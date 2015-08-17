@@ -17,10 +17,6 @@ public class GlobalRegion extends RegionBase {
         super("global");
     }
 
-    public GlobalRegion(IFlagSet ... flagSets){
-        super("global", flagSets);
-    }
-
     @Override
     public void setName(String name) {}
 

@@ -1,5 +1,6 @@
 package tk.elektrofuchse.fox.foxguard;
 
+import com.flowpowered.math.vector.Vector2i;
 import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
@@ -14,7 +15,11 @@ import org.spongepowered.api.service.config.ConfigDir;
 import org.spongepowered.api.service.event.EventManager;
 import org.spongepowered.api.service.sql.SqlService;
 import org.spongepowered.api.world.World;
+import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
+import tk.elektrofuchse.fox.foxguard.flags.SimpleFlagSet;
 import tk.elektrofuchse.fox.foxguard.listener.BlockEventHandler;
+import tk.elektrofuchse.fox.foxguard.regions.RectRegion;
+import tk.elektrofuchse.fox.foxguard.regions.util.BoundingBox2;
 
 import java.io.File;
 import java.sql.Connection;
@@ -52,16 +57,12 @@ public class FoxGuardMain {
     @Subscribe
     public void setupWorld(ServerStartedEvent event){
         FoxGuardManager fgm = FoxGuardManager.getInstance();
-        event.getGame().getServer().getWorlds().stream()
-                .filter(world -> fgm.regions.get(world) == null || fgm.flagSets.get(world) == null)
-                .forEach(fgm::populateWorld);
+        fgm.setup(event.getGame().getServer());
+        fgm.addFlagSet(new SimpleFlagSet("test", 1));
+        fgm.addRegion(event.getGame().getServer().getWorld("world").get(),
+                new RectRegion("test", new BoundingBox2(new Vector2i(-100,-100), new Vector2i(100,100))));
+        fgm.link(event.getGame().getServer(), "world", "test", "test");
     }
-
-
-
-
-
-
 
     public javax.sql.DataSource getDataSource(String jdbcUrl) throws SQLException {
         if (sql == null) {
@@ -74,6 +75,7 @@ public class FoxGuardMain {
     public void myMethodThatQueries() throws SQLException {
         try (Connection conn = getDataSource("jdbc:h2:./foxguard/foxtest.db").getConnection()) {
             conn.prepareStatement("SELECT * FROM test_tbl").execute();
+
         }
 
     }

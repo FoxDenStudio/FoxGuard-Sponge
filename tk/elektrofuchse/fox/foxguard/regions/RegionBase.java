@@ -1,5 +1,9 @@
 package tk.elektrofuchse.fox.foxguard.regions;
 
+import com.flowpowered.math.vector.Vector3d;
+import com.flowpowered.math.vector.Vector3i;
+import org.spongepowered.api.world.World;
+import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 
 import java.util.LinkedList;
@@ -11,21 +15,22 @@ import java.util.List;
 public abstract class RegionBase implements IRegion{
 
     protected final List<IFlagSet> flagSets;
-    String name;
-
-    protected RegionBase(String name, IFlagSet ... flagSets){
-        this.name = name;
-        this.flagSets = new LinkedList<>();
-        if(flagSets != null){
-            for(IFlagSet flagSet : flagSets){
-                this.flagSets.add(flagSet);
-            }
-        }
-    }
+    private String name;
+    private World world;
 
     protected RegionBase(String name) {
         this.name = name;
         this.flagSets = new LinkedList<>();
+    }
+
+    @Override
+    public boolean isInRegion(Vector3i vec) {
+        return this.isInRegion(vec.getX(), vec.getY(), vec.getZ());
+    }
+
+    @Override
+    public boolean isInRegion(Vector3d vec) {
+        return this.isInRegion(vec.getX(), vec.getY(), vec.getZ());
     }
 
     @Override
@@ -34,13 +39,27 @@ public abstract class RegionBase implements IRegion{
     }
 
     @Override
-    public void addFlagSet(IFlagSet flagSet) {
+    public boolean addFlagSet(IFlagSet flagSet) {
+        if (flagSets.contains(flagSet) || !FoxGuardManager.getInstance().isRegistered(flagSet)) return false;
         this.flagSets.add(flagSet);
+        return true;
     }
 
     @Override
-    public void removeFlagSet(IFlagSet flagSet) {
+    public boolean removeFlagSet(IFlagSet flagSet) {
+        if(!flagSets.contains(flagSet)) return false;
         this.flagSets.remove(flagSet);
+        return true;
+    }
+
+    @Override
+    public void setWorld(World world) {
+        if (this.world == null) this.world = world;
+    }
+
+    @Override
+    public World getWorld() {
+        return this.world;
     }
 
     @Override

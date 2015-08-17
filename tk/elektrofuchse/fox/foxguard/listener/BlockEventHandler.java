@@ -27,12 +27,12 @@ import java.util.List;
 /**
  * Created by Fox on 8/16/2015.
  */
-public class BlockEventHandler implements EventHandler<BlockChangeEvent>{
+public class BlockEventHandler implements EventHandler<BlockChangeEvent> {
 
     @Override
     public void handle(BlockChangeEvent event) throws Exception {
-        if(!event.getCause().isPresent() || !(event.getCause().get().getCause() instanceof Player)) return;
-        ActiveFlags typeFlag = null;
+        if (!event.getCause().isPresent() || !(event.getCause().get().getCause() instanceof Player)) return;
+        ActiveFlags typeFlag;
         if (event instanceof BlockBreakEvent) typeFlag = ActiveFlags.BLOCK_BREAK;
         else if (event instanceof BlockPlaceEvent) typeFlag = ActiveFlags.BLOCK_PLACE;
         else return;
@@ -47,25 +47,21 @@ public class BlockEventHandler implements EventHandler<BlockChangeEvent>{
             world = (World) extent;
         }
         List<IFlagSet> flagSetList = new LinkedList<>();
-        for(IRegion region : FoxGuardManager.getInstance().regions.get(world)){
-            if(region.isInRegion(loc)){
-                region.getFlagSets().stream()
+        FoxGuardManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
+                .forEach(region -> region.getFlagSets().stream()
                         .filter(flagSet -> !flagSetList.contains(flagSet))
-                        .forEach(flagSetList::add);
-            }
-        }
+                        .forEach(flagSetList::add));
         Collections.sort(flagSetList);
         int currPriority = flagSetList.get(0).getPriority();
         FlagState flagState = FlagState.PASSTHROUGH;
-        for(IFlagSet flagSet : flagSetList){
-            if (flagSet.getPriority() < currPriority && flagState != FlagState.PASSTHROUGH){
+        for (IFlagSet flagSet : flagSetList) {
+            if (flagSet.getPriority() < currPriority && flagState != FlagState.PASSTHROUGH) {
                 break;
             }
             flagState = FlagState.newState(flagState, flagSet.hasPermission(player, typeFlag));
             currPriority = flagSet.getPriority();
         }
-        flagState = FlagState.newState(flagState, FlagState.TRUE);
-        if(flagState == FlagState.FALSE){
+        if (flagState == FlagState.FALSE) {
             player.sendMessage(Texts.of("You don't have permission."));
             event.setCancelled(true);
         }

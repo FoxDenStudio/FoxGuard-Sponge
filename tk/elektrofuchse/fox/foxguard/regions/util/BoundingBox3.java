@@ -53,14 +53,14 @@ public class BoundingBox3 implements Serializable{
 
     public boolean contains(int x, int y, int z){
         return (x >= this.a.getX() && x <= this.b.getX() &&
-                y >= this.a.getY() && x <= this.b.getY() &&
-                z >= this.a.getZ() && x <= this.b.getZ());
+                y >= this.a.getY() && y <= this.b.getY() &&
+                z >= this.a.getZ() && z <= this.b.getZ());
     }
 
     public boolean contains(double x, double y, double z) {
         return (x > this.a.getX() && x < this.b.getX() + 1 &&
-                y > this.a.getY() && x < this.b.getY() + 1 &&
-                z > this.a.getZ() && x < this.b.getZ() + 1);
+                y > this.a.getY() && y < this.b.getY() + 1 &&
+                z > this.a.getZ() && z < this.b.getZ() + 1);
     }
 
 

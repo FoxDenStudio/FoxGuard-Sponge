@@ -2,6 +2,7 @@ package tk.elektrofuchse.fox.foxguard.regions;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
+import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 
 import java.util.List;
@@ -21,9 +22,13 @@ public interface IRegion{
 
     List<IFlagSet> getFlagSets();
 
-    void addFlagSet(IFlagSet flagSet);
+    boolean addFlagSet(IFlagSet flagSet);
 
-    void removeFlagSet(IFlagSet flagSet);
+    boolean removeFlagSet(IFlagSet flagSet);
+
+    void setWorld(World world);
+
+    World getWorld();
 
     String getName();
 
