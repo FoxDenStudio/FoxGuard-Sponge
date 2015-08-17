@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.event.EventHandler;
 import org.spongepowered.api.event.Subscribe;
+import org.spongepowered.api.event.block.BlockChangeEvent;
 import org.spongepowered.api.event.block.BlockEvent;
 import org.spongepowered.api.event.state.InitializationEvent;
 import org.spongepowered.api.event.state.ServerStartedEvent;
@@ -25,6 +26,8 @@ import java.sql.SQLException;
 @Plugin(id = "foxguard", name = "FoxGuard", version = "1.0")
 public class FoxGuardMain {
 
+    private static FoxGuardMain instance;
+
     @Inject
     private Logger logger;
     @Inject
@@ -39,20 +42,19 @@ public class FoxGuardMain {
 
     @Subscribe
     public void initFoxGuard(InitializationEvent event){
+        instance = this;
         new FoxGuardManager(this);
         FoxGuardManager.getInstance().loadLists();
-        eventManager.register(this, BlockEvent.class, new BlockEventHandler());
+        eventManager.register(this, BlockChangeEvent.class, new BlockEventHandler());
 
     }
 
     @Subscribe
     public void setupWorld(ServerStartedEvent event){
         FoxGuardManager fgm = FoxGuardManager.getInstance();
-        for(World world : event.getGame().getServer().getWorlds()){
-            if(fgm.regions.get(world) == null || fgm.flagSets.get(world) == null){
-                fgm.populateWorld(world);
-            }
-        }
+        event.getGame().getServer().getWorlds().stream()
+                .filter(world -> fgm.regions.get(world) == null || fgm.flagSets.get(world) == null)
+                .forEach(fgm::populateWorld);
     }
 
 
@@ -78,5 +80,9 @@ public class FoxGuardMain {
 
     public Logger getLogger() {
         return logger;
+    }
+
+    public static FoxGuardMain getInstance() {
+        return instance;
     }
 }

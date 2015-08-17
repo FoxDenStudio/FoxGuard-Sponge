@@ -1,5 +1,6 @@
 package tk.elektrofuchse.fox.foxguard.regions;
 
+import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 
@@ -13,6 +14,10 @@ public interface IRegion{
     boolean isInRegion(int x, int y, int z);
 
     boolean isInRegion(Vector3i vec);
+
+    boolean isInRegion(double x, double y, double z);
+
+    boolean isInRegion(Vector3d vec);
 
     List<IFlagSet> getFlagSets();
 

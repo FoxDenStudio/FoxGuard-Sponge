@@ -34,4 +34,9 @@ public abstract class FlagSetBase implements IFlagSet {
     public void setName(String name) {
         this.name = name;
     }
+
+    @Override
+    public int compareTo(IFlagSet o) {
+        return this.priority > o.getPriority() ? -1 : this.priority < o.getPriority() ? 1 : 0;
+    }
 }

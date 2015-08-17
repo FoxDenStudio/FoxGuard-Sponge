@@ -10,7 +10,7 @@ import java.util.StringJoiner;
 /**
  * Created by Fox on 8/17/2015.
  */
-public interface IFlagSet {
+public interface IFlagSet extends Comparable<IFlagSet>{
 
     FlagState hasPermission(Player player, ActiveFlags flag);
 

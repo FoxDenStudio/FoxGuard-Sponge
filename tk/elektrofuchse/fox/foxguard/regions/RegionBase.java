@@ -24,7 +24,8 @@ public abstract class RegionBase implements IRegion{
     }
 
     protected RegionBase(String name) {
-        this(name, null);
+        this.name = name;
+        this.flagSets = new LinkedList<>();
     }
 
     @Override

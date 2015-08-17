@@ -9,15 +9,15 @@ import java.io.Serializable;
 /**
  * Created by Fox on 8/17/2015.
  */
-public class BoundingBox implements Serializable{
+public class BoundingBox3 implements Serializable{
     Vector3i a;
     Vector3i b;
 
-    public BoundingBox(Location parA, Location parB) {
+    public BoundingBox3(Location parA, Location parB) {
         this(parA.getBlockPosition(), parB.getBlockPosition());
     }
 
-    public BoundingBox(Vector3i parA, Vector3i parB){
+    public BoundingBox3(Vector3i parA, Vector3i parB){
         int ax,ay,az,bx,by,bz;
         if(parA.getX() < parB.getX()){
             ax = parA.getX();
