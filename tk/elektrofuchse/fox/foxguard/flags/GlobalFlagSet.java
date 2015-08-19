@@ -26,6 +26,11 @@ public class GlobalFlagSet extends FlagSetBase{
     }
 
     @Override
+    public String getType() {
+        return "Global";
+    }
+
+    @Override
     public FlagState hasPermission(Player player, ActiveFlags flag) {
         return FlagState.TRUE;
     }

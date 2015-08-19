@@ -28,4 +28,9 @@ public class RectRegion extends RegionBase {
         return bb.contains(x, z);
     }
 
+    @Override
+    public String getType() {
+        return "Rect";
+    }
+
 }

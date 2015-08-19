@@ -33,4 +33,6 @@ public interface IRegion{
     String getName();
 
     void setName(String name);
+
+    String getType();
 }

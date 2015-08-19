@@ -30,4 +30,9 @@ public class SimpleFlagSet extends FlagSetBase {
         return FlagState.PASSTHROUGH;
     }
 
+    @Override
+    public String getType() {
+        return "Simple";
+    }
+
 }

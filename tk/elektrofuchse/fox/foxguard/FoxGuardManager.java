@@ -2,6 +2,7 @@ package tk.elektrofuchse.fox.foxguard;
 
 import com.google.common.base.*;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableCollection;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.world.World;
@@ -21,6 +22,7 @@ import java.util.stream.Stream;
 public class FoxGuardManager {
 
     private FoxGuardMain plugin;
+    private Server server;
     private static FoxGuardManager instance;
 
     private final Map<World, List<IRegion>> regions;
@@ -28,9 +30,10 @@ public class FoxGuardManager {
     private final GlobalFlagSet gfs;
 
 
-    public FoxGuardManager(FoxGuardMain plugin) {
+    public FoxGuardManager(FoxGuardMain plugin, Server server) {
         instance = this;
         this.plugin = plugin;
+        this.server = server;
         regions = new HashMap<>();
         flagSets = new LinkedList<>();
         gfs = new GlobalFlagSet();
@@ -57,6 +60,24 @@ public class FoxGuardManager {
 
     public Stream<IRegion> getRegionListAsStream(World world) {
         return this.regions.get(world).stream();
+    }
+
+    public List<IRegion> getRegionsListCopy(){
+        List<IRegion> list = new LinkedList<>();
+        this.regions.forEach((world, tlist) -> tlist.forEach(list::add));
+        return list;
+    }
+
+    public List<IRegion> getRegionsListCopy(World world){
+        List<IRegion> list = new LinkedList<>();
+        this.regions.get(world).forEach(list::add);
+        return list;
+    }
+
+    public List<IFlagSet> getFlagSetsListCopy(){
+        List<IFlagSet> list = new LinkedList<>();
+
+        return list;
     }
 
     public boolean addFlagSet(IFlagSet flagSet) {
@@ -161,5 +182,9 @@ public class FoxGuardManager {
 
     public static FoxGuardManager getInstance() {
         return instance;
+    }
+
+    public Server getServer() {
+        return server;
     }
 }

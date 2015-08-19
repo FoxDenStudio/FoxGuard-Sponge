@@ -20,6 +20,11 @@ public class GlobalRegion extends RegionBase {
     @Override
     public void setName(String name) {}
 
+    @Override
+    public String getType() {
+        return "Global";
+    }
+
     public boolean isInRegion(int x, int y, int z) {
         return true;
     }

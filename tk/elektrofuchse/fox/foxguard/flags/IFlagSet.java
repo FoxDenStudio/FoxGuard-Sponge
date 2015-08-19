@@ -23,4 +23,6 @@ public interface IFlagSet extends Comparable<IFlagSet>{
     String getName();
 
     void setName(String name);
+
+    String getType();
 }
