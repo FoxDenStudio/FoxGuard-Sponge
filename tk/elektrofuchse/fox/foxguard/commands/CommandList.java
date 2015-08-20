@@ -107,6 +107,13 @@ public class CommandList implements CommandCallable {
         return (dispWorld ? region.getWorld().getName() + " : " : "") + region.getName();
     }
 
+    private boolean contains(String[] aliases, String input) {
+        for (String alias : aliases) {
+            if (alias.equalsIgnoreCase(input)) return true;
+        }
+        return false;
+    }
+
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
         return null;
@@ -129,13 +136,6 @@ public class CommandList implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("list [page] <(regions [world])|flagsets>");
-    }
-
-    private boolean contains(String[] aliases, String input) {
-        for (String alias : aliases) {
-            if (alias.equalsIgnoreCase(input)) return true;
-        }
-        return false;
+        return Texts.of("list [page] <(regions [world]) | flagsets>");
     }
 }

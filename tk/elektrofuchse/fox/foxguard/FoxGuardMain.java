@@ -89,6 +89,7 @@ public class FoxGuardMain {
         fgDispatcher.register(new CommandList(), "list", "ls");
         fgDispatcher.register(new CommandPosition(), "position", "pos");
         fgDispatcher.register(new CommandState(), "state", "current", "cur");
+        fgDispatcher.register(new CommandFlush(), "flush", "clear");
         game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fg");
     }
 
