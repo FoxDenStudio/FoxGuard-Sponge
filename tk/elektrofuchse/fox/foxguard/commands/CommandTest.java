@@ -16,7 +16,7 @@ import java.util.List;
 public class CommandTest implements CommandCallable {
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
-        source.sendMessage(Texts.of(arguments));
+        source.sendMessage(Texts.of(Thread.getAllStackTraces().keySet().toString()));
         return CommandResult.empty();
     }
 
@@ -27,7 +27,7 @@ public class CommandTest implements CommandCallable {
 
     @Override
     public boolean testPermission(CommandSource source) {
-        return true;
+        return source.hasPermission("foxguard.debug.test");
     }
 
     @Override

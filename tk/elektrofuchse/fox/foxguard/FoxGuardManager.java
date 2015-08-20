@@ -46,8 +46,8 @@ public class FoxGuardManager {
 
     public boolean addRegion(World world, IRegion region) {
         if (region.getWorld() != null || getRegion(world, region.getName()) != null) return false;
-        regions.get(world).add(region);
         region.setWorld(world);
+        regions.get(world).add(region);
         return true;
     }
 
@@ -59,24 +59,26 @@ public class FoxGuardManager {
     }
 
     public Stream<IRegion> getRegionListAsStream(World world) {
-        return this.regions.get(world).stream();
+        return this.getRegionsListCopy(world).stream();
     }
 
-    public List<IRegion> getRegionsListCopy(){
+    public List<IRegion> getRegionsListCopy() {
         List<IRegion> list = new LinkedList<>();
-        this.regions.forEach((world, tlist) -> tlist.forEach(list::add));
+        this.regions.forEach((world, tlist) -> {
+            tlist.forEach(list::add);
+        });
         return list;
     }
 
-    public List<IRegion> getRegionsListCopy(World world){
+    public List<IRegion> getRegionsListCopy(World world) {
         List<IRegion> list = new LinkedList<>();
         this.regions.get(world).forEach(list::add);
         return list;
     }
 
-    public List<IFlagSet> getFlagSetsListCopy(){
+    public List<IFlagSet> getFlagSetsListCopy() {
         List<IFlagSet> list = new LinkedList<>();
-
+        this.flagSets.forEach(list::add);
         return list;
     }
 
@@ -99,9 +101,11 @@ public class FoxGuardManager {
 
     public boolean removeFlagSet(IFlagSet flagSet) {
         if (flagSet == null) return false;
-        this.regions.forEach((world, list) -> list.stream()
-                .filter(region -> region.getFlagSets().contains(flagSet))
-                .forEach(region -> removeFlagSet(flagSet)));
+        this.regions.forEach((world, list) -> {
+            list.stream()
+                    .filter(region -> region.getFlagSets().contains(flagSet))
+                    .forEach(region -> removeFlagSet(flagSet));
+        });
         if (!this.flagSets.contains(flagSet)) return false;
         flagSets.remove(flagSet);
         return true;
@@ -115,7 +119,7 @@ public class FoxGuardManager {
         this.regions.forEach((world, list) -> this.removeRegion(world, region));
     }
 
-    public boolean removeRegion(World world, IRegion region){
+    public boolean removeRegion(World world, IRegion region) {
         if (region == null || !this.regions.get(world).contains(region)) return false;
         this.regions.get(world).remove(region);
         return true;
@@ -163,7 +167,7 @@ public class FoxGuardManager {
         this.createLists(world);
         GlobalRegion gr = new GlobalRegion();
         gr.addFlagSet(this.gfs);
-        regions.get(world).add(gr);
+        addRegion(world, gr);
 
     }
 

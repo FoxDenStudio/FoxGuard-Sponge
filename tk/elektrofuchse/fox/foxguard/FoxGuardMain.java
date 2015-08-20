@@ -4,24 +4,18 @@ import com.flowpowered.math.vector.Vector2i;
 import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
-import org.spongepowered.api.event.EventHandler;
 import org.spongepowered.api.event.Subscribe;
 import org.spongepowered.api.event.block.BlockChangeEvent;
-import org.spongepowered.api.event.block.BlockEvent;
 import org.spongepowered.api.event.state.InitializationEvent;
 import org.spongepowered.api.event.state.ServerStartedEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.service.config.ConfigDir;
 import org.spongepowered.api.service.event.EventManager;
 import org.spongepowered.api.service.sql.SqlService;
-import org.spongepowered.api.world.World;
-import tk.elektrofuchse.fox.foxguard.commands.CommandCreate;
-import tk.elektrofuchse.fox.foxguard.commands.CommandList;
-import tk.elektrofuchse.fox.foxguard.commands.CommandTest;
-import tk.elektrofuchse.fox.foxguard.commands.FoxGuardCommand;
-import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
+import tk.elektrofuchse.fox.foxguard.commands.*;
 import tk.elektrofuchse.fox.foxguard.flags.SimpleFlagSet;
 import tk.elektrofuchse.fox.foxguard.listener.BlockEventHandler;
+import tk.elektrofuchse.fox.foxguard.listener.PlayerListener;
 import tk.elektrofuchse.fox.foxguard.regions.RectRegion;
 import tk.elektrofuchse.fox.foxguard.regions.util.BoundingBox2;
 
@@ -52,17 +46,18 @@ public class FoxGuardMain {
     private FoxGuardCommand fgDispatcher;
 
     @Subscribe
-    public void initFoxGuard(InitializationEvent event){
+    public void initFoxGuard(InitializationEvent event) {
         instance = this;
         new FoxGuardManager(this, game.getServer());
         FoxGuardManager.getInstance().loadLists();
         eventManager.register(this, BlockChangeEvent.class, new BlockEventHandler());
+        eventManager.register(this, new PlayerListener());
         registerCommands();
 
     }
 
     @Subscribe
-    public void setupWorld(ServerStartedEvent event){
+    public void setupWorld(ServerStartedEvent event) {
         FoxGuardManager fgm = FoxGuardManager.getInstance();
         fgm.setup(game.getServer());
         fgm.addFlagSet(new SimpleFlagSet("test", 1));
@@ -87,12 +82,14 @@ public class FoxGuardMain {
 
     }
 
-    private void registerCommands(){
+    private void registerCommands() {
         fgDispatcher = new FoxGuardCommand();
-        fgDispatcher.register(new CommandCreate(), "create");
+        fgDispatcher.register(new CommandCreate(), "create", "new", "make", "define", "mk");
         fgDispatcher.register(new CommandTest(), "test");
-        fgDispatcher.register(new CommandList(), "list");
-        game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "fg");
+        fgDispatcher.register(new CommandList(), "list", "ls");
+        fgDispatcher.register(new CommandPosition(), "position", "pos");
+        fgDispatcher.register(new CommandState(), "state", "current", "cur");
+        game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fg");
     }
 
     public Logger getLogger() {

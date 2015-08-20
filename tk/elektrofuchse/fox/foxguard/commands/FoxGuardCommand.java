@@ -5,6 +5,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.*;
+import org.spongepowered.api.entity.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
@@ -15,6 +16,7 @@ import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.command.*;
 import org.spongepowered.api.util.command.dispatcher.Disambiguator;
 import org.spongepowered.api.util.command.dispatcher.Dispatcher;
+import tk.elektrofuchse.fox.foxguard.commands.util.CommandState;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -47,6 +49,10 @@ public class FoxGuardCommand implements Dispatcher{
     private final Disambiguator disambiguatorFunc;
     private final ListMultimap<String, CommandMapping> commands = ArrayListMultimap.create();
 
+    private final Map<Player, CommandState> stateMap = new HashMap<>();
+    private final CommandState consoleState = new CommandState();
+    private static FoxGuardCommand instance;
+
     /**
      * Creates a basic new dispatcher.
      */
@@ -61,6 +67,7 @@ public class FoxGuardCommand implements Dispatcher{
      */
     public FoxGuardCommand(Disambiguator disambiguatorFunc) {
         this.disambiguatorFunc = disambiguatorFunc;
+        instance = this;
     }
 
     /**
@@ -408,5 +415,13 @@ public class FoxGuardCommand implements Dispatcher{
     @Override
     public Multimap<String, CommandMapping> getAll() {
         return ImmutableMultimap.copyOf(this.commands);
+    }
+
+    public Map<Player, CommandState> getStateMap() {
+        return stateMap;
+    }
+
+    public static FoxGuardCommand getInstance() {
+        return instance;
     }
 }
