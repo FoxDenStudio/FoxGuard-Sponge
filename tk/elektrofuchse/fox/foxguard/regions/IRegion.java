@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Created by Fox on 8/16/2015.
  */
-public interface IRegion{
+public interface IRegion {
 
     boolean isInRegion(int x, int y, int z);
 

@@ -5,12 +5,10 @@ import tk.elektrofuchse.fox.foxguard.flags.util.ActiveFlags;
 import tk.elektrofuchse.fox.foxguard.flags.util.FlagState;
 import tk.elektrofuchse.fox.foxguard.flags.util.PassiveFlags;
 
-import java.util.StringJoiner;
-
 /**
  * Created by Fox on 8/17/2015.
  */
-public interface IFlagSet extends Comparable<IFlagSet>{
+public interface IFlagSet extends Comparable<IFlagSet> {
 
     FlagState hasPermission(Player player, ActiveFlags flag);
 

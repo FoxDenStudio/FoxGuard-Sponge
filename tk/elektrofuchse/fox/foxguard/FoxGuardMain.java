@@ -97,6 +97,10 @@ public class FoxGuardMain {
         return logger;
     }
 
+    public Game getGame() {
+        return game;
+    }
+
     public static FoxGuardMain getInstance() {
         return instance;
     }

@@ -8,7 +8,7 @@ public enum FlagState {
     TRUE,
     FALSE;
 
-    public static FlagState newState(FlagState oldState, FlagState state){
+    public static FlagState newState(FlagState oldState, FlagState state) {
         return state.ordinal() > oldState.ordinal() ? state : oldState;
     }
 }

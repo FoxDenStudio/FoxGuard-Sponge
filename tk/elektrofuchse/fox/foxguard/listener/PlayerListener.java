@@ -4,7 +4,6 @@ import org.spongepowered.api.event.Subscribe;
 import org.spongepowered.api.event.entity.player.PlayerChangeWorldEvent;
 import org.spongepowered.api.event.entity.player.PlayerJoinEvent;
 import org.spongepowered.api.event.entity.player.PlayerQuitEvent;
-import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.commands.FoxGuardCommand;
 import tk.elektrofuchse.fox.foxguard.commands.util.CommandState;
 

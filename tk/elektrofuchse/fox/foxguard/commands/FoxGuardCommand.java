@@ -29,7 +29,7 @@ import static org.spongepowered.api.util.command.CommandMessageFormatting.SPACE_
 /**
  * Created by Fox on 8/16/2015.
  */
-public class FoxGuardCommand implements Dispatcher{
+public class FoxGuardCommand implements Dispatcher {
     /**
      * This is a disambiguator function that returns the first matching command.
      */

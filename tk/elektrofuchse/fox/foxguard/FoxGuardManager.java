@@ -1,19 +1,17 @@
 package tk.elektrofuchse.fox.foxguard;
 
-import com.google.common.base.*;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableCollection;
-import org.spongepowered.api.Game;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.flags.GlobalFlagSet;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
-import tk.elektrofuchse.fox.foxguard.flags.SimpleFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.GlobalRegion;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
-import javax.swing.text.html.Option;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 /**

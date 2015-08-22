@@ -6,8 +6,9 @@ import org.spongepowered.api.entity.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.command.*;
+import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.util.command.source.ConsoleSource;
-import tk.elektrofuchse.fox.foxguard.commands.FoxGuardCommand;
+import tk.elektrofuchse.fox.foxguard.commands.util.CommandParseHelper;
 
 import java.util.List;
 
@@ -30,9 +31,21 @@ public class CommandPosition implements CommandCallable {
             } else if (args.length > 0 && args.length < 3) {
                 throw new CommandException(Texts.of("Not enough arguments!"));
             } else if (args.length == 3) {
-                x = parse(pPos.getX(), args[0]);
-                y = parse(pPos.getY(), args[1]);
-                z = parse(pPos.getZ(), args[2]);
+                try {
+                    x = CommandParseHelper.parseCoordinate(pPos.getX(), args[0]);
+                } catch (NumberFormatException e) {
+                    throw new ArgumentParseException(Texts.of("Unable to parse \"" + args[0] + "\"!"), e, args[0], 0);
+                }
+                try {
+                    y = CommandParseHelper.parseCoordinate(pPos.getY(), args[1]);
+                } catch (NumberFormatException e) {
+                    throw new ArgumentParseException(Texts.of("Unable to parse \"" + args[1] + "\"!"), e, args[1], 1);
+                }
+                try {
+                    z = CommandParseHelper.parseCoordinate(pPos.getZ(), args[2]);
+                } catch (NumberFormatException e) {
+                    throw new ArgumentParseException(Texts.of("Unable to parse \"" + args[2] + "\"!"), e, args[2], 2);
+                }
             } else {
                 throw new CommandException(Texts.of("Too many arguments!"));
             }
@@ -44,16 +57,6 @@ public class CommandPosition implements CommandCallable {
             throw new CommandPermissionException(Texts.of("You must be a player or console to use this command!"));
         }
         return CommandResult.empty();
-    }
-
-    private int parse(int pPos, String arg) throws NumberFormatException {
-        if (arg.equals("~")) {
-            return pPos;
-        } else if (arg.startsWith("~")) {
-            return pPos + Integer.parseInt(arg.substring(1));
-        } else {
-            return Integer.parseInt(arg);
-        }
     }
 
     @Override

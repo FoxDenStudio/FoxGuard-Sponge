@@ -28,7 +28,8 @@ public class CommandState implements CommandCallable {
             int flag = 0;
             if (!FoxGuardCommand.getInstance().getStateMap().get(player).selectedRegions.isEmpty()) {
                 output.append(Texts.of(TextColors.GREEN, "Regions: "));
-                Iterator<IRegion> regionIterator = FoxGuardCommand.getInstance().getStateMap().get(player).selectedRegions.iterator();
+                Iterator<IRegion> regionIterator = FoxGuardCommand.getInstance().getStateMap()
+                        .get(player).selectedRegions.iterator();
                 while (regionIterator.hasNext()) {
                     IRegion region = regionIterator.next();
                     output.append(Texts.of(getColorForRegion(region), region.getName()));
@@ -39,7 +40,8 @@ public class CommandState implements CommandCallable {
             if (!FoxGuardCommand.getInstance().getStateMap().get(player).selectedFlagSets.isEmpty()) {
                 if (flag != 0) output.append(Texts.of("\n"));
                 output.append(Texts.of(TextColors.GREEN, "FlagSets: "));
-                Iterator<IFlagSet> flagSetIterator = FoxGuardCommand.getInstance().getStateMap().get(player).selectedFlagSets.iterator();
+                Iterator<IFlagSet> flagSetIterator = FoxGuardCommand.getInstance().getStateMap()
+                        .get(player).selectedFlagSets.iterator();
                 while (flagSetIterator.hasNext()) {
                     IFlagSet flagSet = flagSetIterator.next();
                     output.append(Texts.of(getColorForFlagSet(flagSet), flagSet.getName()));
@@ -54,7 +56,9 @@ public class CommandState implements CommandCallable {
                 output.append(Texts.of(TextColors.RESET));
                 int index = 1;
                 for (Vector3i pos : FoxGuardCommand.getInstance().getStateMap().get(player).positions) {
-                    output.append(Texts.of("\nPos" + index + ": (" + pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + ")"));
+                    output.append(
+                            Texts.of("\nPos" + index + ": (" + pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + ")")
+                    );
                     index++;
                 }
                 flag++;

@@ -13,7 +13,8 @@ public abstract class FlagSetBase implements IFlagSet {
         setPriority(priority);
     }
 
-    public FlagSetBase(){}
+    public FlagSetBase() {
+    }
 
     @Override
     public int getPriority() {

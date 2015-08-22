@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * Created by Fox on 8/17/2015.
  */
-public abstract class RegionBase implements IRegion{
+public abstract class RegionBase implements IRegion {
 
     protected final List<IFlagSet> flagSets;
     private String name;
@@ -47,7 +47,7 @@ public abstract class RegionBase implements IRegion{
 
     @Override
     public boolean removeFlagSet(IFlagSet flagSet) {
-        if(!flagSets.contains(flagSet)) return false;
+        if (!flagSets.contains(flagSet)) return false;
         this.flagSets.remove(flagSet);
         return true;
     }

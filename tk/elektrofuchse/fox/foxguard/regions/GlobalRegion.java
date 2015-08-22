@@ -2,11 +2,6 @@ package tk.elektrofuchse.fox.foxguard.regions;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
-
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Created by Fox on 8/17/2015.
@@ -18,7 +13,8 @@ public class GlobalRegion extends RegionBase {
     }
 
     @Override
-    public void setName(String name) {}
+    public void setName(String name) {
+    }
 
     @Override
     public String getType() {

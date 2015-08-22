@@ -1,6 +1,5 @@
 package tk.elektrofuchse.fox.foxguard.commands.util;
 
-import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
@@ -24,8 +23,8 @@ public class CommandState {
         positions = new ArrayList<>();
     }
 
-    public void flush (StateField field){
-        switch (field){
+    public void flush(StateField field) {
+        switch (field) {
             case REGIONS:
                 selectedRegions = new LinkedList<>();
                 break;

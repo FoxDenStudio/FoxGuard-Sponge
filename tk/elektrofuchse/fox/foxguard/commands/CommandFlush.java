@@ -29,7 +29,7 @@ public class CommandFlush implements CommandCallable {
                 args = arguments.split(" ");
                 for (String arg : args) {
                     CommandState.StateField type = getType(arg);
-                    if(type == null) throw new CommandException(Texts.of("\"" + arg + "\" is not a valid type!"));
+                    if (type == null) throw new CommandException(Texts.of("\"" + arg + "\" is not a valid type!"));
                     FoxGuardCommand.getInstance().getStateMap().get(player).flush(type);
                 }
             }
@@ -41,7 +41,7 @@ public class CommandFlush implements CommandCallable {
     }
 
     public CommandState.StateField getType(String input) {
-        if(contains(regionsAliases, input))return CommandState.StateField.REGIONS;
+        if (contains(regionsAliases, input)) return CommandState.StateField.REGIONS;
         else if (contains(flagSetsAliases, input)) return CommandState.StateField.FLAGSETS;
         else if (contains(positionsAliases, input)) return CommandState.StateField.POSITIONS;
         else return null;

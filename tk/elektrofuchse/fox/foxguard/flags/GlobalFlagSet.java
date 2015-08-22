@@ -8,7 +8,7 @@ import tk.elektrofuchse.fox.foxguard.flags.util.PassiveFlags;
 /**
  * Created by Fox on 8/17/2015.
  */
-public class GlobalFlagSet extends FlagSetBase{
+public class GlobalFlagSet extends FlagSetBase {
 
     public GlobalFlagSet() {
         setPriority(0);

@@ -1,24 +1,19 @@
 package tk.elektrofuchse.fox.foxguard.listener;
 
 import com.flowpowered.math.vector.Vector3i;
-import org.spongepowered.api.effect.sound.SoundType;
 import org.spongepowered.api.entity.player.Player;
 import org.spongepowered.api.event.EventHandler;
 import org.spongepowered.api.event.block.BlockBreakEvent;
 import org.spongepowered.api.event.block.BlockChangeEvent;
-import org.spongepowered.api.event.block.BlockEvent;
 import org.spongepowered.api.event.block.BlockPlaceEvent;
-import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.world.Chunk;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.extent.Extent;
-import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.flags.util.ActiveFlags;
 import tk.elektrofuchse.fox.foxguard.flags.util.FlagState;
-import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
 import java.util.Collections;
 import java.util.LinkedList;
