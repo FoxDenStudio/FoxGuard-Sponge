@@ -1,7 +1,6 @@
 package tk.elektrofuchse.fox.foxguard.commands;
 
 import com.google.common.base.Optional;
-import org.spongepowered.api.Server;
 import org.spongepowered.api.entity.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
@@ -10,11 +9,11 @@ import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandResult;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
+import org.spongepowered.api.util.command.source.ConsoleSource;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
-import tk.elektrofuchse.fox.foxguard.commands.util.CommandParseHelper;
-import tk.elektrofuchse.fox.foxguard.commands.util.CommandState;
+import tk.elektrofuchse.fox.foxguard.commands.util.*;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 import tk.elektrofuchse.fox.foxguard.regions.RectRegion;
 
@@ -22,17 +21,14 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by Fox on 8/18/2015.
+ * Created by Fox on 8/22/2015.
  */
-public class CommandCreate implements CommandCallable {
+public class CommandDetail implements CommandCallable {
 
     String[] regionsAliases = {"regions", "region", "reg", "r"};
     String[] flagSetsAliases = {"flagsets", "flagset", "flags", "flag", "f"};
 
-    String[] rectAliases = {"rectangular", "rectangle", "rect"};
-
-    //create region [w:<world>] name type args...
-
+    //fg detail <region> [w:<world>] <name>
 
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
@@ -51,31 +47,20 @@ public class CommandCreate implements CommandCallable {
                     world = player.getWorld();
                 }
                 if (args.length < 1 + flag) throw new CommandException(Texts.of("Must specify a name!"));
-                if (args[1 + flag].matches("^[^a-zA-Z].*"))
-                    throw new CommandException(Texts.of("Name must start with a letter!"));
-                if (args[1 + flag].matches("^.*[^0-9a-zA-Z].*$"))
-                    throw new CommandException(Texts.of("Name must be alphanumeric!"));
-                if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a type!"));
-                IRegion newRegion;
-                if (CommandParseHelper.contains(rectAliases, args[2 + flag])) {
-                    newRegion = new RectRegion(args[1 + flag].toLowerCase(),
-                            FoxGuardCommand.getInstance().getStateMap().get(player).positions,
-                            Arrays.copyOfRange(args, 3 + flag, args.length), player);
-                } else {
-                    throw new ArgumentParseException(Texts.of("Not a valid type!"), args[2 + flag], 2 + flag);
-                }
-                FoxGuardManager.getInstance().addRegion(world, newRegion);
-                FoxGuardCommand.getInstance().getStateMap().get(player).flush(CommandState.StateField.POSITIONS);
-                player.sendMessage(Texts.of("Region created successfully"));
+                IRegion region = FoxGuardManager.getInstance().getRegion(world, args[1+flag]);
+                if(region == null) throw new CommandException(Texts.of("No region with name \"" + args[1 + flag] + "\"!"));
+
+                player.sendMessage(region.getDetails(Arrays.copyOfRange(args, 2+flag, args.length)));
 
             } else if (CommandParseHelper.contains(flagSetsAliases, args[0])) {
 
             } else {
                 throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
             }
-        } else {
+        } else (source instanceof ConsoleSource) {
 
         }
+
         return CommandResult.empty();
     }
 
@@ -86,7 +71,7 @@ public class CommandCreate implements CommandCallable {
 
     @Override
     public boolean testPermission(CommandSource source) {
-        return source.hasPermission("foxguard.modify.create");
+        return true;
     }
 
     @Override

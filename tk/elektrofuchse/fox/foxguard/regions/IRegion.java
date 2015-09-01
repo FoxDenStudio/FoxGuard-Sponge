@@ -2,6 +2,7 @@ package tk.elektrofuchse.fox.foxguard.regions;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
+import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 
@@ -35,4 +36,6 @@ public interface IRegion {
     void setName(String name);
 
     String getType();
+
+    Text getDetails(String[] args);
 }

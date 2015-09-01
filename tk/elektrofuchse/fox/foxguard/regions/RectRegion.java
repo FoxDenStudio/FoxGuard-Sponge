@@ -2,6 +2,7 @@ package tk.elektrofuchse.fox.foxguard.regions;
 
 import com.flowpowered.math.vector.Vector3i;
 import org.spongepowered.api.entity.player.Player;
+import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandSource;
@@ -114,5 +115,13 @@ public class RectRegion extends RegionBase implements IOwnable {
         return true;
     }
 
+    @Override
+    public Text getDetails(String[] args) {
+        return Texts.builder().append(super.getDetails(args)).build();
+    }
 
+    @Override
+    public String toString() {
+        return this.bb.toString();
+    }
 }
