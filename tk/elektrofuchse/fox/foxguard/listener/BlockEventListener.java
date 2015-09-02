@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * Created by Fox on 8/16/2015.
  */
-public class BlockEventHandler implements EventListener<ChangeBlockEvent> {
+public class BlockEventListener implements EventListener<ChangeBlockEvent> {
 
     @Override
     public void handle(ChangeBlockEvent event) throws Exception {

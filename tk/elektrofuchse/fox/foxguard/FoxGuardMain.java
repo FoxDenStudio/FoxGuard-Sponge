@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.entity.living.player.PlayerEvent;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
@@ -14,7 +15,8 @@ import org.spongepowered.api.service.event.EventManager;
 import org.spongepowered.api.service.sql.SqlService;
 import tk.elektrofuchse.fox.foxguard.commands.*;
 import tk.elektrofuchse.fox.foxguard.flags.SimpleFlagSet;
-import tk.elektrofuchse.fox.foxguard.listener.PlayerListener;
+import tk.elektrofuchse.fox.foxguard.listener.BlockEventListener;
+import tk.elektrofuchse.fox.foxguard.listener.PlayerEventListener;
 import tk.elektrofuchse.fox.foxguard.regions.RectRegion;
 import tk.elektrofuchse.fox.foxguard.regions.util.BoundingBox2;
 
@@ -49,7 +51,8 @@ public class FoxGuardMain {
         instance = this;
         new FoxGuardManager(this, game.getServer());
         FoxGuardManager.getInstance().loadLists();
-        eventManager.registerListener(this, PlayerEvent.class, new PlayerListener());
+        eventManager.registerListener(this, PlayerEvent.class, new PlayerEventListener());
+        eventManager.registerListener(this, ChangeBlockEvent.class, new BlockEventListener());
         registerCommands();
 
     }

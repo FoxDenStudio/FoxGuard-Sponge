@@ -10,7 +10,7 @@ import tk.elektrofuchse.fox.foxguard.commands.util.CommandState;
 /**
  * Created by Fox on 8/20/2015.
  */
-public class PlayerListener implements EventListener<PlayerEvent> {
+public class PlayerEventListener implements EventListener<PlayerEvent> {
 
     @Override
     public void handle(PlayerEvent event) {
