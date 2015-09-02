@@ -1,6 +1,6 @@
 package tk.elektrofuchse.fox.foxguard.flags;
 
-import org.spongepowered.api.entity.player.Player;
+import org.spongepowered.api.entity.living.player.Player;
 import tk.elektrofuchse.fox.foxguard.flags.util.ActiveFlags;
 import tk.elektrofuchse.fox.foxguard.flags.util.FlagState;
 import tk.elektrofuchse.fox.foxguard.flags.util.PassiveFlags;

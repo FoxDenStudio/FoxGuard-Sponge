@@ -1,6 +1,6 @@
 package tk.elektrofuchse.fox.foxguard.regions;
 
-import org.spongepowered.api.entity.player.Player;
+import org.spongepowered.api.entity.living.player.Player;
 
 import java.util.List;
 

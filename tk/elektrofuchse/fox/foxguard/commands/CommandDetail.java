@@ -1,7 +1,7 @@
 package tk.elektrofuchse.fox.foxguard.commands;
 
 import com.google.common.base.Optional;
-import org.spongepowered.api.entity.player.Player;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.command.CommandCallable;
@@ -57,7 +57,7 @@ public class CommandDetail implements CommandCallable {
             } else {
                 throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
             }
-        } else (source instanceof ConsoleSource) {
+        } else if(source instanceof ConsoleSource) {
 
         }
 

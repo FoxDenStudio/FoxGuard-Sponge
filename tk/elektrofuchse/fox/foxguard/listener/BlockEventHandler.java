@@ -1,11 +1,11 @@
 package tk.elektrofuchse.fox.foxguard.listener;
 
 import com.flowpowered.math.vector.Vector3i;
-import org.spongepowered.api.entity.player.Player;
-import org.spongepowered.api.event.EventHandler;
-import org.spongepowered.api.event.block.BlockBreakEvent;
-import org.spongepowered.api.event.block.BlockChangeEvent;
-import org.spongepowered.api.event.block.BlockPlaceEvent;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.EventListener;
+import org.spongepowered.api.event.block.BreakBlockEvent;
+import org.spongepowered.api.event.block.ChangeBlockEvent;
+import org.spongepowered.api.event.block.PlaceBlockEvent;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.world.Chunk;
 import org.spongepowered.api.world.World;
@@ -22,25 +22,19 @@ import java.util.List;
 /**
  * Created by Fox on 8/16/2015.
  */
-public class BlockEventHandler implements EventHandler<BlockChangeEvent> {
+public class BlockEventHandler implements EventListener<ChangeBlockEvent> {
 
     @Override
-    public void handle(BlockChangeEvent event) throws Exception {
-        if (!event.getCause().isPresent() || !(event.getCause().get().getCause() instanceof Player)) return;
+    public void handle(ChangeBlockEvent event) throws Exception {
+        if (!event.getCause().getFirst(Player.class).isPresent()) return;
         ActiveFlags typeFlag;
-        if (event instanceof BlockBreakEvent) typeFlag = ActiveFlags.BLOCK_BREAK;
-        else if (event instanceof BlockPlaceEvent) typeFlag = ActiveFlags.BLOCK_PLACE;
+        if (event instanceof BreakBlockEvent) typeFlag = ActiveFlags.BLOCK_BREAK;
+        else if (event instanceof PlaceBlockEvent) typeFlag = ActiveFlags.BLOCK_PLACE;
         else return;
-        Player player = (Player) event.getCause().get().getCause();
-        Vector3i loc = event.getLocation().getBlockPosition();
-        Extent extent = event.getLocation().getExtent();
-        World world;
-
-        if (extent instanceof Chunk) {
-            world = ((Chunk) extent).getWorld();
-        } else {
-            world = (World) extent;
-        }
+        Player player = (Player) event.getCause().getFirst(Player.class);
+        Vector3i loc = event.getTransactions().get(0).getOriginal().getLocation().get().getBlockPosition();
+        World world = event.getTransactions().get(0).getOriginal().getLocation().get().getExtent();
+        
         List<IFlagSet> flagSetList = new LinkedList<>();
         FoxGuardManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
                 .forEach(region -> region.getFlagSets().stream()

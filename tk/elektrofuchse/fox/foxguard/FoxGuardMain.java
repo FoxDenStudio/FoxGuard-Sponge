@@ -4,17 +4,16 @@ import com.flowpowered.math.vector.Vector2i;
 import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
-import org.spongepowered.api.event.Subscribe;
-import org.spongepowered.api.event.block.BlockChangeEvent;
-import org.spongepowered.api.event.state.InitializationEvent;
-import org.spongepowered.api.event.state.ServerStartedEvent;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.entity.living.player.PlayerEvent;
+import org.spongepowered.api.event.game.state.GameInitializationEvent;
+import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.service.config.ConfigDir;
 import org.spongepowered.api.service.event.EventManager;
 import org.spongepowered.api.service.sql.SqlService;
 import tk.elektrofuchse.fox.foxguard.commands.*;
 import tk.elektrofuchse.fox.foxguard.flags.SimpleFlagSet;
-import tk.elektrofuchse.fox.foxguard.listener.BlockEventHandler;
 import tk.elektrofuchse.fox.foxguard.listener.PlayerListener;
 import tk.elektrofuchse.fox.foxguard.regions.RectRegion;
 import tk.elektrofuchse.fox.foxguard.regions.util.BoundingBox2;
@@ -45,19 +44,18 @@ public class FoxGuardMain {
 
     private FoxGuardCommand fgDispatcher;
 
-    @Subscribe
-    public void initFoxGuard(InitializationEvent event) {
+    @Listener
+    public void initFoxGuard(GameInitializationEvent event) {
         instance = this;
         new FoxGuardManager(this, game.getServer());
         FoxGuardManager.getInstance().loadLists();
-        eventManager.register(this, BlockChangeEvent.class, new BlockEventHandler());
-        eventManager.register(this, new PlayerListener());
+        eventManager.registerListener(this, PlayerEvent.class, new PlayerListener());
         registerCommands();
 
     }
 
-    @Subscribe
-    public void setupWorld(ServerStartedEvent event) {
+    @Listener
+    public void setupWorld(GameStartedServerEvent event) {
         FoxGuardManager fgm = FoxGuardManager.getInstance();
         fgm.setup(game.getServer());
         fgm.addFlagSet(new SimpleFlagSet("test", 1));

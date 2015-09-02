@@ -1,29 +1,23 @@
 package tk.elektrofuchse.fox.foxguard.listener;
 
-import org.spongepowered.api.event.Subscribe;
-import org.spongepowered.api.event.entity.player.PlayerChangeWorldEvent;
-import org.spongepowered.api.event.entity.player.PlayerJoinEvent;
-import org.spongepowered.api.event.entity.player.PlayerQuitEvent;
+import org.spongepowered.api.event.EventListener;
+import org.spongepowered.api.event.entity.living.player.PlayerEvent;
+import org.spongepowered.api.event.entity.living.player.PlayerJoinEvent;
+import org.spongepowered.api.event.entity.living.player.PlayerQuitEvent;
 import tk.elektrofuchse.fox.foxguard.commands.FoxGuardCommand;
 import tk.elektrofuchse.fox.foxguard.commands.util.CommandState;
 
 /**
  * Created by Fox on 8/20/2015.
  */
-public class PlayerListener {
+public class PlayerListener implements EventListener<PlayerEvent> {
 
-    @Subscribe
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        FoxGuardCommand.getInstance().getStateMap().put(event.getEntity(), new CommandState());
-    }
-
-    @Subscribe
-    public void onPlayerLeave(PlayerQuitEvent event) {
-        FoxGuardCommand.getInstance().getStateMap().remove(event.getEntity());
-    }
-
-    @Subscribe
-    public void onPlayerEnterWorld(PlayerChangeWorldEvent event) {
-        FoxGuardCommand.getInstance().getStateMap().get(event.getEntity()).flush();
+    @Override
+    public void handle(PlayerEvent event) {
+        if(event instanceof PlayerJoinEvent){
+            FoxGuardCommand.getInstance().getStateMap().put(event.getSourceEntity(), new CommandState());
+        } else if (event instanceof PlayerQuitEvent){
+            FoxGuardCommand.getInstance().getStateMap().remove(event.getSourceEntity());
+        }
     }
 }

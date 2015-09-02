@@ -1,7 +1,7 @@
 package tk.elektrofuchse.fox.foxguard.regions;
 
 import com.flowpowered.math.vector.Vector3i;
-import org.spongepowered.api.entity.player.Player;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.command.CommandException;

@@ -1,7 +1,7 @@
 package tk.elektrofuchse.fox.foxguard.commands;
 
 import com.google.common.base.Optional;
-import org.spongepowered.api.entity.player.Player;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
