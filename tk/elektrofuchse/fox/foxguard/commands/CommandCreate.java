@@ -1,7 +1,5 @@
 package tk.elektrofuchse.fox.foxguard.commands;
 
-import com.google.common.base.Optional;
-import org.spongepowered.api.Server;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
@@ -14,12 +12,13 @@ import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
 import tk.elektrofuchse.fox.foxguard.commands.util.CommandParseHelper;
-import tk.elektrofuchse.fox.foxguard.commands.util.CommandState;
+import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 import tk.elektrofuchse.fox.foxguard.regions.RectRegion;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by Fox on 8/18/2015.
@@ -65,7 +64,7 @@ public class CommandCreate implements CommandCallable {
                     throw new ArgumentParseException(Texts.of("Not a valid type!"), args[2 + flag], 2 + flag);
                 }
                 FoxGuardManager.getInstance().addRegion(world, newRegion);
-                FoxGuardCommand.getInstance().getStateMap().get(player).flush(CommandState.StateField.POSITIONS);
+                FoxGuardCommand.getInstance().getStateMap().get(player).flush(InternalCommandState.StateField.POSITIONS);
                 player.sendMessage(Texts.of("Region created successfully"));
 
             } else if (CommandParseHelper.contains(flagSetsAliases, args[0])) {

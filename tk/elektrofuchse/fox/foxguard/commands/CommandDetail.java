@@ -1,6 +1,5 @@
 package tk.elektrofuchse.fox.foxguard.commands;
 
-import com.google.common.base.Optional;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
@@ -13,12 +12,12 @@ import org.spongepowered.api.util.command.source.ConsoleSource;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
-import tk.elektrofuchse.fox.foxguard.commands.util.*;
+import tk.elektrofuchse.fox.foxguard.commands.util.CommandParseHelper;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
-import tk.elektrofuchse.fox.foxguard.regions.RectRegion;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by Fox on 8/22/2015.
@@ -47,17 +46,18 @@ public class CommandDetail implements CommandCallable {
                     world = player.getWorld();
                 }
                 if (args.length < 1 + flag) throw new CommandException(Texts.of("Must specify a name!"));
-                IRegion region = FoxGuardManager.getInstance().getRegion(world, args[1+flag]);
-                if(region == null) throw new CommandException(Texts.of("No region with name \"" + args[1 + flag] + "\"!"));
+                IRegion region = FoxGuardManager.getInstance().getRegion(world, args[1 + flag]);
+                if (region == null)
+                    throw new CommandException(Texts.of("No region with name \"" + args[1 + flag] + "\"!"));
 
-                player.sendMessage(region.getDetails(Arrays.copyOfRange(args, 2+flag, args.length)));
+                player.sendMessage(region.getDetails(Arrays.copyOfRange(args, 2 + flag, args.length)));
 
             } else if (CommandParseHelper.contains(flagSetsAliases, args[0])) {
 
             } else {
                 throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
             }
-        } else if(source instanceof ConsoleSource) {
+        } else if (source instanceof ConsoleSource) {
 
         }
 
@@ -71,6 +71,7 @@ public class CommandDetail implements CommandCallable {
 
     @Override
     public boolean testPermission(CommandSource source) {
+
         return true;
     }
 

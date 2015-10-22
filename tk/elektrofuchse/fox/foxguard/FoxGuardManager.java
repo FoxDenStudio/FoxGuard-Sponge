@@ -1,6 +1,5 @@
 package tk.elektrofuchse.fox.foxguard;
 
-import com.google.common.base.Optional;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.flags.GlobalFlagSet;
@@ -8,10 +7,7 @@ import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.GlobalRegion;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**

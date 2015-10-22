@@ -1,9 +1,29 @@
+/*
+ * This file is part of SpongeAPI, licensed under the MIT License (MIT).
+ *
+ * Copyright (c) SpongePowered <https://www.spongepowered.org>
+ * Copyright (c) contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 package tk.elektrofuchse.fox.foxguard.commands;
 
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.*;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
@@ -12,14 +32,17 @@ import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.format.TextStyles;
+import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.command.*;
 import org.spongepowered.api.util.command.dispatcher.Disambiguator;
 import org.spongepowered.api.util.command.dispatcher.Dispatcher;
-import tk.elektrofuchse.fox.foxguard.commands.util.CommandState;
+import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.spongepowered.api.util.SpongeApiTranslationHelper.t;
@@ -27,30 +50,27 @@ import static org.spongepowered.api.util.command.CommandMessageFormatting.NEWLIN
 import static org.spongepowered.api.util.command.CommandMessageFormatting.SPACE_TEXT;
 
 /**
- * Created by Fox on 8/16/2015.
+ * A simple implementation of a {@link Dispatcher}.
  */
-public class FoxGuardCommand implements Dispatcher {
+public final class FoxGuardCommand implements Dispatcher {
+
     /**
      * This is a disambiguator function that returns the first matching command.
      */
-    public static final Disambiguator FIRST_DISAMBIGUATOR = new Disambiguator() {
-
-        @Override
-        public Optional<CommandMapping> disambiguate(CommandSource source, final String aliasUsed, List<CommandMapping> availableOptions) {
-            for (CommandMapping mapping : availableOptions) {
-                if (mapping.getPrimaryAlias().toLowerCase().equals(aliasUsed.toLowerCase())) {
-                    return Optional.of(mapping);
-                }
+    public static final Disambiguator FIRST_DISAMBIGUATOR = (source, aliasUsed, availableOptions) -> {
+        for (CommandMapping mapping : availableOptions) {
+            if (mapping.getPrimaryAlias().toLowerCase().equals(aliasUsed.toLowerCase())) {
+                return Optional.of(mapping);
             }
-            return Optional.of(availableOptions.get(0));
         }
+        return Optional.of(availableOptions.get(0));
     };
 
     private final Disambiguator disambiguatorFunc;
     private final ListMultimap<String, CommandMapping> commands = ArrayListMultimap.create();
 
-    private final Map<Player, CommandState> stateMap = new HashMap<>();
-    private final CommandState consoleState = new CommandState();
+    private final Map<Player, InternalCommandState> stateMap = new HashMap<>();
+    private final InternalCommandState consoleState = new InternalCommandState();
     private static FoxGuardCommand instance;
 
     /**
@@ -58,6 +78,7 @@ public class FoxGuardCommand implements Dispatcher {
      */
     public FoxGuardCommand() {
         this(FIRST_DISAMBIGUATOR);
+        instance = this;
     }
 
     /**
@@ -67,7 +88,6 @@ public class FoxGuardCommand implements Dispatcher {
      */
     public FoxGuardCommand(Disambiguator disambiguatorFunc) {
         this.disambiguatorFunc = disambiguatorFunc;
-        instance = this;
     }
 
     /**
@@ -106,7 +126,7 @@ public class FoxGuardCommand implements Dispatcher {
      * @return The registered command mapping, unless no aliases could be registered
      */
     public Optional<CommandMapping> register(CommandCallable callable, List<String> aliases) {
-        return register(callable, aliases, Functions.<List<String>>identity());
+        return register(callable, aliases, Function.identity());
     }
 
     /**
@@ -148,7 +168,7 @@ public class FoxGuardCommand implements Dispatcher {
 
             return Optional.of(mapping);
         } else {
-            return Optional.absent();
+            return Optional.empty();
         }
     }
 
@@ -202,7 +222,7 @@ public class FoxGuardCommand implements Dispatcher {
             }
         }
 
-        return Optional.fromNullable(found);
+        return Optional.ofNullable(found);
     }
 
     /**
@@ -271,7 +291,7 @@ public class FoxGuardCommand implements Dispatcher {
         if (results.size() == 1) {
             return Optional.of(results.get(0));
         } else if (results.size() == 0 || source == null) {
-            return Optional.absent();
+            return Optional.empty();
         } else {
             return this.disambiguatorFunc.disambiguate(source, alias, results);
         }
@@ -316,7 +336,7 @@ public class FoxGuardCommand implements Dispatcher {
         final String[] argSplit = arguments.split(" ", 2);
         Optional<CommandMapping> cmdOptional = get(argSplit[0], src);
         if (argSplit.length == 1) {
-            return ImmutableList.copyOf(Iterables.filter(filterCommands(src), new StartsWithPredicate(argSplit[0])));
+            return filterCommands(src).stream().filter(new StartsWithPredicate(argSplit[0])).collect(GuavaCollectors.toImmutableList());
         } else if (!cmdOptional.isPresent()) {
             return ImmutableList.of();
         }
@@ -335,13 +355,13 @@ public class FoxGuardCommand implements Dispatcher {
 
     @Override
     public Optional<Text> getShortDescription(CommandSource source) {
-        return Optional.absent();
+        return Optional.empty();
     }
 
     @Override
     public Optional<Text> getHelp(CommandSource source) {
         if (this.commands.isEmpty()) {
-            return Optional.absent();
+            return Optional.empty();
         }
         TextBuilder build = t("Available commands:\n").builder();
         for (Iterator<String> it = filterCommands(source).iterator(); it.hasNext(); ) {
@@ -356,7 +376,7 @@ public class FoxGuardCommand implements Dispatcher {
                             .color(TextColors.GREEN)
                             .style(TextStyles.UNDERLINE)
                             .onClick(TextActions.suggestCommand("/" + mapping.getPrimaryAlias())).build(),
-                    SPACE_TEXT, description.or(mapping.getCallable().getUsage(source)));
+                    SPACE_TEXT, description.orElse(mapping.getCallable().getUsage(source)));
             if (it.hasNext()) {
                 build.append(NEWLINE_TEXT);
             }
@@ -364,14 +384,8 @@ public class FoxGuardCommand implements Dispatcher {
         return Optional.of(build.build());
     }
 
-    private Iterable<String> filterCommands(final CommandSource src) {
-        return Multimaps.filterValues(this.commands, new Predicate<CommandMapping>() {
-
-            @Override
-            public boolean apply(@Nullable CommandMapping input) {
-                return input != null && input.getCallable().testPermission(src);
-            }
-        }).keys();
+    private Set<String> filterCommands(final CommandSource src) {
+        return Multimaps.filterValues(this.commands, input -> input.getCallable().testPermission(src)).keys().elementSet();
     }
 
     /**
@@ -386,22 +400,22 @@ public class FoxGuardCommand implements Dispatcher {
     @Override
     public Text getUsage(final CommandSource source) {
         final TextBuilder build = Texts.builder();
-        Iterable<String> filteredCommands = Iterables.filter(filterCommands(source), new Predicate<String>() {
-
-            @Override
-            public boolean apply(@Nullable String input) {
-                if (input == null) {
-                    return false;
-                }
-                final Optional<CommandMapping> ret = get(input, source);
-                return ret.isPresent() && ret.get().getPrimaryAlias().equals(input);
-            }
-        });
+        Iterable<String> filteredCommands = filterCommands(source).stream()
+                .filter(input -> {
+                    if (input == null) {
+                        return false;
+                    }
+                    final Optional<CommandMapping> ret = get(input, source);
+                    return ret.isPresent() && ret.get().getPrimaryAlias().equals(input);
+                })
+                .collect(Collectors.toList());
 
         for (Iterator<String> it = filteredCommands.iterator(); it.hasNext(); ) {
             build.append(Texts.of(it.next()));
             if (it.hasNext()) {
+                build.append(CommandMessageFormatting.SPACE_TEXT);
                 build.append(CommandMessageFormatting.PIPE_TEXT);
+                build.append(CommandMessageFormatting.SPACE_TEXT);
             }
         }
         return build.build();
@@ -417,7 +431,8 @@ public class FoxGuardCommand implements Dispatcher {
         return ImmutableMultimap.copyOf(this.commands);
     }
 
-    public Map<Player, CommandState> getStateMap() {
+
+    public Map<Player, InternalCommandState> getStateMap() {
         return stateMap;
     }
 

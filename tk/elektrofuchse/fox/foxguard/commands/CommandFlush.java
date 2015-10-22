@@ -1,13 +1,13 @@
 package tk.elektrofuchse.fox.foxguard.commands;
 
-import com.google.common.base.Optional;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.command.*;
-import tk.elektrofuchse.fox.foxguard.commands.util.CommandState;
+import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by Fox on 8/20/2015.
@@ -28,7 +28,7 @@ public class CommandFlush implements CommandCallable {
             } else {
                 args = arguments.split(" ");
                 for (String arg : args) {
-                    CommandState.StateField type = getType(arg);
+                    InternalCommandState.StateField type = getType(arg);
                     if (type == null) throw new CommandException(Texts.of("\"" + arg + "\" is not a valid type!"));
                     FoxGuardCommand.getInstance().getStateMap().get(player).flush(type);
                 }
@@ -40,10 +40,10 @@ public class CommandFlush implements CommandCallable {
         return CommandResult.empty();
     }
 
-    public CommandState.StateField getType(String input) {
-        if (contains(regionsAliases, input)) return CommandState.StateField.REGIONS;
-        else if (contains(flagSetsAliases, input)) return CommandState.StateField.FLAGSETS;
-        else if (contains(positionsAliases, input)) return CommandState.StateField.POSITIONS;
+    public InternalCommandState.StateField getType(String input) {
+        if (contains(regionsAliases, input)) return InternalCommandState.StateField.REGIONS;
+        else if (contains(flagSetsAliases, input)) return InternalCommandState.StateField.FLAGSETS;
+        else if (contains(positionsAliases, input)) return InternalCommandState.StateField.POSITIONS;
         else return null;
     }
 

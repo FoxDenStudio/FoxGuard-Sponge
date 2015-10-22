@@ -1,7 +1,6 @@
 package tk.elektrofuchse.fox.foxguard.commands;
 
 import com.flowpowered.math.vector.Vector3i;
-import com.google.common.base.Optional;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
@@ -15,6 +14,7 @@ import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by Fox on 8/20/2015.
