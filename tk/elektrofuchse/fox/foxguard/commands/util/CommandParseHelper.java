@@ -1,8 +1,9 @@
 package tk.elektrofuchse.fox.foxguard.commands.util;
 
-import com.google.common.base.Optional;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.world.World;
+
+import java.util.Optional;
 
 /**
  * Created by Fox on 8/22/2015.

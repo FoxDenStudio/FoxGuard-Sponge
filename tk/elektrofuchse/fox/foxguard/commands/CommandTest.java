@@ -1,6 +1,6 @@
 package tk.elektrofuchse.fox.foxguard.commands;
 
-import com.google.common.base.Optional;
+
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.command.CommandCallable;
@@ -9,6 +9,7 @@ import org.spongepowered.api.util.command.CommandResult;
 import org.spongepowered.api.util.command.CommandSource;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by Fox on 8/18/2015.
@@ -32,12 +33,12 @@ public class CommandTest implements CommandCallable {
 
     @Override
     public Optional<? extends Text> getShortDescription(CommandSource source) {
-        return Optional.absent();
+        return Optional.empty();
     }
 
     @Override
     public Optional<? extends Text> getHelp(CommandSource source) {
-        return Optional.absent();
+        return Optional.empty();
     }
 
     @Override

@@ -1,6 +1,5 @@
 package tk.elektrofuchse.fox.foxguard.commands;
 
-import com.google.common.base.Optional;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
@@ -18,6 +17,7 @@ import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Optional;
 
 /**
  * Created by Fox on 8/18/2015.
@@ -131,7 +131,7 @@ public class CommandList implements CommandCallable {
 
     @Override
     public Optional<? extends Text> getHelp(CommandSource source) {
-        return Optional.absent();
+        return Optional.empty();
     }
 
     @Override

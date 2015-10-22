@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Created by Fox on 8/18/2015.
  */
-public class CommandState {
+public class InternalCommandState {
 
     public List<IRegion> selectedRegions = new LinkedList<>();
     public List<IFlagSet> selectedFlagSets = new LinkedList<>();
