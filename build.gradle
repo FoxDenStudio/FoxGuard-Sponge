@@ -1,0 +1,41 @@
+import java.nio.file.CopyOption
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+
+group 'tk.elektrofuchse.fox.foxguard'
+version '0.7-SNAPSHOT'
+
+apply plugin: 'java'
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+def modsDirectory = 'server/mods/'
+
+repositories {
+    mavenCentral()
+    maven {
+        name 'Sponge maven repo'
+        url 'http://repo.spongepowered.org/maven'
+    }
+}
+
+dependencies {
+    compile "org.spongepowered:spongeapi:2.1-SNAPSHOT"
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+        }
+    }
+}
+
+task copyJar(type: Copy) {
+    from 'build/libs/'
+    into modsDirectory
+    include this.name + '*.jar'
+}
+copyJar.group = 'custom'
