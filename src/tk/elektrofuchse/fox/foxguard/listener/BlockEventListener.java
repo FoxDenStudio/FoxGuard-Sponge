@@ -1,6 +1,8 @@
 package tk.elektrofuchse.fox.foxguard.listener;
 
 import com.flowpowered.math.vector.Vector3i;
+import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
@@ -35,14 +37,16 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
 
         FoxGuardMain.getInstance().getLogger().info(player.getName());
 
-        Vector3i loc = event.getTransactions().get(0).getOriginal().getLocation().get().getBlockPosition();
-        World world = event.getTransactions().get(0).getOriginal().getLocation().get().getExtent();
-
         List<IFlagSet> flagSetList = new ArrayList<>();
-        FoxGuardManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
-                .forEach(region -> region.getFlagSets().stream()
-                        .filter(flagSet -> !flagSetList.contains(flagSet))
-                        .forEach(flagSetList::add));
+        World world = event.getTargetWorld();
+
+        for (Transaction<BlockSnapshot> trans : event.getTransactions()) {
+            Vector3i loc = trans.getOriginal().getLocation().get().getBlockPosition();
+            FoxGuardManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
+                    .forEach(region -> region.getFlagSets().stream()
+                            .filter(flagSet -> !flagSetList.contains(flagSet))
+                            .forEach(flagSetList::add));
+        }
         Collections.sort(flagSetList);
         int currPriority = flagSetList.get(0).getPriority();
         FlagState flagState = FlagState.PASSTHROUGH;

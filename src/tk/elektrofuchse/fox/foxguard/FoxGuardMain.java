@@ -53,9 +53,7 @@ public class FoxGuardMain {
         instance = this;
         new FoxGuardManager(this, game.getServer());
         FoxGuardManager.getInstance().loadLists();
-        eventManager.registerListener(this, TargetPlayerEvent.class, new PlayerEventListener());
-        eventManager.registerListener(this, ChangeBlockEvent.class, new BlockEventListener());
-        eventManager.registerListener(this, InteractBlockEvent.class, new RightClickHandler());
+
         registerCommands();
 
     }
@@ -95,6 +93,13 @@ public class FoxGuardMain {
         fgDispatcher.register(new CommandState(), "state", "current", "cur");
         fgDispatcher.register(new CommandFlush(), "flush", "clear");
         game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fg");
+    }
+
+    private void registerListeners(){
+        eventManager.registerListener(this, TargetPlayerEvent.class, new PlayerEventListener());
+        eventManager.registerListener(this, ChangeBlockEvent.class, new BlockEventListener());
+        eventManager.registerListener(this, InteractBlockEvent.class, new RightClickHandler());
+
     }
 
     public Logger getLogger() {
