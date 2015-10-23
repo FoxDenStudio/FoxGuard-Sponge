@@ -49,6 +49,6 @@ public abstract class FlagSetBase implements IFlagSet {
 
     @Override
     public int compareTo(IFlagSet o) {
-        return this.priority > o.getPriority() ? -1 : this.priority < o.getPriority() ? 1 : 0;
+        return o.getPriority() - this.priority;
     }
 }
