@@ -46,7 +46,7 @@ public class FoxGuardMain {
 
     private SqlService sql;
 
-    private FoxGuardCommand fgDispatcher;
+    private FoxGuardCommandDispatcher fgDispatcher;
 
     @Listener
     public void initFoxGuard(GameInitializationEvent event) {
@@ -87,13 +87,14 @@ public class FoxGuardMain {
     }
 
     private void registerCommands() {
-        fgDispatcher = new FoxGuardCommand();
+        fgDispatcher = new FoxGuardCommandDispatcher();
         fgDispatcher.register(new CommandCreate(), "create", "new", "make", "define", "mk");
         fgDispatcher.register(new CommandTest(), "test");
         fgDispatcher.register(new CommandList(), "list", "ls");
         fgDispatcher.register(new CommandPosition(), "position", "pos");
         fgDispatcher.register(new CommandState(), "state", "current", "cur");
         fgDispatcher.register(new CommandFlush(), "flush", "clear");
+        fgDispatcher.register(new CommandDetail(), "detail", "show");
         game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fg");
     }
 

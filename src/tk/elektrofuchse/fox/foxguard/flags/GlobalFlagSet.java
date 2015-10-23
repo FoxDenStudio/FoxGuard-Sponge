@@ -1,6 +1,8 @@
 package tk.elektrofuchse.fox.foxguard.flags;
 
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.Texts;
 import tk.elektrofuchse.fox.foxguard.flags.util.ActiveFlags;
 import tk.elektrofuchse.fox.foxguard.flags.util.FlagState;
 import tk.elektrofuchse.fox.foxguard.flags.util.PassiveFlags;
@@ -31,12 +33,17 @@ public class GlobalFlagSet extends FlagSetBase {
     }
 
     @Override
+    public Text getDetails(String[] args) {
+        return Texts.of("This is the global FlagSet.");
+    }
+
+    @Override
     public FlagState hasPermission(Player player, ActiveFlags flag) {
         return FlagState.TRUE;
     }
 
     @Override
-    public FlagState isEnabled(PassiveFlags flag) {
+    public FlagState isFlagAllowed(PassiveFlags flag) {
         return FlagState.TRUE;
     }
 }

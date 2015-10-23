@@ -117,7 +117,7 @@ public class RectRegion extends RegionBase implements IOwnable {
 
     @Override
     public Text getDetails(String[] args) {
-        return Texts.builder().append(super.getDetails(args)).build();
+        return Texts.of("BB2: " + this.bb.toString());
     }
 
     @Override

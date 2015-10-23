@@ -1,6 +1,7 @@
 package tk.elektrofuchse.fox.foxguard.flags;
 
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.text.Text;
 import tk.elektrofuchse.fox.foxguard.flags.util.ActiveFlags;
 import tk.elektrofuchse.fox.foxguard.flags.util.FlagState;
 import tk.elektrofuchse.fox.foxguard.flags.util.PassiveFlags;
@@ -12,7 +13,11 @@ public interface IFlagSet extends Comparable<IFlagSet> {
 
     FlagState hasPermission(Player player, ActiveFlags flag);
 
-    FlagState isEnabled(PassiveFlags flag);
+    FlagState isFlagAllowed(PassiveFlags flag);
+
+    boolean isEnabled();
+
+    void setIsEnabled(boolean state);
 
     int getPriority();
 
@@ -23,4 +28,7 @@ public interface IFlagSet extends Comparable<IFlagSet> {
     void setName(String name);
 
     String getType();
+
+    Text getDetails(String[] args);
+
 }

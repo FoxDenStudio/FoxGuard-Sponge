@@ -76,6 +76,6 @@ public abstract class RegionBase implements IRegion {
 
     @Override
     public Text getDetails(String[] args) {
-        return Texts.of();
+        return Texts.of("");
     }
 }

@@ -1,6 +1,8 @@
 package tk.elektrofuchse.fox.foxguard.flags;
 
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.Texts;
 import tk.elektrofuchse.fox.foxguard.flags.util.ActiveFlags;
 import tk.elektrofuchse.fox.foxguard.flags.util.FlagState;
 import tk.elektrofuchse.fox.foxguard.flags.util.PassiveFlags;
@@ -26,13 +28,18 @@ public class SimpleFlagSet extends FlagSetBase {
     }
 
     @Override
-    public FlagState isEnabled(PassiveFlags flag) {
+    public FlagState isFlagAllowed(PassiveFlags flag) {
         return FlagState.PASSTHROUGH;
     }
 
     @Override
     public String getType() {
         return "Simple";
+    }
+
+    @Override
+    public Text getDetails(String[] args) {
+        return Texts.of("This flagset contains no configurable parameters!");
     }
 
 }

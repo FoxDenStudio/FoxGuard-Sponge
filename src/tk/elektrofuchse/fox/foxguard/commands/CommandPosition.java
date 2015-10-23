@@ -49,7 +49,7 @@ public class CommandPosition implements CommandCallable {
             } else {
                 throw new CommandException(Texts.of("Too many arguments!"));
             }
-            FoxGuardCommand.getInstance().getStateMap().get(player).positions.add(new Vector3i(x, y, z));
+            FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).positions.add(new Vector3i(x, y, z));
             player.sendMessage(Texts.of("Successfully added position (" + x + ", " + y + ", " + z + ") to the stack!"));
         } else if (source instanceof ConsoleSource) {
 
@@ -71,16 +71,21 @@ public class CommandPosition implements CommandCallable {
 
     @Override
     public Optional<? extends Text> getShortDescription(CommandSource source) {
-        return null;
+        return Optional.empty();
     }
 
     @Override
     public Optional<? extends Text> getHelp(CommandSource source) {
-        return null;
+        return Optional.empty();
     }
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("position [<x> <y> <z>]");
+
+        if (source instanceof Player)
+            return Texts.of("position [<x> <y> <z>]");
+        else return Texts.of("position <x> <y> <z>");
+
     }
+
 }

@@ -13,6 +13,7 @@ import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
 import tk.elektrofuchse.fox.foxguard.commands.util.CommandParseHelper;
+import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
 import java.util.Arrays;
@@ -53,7 +54,12 @@ public class CommandDetail implements CommandCallable {
                 player.sendMessage(region.getDetails(Arrays.copyOfRange(args, 2 + flag, args.length)));
 
             } else if (CommandParseHelper.contains(flagSetsAliases, args[0])) {
+                if (args.length < 1) throw new CommandException(Texts.of("Must specify a name!"));
+                IFlagSet flagSet = FoxGuardManager.getInstance().getFlagSet(args[1]);
+                if (flagSet == null)
+                    throw new CommandException(Texts.of("No region with name \"" + args[1] + "\"!"));
 
+                player.sendMessage(flagSet.getDetails(Arrays.copyOfRange(args, 2, args.length)));
             } else {
                 throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
             }
@@ -77,16 +83,20 @@ public class CommandDetail implements CommandCallable {
 
     @Override
     public Optional<? extends Text> getShortDescription(CommandSource source) {
-        return null;
+        return Optional.empty();
     }
 
     @Override
     public Optional<? extends Text> getHelp(CommandSource source) {
-        return null;
+        return Optional.empty();
     }
 
     @Override
     public Text getUsage(CommandSource source) {
-        return null;
+        if (source instanceof Player)
+            return Texts.of("detail (region [w:<worldname>] | flagset) <name> [args...]");
+        else if (source instanceof ConsoleSource)
+            return Texts.of("detail (region <worldname> | flagset) <name> [args...]");
+        else return Texts.of("You can't run this command!");
     }
 }

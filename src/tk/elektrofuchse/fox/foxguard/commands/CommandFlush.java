@@ -16,7 +16,7 @@ public class CommandFlush implements CommandCallable {
 
     String[] regionsAliases = {"regions", "region", "reg", "r"};
     String[] flagSetsAliases = {"flagsets", "flagset", "flags", "flag", "f"};
-    String[] positionsAliases = {"positions", "position", "points", "point", "locations", "location", "pos", "loc", "p"};
+    String[] positionsAliases = {"positions", "position", "points", "point", "locations", "location", "pos", "loc", "locs", "p"};
 
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
@@ -24,13 +24,13 @@ public class CommandFlush implements CommandCallable {
             Player player = (Player) source;
             String[] args;
             if (arguments.isEmpty()) {
-                FoxGuardCommand.getInstance().getStateMap().get(player).flush();
+                FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).flush();
             } else {
                 args = arguments.split(" ");
                 for (String arg : args) {
                     InternalCommandState.StateField type = getType(arg);
                     if (type == null) throw new CommandException(Texts.of("\"" + arg + "\" is not a valid type!"));
-                    FoxGuardCommand.getInstance().getStateMap().get(player).flush(type);
+                    FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).flush(type);
                 }
             }
             player.sendMessage(Texts.of("Successfully flushed!"));
@@ -66,12 +66,12 @@ public class CommandFlush implements CommandCallable {
 
     @Override
     public Optional<? extends Text> getShortDescription(CommandSource source) {
-        return null;
+        return Optional.empty();
     }
 
     @Override
     public Optional<? extends Text> getHelp(CommandSource source) {
-        return null;
+        return Optional.empty();
     }
 
     @Override

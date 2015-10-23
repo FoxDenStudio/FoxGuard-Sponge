@@ -13,8 +13,9 @@ import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
 import tk.elektrofuchse.fox.foxguard.commands.util.CommandParseHelper;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
+import tk.elektrofuchse.fox.foxguard.factory.FGFactoryManager;
+import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
-import tk.elektrofuchse.fox.foxguard.regions.RectRegion;
 
 import java.util.Arrays;
 import java.util.List;
@@ -36,7 +37,7 @@ public class CommandCreate implements CommandCallable {
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         String[] args = {};
-        if (!arguments.isEmpty()) args = arguments.split(" ");
+        if (!arguments.isEmpty()) args = arguments.split(" ", 4);
         if (source instanceof Player) {
             Player player = (Player) source;
             if (CommandParseHelper.contains(regionsAliases, args[0])) {
@@ -46,6 +47,7 @@ public class CommandCreate implements CommandCallable {
                 if (optWorld != null && optWorld.isPresent()) {
                     world = optWorld.get();
                     flag = 1;
+                    args = arguments.split(" ", 5);
                 } else {
                     world = player.getWorld();
                 }
@@ -55,20 +57,29 @@ public class CommandCreate implements CommandCallable {
                 if (args[1 + flag].matches("^.*[^0-9a-zA-Z].*$"))
                     throw new CommandException(Texts.of("Name must be alphanumeric!"));
                 if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a type!"));
-                IRegion newRegion;
-                if (CommandParseHelper.contains(rectAliases, args[2 + flag])) {
-                    newRegion = new RectRegion(args[1 + flag].toLowerCase(),
-                            FoxGuardCommand.getInstance().getStateMap().get(player).positions,
-                            Arrays.copyOfRange(args, 3 + flag, args.length), player);
-                } else {
-                    throw new ArgumentParseException(Texts.of("Not a valid type!"), args[2 + flag], 2 + flag);
-                }
+
+                IRegion newRegion = FGFactoryManager.getInstance().createRegion(
+                        args[2 + flag], args[1 + flag].toLowerCase(),
+                        args[3 + flag], player);
+
                 FoxGuardManager.getInstance().addRegion(world, newRegion);
-                FoxGuardCommand.getInstance().getStateMap().get(player).flush(InternalCommandState.StateField.POSITIONS);
+                FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).flush(InternalCommandState.StateField.POSITIONS);
                 player.sendMessage(Texts.of("Region created successfully"));
 
             } else if (CommandParseHelper.contains(flagSetsAliases, args[0])) {
+                if (args.length < 1) throw new CommandException(Texts.of("Must specify a name!"));
+                if (args[1].matches("^[^a-zA-Z].*"))
+                    throw new CommandException(Texts.of("Name must start with a letter!"));
+                if (args[1].matches("^.*[^0-9a-zA-Z].*$"))
+                    throw new CommandException(Texts.of("Name must be alphanumeric!"));
+                if (args.length < 2) throw new CommandException(Texts.of("Must specify a type!"));
 
+                IFlagSet newFlagSet = FGFactoryManager.getInstance().createFlagSet(
+                        args[2], args[1].toLowerCase(),
+                        args[3], player);
+
+                FoxGuardManager.getInstance().addFlagSet(newFlagSet);
+                player.sendMessage(Texts.of("Region created successfully"));
             } else {
                 throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
             }
@@ -90,16 +101,18 @@ public class CommandCreate implements CommandCallable {
 
     @Override
     public Optional<? extends Text> getShortDescription(CommandSource source) {
-        return null;
+        return Optional.empty();
     }
 
     @Override
     public Optional<? extends Text> getHelp(CommandSource source) {
-        return null;
+        return Optional.empty();
     }
 
     @Override
     public Text getUsage(CommandSource source) {
-        return null;
+        if (source instanceof Player)
+            return Texts.of("create (region [w:<world>] | flagset) <name> <type> [args...]");
+        else return Texts.of("create (region <world> | flagset) <name> <type> [args...]");
     }
 }

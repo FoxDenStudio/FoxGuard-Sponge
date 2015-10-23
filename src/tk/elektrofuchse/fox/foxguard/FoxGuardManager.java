@@ -25,7 +25,7 @@ public class FoxGuardManager {
 
 
     public FoxGuardManager(FoxGuardMain plugin, Server server) {
-        instance = this;
+        if (instance == null) instance = this;
         this.plugin = plugin;
         this.server = server;
         regions = new HashMap<>();

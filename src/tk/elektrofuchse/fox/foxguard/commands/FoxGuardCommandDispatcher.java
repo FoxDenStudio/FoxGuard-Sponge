@@ -31,7 +31,6 @@ import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.text.format.TextStyles;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.command.*;
@@ -52,7 +51,7 @@ import static org.spongepowered.api.util.command.CommandMessageFormatting.SPACE_
 /**
  * A simple implementation of a {@link Dispatcher}.
  */
-public final class FoxGuardCommand implements Dispatcher {
+public final class FoxGuardCommandDispatcher implements Dispatcher {
 
     /**
      * This is a disambiguator function that returns the first matching command.
@@ -71,12 +70,12 @@ public final class FoxGuardCommand implements Dispatcher {
 
     private final Map<Player, InternalCommandState> stateMap = new HashMap<>();
     private final InternalCommandState consoleState = new InternalCommandState();
-    private static FoxGuardCommand instance;
+    private static FoxGuardCommandDispatcher instance;
 
     /**
      * Creates a basic new dispatcher.
      */
-    public FoxGuardCommand() {
+    public FoxGuardCommandDispatcher() {
         this(FIRST_DISAMBIGUATOR);
         instance = this;
     }
@@ -86,7 +85,7 @@ public final class FoxGuardCommand implements Dispatcher {
      *
      * @param disambiguatorFunc Function that returns the preferred command if multiple exist for a given alias
      */
-    public FoxGuardCommand(Disambiguator disambiguatorFunc) {
+    public FoxGuardCommandDispatcher(Disambiguator disambiguatorFunc) {
         this.disambiguatorFunc = disambiguatorFunc;
     }
 
@@ -364,17 +363,13 @@ public final class FoxGuardCommand implements Dispatcher {
             return Optional.empty();
         }
         TextBuilder build = t("Available commands:\n").builder();
-        for (Iterator<String> it = filterCommands(source).iterator(); it.hasNext(); ) {
-            final Optional<CommandMapping> mappingOpt = get(it.next(), source);
-            if (!mappingOpt.isPresent()) {
-                continue;
-            }
-            CommandMapping mapping = mappingOpt.get();
+        for (Iterator<CommandMapping> it = filterCommandMappings(source).iterator(); it.hasNext(); ) {
+
+            CommandMapping mapping = it.next();
             @SuppressWarnings("unchecked")
             final Optional<Text> description = (Optional<Text>) mapping.getCallable().getShortDescription(source);
             build.append(Texts.builder(mapping.getPrimaryAlias())
                             .color(TextColors.GREEN)
-                            .style(TextStyles.UNDERLINE)
                             .onClick(TextActions.suggestCommand("/" + mapping.getPrimaryAlias())).build(),
                     SPACE_TEXT, description.orElse(mapping.getCallable().getUsage(source)));
             if (it.hasNext()) {
@@ -386,6 +381,11 @@ public final class FoxGuardCommand implements Dispatcher {
 
     private Set<String> filterCommands(final CommandSource src) {
         return Multimaps.filterValues(this.commands, input -> input.getCallable().testPermission(src)).keys().elementSet();
+    }
+
+    private Set<CommandMapping> filterCommandMappings(final CommandSource src) {
+        return new HashSet<>(
+                Multimaps.filterValues(this.commands, input -> input.getCallable().testPermission(src)).values());
     }
 
     /**
@@ -436,7 +436,7 @@ public final class FoxGuardCommand implements Dispatcher {
         return stateMap;
     }
 
-    public static FoxGuardCommand getInstance() {
+    public static FoxGuardCommandDispatcher getInstance() {
         return instance;
     }
 }

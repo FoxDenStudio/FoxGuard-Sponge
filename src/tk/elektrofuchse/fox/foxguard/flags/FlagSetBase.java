@@ -7,6 +7,7 @@ public abstract class FlagSetBase implements IFlagSet {
 
     protected String name;
     protected int priority;
+    protected boolean isEnabled = true;
 
     public FlagSetBase(String name, int priority) {
         setName(name);
@@ -14,6 +15,16 @@ public abstract class FlagSetBase implements IFlagSet {
     }
 
     public FlagSetBase() {
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return isEnabled;
+    }
+
+    @Override
+    public void setIsEnabled(boolean state) {
+        this.isEnabled = state;
     }
 
     @Override
