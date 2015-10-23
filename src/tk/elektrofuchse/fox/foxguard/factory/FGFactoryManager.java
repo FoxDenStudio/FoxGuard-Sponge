@@ -27,6 +27,7 @@ public class FGFactoryManager {
         flagSetFactories = new ArrayList<>();
     }
 
+
     public IRegion createRegion(String type, String name, String args, Player player) {
 
         return null;
