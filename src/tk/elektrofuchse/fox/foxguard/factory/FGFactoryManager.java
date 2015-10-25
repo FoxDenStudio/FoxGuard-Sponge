@@ -1,6 +1,10 @@
 package tk.elektrofuchse.fox.foxguard.factory;
 
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.util.command.CommandSource;
+import org.spongepowered.api.world.World;
+import tk.elektrofuchse.fox.foxguard.commands.util.CommandParseHelper;
+import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
@@ -28,14 +32,22 @@ public class FGFactoryManager {
     }
 
 
-    public IRegion createRegion(String type, String name, String args, Player player) {
-
+    public IRegion createRegion(String type, String name, String args, InternalCommandState state, World world, CommandSource source) {
+        for (IRegionFactory rf : regionFactories){
+            if(CommandParseHelper.contains(rf.getAliases(), type)){
+                return rf.createRegion(type, name, args, state, world, source);
+            }
+        }
         return null;
     }
 
 
-    public IFlagSet createFlagSet(String type, String name, String args, Player player) {
-
+    public IFlagSet createFlagSet(String type, String name, String args, InternalCommandState state, CommandSource source) {
+        for (IFlagSetFactory rf : flagSetFactories) {
+            if (CommandParseHelper.contains(rf.getAliases(), type)) {
+                return rf.createFlagSet(type, name, args, state, source);
+            }
+        }
         return null;
     }
 

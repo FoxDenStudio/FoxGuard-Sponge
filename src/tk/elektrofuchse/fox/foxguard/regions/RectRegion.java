@@ -3,7 +3,9 @@ package tk.elektrofuchse.fox.foxguard.regions;
 import com.flowpowered.math.vector.Vector3i;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
@@ -19,12 +21,12 @@ import java.util.List;
  */
 public class RectRegion extends RegionBase implements IOwnable {
 
-    private final BoundingBox2 bb;
+    private final BoundingBox2 boundingBox;
     private List<Player> ownerList = new LinkedList<>();
 
-    public RectRegion(String name, BoundingBox2 bb) {
+    public RectRegion(String name, BoundingBox2 boundingBox) {
         super(name);
-        this.bb = bb;
+        this.boundingBox = boundingBox;
     }
 
     public RectRegion(String name, List<Vector3i> positions, String[] args, CommandSource source)
@@ -62,7 +64,7 @@ public class RectRegion extends RegionBase implements IOwnable {
             a = a.min(pos);
             b = b.max(pos);
         }
-        this.bb = new BoundingBox2(a, b);
+        this.boundingBox = new BoundingBox2(a, b);
     }
 
     public RectRegion(String name, List<Vector3i> positions, String[] args, CommandSource source, Player... owners) throws CommandException {
@@ -77,13 +79,13 @@ public class RectRegion extends RegionBase implements IOwnable {
 
     @Override
     public boolean isInRegion(int x, int y, int z) {
-        return bb.contains(x, z);
+        return boundingBox.contains(x, z);
     }
 
 
     @Override
     public boolean isInRegion(double x, double y, double z) {
-        return bb.contains(x, z);
+        return boundingBox.contains(x, z);
     }
 
     @Override
@@ -117,11 +119,19 @@ public class RectRegion extends RegionBase implements IOwnable {
 
     @Override
     public Text getDetails(String[] args) {
-        return Texts.of("BB2: " + this.bb.toString());
+        TextBuilder builder = Texts.builder();
+        builder.append(Texts.of(TextColors.GREEN, "Owners: "));
+        for(Player p: ownerList){
+            builder.append(Texts.of(TextColors.RESET, p.getName() + " "));
+        }
+        builder.append(Texts.of("\n"));
+        builder.append(Texts.of(TextColors.GREEN, "Bbox: "));
+        builder.append(Texts.of(TextColors.RESET, boundingBox.toString()));
+        return builder.build();
     }
 
     @Override
     public String toString() {
-        return this.bb.toString();
+        return this.boundingBox.toString();
     }
 }

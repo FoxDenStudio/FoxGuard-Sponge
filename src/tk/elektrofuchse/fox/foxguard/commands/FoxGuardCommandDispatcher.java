@@ -37,9 +37,11 @@ import org.spongepowered.api.util.command.*;
 import org.spongepowered.api.util.command.dispatcher.Disambiguator;
 import org.spongepowered.api.util.command.dispatcher.Dispatcher;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
+import tk.elektrofuchse.fox.foxguard.commands.util.CallbackHashMap;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -68,7 +70,14 @@ public final class FoxGuardCommandDispatcher implements Dispatcher {
     private final Disambiguator disambiguatorFunc;
     private final ListMultimap<String, CommandMapping> commands = ArrayListMultimap.create();
 
-    private final Map<Player, InternalCommandState> stateMap = new HashMap<>();
+    private final Map<Player, InternalCommandState> stateMap = new CallbackHashMap<>(new Consumer<Object>() {
+        @Override
+        public void accept(Object o) {
+            if (o instanceof Player){
+                stateMap.put((Player) o, new InternalCommandState());
+            }
+        }
+    });
     private final InternalCommandState consoleState = new InternalCommandState();
     private static FoxGuardCommandDispatcher instance;
 
@@ -316,17 +325,26 @@ public final class FoxGuardCommandDispatcher implements Dispatcher {
 
     @Override
     public CommandResult process(CommandSource source, String commandLine) throws CommandException {
-        final String[] argSplit = commandLine.split(" ", 2);
-        Optional<CommandMapping> cmdOptional = get(argSplit[0], source);
-        if (!cmdOptional.isPresent()) {
-            throw new CommandNotFoundException(t("commands.generic.notFound"), argSplit[0]); // TODO: Fix properly to use a SpongeTranslation??
-        }
-        final String arguments = argSplit.length > 1 ? argSplit[1] : "";
-        final CommandCallable spec = cmdOptional.get().getCallable();
-        try {
-            return spec.process(source, arguments);
-        } catch (CommandNotFoundException e) {
-            throw new CommandException(t("No such child command: %s", e.getCommand()));
+
+        if (!commandLine.isEmpty()) {
+            final String[] argSplit = commandLine.split(" ", 2);
+            final Optional<CommandMapping> cmdOptional = get(argSplit[0], source);
+            if (!cmdOptional.isPresent()) {
+                throw new CommandNotFoundException(t("commands.generic.notFound"), argSplit[0]); // TODO: Fix properly to use a SpongeTranslation??
+            }
+            final String arguments = argSplit.length > 1 ? argSplit[1] : "";
+            final CommandCallable spec = cmdOptional.get().getCallable();
+            try {
+                return spec.process(source, arguments);
+            } catch (CommandNotFoundException e) {
+                throw new CommandException(t("No such child command: %s", e.getCommand()));
+            }
+        } else {
+            source.sendMessage(Texts.builder()
+                    .append(Texts.of(TextColors.GREEN, "Usage: "))
+                    .append(getUsage(source))
+                    .build());
+            return CommandResult.empty();
         }
     }
 

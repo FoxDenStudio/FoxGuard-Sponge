@@ -55,6 +55,7 @@ public class FoxGuardMain {
         FoxGuardManager.getInstance().loadLists();
 
         registerCommands();
+        registerListeners();
 
     }
 

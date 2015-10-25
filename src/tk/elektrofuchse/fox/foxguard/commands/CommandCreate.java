@@ -3,6 +3,7 @@ package tk.elektrofuchse.fox.foxguard.commands;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.CommandCallable;
 import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandResult;
@@ -17,7 +18,6 @@ import tk.elektrofuchse.fox.foxguard.factory.FGFactoryManager;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,7 +40,13 @@ public class CommandCreate implements CommandCallable {
         if (!arguments.isEmpty()) args = arguments.split(" ", 4);
         if (source instanceof Player) {
             Player player = (Player) source;
-            if (CommandParseHelper.contains(regionsAliases, args[0])) {
+            if (args.length == 0) {
+                source.sendMessage(Texts.builder()
+                        .append(Texts.of(TextColors.GREEN, "Usage: "))
+                        .append(getUsage(source))
+                        .build());
+                return CommandResult.empty();
+            } else if (CommandParseHelper.contains(regionsAliases, args[0])) {
                 int flag = 0;
                 Optional<World> optWorld = CommandParseHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
                 World world;
@@ -51,35 +57,41 @@ public class CommandCreate implements CommandCallable {
                 } else {
                     world = player.getWorld();
                 }
-                if (args.length < 1 + flag) throw new CommandException(Texts.of("Must specify a name!"));
-                if (args[1 + flag].matches("^[^a-zA-Z].*"))
-                    throw new CommandException(Texts.of("Name must start with a letter!"));
+                if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a name!"));
                 if (args[1 + flag].matches("^.*[^0-9a-zA-Z].*$"))
-                    throw new CommandException(Texts.of("Name must be alphanumeric!"));
-                if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a type!"));
+                    throw new ArgumentParseException(Texts.of("Name must be alphanumeric!"), args[1 + flag], 1 + flag);
+                if (args[1 + flag].matches("^[^a-zA-Z].*"))
+                    throw new ArgumentParseException(Texts.of("Name must start with a letter!"), args[1 + flag], 1 + flag);
+                if (args.length < 3 + flag) throw new CommandException(Texts.of("Must specify a type!"));
 
                 IRegion newRegion = FGFactoryManager.getInstance().createRegion(
                         args[2 + flag], args[1 + flag].toLowerCase(),
-                        args[3 + flag], player);
+                        args.length < 4 + flag ? "" : args[3 + flag],
+                        FoxGuardCommandDispatcher.getInstance().getStateMap().get(player), world, player);
 
-                FoxGuardManager.getInstance().addRegion(world, newRegion);
+                boolean success = FoxGuardManager.getInstance().addRegion(world, newRegion);
+                if (!success)
+                    throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1 + flag], 1 + flag);
                 FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).flush(InternalCommandState.StateField.POSITIONS);
                 player.sendMessage(Texts.of("Region created successfully"));
 
             } else if (CommandParseHelper.contains(flagSetsAliases, args[0])) {
-                if (args.length < 1) throw new CommandException(Texts.of("Must specify a name!"));
-                if (args[1].matches("^[^a-zA-Z].*"))
-                    throw new CommandException(Texts.of("Name must start with a letter!"));
+                if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 if (args[1].matches("^.*[^0-9a-zA-Z].*$"))
-                    throw new CommandException(Texts.of("Name must be alphanumeric!"));
-                if (args.length < 2) throw new CommandException(Texts.of("Must specify a type!"));
+                    throw new ArgumentParseException(Texts.of("Name must be alphanumeric!"), args[1], 1);
+                if (args[1].matches("^[^a-zA-Z].*"))
+                    throw new ArgumentParseException(Texts.of("Name must start with a letter!"), args[1], 1);
+                if (args.length < 3) throw new CommandException(Texts.of("Must specify a type!"));
 
                 IFlagSet newFlagSet = FGFactoryManager.getInstance().createFlagSet(
                         args[2], args[1].toLowerCase(),
-                        args[3], player);
+                        args.length < 4 ? "" : args[3],
+                        FoxGuardCommandDispatcher.getInstance().getStateMap().get(player), player);
 
-                FoxGuardManager.getInstance().addFlagSet(newFlagSet);
-                player.sendMessage(Texts.of("Region created successfully"));
+                boolean success = FoxGuardManager.getInstance().addFlagSet(newFlagSet);
+                if (!success)
+                    throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1], 1);
+                player.sendMessage(Texts.of("FlagSet created successfully!"));
             } else {
                 throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
             }
@@ -96,7 +108,7 @@ public class CommandCreate implements CommandCallable {
 
     @Override
     public boolean testPermission(CommandSource source) {
-        return source.hasPermission("foxguard.modify.create");
+        return source.hasPermission("foxguard.command.modify.create");
     }
 
     @Override

@@ -3,6 +3,7 @@ package tk.elektrofuchse.fox.foxguard.commands;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.CommandCallable;
 import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandResult;
@@ -36,9 +37,18 @@ public class CommandDetail implements CommandCallable {
         if (!arguments.isEmpty()) args = arguments.split(" ");
         if (source instanceof Player) {
             Player player = (Player) source;
-            if (CommandParseHelper.contains(regionsAliases, args[0])) {
+            if (args.length == 0) {
+                source.sendMessage(Texts.builder()
+                        .append(Texts.of(TextColors.GREEN, "Usage: "))
+                        .append(getUsage(source))
+                        .build());
+                return CommandResult.empty();
+            } else if (CommandParseHelper.contains(regionsAliases, args[0])) {
                 int flag = 0;
-                Optional<World> optWorld = CommandParseHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
+                Optional<World> optWorld = null;
+                if (args.length > 1) {
+                    optWorld = CommandParseHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
+                }
                 World world;
                 if (optWorld != null && optWorld.isPresent()) {
                     world = optWorld.get();
@@ -46,7 +56,7 @@ public class CommandDetail implements CommandCallable {
                 } else {
                     world = player.getWorld();
                 }
-                if (args.length < 1 + flag) throw new CommandException(Texts.of("Must specify a name!"));
+                if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a name!"));
                 IRegion region = FoxGuardManager.getInstance().getRegion(world, args[1 + flag]);
                 if (region == null)
                     throw new CommandException(Texts.of("No region with name \"" + args[1 + flag] + "\"!"));
@@ -78,7 +88,7 @@ public class CommandDetail implements CommandCallable {
     @Override
     public boolean testPermission(CommandSource source) {
 
-        return true;
+        return source.hasPermission("foxguard.command.info.detail");
     }
 
     @Override

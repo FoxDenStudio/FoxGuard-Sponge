@@ -1,6 +1,8 @@
 package tk.elektrofuchse.fox.foxguard.factory;
 
 
+import org.spongepowered.api.util.command.CommandSource;
+import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 
 /**
@@ -8,7 +10,6 @@ import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
  */
 public interface IFlagSetFactory extends IFGFactory {
 
-
-    IFlagSet createFlagSet();
+    IFlagSet createFlagSet(String type, String name, String arguments, InternalCommandState state, CommandSource source);
 
 }

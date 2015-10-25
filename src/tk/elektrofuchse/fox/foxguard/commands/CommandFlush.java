@@ -61,7 +61,7 @@ public class CommandFlush implements CommandCallable {
 
     @Override
     public boolean testPermission(CommandSource source) {
-        return true;
+        return source.hasPermission("foxguard.command.state");
     }
 
     @Override

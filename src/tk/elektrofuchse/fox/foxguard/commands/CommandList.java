@@ -10,7 +10,9 @@ import org.spongepowered.api.util.command.*;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.util.command.source.ConsoleSource;
 import org.spongepowered.api.world.World;
+import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
+import tk.elektrofuchse.fox.foxguard.commands.util.CommandParseHelper;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
@@ -34,60 +36,67 @@ public class CommandList implements CommandCallable {
             String[] args = {};
             if (!arguments.isEmpty()) args = arguments.split(" ");
             int page = 1;
-            if (args.length > 0) {
-                int pageFlag = 0;
-                try {
-                    page = Integer.parseInt(args[0]);
-                    pageFlag = 1;
-                } catch (NumberFormatException ignored) {
-                }
-                if (args.length > pageFlag) {
-                    if (contains(regionsAliases, args[pageFlag])) {
-                        List<IRegion> regionList = new LinkedList<>();
-                        boolean allFlag;
-                        String worldName = "";
-                        if (args.length > pageFlag + 1) {
-                            Optional<World> optWorld = FoxGuardManager.getInstance().getServer().
-                                    getWorld(args[pageFlag + 1]);
-                            if (!optWorld.isPresent())
-                                throw new ArgumentParseException(Texts.of("No world found with that name!"),
-                                        args[pageFlag + 1], pageFlag + 1);
-                            FoxGuardManager.getInstance().getRegionsListCopy(optWorld.get()).forEach(regionList::add);
-                            allFlag = false;
-                            worldName = optWorld.get().getName();
-                        } else {
-                            FoxGuardManager.getInstance().getRegionsListCopy().forEach(regionList::add);
-                            allFlag = true;
-                        }
-                        TextBuilder output = Texts.builder(
-                                "---Regions" + (allFlag ? "" : (" for world: \"" + worldName + "\"")) + "---\n")
-                                .color(TextColors.GREEN);
-                        ListIterator<IRegion> regionListIterator = regionList.listIterator();
-                        while (regionListIterator.hasNext()) {
-                            IRegion region = regionListIterator.next();
-                            output.append(Texts.of(getColorForRegion(region), getRegionName(region, allFlag)));
-                            if (regionListIterator.hasNext()) output.append(Texts.of("\n"));
-                        }
-                        source.sendMessage(output.build());
-                    } else if (contains(flagSetsAliases, args[pageFlag])) {
-                        List<IFlagSet> flagSetList = FoxGuardManager.getInstance().getFlagSetsListCopy();
-                        TextBuilder output = Texts.builder("---FlagSets---\n").color(TextColors.GREEN);
-                        ListIterator<IFlagSet> flagSetListIterator = flagSetList.listIterator();
-                        while (flagSetListIterator.hasNext()) {
-                            IFlagSet flagSet = flagSetListIterator.next();
-                            output.append(Texts.of(getColorForFlagSet(flagSet), flagSet.getName()));
-                            if (flagSetListIterator.hasNext()) output.append(Texts.of("\n"));
-                        }
-                        source.sendMessage(output.build());
-                    } else {
-                        throw new ArgumentParseException(Texts.of("Not a valid category!"), args[pageFlag], pageFlag);
+
+            if (args.length == 0) {
+                source.sendMessage(Texts.builder()
+                        .append(Texts.of(TextColors.GREEN, "Usage: "))
+                        .append(getUsage(source))
+                        .build());
+                return CommandResult.empty();
+            } else if (contains(regionsAliases, args[0])) {
+                List<IRegion> regionList = new LinkedList<>();
+                boolean allFlag = true;
+                int worldOffset = 0;
+                String worldName = "";
+                if (args.length > 1) {
+                    Optional<World> optWorld = CommandParseHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
+                    if (optWorld != null) {
+                        if (!optWorld.isPresent())
+                            throw new ArgumentParseException(Texts.of("No world found with that name!"), args[1], 1);
+                        FoxGuardManager.getInstance().getRegionsListCopy(optWorld.get()).forEach(regionList::add);
+                        worldOffset = 1;
+                        allFlag = false;
+                        worldName = optWorld.get().getName();
                     }
-                } else {
-                    throw new CommandException(Texts.of("Must specify a category!"));
+                } if(allFlag) {
+                    FoxGuardManager.getInstance().getRegionsListCopy().forEach(regionList::add);
                 }
+
+                    /*try {
+                        page = Integer.parseInt(args[1 + worldOffset]);
+                    } catch (NumberFormatException ignored) {
+                    }*/
+
+                TextBuilder output = Texts.builder(
+                        "---Regions" + (allFlag ? "" : (" for world: \"" + worldName + "\"")) + "---\n")
+                        .color(TextColors.GREEN);
+                ListIterator<IRegion> regionListIterator = regionList.listIterator();
+                while (regionListIterator.hasNext()) {
+                    IRegion region = regionListIterator.next();
+                    output.append(Texts.of(getColorForRegion(region), getRegionName(region, allFlag)));
+                    if (regionListIterator.hasNext()) output.append(Texts.of("\n"));
+                }
+                source.sendMessage(output.build());
+            } else if (contains(flagSetsAliases, args[0])) {
+                List<IFlagSet> flagSetList = FoxGuardManager.getInstance().getFlagSetsListCopy();
+
+                    /*try {
+                        page = Integer.parseInt(args[1]);
+                    } catch (NumberFormatException ignored) {
+                    }*/
+
+                TextBuilder output = Texts.builder("---FlagSets---\n").color(TextColors.GREEN);
+                ListIterator<IFlagSet> flagSetListIterator = flagSetList.listIterator();
+                while (flagSetListIterator.hasNext()) {
+                    IFlagSet flagSet = flagSetListIterator.next();
+                    output.append(Texts.of(getColorForFlagSet(flagSet), flagSet.getName()));
+                    if (flagSetListIterator.hasNext()) output.append(Texts.of("\n"));
+                }
+                source.sendMessage(output.build());
             } else {
-                throw new CommandException(Texts.of("Must specify a category!"));
+                throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
             }
+
 
             return CommandResult.empty();
         } else {
@@ -136,6 +145,6 @@ public class CommandList implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("list [page] <(regions [world]) | flagsets>");
+        return Texts.of("list (regions [w:<world>] | flagsets) [page]");
     }
 }
