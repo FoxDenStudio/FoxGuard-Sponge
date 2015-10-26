@@ -1,5 +1,6 @@
 package tk.elektrofuchse.fox.foxguard.commands;
 
+import com.flowpowered.math.vector.Vector3i;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
@@ -24,8 +25,9 @@ import java.util.Optional;
  */
 public class CommandAdd implements CommandCallable {
 
-    String[] regionsAliases = {"region", "reg", "r"};
-    String[] flagSetsAliases = {"flagset", "flag", "f"};
+    String[] regionsAliases = {"regions", "region", "reg", "r"};
+    String[] flagSetsAliases = {"flagsets", "flagset", "flags", "flag", "f"};
+    String[] positionsAliases = {"positions", "position", "points", "point", "locations", "location", "pos", "loc", "locs", "p"};
 
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
@@ -67,6 +69,36 @@ public class CommandAdd implements CommandCallable {
                 FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.add(flagSet);
 
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully added FlagSet to your state buffer!"));
+            } else if (FGHelper.contains(positionsAliases, args[0])) {
+                int x, y, z;
+                Vector3i pPos = player.getLocation().getBlockPosition();
+                if (args.length == 1) {
+                    x = pPos.getX();
+                    y = pPos.getY();
+                    z = pPos.getZ();
+                } else if (args.length > 1 && args.length < 4) {
+                    throw new CommandException(Texts.of("Not enough arguments!"));
+                } else if (args.length == 4) {
+                    try {
+                        x = FGHelper.parseCoordinate(pPos.getX(), args[1]);
+                    } catch (NumberFormatException e) {
+                        throw new ArgumentParseException(Texts.of("Unable to parse \"" + args[1] + "\"!"), e, args[1], 1);
+                    }
+                    try {
+                        y = FGHelper.parseCoordinate(pPos.getY(), args[2]);
+                    } catch (NumberFormatException e) {
+                        throw new ArgumentParseException(Texts.of("Unable to parse \"" + args[2] + "\"!"), e, args[2], 2);
+                    }
+                    try {
+                        z = FGHelper.parseCoordinate(pPos.getZ(), args[3]);
+                    } catch (NumberFormatException e) {
+                        throw new ArgumentParseException(Texts.of("Unable to parse \"" + args[3] + "\"!"), e, args[3], 3);
+                    }
+                } else {
+                    throw new CommandException(Texts.of("Too many arguments!"));
+                }
+                FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).positions.add(new Vector3i(x, y, z));
+                player.sendMessage(Texts.of(TextColors.GREEN, "Successfully added position (" + x + ", " + y + ", " + z + ") to your state buffer!"));
             } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
         } else {
 

@@ -26,8 +26,8 @@ import java.util.Vector;
  */
 public class CommandSubtract implements CommandCallable {
 
-    String[] regionsAliases = {"region", "reg", "r"};
-    String[] flagSetsAliases = {"flagset", "flag", "f"};
+    String[] regionsAliases = {"regions", "region", "reg", "r"};
+    String[] flagSetsAliases = {"flagsets", "flagset", "flags", "flag", "f"};
     String[] positionsAliases = {"positions", "position", "points", "point", "locations", "location", "pos", "loc", "locs", "p"};
 
     @Override

@@ -42,7 +42,7 @@ abstract public class OwnableRegionBase extends RegionBase implements IOwnable {
     }
 
     @Override
-    public Text getDetails(String[] args) {
+    public Text getDetails(String arguments) {
         TextBuilder builder = Texts.builder();
         builder.append(Texts.of(TextColors.GREEN, "Owners: "));
         for (User p : ownerList) {

@@ -45,7 +45,7 @@ public class SimpleFlagSet extends FlagSetBase {
     }
 
     @Override
-    public Text getDetails(String[] args) {
+    public Text getDetails(String arguments) {
         return Texts.of("This flagset contains no configurable parameters!");
     }
 

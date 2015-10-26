@@ -28,15 +28,15 @@ import java.util.Optional;
  */
 public class CommandDetail implements CommandCallable {
 
-    String[] regionsAliases = { "region", "reg", "r"};
-    String[] flagSetsAliases = { "flagset", "flag", "f"};
+    String[] regionsAliases = {"regions", "region", "reg", "r"};
+    String[] flagSetsAliases = {"flagsets", "flagset", "flags", "flag", "f"};
 
     //fg detail <region> [w:<world>] <name>
 
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         String[] args = {};
-        if (!arguments.isEmpty()) args = arguments.split(" ");
+        if (!arguments.isEmpty()) args = arguments.split(" ", 3);
         if (source instanceof Player) {
             Player player = (Player) source;
             if (args.length == 0) {
@@ -53,6 +53,7 @@ public class CommandDetail implements CommandCallable {
                 if (optWorld != null && optWorld.isPresent()) {
                     world = optWorld.get();
                     flag = 1;
+                    args = arguments.split(" ", 4);
                 } else world = player.getWorld();
                 if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a name!"));
                 IRegion region = FoxGuardManager.getInstance().getRegion(world, args[1 + flag]);
@@ -60,7 +61,7 @@ public class CommandDetail implements CommandCallable {
                     throw new CommandException(Texts.of("No region with name \"" + args[1 + flag] + "\"!"));
                 TextBuilder builder = Texts.builder();
                 builder.append(Texts.of(TextColors.GREEN, "---Details---\n"));
-                builder.append(region.getDetails(Arrays.copyOfRange(args, 2 + flag, args.length)));
+                builder.append(region.getDetails(args.length < 3 + flag ? "" : args[2+flag]));
                 builder.append(Texts.of(TextColors.GREEN, "\n---Linked FlagSets---"));
                 if(region.getFlagSets().size() == 0) builder.append(Texts.of(TextStyles.ITALIC, "\nNo linked FlagSets!"));
                 region.getFlagSets().stream().forEach(flagSet -> builder.append(Texts.of(FGHelper.getColorForFlagSet(flagSet),
@@ -73,7 +74,7 @@ public class CommandDetail implements CommandCallable {
                 if (flagSet == null)
                     throw new CommandException(Texts.of("No region with name \"" + args[1] + "\"!"));
 
-                player.sendMessage(flagSet.getDetails(Arrays.copyOfRange(args, 2, args.length)));
+                player.sendMessage(flagSet.getDetails(args.length < 3 ? "" : args[2]));
             } else {
                 throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
             }

@@ -33,6 +33,6 @@ public interface IFlagSet extends Comparable<IFlagSet> {
 
     String getType();
 
-    Text getDetails(String[] args);
+    Text getDetails(String arguments);
 
 }

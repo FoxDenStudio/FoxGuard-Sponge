@@ -41,5 +41,5 @@ public interface IRegion {
 
     String getType();
 
-    Text getDetails(String[] args);
+    Text getDetails(String arguments);
 }

@@ -26,14 +26,10 @@ import java.util.Optional;
  */
 public class CommandCreate implements CommandCallable {
 
-    String[] regionsAliases = {"region", "reg", "r"};
-    String[] flagSetsAliases = {"flagset", "flag", "f"};
-
-
+    String[] regionsAliases = {"regions", "region", "reg", "r"};
+    String[] flagSetsAliases = {"flagsets", "flagset", "flags", "flag", "f"};
 
     //create region [w:<world>] name type args...
-
-
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         String[] args = {};
@@ -79,8 +75,8 @@ public class CommandCreate implements CommandCallable {
                     throw new ArgumentParseException(Texts.of("Name must be alphanumeric!"), args[1], 1);
                 if (args[1].matches("^[^a-zA-Z_$].*$"))
                     throw new ArgumentParseException(Texts.of("Name can't start with a number!"), args[1], 1);
-                if(args[1].equalsIgnoreCase("all") || args[1].equalsIgnoreCase("state"))
-                    throw new CommandException(Texts.of("You may not use \""+args[1]+"\" as a name!"));
+                if (args[1].equalsIgnoreCase("all") || args[1].equalsIgnoreCase("state"))
+                    throw new CommandException(Texts.of("You may not use \"" + args[1] + "\" as a name!"));
                 if (args.length < 3) throw new CommandException(Texts.of("Must specify a type!"));
                 IFlagSet newFlagSet = FGFactoryManager.getInstance().createFlagSet(
                         args[2], args[1].toLowerCase(),

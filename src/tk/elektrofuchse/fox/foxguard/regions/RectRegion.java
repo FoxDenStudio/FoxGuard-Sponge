@@ -103,9 +103,9 @@ public class RectRegion extends OwnableRegionBase {
 
 
     @Override
-    public Text getDetails(String[] args) {
+    public Text getDetails(String arguments) {
         TextBuilder builder = Texts.builder();
-        builder.append(super.getDetails(args));
+        builder.append(super.getDetails(arguments));
         builder.append(Texts.of(TextColors.GREEN, "\nBounds: "));
         builder.append(Texts.of(TextColors.RESET, boundingBox.toString()));
         return builder.build();

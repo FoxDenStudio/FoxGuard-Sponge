@@ -36,8 +36,8 @@ public class GlobalFlagSet extends FlagSetBase {
     }
 
     @Override
-    public Text getDetails(String[] args) {
-        return Texts.of("This is the global FlagSet.");
+    public Text getDetails(String arguments) {
+        return Texts.of("It's global. Nothing to see here. Now move along.");
     }
 
     @Override

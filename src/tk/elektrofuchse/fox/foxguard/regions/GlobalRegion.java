@@ -29,7 +29,7 @@ public class GlobalRegion extends RegionBase {
     }
 
     @Override
-    public Text getDetails(String[] args) {
+    public Text getDetails(String arguments) {
         return Texts.of("It's global. Nothing to see here. Now move along.");
     }
 
