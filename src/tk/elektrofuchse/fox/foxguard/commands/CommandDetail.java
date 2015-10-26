@@ -2,8 +2,10 @@ package tk.elektrofuchse.fox.foxguard.commands;
 
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.text.format.TextStyles;
 import org.spongepowered.api.util.command.CommandCallable;
 import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandResult;
@@ -13,7 +15,7 @@ import org.spongepowered.api.util.command.source.ConsoleSource;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
-import tk.elektrofuchse.fox.foxguard.commands.util.CommandParseHelper;
+import tk.elektrofuchse.fox.foxguard.commands.util.FGHelper;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
@@ -26,8 +28,8 @@ import java.util.Optional;
  */
 public class CommandDetail implements CommandCallable {
 
-    String[] regionsAliases = {"regions", "region", "reg", "r"};
-    String[] flagSetsAliases = {"flagsets", "flagset", "flags", "flag", "f"};
+    String[] regionsAliases = { "region", "reg", "r"};
+    String[] flagSetsAliases = { "flagset", "flag", "f"};
 
     //fg detail <region> [w:<world>] <name>
 
@@ -43,27 +45,29 @@ public class CommandDetail implements CommandCallable {
                         .append(getUsage(source))
                         .build());
                 return CommandResult.empty();
-            } else if (CommandParseHelper.contains(regionsAliases, args[0])) {
+            } else if (FGHelper.contains(regionsAliases, args[0])) {
+                if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 int flag = 0;
-                Optional<World> optWorld = null;
-                if (args.length > 1) {
-                    optWorld = CommandParseHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
-                }
+                Optional<World> optWorld = FGHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
                 World world;
                 if (optWorld != null && optWorld.isPresent()) {
                     world = optWorld.get();
                     flag = 1;
-                } else {
-                    world = player.getWorld();
-                }
+                } else world = player.getWorld();
                 if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a name!"));
                 IRegion region = FoxGuardManager.getInstance().getRegion(world, args[1 + flag]);
                 if (region == null)
                     throw new CommandException(Texts.of("No region with name \"" + args[1 + flag] + "\"!"));
+                TextBuilder builder = Texts.builder();
+                builder.append(Texts.of(TextColors.GREEN, "---Details---\n"));
+                builder.append(region.getDetails(Arrays.copyOfRange(args, 2 + flag, args.length)));
+                builder.append(Texts.of(TextColors.GREEN, "\n---Linked FlagSets---"));
+                if(region.getFlagSets().size() == 0) builder.append(Texts.of(TextStyles.ITALIC, "\nNo linked FlagSets!"));
+                region.getFlagSets().stream().forEach(flagSet -> builder.append(Texts.of(FGHelper.getColorForFlagSet(flagSet),
+                        "\n" + flagSet.getType() + " : " + flagSet.getName())));
+                player.sendMessage(builder.build());
 
-                player.sendMessage(region.getDetails(Arrays.copyOfRange(args, 2 + flag, args.length)));
-
-            } else if (CommandParseHelper.contains(flagSetsAliases, args[0])) {
+            } else if (FGHelper.contains(flagSetsAliases, args[0])) {
                 if (args.length < 1) throw new CommandException(Texts.of("Must specify a name!"));
                 IFlagSet flagSet = FoxGuardManager.getInstance().getFlagSet(args[1]);
                 if (flagSet == null)

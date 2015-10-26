@@ -3,6 +3,8 @@ package tk.elektrofuchse.fox.foxguard.flags;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.util.command.CommandSource;
+import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.flags.util.ActiveFlags;
 import tk.elektrofuchse.fox.foxguard.flags.util.FlagState;
 import tk.elektrofuchse.fox.foxguard.flags.util.PassiveFlags;
@@ -12,9 +14,10 @@ import tk.elektrofuchse.fox.foxguard.flags.util.PassiveFlags;
  */
 public class GlobalFlagSet extends FlagSetBase {
 
+    public static final String NAME = "_global";
+
     public GlobalFlagSet() {
-        setPriority(0);
-        setName("global");
+        super(NAME, 0);
     }
 
     @Override
@@ -24,7 +27,7 @@ public class GlobalFlagSet extends FlagSetBase {
 
     @Override
     public void setName(String name) {
-        this.name = "global";
+        this.name = NAME;
     }
 
     @Override
@@ -35,6 +38,11 @@ public class GlobalFlagSet extends FlagSetBase {
     @Override
     public Text getDetails(String[] args) {
         return Texts.of("This is the global FlagSet.");
+    }
+
+    @Override
+    public boolean modify(String arguments, InternalCommandState state, CommandSource source) {
+        return false;
     }
 
     @Override

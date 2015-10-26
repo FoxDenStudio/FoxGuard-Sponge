@@ -14,9 +14,6 @@ public abstract class FlagSetBase implements IFlagSet {
         setPriority(priority);
     }
 
-    public FlagSetBase() {
-    }
-
     @Override
     public boolean isEnabled() {
         return isEnabled;

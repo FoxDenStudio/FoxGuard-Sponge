@@ -17,10 +17,10 @@ import java.util.List;
 public abstract class RegionBase implements IRegion {
 
     protected final List<IFlagSet> flagSets;
-    private String name;
-    private World world;
+    protected String name;
+    protected World world;
 
-    protected RegionBase(String name) {
+    public RegionBase(String name) {
         this.name = name;
         this.flagSets = new LinkedList<>();
     }
@@ -74,8 +74,4 @@ public abstract class RegionBase implements IRegion {
         this.name = name;
     }
 
-    @Override
-    public Text getDetails(String[] args) {
-        return Texts.of("");
-    }
 }

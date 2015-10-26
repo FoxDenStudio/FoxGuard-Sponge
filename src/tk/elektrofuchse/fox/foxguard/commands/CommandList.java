@@ -12,8 +12,10 @@ import org.spongepowered.api.util.command.source.ConsoleSource;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
-import tk.elektrofuchse.fox.foxguard.commands.util.CommandParseHelper;
+import tk.elektrofuchse.fox.foxguard.commands.util.FGHelper;
+import tk.elektrofuchse.fox.foxguard.flags.GlobalFlagSet;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
+import tk.elektrofuchse.fox.foxguard.regions.GlobalRegion;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
 import java.util.LinkedList;
@@ -49,7 +51,7 @@ public class CommandList implements CommandCallable {
                 int worldOffset = 0;
                 String worldName = "";
                 if (args.length > 1) {
-                    Optional<World> optWorld = CommandParseHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
+                    Optional<World> optWorld = FGHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
                     if (optWorld != null) {
                         if (!optWorld.isPresent())
                             throw new ArgumentParseException(Texts.of("No world found with that name!"), args[1], 1);
@@ -58,7 +60,8 @@ public class CommandList implements CommandCallable {
                         allFlag = false;
                         worldName = optWorld.get().getName();
                     }
-                } if(allFlag) {
+                }
+                if (allFlag) {
                     FoxGuardManager.getInstance().getRegionsListCopy().forEach(regionList::add);
                 }
 
@@ -73,7 +76,7 @@ public class CommandList implements CommandCallable {
                 ListIterator<IRegion> regionListIterator = regionList.listIterator();
                 while (regionListIterator.hasNext()) {
                     IRegion region = regionListIterator.next();
-                    output.append(Texts.of(getColorForRegion(region), getRegionName(region, allFlag)));
+                    output.append(Texts.of(FGHelper.getColorForRegion(region), getRegionName(region, allFlag)));
                     if (regionListIterator.hasNext()) output.append(Texts.of("\n"));
                 }
                 source.sendMessage(output.build());
@@ -89,7 +92,8 @@ public class CommandList implements CommandCallable {
                 ListIterator<IFlagSet> flagSetListIterator = flagSetList.listIterator();
                 while (flagSetListIterator.hasNext()) {
                     IFlagSet flagSet = flagSetListIterator.next();
-                    output.append(Texts.of(getColorForFlagSet(flagSet), flagSet.getName()));
+                    output.append(Texts.of(FGHelper.getColorForFlagSet(flagSet),
+                            flagSet.getType() + " : " + flagSet.getName()));
                     if (flagSetListIterator.hasNext()) output.append(Texts.of("\n"));
                 }
                 source.sendMessage(output.build());
@@ -104,16 +108,9 @@ public class CommandList implements CommandCallable {
         }
     }
 
-    private TextColor getColorForRegion(IRegion region) {
-        return region.getName().equals("global") ? TextColors.YELLOW : TextColors.RESET;
-    }
-
-    private TextColor getColorForFlagSet(IFlagSet flagSet) {
-        return flagSet.getName().equals("global") ? TextColors.YELLOW : TextColors.RESET;
-    }
 
     private String getRegionName(IRegion region, boolean dispWorld) {
-        return (dispWorld ? region.getWorld().getName() + " : " : "") + region.getName();
+        return region.getType() + " : " + (dispWorld ? region.getWorld().getName() + " : " : "") + region.getName();
     }
 
     private boolean contains(String[] aliases, String input) {

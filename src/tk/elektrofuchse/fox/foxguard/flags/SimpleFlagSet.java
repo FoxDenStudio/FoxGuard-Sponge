@@ -3,6 +3,8 @@ package tk.elektrofuchse.fox.foxguard.flags;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.util.command.CommandSource;
+import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.flags.util.ActiveFlags;
 import tk.elektrofuchse.fox.foxguard.flags.util.FlagState;
 import tk.elektrofuchse.fox.foxguard.flags.util.PassiveFlags;
@@ -14,6 +16,11 @@ public class SimpleFlagSet extends FlagSetBase {
 
     public SimpleFlagSet(String name, int priority) {
         super(name, priority);
+    }
+
+    @Override
+    public boolean modify(String arguments, InternalCommandState state, CommandSource source) {
+        return false;
     }
 
     @Override

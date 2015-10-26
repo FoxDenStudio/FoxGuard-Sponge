@@ -14,6 +14,7 @@ import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.service.config.ConfigDir;
 import org.spongepowered.api.service.event.EventManager;
 import org.spongepowered.api.service.sql.SqlService;
+import org.spongepowered.api.service.user.UserStorage;
 import tk.elektrofuchse.fox.foxguard.commands.*;
 import tk.elektrofuchse.fox.foxguard.flags.SimpleFlagSet;
 import tk.elektrofuchse.fox.foxguard.listener.BlockEventListener;
@@ -29,10 +30,13 @@ import java.sql.SQLException;
 /**
  * Created by Fox on 8/16/2015.
  */
-@Plugin(id = "foxguard", name = "FoxGuard", version = "1.0")
+@Plugin(id = "foxguard", name = "FoxGuard", version = FoxGuardMain.PLUGIN_VERSION)
 public class FoxGuardMain {
 
+    public static final String PLUGIN_VERSION = "0.7";
+
     private static FoxGuardMain instance;
+
 
     @Inject
     private Logger logger;
@@ -45,12 +49,13 @@ public class FoxGuardMain {
     File configDirectory;
 
     private SqlService sql;
-
+    private UserStorage userStorage;
     private FoxGuardCommandDispatcher fgDispatcher;
 
     @Listener
     public void initFoxGuard(GameInitializationEvent event) {
         instance = this;
+        userStorage =game.getServiceManager().provide(UserStorage.class).get();
         new FoxGuardManager(this, game.getServer());
         FoxGuardManager.getInstance().loadLists();
 
@@ -87,14 +92,19 @@ public class FoxGuardMain {
 
     private void registerCommands() {
         fgDispatcher = new FoxGuardCommandDispatcher();
-        fgDispatcher.register(new CommandCreate(), "create", "new", "make", "define", "mk");
-        fgDispatcher.register(new CommandTest(), "test");
+        fgDispatcher.register(new CommandCreate(), "create", "construct", "new", "make", "define", "mk");
+        fgDispatcher.register(new CommandDelete(), "delete", "del", "remove", "rem", "rm", "destroy");
+        fgDispatcher.register(new CommandLink(), "link", "connect", "attach");
         fgDispatcher.register(new CommandList(), "list", "ls");
-        fgDispatcher.register(new CommandPosition(), "position", "pos");
-        fgDispatcher.register(new CommandState(), "state", "current", "cur");
-        fgDispatcher.register(new CommandFlush(), "flush", "clear");
         fgDispatcher.register(new CommandDetail(), "detail", "show");
-        game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fg");
+        fgDispatcher.register(new CommandState(), "state", "current", "cur");
+        fgDispatcher.register(new CommandPosition(), "position", "pos", "p");
+        fgDispatcher.register(new CommandAdd(), "add", "push");
+        fgDispatcher.register(new CommandSubtract(), "subtract", "sub", "pop");
+        fgDispatcher.register(new CommandFlush(), "flush", "clear");
+        fgDispatcher.register(new CommandAbout(), "about", "info" );
+        fgDispatcher.register(new CommandTest(), "test");
+        game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
     }
 
     private void registerListeners(){
@@ -114,5 +124,9 @@ public class FoxGuardMain {
 
     public static FoxGuardMain getInstance() {
         return instance;
+    }
+
+    public UserStorage getUserStorage() {
+        return userStorage;
     }
 }

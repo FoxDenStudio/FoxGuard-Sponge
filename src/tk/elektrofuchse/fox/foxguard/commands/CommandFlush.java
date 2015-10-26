@@ -3,6 +3,7 @@ package tk.elektrofuchse.fox.foxguard.commands;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.*;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 
@@ -33,7 +34,7 @@ public class CommandFlush implements CommandCallable {
                     FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).flush(type);
                 }
             }
-            player.sendMessage(Texts.of("Successfully flushed!"));
+            player.sendMessage(Texts.of(TextColors.GREEN, "Successfully flushed!"));
         } else {
             throw new CommandPermissionException(Texts.of("You must be a player or console to use this command!"));
         }

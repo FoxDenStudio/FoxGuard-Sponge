@@ -12,7 +12,7 @@ import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
-import tk.elektrofuchse.fox.foxguard.commands.util.CommandParseHelper;
+import tk.elektrofuchse.fox.foxguard.commands.util.FGHelper;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.factory.FGFactoryManager;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
@@ -26,10 +26,10 @@ import java.util.Optional;
  */
 public class CommandCreate implements CommandCallable {
 
-    String[] regionsAliases = {"regions", "region", "reg", "r"};
-    String[] flagSetsAliases = {"flagsets", "flagset", "flags", "flag", "f"};
+    String[] regionsAliases = {"region", "reg", "r"};
+    String[] flagSetsAliases = {"flagset", "flag", "f"};
 
-    String[] rectAliases = {"rectangular", "rectangle", "rect"};
+
 
     //create region [w:<world>] name type args...
 
@@ -46,55 +46,51 @@ public class CommandCreate implements CommandCallable {
                         .append(getUsage(source))
                         .build());
                 return CommandResult.empty();
-            } else if (CommandParseHelper.contains(regionsAliases, args[0])) {
+            } else if (FGHelper.contains(regionsAliases, args[0])) {
+                if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 int flag = 0;
-                Optional<World> optWorld = CommandParseHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
+                Optional<World> optWorld = FGHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
                 World world;
                 if (optWorld != null && optWorld.isPresent()) {
                     world = optWorld.get();
                     flag = 1;
                     args = arguments.split(" ", 5);
-                } else {
-                    world = player.getWorld();
-                }
+                } else world = player.getWorld();
                 if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a name!"));
-                if (args[1 + flag].matches("^.*[^0-9a-zA-Z].*$"))
+                if (args[1 + flag].matches("^.*[^0-9a-zA-Z_$].*$"))
                     throw new ArgumentParseException(Texts.of("Name must be alphanumeric!"), args[1 + flag], 1 + flag);
-                if (args[1 + flag].matches("^[^a-zA-Z].*"))
-                    throw new ArgumentParseException(Texts.of("Name must start with a letter!"), args[1 + flag], 1 + flag);
+                if (args[1 + flag].matches("^[^a-zA-Z_$].*$"))
+                    throw new ArgumentParseException(Texts.of("Name can't start with a number!"), args[1 + flag], 1 + flag);
+                if (args[1 + flag].equalsIgnoreCase("all") || args[1].equalsIgnoreCase("state"))
+                    throw new CommandException(Texts.of("You may not use \"" + args[1 + flag] + "\" as a name!"));
                 if (args.length < 3 + flag) throw new CommandException(Texts.of("Must specify a type!"));
-
                 IRegion newRegion = FGFactoryManager.getInstance().createRegion(
                         args[2 + flag], args[1 + flag].toLowerCase(),
                         args.length < 4 + flag ? "" : args[3 + flag],
                         FoxGuardCommandDispatcher.getInstance().getStateMap().get(player), world, player);
-
                 boolean success = FoxGuardManager.getInstance().addRegion(world, newRegion);
                 if (!success)
                     throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1 + flag], 1 + flag);
                 FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).flush(InternalCommandState.StateField.POSITIONS);
-                player.sendMessage(Texts.of("Region created successfully"));
-
-            } else if (CommandParseHelper.contains(flagSetsAliases, args[0])) {
+                player.sendMessage(Texts.of(TextColors.GREEN, "Region created successfully"));
+            } else if (FGHelper.contains(flagSetsAliases, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-                if (args[1].matches("^.*[^0-9a-zA-Z].*$"))
+                if (args[1].matches("^.*[^0-9a-zA-Z_$].*$"))
                     throw new ArgumentParseException(Texts.of("Name must be alphanumeric!"), args[1], 1);
-                if (args[1].matches("^[^a-zA-Z].*"))
-                    throw new ArgumentParseException(Texts.of("Name must start with a letter!"), args[1], 1);
+                if (args[1].matches("^[^a-zA-Z_$].*$"))
+                    throw new ArgumentParseException(Texts.of("Name can't start with a number!"), args[1], 1);
+                if(args[1].equalsIgnoreCase("all") || args[1].equalsIgnoreCase("state"))
+                    throw new CommandException(Texts.of("You may not use \""+args[1]+"\" as a name!"));
                 if (args.length < 3) throw new CommandException(Texts.of("Must specify a type!"));
-
                 IFlagSet newFlagSet = FGFactoryManager.getInstance().createFlagSet(
                         args[2], args[1].toLowerCase(),
                         args.length < 4 ? "" : args[3],
                         FoxGuardCommandDispatcher.getInstance().getStateMap().get(player), player);
-
                 boolean success = FoxGuardManager.getInstance().addFlagSet(newFlagSet);
                 if (!success)
                     throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1], 1);
-                player.sendMessage(Texts.of("FlagSet created successfully!"));
-            } else {
-                throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
-            }
+                player.sendMessage(Texts.of(TextColors.GREEN, "FlagSet created successfully!"));
+            } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
         } else {
 
         }

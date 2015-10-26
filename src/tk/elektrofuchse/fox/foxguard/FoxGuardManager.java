@@ -47,7 +47,7 @@ public class FoxGuardManager {
 
     public IRegion getRegion(World world, String name) {
         for (IRegion region : regions.get(world)) {
-            if (region.getName().equals(name)) return region;
+            if (region.getName().equalsIgnoreCase(name)) return region;
         }
         return null;
     }
@@ -84,7 +84,7 @@ public class FoxGuardManager {
 
     public IFlagSet getFlagSet(String name) {
         for (IFlagSet flagSet : flagSets) {
-            if (flagSet.getName().equals(name)) return flagSet;
+            if (flagSet.getName().equalsIgnoreCase(name)) return flagSet;
         }
         return null;
     }
@@ -94,11 +94,11 @@ public class FoxGuardManager {
     }
 
     public boolean removeFlagSet(IFlagSet flagSet) {
-        if (flagSet == null) return false;
+        if (flagSet == null || flagSet instanceof GlobalFlagSet) return false;
         this.regions.forEach((world, list) -> {
             list.stream()
                     .filter(region -> region.getFlagSets().contains(flagSet))
-                    .forEach(region -> removeFlagSet(flagSet));
+                    .forEach(region -> region.removeFlagSet(flagSet));
         });
         if (!this.flagSets.contains(flagSet)) return false;
         flagSets.remove(flagSet);
@@ -110,11 +110,12 @@ public class FoxGuardManager {
     }
 
     public void removeRegion(IRegion region) {
-        this.regions.forEach((world, list) -> this.removeRegion(world, region));
+        if (region.getWorld() != null) removeRegion(region.getWorld(), region);
+        else this.regions.forEach((world, list) -> this.removeRegion(world, region));
     }
 
     public boolean removeRegion(World world, IRegion region) {
-        if (region == null || !this.regions.get(world).contains(region)) return false;
+        if (region == null || region instanceof GlobalRegion || !this.regions.get(world).contains(region)) return false;
         this.regions.get(world).remove(region);
         return true;
     }
@@ -132,6 +133,7 @@ public class FoxGuardManager {
 
     public boolean link(IRegion region, IFlagSet flagSet) {
         if (region == null || flagSet == null || region.getFlagSets().contains(flagSet)) return false;
+        if (flagSet instanceof GlobalFlagSet && !(region instanceof GlobalRegion)) return false;
         region.addFlagSet(flagSet);
         return true;
     }
@@ -149,6 +151,7 @@ public class FoxGuardManager {
 
     public boolean unlink(IRegion region, IFlagSet flagSet) {
         if (region == null || flagSet == null || !region.getFlagSets().contains(flagSet)) return false;
+        if (flagSet instanceof GlobalFlagSet && region instanceof GlobalRegion) return false;
         region.removeFlagSet(flagSet);
         return true;
     }
