@@ -60,6 +60,7 @@ public class CommandDetail implements CommandCallable {
                 if (region == null)
                     throw new CommandException(Texts.of("No region with name \"" + args[1 + flag] + "\"!"));
                 TextBuilder builder = Texts.builder();
+                builder.append(Texts.of(TextColors.GOLD, "------------------------------------------------------\n"));
                 builder.append(Texts.of(TextColors.GREEN, "---Details---\n"));
                 builder.append(region.getDetails(args.length < 3 + flag ? "" : args[2+flag]));
                 builder.append(Texts.of(TextColors.GREEN, "\n---Linked FlagSets---"));

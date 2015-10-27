@@ -23,6 +23,7 @@ import tk.elektrofuchse.fox.foxguard.listener.RightClickHandler;
 import tk.elektrofuchse.fox.foxguard.regions.RectRegion;
 import tk.elektrofuchse.fox.foxguard.regions.util.BoundingBox2;
 
+import javax.sql.DataSource;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -62,6 +63,12 @@ public class FoxGuardMain {
         registerCommands();
         registerListeners();
 
+        try {
+            FoxGuardStorageManager.getInstance().init();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Listener
@@ -74,20 +81,11 @@ public class FoxGuardMain {
         fgm.link(game.getServer(), "world", "test", "test");
     }
 
-    public javax.sql.DataSource getDataSource(String jdbcUrl) throws SQLException {
+    public DataSource getDataSource(String jdbcUrl) throws SQLException {
         if (sql == null) {
             sql = game.getServiceManager().provide(SqlService.class).get();
         }
         return sql.getDataSource(jdbcUrl);
-    }
-
-    // Later on
-    public void myMethodThatQueries() throws SQLException {
-        try (Connection conn = getDataSource("jdbc:h2:./foxguard/foxtest.db").getConnection()) {
-            conn.prepareStatement("SELECT * FROM test_tbl").execute();
-
-        }
-
     }
 
     private void registerCommands() {
@@ -98,7 +96,7 @@ public class FoxGuardMain {
         fgDispatcher.register(new CommandLink(), "link", "connect", "attach");
         fgDispatcher.register(new CommandUnlink(), "unlink", "disconnect", "detach");
         fgDispatcher.register(new CommandList(), "list", "ls");
-        fgDispatcher.register(new CommandDetail(), "detail", "show");
+        fgDispatcher.register(new CommandDetail(), "detail", "det", "show");
         fgDispatcher.register(new CommandState(), "state", "current", "cur");
         fgDispatcher.register(new CommandPosition(), "position", "pos", "p");
         fgDispatcher.register(new CommandAdd(), "add", "push");

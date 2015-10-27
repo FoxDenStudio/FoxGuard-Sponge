@@ -25,7 +25,7 @@ import java.util.Optional;
 public class CommandState implements CommandCallable {
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
-        TextBuilder output = Texts.builder().append(Texts.of(TextColors.GREEN, "------------------------\n"));
+        TextBuilder output = Texts.builder().append(Texts.of(TextColors.GOLD, "------------------------------------------------------\n"));
         if (source instanceof Player) {
             Player player = (Player) source;
             int flag = 0;

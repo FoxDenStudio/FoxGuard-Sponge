@@ -4,7 +4,6 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
-import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.*;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
@@ -13,9 +12,7 @@ import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
 import tk.elektrofuchse.fox.foxguard.commands.util.FGHelper;
-import tk.elektrofuchse.fox.foxguard.flags.GlobalFlagSet;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
-import tk.elektrofuchse.fox.foxguard.regions.GlobalRegion;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
 import java.util.LinkedList;
@@ -65,14 +62,10 @@ public class CommandList implements CommandCallable {
                     FoxGuardManager.getInstance().getRegionsListCopy().forEach(regionList::add);
                 }
 
-                    /*try {
-                        page = Integer.parseInt(args[1 + worldOffset]);
-                    } catch (NumberFormatException ignored) {
-                    }*/
 
-                TextBuilder output = Texts.builder(
-                        "---Regions" + (allFlag ? "" : (" for world: \"" + worldName + "\"")) + "---\n")
-                        .color(TextColors.GREEN);
+                TextBuilder output = Texts.builder()
+                        .append(Texts.of(TextColors.GOLD, "------------------------------------------------------\n"))
+                        .append(Texts.of(TextColors.GREEN, "---Regions" + (allFlag ? "" : (" for world: \"" + worldName + "\"")) + "---\n"));
                 ListIterator<IRegion> regionListIterator = regionList.listIterator();
                 while (regionListIterator.hasNext()) {
                     IRegion region = regionListIterator.next();
