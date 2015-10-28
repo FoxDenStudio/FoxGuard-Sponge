@@ -42,6 +42,7 @@ public class CommandCreate implements CommandCallable {
                         .append(getUsage(source))
                         .build());
                 return CommandResult.empty();
+                //----------------------------------------------------------------------------------------------------------------------
             } else if (FGHelper.contains(regionsAliases, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 int flag = 0;
@@ -61,7 +62,7 @@ public class CommandCreate implements CommandCallable {
                     throw new CommandException(Texts.of("You may not use \"" + args[1 + flag] + "\" as a name!"));
                 if (args.length < 3 + flag) throw new CommandException(Texts.of("Must specify a type!"));
                 IRegion newRegion = FGFactoryManager.getInstance().createRegion(
-                        args[2 + flag], args[1 + flag].toLowerCase(),
+                        args[1 + flag].toLowerCase(), args[2 + flag],
                         args.length < 4 + flag ? "" : args[3 + flag],
                         FoxGuardCommandDispatcher.getInstance().getStateMap().get(player), world, player);
                 boolean success = FoxGuardManager.getInstance().addRegion(world, newRegion);
@@ -70,6 +71,7 @@ public class CommandCreate implements CommandCallable {
                 FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).flush(InternalCommandState.StateField.POSITIONS);
                 player.sendMessage(Texts.of(TextColors.GREEN, "Region created successfully"));
                 return CommandResult.success();
+                //----------------------------------------------------------------------------------------------------------------------
             } else if (FGHelper.contains(flagSetsAliases, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 if (args[1].matches("^.*[^0-9a-zA-Z_$].*$"))
@@ -78,16 +80,24 @@ public class CommandCreate implements CommandCallable {
                     throw new ArgumentParseException(Texts.of("Name can't start with a number!"), args[1], 1);
                 if (args[1].equalsIgnoreCase("all") || args[1].equalsIgnoreCase("state"))
                     throw new CommandException(Texts.of("You may not use \"" + args[1] + "\" as a name!"));
-                if (args.length < 3) throw new CommandException(Texts.of("Must specify a type!"));
+                int flag = 0;
+                int priority = 0;
+                try{
+                    priority = Integer.parseInt(args[2]);
+                    flag = 1;
+                } catch (NumberFormatException ignored){}
+
+                if (args.length < 3 + flag) throw new CommandException(Texts.of("Must specify a type!"));
                 IFlagSet newFlagSet = FGFactoryManager.getInstance().createFlagSet(
-                        args[2], args[1].toLowerCase(),
-                        args.length < 4 ? "" : args[3],
+                        args[1].toLowerCase(), args[2 + flag], priority,
+                        args.length < 4 + flag ? "" : args[3 + flag],
                         FoxGuardCommandDispatcher.getInstance().getStateMap().get(player), player);
                 boolean success = FoxGuardManager.getInstance().addFlagSet(newFlagSet);
                 if (!success)
                     throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1], 1);
                 player.sendMessage(Texts.of(TextColors.GREEN, "FlagSet created successfully!"));
                 return CommandResult.success();
+                //----------------------------------------------------------------------------------------------------------------------
             } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
         } else {
 
@@ -118,7 +128,7 @@ public class CommandCreate implements CommandCallable {
     @Override
     public Text getUsage(CommandSource source) {
         if (source instanceof Player)
-            return Texts.of("create (region [w:<world>] | flagset) <name> <type> [args...]");
-        else return Texts.of("create (region <world> | flagset) <name> <type> [args...]");
+            return Texts.of("create (region [w:<world>] | flagset) <name> <priority> <type> [args...]");
+        else return Texts.of("create (region <world> | flagset) <name> <priority> <type> [args...]");
     }
 }

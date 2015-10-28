@@ -25,7 +25,7 @@
 package tk.elektrofuchse.fox.foxguard.commands;
 
 import com.google.common.collect.*;
-import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.service.permission.Subject;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
@@ -36,11 +36,13 @@ import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.command.*;
 import org.spongepowered.api.util.command.dispatcher.Disambiguator;
 import org.spongepowered.api.util.command.dispatcher.Dispatcher;
-import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
+import org.spongepowered.api.util.command.source.ConsoleSource;
 import tk.elektrofuchse.fox.foxguard.commands.util.CallbackHashMap;
+import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -70,15 +72,11 @@ public final class FoxGuardCommandDispatcher implements Dispatcher {
     private final Disambiguator disambiguatorFunc;
     private final ListMultimap<String, CommandMapping> commands = ArrayListMultimap.create();
 
-    private final Map<Player, InternalCommandState> stateMap = new CallbackHashMap<>(new Consumer<Object>() {
-        @Override
-        public void accept(Object o) {
-            if (o instanceof Player){
-                stateMap.put((Player) o, new InternalCommandState());
-            }
+    private final Map<CommandSource, InternalCommandState> stateMap = new CallbackHashMap<>((o, m) -> {
+        if (o instanceof CommandSource) {
+            m.put((CommandSource) o, new InternalCommandState());
         }
     });
-    private final InternalCommandState consoleState = new InternalCommandState();
     private static FoxGuardCommandDispatcher instance;
 
     /**
@@ -450,7 +448,7 @@ public final class FoxGuardCommandDispatcher implements Dispatcher {
     }
 
 
-    public Map<Player, InternalCommandState> getStateMap() {
+    public Map<CommandSource, InternalCommandState> getStateMap() {
         return stateMap;
     }
 
