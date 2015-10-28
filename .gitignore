@@ -2,4 +2,6 @@
 .idea/
 build/
 server/
+libsarchive/
+printouts/
 /*.iml
