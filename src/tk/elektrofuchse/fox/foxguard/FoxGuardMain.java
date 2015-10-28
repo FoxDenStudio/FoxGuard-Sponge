@@ -10,7 +10,9 @@ import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.entity.living.player.TargetPlayerEvent;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
+import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
 import org.spongepowered.api.event.world.LoadWorldEvent;
+import org.spongepowered.api.event.world.UnloadWorldEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.service.config.ConfigDir;
 import org.spongepowered.api.service.event.EventManager;
@@ -21,13 +23,11 @@ import tk.elektrofuchse.fox.foxguard.flags.SimpleFlagSet;
 import tk.elektrofuchse.fox.foxguard.listener.BlockEventListener;
 import tk.elektrofuchse.fox.foxguard.listener.PlayerEventListener;
 import tk.elektrofuchse.fox.foxguard.listener.RightClickHandler;
-import tk.elektrofuchse.fox.foxguard.listener.WorldLoadListener;
 import tk.elektrofuchse.fox.foxguard.regions.RectRegion;
 import tk.elektrofuchse.fox.foxguard.regions.util.BoundingBox2;
 
 import javax.sql.DataSource;
 import java.io.File;
-import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
@@ -56,9 +56,9 @@ public class FoxGuardMain {
     private FoxGuardCommandDispatcher fgDispatcher;
 
     @Listener
-    public void initFoxGuard(GameInitializationEvent event) {
+    public void gameInit(GameInitializationEvent event) {
         instance = this;
-        userStorage =game.getServiceManager().provide(UserStorage.class).get();
+        userStorage = game.getServiceManager().provide(UserStorage.class).get();
         new FoxGuardManager(this, game.getServer());
 
 
@@ -68,7 +68,7 @@ public class FoxGuardMain {
     }
 
     @Listener
-    public void setupServer(GameStartedServerEvent event) {
+    public void serverStarted(GameStartedServerEvent event) {
         FoxGuardManager.getInstance().loadLists();
         try {
             FoxGuardStorageManager.getInstance().init();
@@ -82,10 +82,31 @@ public class FoxGuardMain {
         fgm.addRegion(game.getServer().getWorld("world").get(),
                 new RectRegion("test", new BoundingBox2(new Vector2i(-100, -100), new Vector2i(100, 100))));
         fgm.link(game.getServer(), "world", "test", "test");
+    }
 
+    @Listener
+    public void serverStopping(GameStoppingServerEvent event) {
         try {
             FoxGuardStorageManager.getInstance().writeRegions();
             FoxGuardStorageManager.getInstance().writeFlagSets();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Listener
+    public void worldUnload(UnloadWorldEvent event) {
+        try {
+            FoxGuardStorageManager.getInstance().writeWorldRegions(event.getTargetWorld());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Listener
+    public void worldLoad(LoadWorldEvent event) {
+        try {
+            FoxGuardStorageManager.getInstance().initWorld(event.getTargetWorld());
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -112,16 +133,15 @@ public class FoxGuardMain {
         fgDispatcher.register(new CommandAdd(), "add", "push");
         fgDispatcher.register(new CommandSubtract(), "subtract", "sub", "pop");
         fgDispatcher.register(new CommandFlush(), "flush", "clear");
-        fgDispatcher.register(new CommandAbout(), "about", "info" );
+        fgDispatcher.register(new CommandAbout(), "about", "info");
         fgDispatcher.register(new CommandTest(), "test");
         game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
     }
 
-    private void registerListeners(){
+    private void registerListeners() {
         eventManager.registerListener(this, TargetPlayerEvent.class, new PlayerEventListener());
         eventManager.registerListener(this, ChangeBlockEvent.class, new BlockEventListener());
         eventManager.registerListener(this, InteractBlockEvent.class, new RightClickHandler());
-        eventManager.registerListener(this, LoadWorldEvent.class, new WorldLoadListener());
     }
 
     public Logger getLogger() {
