@@ -10,11 +10,18 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
-import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.regions.util.BoundingBox2;
+import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 
-import java.util.*;
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 
 /**
  * Created by Fox on 8/18/2015.
@@ -98,6 +105,10 @@ public class RectRegion extends OwnableRegionBase {
         return "Rect";
     }
 
+    @Override
+    public String getUniqueType() {
+        return "rectangular";
+    }
 
 
     @Override
@@ -107,6 +118,16 @@ public class RectRegion extends OwnableRegionBase {
         builder.append(Texts.of(TextColors.GREEN, "\nBounds: "));
         builder.append(Texts.of(TextColors.RESET, boundingBox.toString()));
         return builder.build();
+    }
+
+    @Override
+    public void writeToDatabase(DataSource dataSource) throws SQLException {
+        try (Connection conn = dataSource.getConnection()) {
+            Statement statement = conn.createStatement();
+            statement.execute("CREATE TABLE IF NOT EXISTS BOUNDS(X INTEGER, Y INTEGER);\n" +
+                    "INSERT INTO BOUNDS(X, Y) VALUES (" + boundingBox.a.getX() + ", " + boundingBox.a.getY() + ");\n" +
+                    "INSERT INTO BOUNDS(X, Y) VALUES (" + boundingBox.b.getX() + ", " + boundingBox.b.getY() + ");");
+        }
     }
 
     @Override

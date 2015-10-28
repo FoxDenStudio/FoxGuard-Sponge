@@ -9,6 +9,9 @@ import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.flags.util.ActiveFlags;
 import tk.elektrofuchse.fox.foxguard.flags.util.PassiveFlags;
 
+import javax.sql.DataSource;
+import java.sql.SQLException;
+
 /**
  * Created by Fox on 8/17/2015.
  */
@@ -50,8 +53,18 @@ public class SimpleFlagSet extends FlagSetBase {
     }
 
     @Override
+    public String getUniqueType() {
+        return "simple";
+    }
+
+    @Override
     public Text getDetails(String arguments) {
         return Texts.of("This flagset contains no configurable parameters!");
+    }
+
+    @Override
+    public void writeToDatabase(DataSource dataSource) throws SQLException {
+
     }
 
 }

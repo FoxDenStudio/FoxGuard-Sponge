@@ -10,6 +10,9 @@ import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.entity.living.player.TargetPlayerEvent;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
+import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
+import org.spongepowered.api.event.world.LoadWorldEvent;
+import org.spongepowered.api.event.world.UnloadWorldEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.service.config.ConfigDir;
 import org.spongepowered.api.service.event.EventManager;
@@ -53,31 +56,60 @@ public class FoxGuardMain {
     private FoxGuardCommandDispatcher fgDispatcher;
 
     @Listener
-    public void initFoxGuard(GameInitializationEvent event) {
+    public void gameInit(GameInitializationEvent event) {
         instance = this;
-        userStorage =game.getServiceManager().provide(UserStorage.class).get();
+        userStorage = game.getServiceManager().provide(UserStorage.class).get();
         new FoxGuardManager(this, game.getServer());
-        FoxGuardManager.getInstance().loadLists();
+
 
         registerCommands();
         registerListeners();
 
+    }
+
+    @Listener
+    public void serverStarted(GameStartedServerEvent event) {
+        FoxGuardManager.getInstance().loadLists();
         try {
             FoxGuardStorageManager.getInstance().init();
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-    }
-
-    @Listener
-    public void setupWorld(GameStartedServerEvent event) {
         FoxGuardManager fgm = FoxGuardManager.getInstance();
         fgm.setup(game.getServer());
         fgm.addFlagSet(new SimpleFlagSet("test", 1));
         fgm.addRegion(game.getServer().getWorld("world").get(),
                 new RectRegion("test", new BoundingBox2(new Vector2i(-100, -100), new Vector2i(100, 100))));
         fgm.link(game.getServer(), "world", "test", "test");
+    }
+
+    @Listener
+    public void serverStopping(GameStoppingServerEvent event) {
+        try {
+            FoxGuardStorageManager.getInstance().writeRegions();
+            FoxGuardStorageManager.getInstance().writeFlagSets();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Listener
+    public void worldUnload(UnloadWorldEvent event) {
+        try {
+            FoxGuardStorageManager.getInstance().writeWorldRegions(event.getTargetWorld());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Listener
+    public void worldLoad(LoadWorldEvent event) {
+        try {
+            FoxGuardStorageManager.getInstance().initWorld(event.getTargetWorld());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public DataSource getDataSource(String jdbcUrl) throws SQLException {
@@ -101,16 +133,15 @@ public class FoxGuardMain {
         fgDispatcher.register(new CommandAdd(), "add", "push");
         fgDispatcher.register(new CommandSubtract(), "subtract", "sub", "pop");
         fgDispatcher.register(new CommandFlush(), "flush", "clear");
-        fgDispatcher.register(new CommandAbout(), "about", "info" );
+        fgDispatcher.register(new CommandAbout(), "about", "info");
         fgDispatcher.register(new CommandTest(), "test");
         game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
     }
 
-    private void registerListeners(){
+    private void registerListeners() {
         eventManager.registerListener(this, TargetPlayerEvent.class, new PlayerEventListener());
         eventManager.registerListener(this, ChangeBlockEvent.class, new BlockEventListener());
         eventManager.registerListener(this, InteractBlockEvent.class, new InteractListener());
-
     }
 
     public Logger getLogger() {

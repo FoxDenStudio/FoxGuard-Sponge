@@ -5,11 +5,15 @@ import org.spongepowered.api.util.command.CommandSource;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 
+import javax.sql.DataSource;
+
 /**
  * Created by Fox on 10/22/2015.
  */
 public interface IFlagSetFactory extends IFGFactory {
 
-    IFlagSet createFlagSet(String type, String name, String arguments, InternalCommandState state, CommandSource source);
+    IFlagSet createFlagSet(String name, String type,int priority, String arguments, InternalCommandState state, CommandSource source);
+
+    IFlagSet createFlagSet(DataSource source, String type);
 
 }

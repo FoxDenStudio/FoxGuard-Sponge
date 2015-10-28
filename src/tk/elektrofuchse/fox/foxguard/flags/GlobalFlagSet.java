@@ -9,6 +9,8 @@ import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.flags.util.ActiveFlags;
 import tk.elektrofuchse.fox.foxguard.flags.util.PassiveFlags;
 
+import javax.sql.DataSource;
+
 /**
  * Created by Fox on 8/17/2015.
  */
@@ -36,8 +38,18 @@ public class GlobalFlagSet extends FlagSetBase {
     }
 
     @Override
+    public String getUniqueType() {
+        return "global";
+    }
+
+    @Override
     public Text getDetails(String arguments) {
         return Texts.of("It's global. Nothing to see here. Now move along.");
+    }
+
+    @Override
+    public void writeToDatabase(DataSource dataSource) {
+
     }
 
     @Override

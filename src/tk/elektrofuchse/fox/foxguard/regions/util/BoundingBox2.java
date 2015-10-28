@@ -12,8 +12,8 @@ import java.io.Serializable;
  */
 public class BoundingBox2 implements Serializable {
 
-    Vector2i a;
-    Vector2i b;
+    public Vector2i a;
+    public Vector2i b;
 
     public BoundingBox2(Location parA, Location parB) {
         this(parA.getBlockPosition(), parB.getBlockPosition());

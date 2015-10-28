@@ -5,6 +5,7 @@ import com.flowpowered.math.vector.Vector3i;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.world.World;
+import tk.elektrofuchse.fox.foxguard.IFGObject;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 
@@ -13,7 +14,7 @@ import java.util.List;
 /**
  * Created by Fox on 8/16/2015.
  */
-public interface IRegion {
+public interface IRegion extends IFGObject {
 
     boolean modify(String arguments, InternalCommandState state, CommandSource source);
 
@@ -35,11 +36,4 @@ public interface IRegion {
 
     World getWorld();
 
-    String getName();
-
-    void setName(String name);
-
-    String getType();
-
-    Text getDetails(String arguments);
 }

@@ -1,6 +1,9 @@
 package tk.elektrofuchse.fox.foxguard;
 
+import org.spongepowered.api.Server;
 import org.spongepowered.api.world.World;
+import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
+import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -21,35 +24,92 @@ public class FoxGuardStorageManager {
         return instance;
     }
 
-
-    // Later on
-    public void myMethodThatQueries() throws SQLException {
-        try (Connection conn = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./world/foxguard/regions").getConnection()) {
-
-            conn.prepareStatement("SELECT * FROM test_tbl");
-
-        }
-
-    }
-
     public void writeRegions() throws SQLException {
         for (World world : FoxGuardMain.getInstance().getGame().getServer().getWorlds()) {
-            String dataBaseName;
-            if (world.getName().equals("world")) {
-                dataBaseName = "jdbc:h2:./world/foxguard/regions";
-            } else {
-                dataBaseName = "jdbc:h2:./world/" + world.getName() + "/foxguard/regions";
-            }
-            try (Connection conn = FoxGuardMain.getInstance().getDataSource(dataBaseName).getConnection()) {
-
-            }
+            writeWorldRegions(world);
         }
     }
 
-    public void init() throws SQLException{
-        try(Connection conn = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./world/foxguard/foxguard").getConnection()){
+    public void writeWorldRegions(World world) throws SQLException{
+        Server server = FoxGuardMain.getInstance().getGame().getServer();
+        String dataBaseDir;
+        if (world.getProperties().equals(server.getDefaultWorld().get())) {
+            dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/";
+        } else {
+            dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + world.getName() + "/foxguard/";
+        }
+        try (Connection conn = FoxGuardMain.getInstance().getDataSource(dataBaseDir + "foxguard").getConnection()) {
             Statement statement = conn.createStatement();
-            statement.executeUpdate("CREATE TABLE IF NOT EXISTS RegionTypes (regionType VARCHAR(64))");
+            statement.addBatch("DELETE FROM REGIONS; DELETE FROM LINKAGES;");
+            for (IRegion region : FoxGuardManager.getInstance().getRegionsListCopy(world)) {
+                statement.addBatch("INSERT INTO REGIONS(NAME, TYPE) VALUES ('" +
+                        region.getName() + "', '" +
+                        region.getUniqueType() + "');");
+                for (IFlagSet flagSet : region.getFlagSets()) {
+                    statement.addBatch("INSERT INTO LINKAGES(REGION, FLAGSET) VALUES ('" +
+                            region.getName() + "', '" +
+                            flagSet.getName() + "');");
+                }
+            }
+            statement.executeBatch();
+        }
+        for (IRegion region : FoxGuardManager.getInstance().getRegionsListCopy(world)) {
+            region.writeToDatabase(FoxGuardMain.getInstance().getDataSource(dataBaseDir + "regions/" + region.getName()));
+        }
+    }
+
+    public void writeFlagSets() throws SQLException {
+        Server server = FoxGuardMain.getInstance().getGame().getServer();
+        try (Connection conn = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
+            Statement statement = conn.createStatement();
+            statement.addBatch("DELETE FROM FLAGSETS;");
+            for (IFlagSet flagSet : FoxGuardManager.getInstance().getFlagSetsListCopy()) {
+                statement.addBatch("INSERT INTO FLAGSETS(NAME, TYPE) VALUES ('" +
+                        flagSet.getName() + "', '" +
+                        flagSet.getUniqueType() + "');");
+            }
+            statement.executeBatch();
+        }
+        for (IFlagSet flagSet : FoxGuardManager.getInstance().getFlagSetsListCopy()) {
+            flagSet.writeToDatabase(FoxGuardMain.getInstance().getDataSource(
+                    "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() +
+                            "/foxguard/flagsets/" + flagSet.getName()));
+        }
+    }
+
+    public void init() throws SQLException {
+        Server server = FoxGuardMain.getInstance().getGame().getServer();
+        for (World world : FoxGuardMain.getInstance().getGame().getServer().getWorlds()) {
+            initWorld(world);
+        }
+        try (Connection conn = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
+            Statement statement = conn.createStatement();
+            statement.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS FLAGSETS (" +
+                            "NAME VARCHAR(256), " +
+                            "TYPE VARCHAR(256));");
+
+        }
+
+    }
+
+    public void initWorld(World world) throws SQLException {
+        String dataBaseDir;
+        Server server = FoxGuardMain.getInstance().getGame().getServer();
+        if (world.getProperties().equals(server.getDefaultWorld().get())) {
+            dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/";
+        } else {
+            dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + world.getName() + "/foxguard/";
+        }
+        try (Connection conn = FoxGuardMain.getInstance().getDataSource(dataBaseDir + "foxguard").getConnection()) {
+            Statement statement = conn.createStatement();
+            statement.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS REGIONS (" +
+                            "NAME VARCHAR(256), " +
+                            "TYPE VARCHAR(256));" +
+                            "CREATE TABLE IF NOT EXISTS LINKAGES (" +
+                            "REGION VARCHAR(256)," +
+                            "FLAGSET VARCHAR(256));");
         }
     }
 }
