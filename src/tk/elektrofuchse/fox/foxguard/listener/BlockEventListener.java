@@ -7,13 +7,12 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.flags.util.ActiveFlags;
-import tk.elektrofuchse.fox.foxguard.flags.util.FlagState;
-import tk.elektrofuchse.fox.foxguard.util.DebugHelper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,15 +50,15 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
         }
         Collections.sort(flagSetList);
         int currPriority = flagSetList.get(0).getPriority();
-        FlagState flagState = FlagState.PASSTHROUGH;
+        Tristate flagState = Tristate.UNDEFINED;
         for (IFlagSet flagSet : flagSetList) {
-            if (flagSet.getPriority() < currPriority && flagState != FlagState.PASSTHROUGH) {
+            if (flagSet.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
                 break;
             }
-            flagState = FlagState.newState(flagState, flagSet.hasPermission(player, typeFlag));
+            flagState = flagState.and(flagSet.hasPermission(player, typeFlag));
             currPriority = flagSet.getPriority();
         }
-        if (flagState == FlagState.FALSE) {
+        if (flagState == Tristate.FALSE) {
             player.sendMessage(Texts.of("You don't have permission."));
             event.setCancelled(true);
         }

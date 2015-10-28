@@ -3,10 +3,10 @@ package tk.elektrofuchse.fox.foxguard.flags;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.util.command.CommandSource;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.flags.util.ActiveFlags;
-import tk.elektrofuchse.fox.foxguard.flags.util.FlagState;
 import tk.elektrofuchse.fox.foxguard.flags.util.PassiveFlags;
 
 /**
@@ -46,12 +46,12 @@ public class GlobalFlagSet extends FlagSetBase {
     }
 
     @Override
-    public FlagState hasPermission(Player player, ActiveFlags flag) {
-        return FlagState.TRUE;
+    public Tristate hasPermission(Player player, ActiveFlags flag) {
+        return Tristate.TRUE;
     }
 
     @Override
-    public FlagState isFlagAllowed(PassiveFlags flag) {
-        return FlagState.TRUE;
+    public Tristate isFlagAllowed(PassiveFlags flag) {
+        return Tristate.TRUE;
     }
 }

@@ -3,10 +3,10 @@ package tk.elektrofuchse.fox.foxguard.flags;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.util.command.CommandSource;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.flags.util.ActiveFlags;
-import tk.elektrofuchse.fox.foxguard.flags.util.FlagState;
 import tk.elektrofuchse.fox.foxguard.flags.util.PassiveFlags;
 
 /**
@@ -24,24 +24,24 @@ public class SimpleFlagSet extends FlagSetBase {
     }
 
     @Override
-    public FlagState hasPermission(Player player, ActiveFlags flag) {
-        if (flag == null) return FlagState.PASSTHROUGH;
+    public Tristate hasPermission(Player player, ActiveFlags flag) {
+        if (flag == null) return Tristate.UNDEFINED;
         if (flag == ActiveFlags.BLOCK_PLACE) {
             if (player.hasPermission("foxguard.flags.simple.block.place"))
-                return FlagState.TRUE;
-            else return FlagState.FALSE;
+                return Tristate.TRUE;
+            else return Tristate.FALSE;
         }
         if (flag == ActiveFlags.BLOCK_BREAK) {
             if (player.hasPermission("foxguard.flags.simple.block.break"))
-                return FlagState.TRUE;
-            else return FlagState.FALSE;
+                return Tristate.TRUE;
+            else return Tristate.FALSE;
         }
-        return FlagState.PASSTHROUGH;
+        return Tristate.UNDEFINED;
     }
 
     @Override
-    public FlagState isFlagAllowed(PassiveFlags flag) {
-        return FlagState.PASSTHROUGH;
+    public Tristate isFlagAllowed(PassiveFlags flag) {
+        return Tristate.UNDEFINED;
     }
 
     @Override

@@ -2,10 +2,10 @@ package tk.elektrofuchse.fox.foxguard.flags;
 
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.util.command.CommandSource;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.flags.util.ActiveFlags;
-import tk.elektrofuchse.fox.foxguard.flags.util.FlagState;
 import tk.elektrofuchse.fox.foxguard.flags.util.PassiveFlags;
 
 /**
@@ -15,9 +15,9 @@ public interface IFlagSet extends Comparable<IFlagSet> {
 
     boolean modify(String arguments, InternalCommandState state, CommandSource source);
 
-    FlagState hasPermission(Player player, ActiveFlags flag);
+    Tristate hasPermission(Player player, ActiveFlags flag);
 
-    FlagState isFlagAllowed(PassiveFlags flag);
+    Tristate isFlagAllowed(PassiveFlags flag);
 
     boolean isEnabled();
 
