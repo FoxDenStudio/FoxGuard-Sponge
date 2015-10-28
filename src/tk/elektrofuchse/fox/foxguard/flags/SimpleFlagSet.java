@@ -14,6 +14,7 @@ import java.sql.SQLException;
 
 /**
  * Created by Fox on 8/17/2015.
+ * Project: foxguard
  */
 public class SimpleFlagSet extends FlagSetBase {
 

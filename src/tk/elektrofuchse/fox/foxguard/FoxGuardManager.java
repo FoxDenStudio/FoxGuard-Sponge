@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 /**
  * Created by Fox on 8/17/2015.
+ * Project: foxguard
  */
 public class FoxGuardManager {
 

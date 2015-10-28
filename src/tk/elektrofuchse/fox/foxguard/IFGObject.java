@@ -7,6 +7,7 @@ import java.sql.SQLException;
 
 /**
  * Created by Fox on 10/28/2015.
+ * Project: foxguard
  */
 public interface IFGObject {
     String getName();

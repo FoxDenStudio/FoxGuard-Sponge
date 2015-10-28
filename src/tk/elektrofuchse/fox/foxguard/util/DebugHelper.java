@@ -8,6 +8,7 @@ import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 
 /**
  * Created by Fox on 10/21/2015.
+ * Project: foxguard
  */
 public class DebugHelper {
 

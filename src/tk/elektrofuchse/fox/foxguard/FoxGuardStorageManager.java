@@ -11,6 +11,7 @@ import java.sql.Statement;
 
 /**
  * Created by Fox on 10/26/2015.
+ * Project: foxguard
  */
 public class FoxGuardStorageManager {
     private static FoxGuardStorageManager instance;

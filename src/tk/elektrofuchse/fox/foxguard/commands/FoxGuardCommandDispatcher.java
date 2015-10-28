@@ -25,7 +25,6 @@
 package tk.elektrofuchse.fox.foxguard.commands;
 
 import com.google.common.collect.*;
-import org.spongepowered.api.service.permission.Subject;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
@@ -36,14 +35,11 @@ import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.command.*;
 import org.spongepowered.api.util.command.dispatcher.Disambiguator;
 import org.spongepowered.api.util.command.dispatcher.Dispatcher;
-import org.spongepowered.api.util.command.source.ConsoleSource;
 import tk.elektrofuchse.fox.foxguard.commands.util.CallbackHashMap;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -53,13 +49,11 @@ import static org.spongepowered.api.util.command.CommandMessageFormatting.NEWLIN
 import static org.spongepowered.api.util.command.CommandMessageFormatting.SPACE_TEXT;
 
 /**
- * A simple implementation of a {@link Dispatcher}.
+ * Created by Fox on 10/25/2015.
+ * Project: foxguard
  */
 public final class FoxGuardCommandDispatcher implements Dispatcher {
-
-    /**
-     * This is a disambiguator function that returns the first matching command.
-     */
+    
     public static final Disambiguator FIRST_DISAMBIGUATOR = (source, aliasUsed, availableOptions) -> {
         for (CommandMapping mapping : availableOptions) {
             if (mapping.getPrimaryAlias().toLowerCase().equals(aliasUsed.toLowerCase())) {
@@ -79,81 +73,25 @@ public final class FoxGuardCommandDispatcher implements Dispatcher {
     });
     private static FoxGuardCommandDispatcher instance;
 
-    /**
-     * Creates a basic new dispatcher.
-     */
+
     public FoxGuardCommandDispatcher() {
         this(FIRST_DISAMBIGUATOR);
         instance = this;
     }
 
-    /**
-     * Creates a new dispatcher with a specific disambiguator.
-     *
-     * @param disambiguatorFunc Function that returns the preferred command if multiple exist for a given alias
-     */
     public FoxGuardCommandDispatcher(Disambiguator disambiguatorFunc) {
         this.disambiguatorFunc = disambiguatorFunc;
     }
 
-    /**
-     * Register a given command using the given list of aliases.
-     * <p>
-     * <p>If there is a conflict with one of the aliases (i.e. that alias
-     * is already assigned to another command), then the alias will be skipped.
-     * It is possible for there to be no alias to be available out of
-     * the provided list of aliases, which would mean that the command would not
-     * be assigned to any aliases.</p>
-     * <p>
-     * <p>The first non-conflicted alias becomes the "primary alias."</p>
-     *
-     * @param callable The command
-     * @param alias    An array of aliases
-     * @return The registered command mapping, unless no aliases could be registered
-     */
     public Optional<CommandMapping> register(CommandCallable callable, String... alias) {
         checkNotNull(alias, "alias");
         return register(callable, Arrays.asList(alias));
     }
 
-    /**
-     * Register a given command using the given list of aliases.
-     * <p>
-     * <p>If there is a conflict with one of the aliases (i.e. that alias
-     * is already assigned to another command), then the alias will be skipped.
-     * It is possible for there to be no alias to be available out of
-     * the provided list of aliases, which would mean that the command would not
-     * be assigned to any aliases.</p>
-     * <p>
-     * <p>The first non-conflicted alias becomes the "primary alias."</p>
-     *
-     * @param callable The command
-     * @param aliases  A list of aliases
-     * @return The registered command mapping, unless no aliases could be registered
-     */
     public Optional<CommandMapping> register(CommandCallable callable, List<String> aliases) {
         return register(callable, aliases, Function.identity());
     }
 
-    /**
-     * Register a given command using a given list of aliases.
-     * <p>
-     * <p>The provided callback function will be called with a list of aliases
-     * that are not taken (from the list of aliases that were requested) and
-     * it should return a list of aliases to actually register. Aliases may be
-     * removed, and if no aliases remain, then the command will not be
-     * registered. It may be possible that no aliases are available, and thus
-     * the callback would receive an empty list. New aliases should not be added
-     * to the list in the callback as this may cause
-     * {@link IllegalArgumentException} to be thrown.</p>
-     * <p>
-     * <p>The first non-conflicted alias becomes the "primary alias."</p>
-     *
-     * @param callable The command
-     * @param aliases  A list of aliases
-     * @param callback The callback
-     * @return The registered command mapping, unless no aliases could be registered
-     */
     public synchronized Optional<CommandMapping> register(CommandCallable callable, List<String> aliases,
                                                           Function<List<String>, List<String>> callback) {
         checkNotNull(aliases, "aliases");
@@ -178,22 +116,10 @@ public final class FoxGuardCommandDispatcher implements Dispatcher {
         }
     }
 
-    /**
-     * Remove a mapping identified by the given alias.
-     *
-     * @param alias The alias
-     * @return The previous mapping associated with the alias, if one was found
-     */
     public synchronized Collection<CommandMapping> remove(String alias) {
         return this.commands.removeAll(alias.toLowerCase());
     }
 
-    /**
-     * Remove all mappings identified by the given aliases.
-     *
-     * @param aliases A collection of aliases
-     * @return Whether any were found
-     */
     public synchronized boolean removeAll(Collection<?> aliases) {
         checkNotNull(aliases, "aliases");
 
@@ -208,12 +134,6 @@ public final class FoxGuardCommandDispatcher implements Dispatcher {
         return found;
     }
 
-    /**
-     * Remove a command identified by the given mapping.
-     *
-     * @param mapping The mapping
-     * @return The previous mapping associated with the alias, if one was found
-     */
     public synchronized Optional<CommandMapping> removeMapping(CommandMapping mapping) {
         checkNotNull(mapping, "mapping");
 
@@ -231,12 +151,6 @@ public final class FoxGuardCommandDispatcher implements Dispatcher {
         return Optional.ofNullable(found);
     }
 
-    /**
-     * Remove all mappings contained with the given collection.
-     *
-     * @param mappings The collection
-     * @return Whether the at least one command was removed
-     */
     public synchronized boolean removeMappings(Collection<?> mappings) {
         checkNotNull(mappings, "mappings");
 
@@ -285,13 +199,7 @@ public final class FoxGuardCommandDispatcher implements Dispatcher {
         return get(alias, null);
     }
 
-    /**
-     * Get a given command in the context of a certain command source.
-     *
-     * @param alias  The alias to look up
-     * @param source The source this alias is being looked up for
-     * @return the command if exactly one matches
-     */
+
     public synchronized Optional<CommandMapping> get(String alias, @Nullable CommandSource source) {
         List<CommandMapping> results = this.commands.get(alias.toLowerCase());
         if (results.size() == 1) {
@@ -404,11 +312,6 @@ public final class FoxGuardCommandDispatcher implements Dispatcher {
                 Multimaps.filterValues(this.commands, input -> input.getCallable().testPermission(src)).values());
     }
 
-    /**
-     * Get the number of registered aliases.
-     *
-     * @return The number of aliases
-     */
     public synchronized int size() {
         return this.commands.size();
     }
@@ -446,7 +349,6 @@ public final class FoxGuardCommandDispatcher implements Dispatcher {
     public Multimap<String, CommandMapping> getAll() {
         return ImmutableMultimap.copyOf(this.commands);
     }
-
 
     public Map<CommandSource, InternalCommandState> getStateMap() {
         return stateMap;

@@ -24,6 +24,7 @@ import java.util.Optional;
 
 /**
  * Created by Fox on 8/22/2015.
+ * Project: foxguard
  */
 public class CommandDetail implements CommandCallable {
 

@@ -32,6 +32,7 @@ import java.sql.SQLException;
 
 /**
  * Created by Fox on 8/16/2015.
+ * Project: foxguard
  */
 @Plugin(id = "foxguard", name = "FoxGuard", version = FoxGuardMain.PLUGIN_VERSION)
 public class FoxGuardMain {

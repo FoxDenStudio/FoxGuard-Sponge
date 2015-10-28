@@ -12,6 +12,7 @@ import java.util.Optional;
 
 /**
  * Created by Fox on 8/20/2015.
+ * Project: foxguard
  */
 public class CommandFlush implements CommandCallable {
 

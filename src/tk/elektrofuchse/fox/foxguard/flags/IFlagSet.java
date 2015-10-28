@@ -11,6 +11,7 @@ import tk.elektrofuchse.fox.foxguard.flags.util.PassiveFlags;
 
 /**
  * Created by Fox on 8/17/2015.
+ * Project: foxguard
  */
 public interface IFlagSet extends IFGObject, Comparable<IFlagSet> {
 

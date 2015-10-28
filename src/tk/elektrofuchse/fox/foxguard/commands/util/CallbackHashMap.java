@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 
 /**
  * Created by Fox on 10/23/2015.
+ * Project: foxguard
  */
 public class CallbackHashMap<K,V> extends HashMap<K,V> {
     final private BiConsumer<Object, Map<K, V>> callback;

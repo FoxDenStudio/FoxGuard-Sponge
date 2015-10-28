@@ -8,6 +8,7 @@ import java.io.Serializable;
 
 /**
  * Created by Fox on 8/17/2015.
+ * Project: foxguard
  */
 public class BoundingBox3 implements Serializable {
     Vector3i a;
