@@ -3,7 +3,7 @@ package tk.elektrofuchse.fox.foxguard.factory;
 import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.world.World;
-import tk.elektrofuchse.fox.foxguard.commands.util.FGHelper;
+import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;

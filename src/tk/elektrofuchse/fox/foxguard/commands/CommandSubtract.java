@@ -1,6 +1,5 @@
 package tk.elektrofuchse.fox.foxguard.commands;
 
-import com.flowpowered.math.vector.Vector3i;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
@@ -13,13 +12,12 @@ import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
-import tk.elektrofuchse.fox.foxguard.commands.util.FGHelper;
+import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Vector;
 
 /**
  * Created by Fox on 10/25/2015.

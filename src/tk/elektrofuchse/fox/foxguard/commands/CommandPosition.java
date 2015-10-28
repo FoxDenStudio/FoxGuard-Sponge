@@ -8,7 +8,7 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.*;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.util.command.source.ConsoleSource;
-import tk.elektrofuchse.fox.foxguard.commands.util.FGHelper;
+import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 
 import java.util.List;
 import java.util.Optional;

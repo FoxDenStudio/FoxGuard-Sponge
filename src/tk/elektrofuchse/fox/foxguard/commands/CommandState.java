@@ -5,14 +5,11 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
-import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.*;
 import org.spongepowered.api.util.command.source.ConsoleSource;
-import tk.elektrofuchse.fox.foxguard.commands.util.FGHelper;
-import tk.elektrofuchse.fox.foxguard.flags.GlobalFlagSet;
+import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
-import tk.elektrofuchse.fox.foxguard.regions.GlobalRegion;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
 import java.util.Iterator;

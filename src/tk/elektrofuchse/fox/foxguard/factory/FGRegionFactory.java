@@ -4,12 +4,10 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.world.World;
-import tk.elektrofuchse.fox.foxguard.commands.util.FGHelper;
+import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 import tk.elektrofuchse.fox.foxguard.regions.RectRegion;
-
-import java.util.List;
 
 /**
  * Created by Fox on 10/25/2015.
