@@ -7,6 +7,8 @@ import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.command.CommandSource;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 
+import javax.sql.DataSource;
+
 /**
  * Created by Fox on 8/17/2015.
  */
@@ -29,8 +31,18 @@ public class GlobalRegion extends RegionBase {
     }
 
     @Override
+    public String getUniqueType() {
+        return "global";
+    }
+
+    @Override
     public Text getDetails(String arguments) {
         return Texts.of("It's global. Nothing to see here. Now move along.");
+    }
+
+    @Override
+    public void writeToDatabase(DataSource dataSource) {
+
     }
 
     @Override

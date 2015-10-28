@@ -8,6 +8,7 @@ import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
+import javax.sql.DataSource;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +38,16 @@ public class FGFactoryManager {
     public IRegion createRegion(String name, String type, String args, InternalCommandState state, World world, CommandSource source) throws CommandException {
         for (IRegionFactory rf : regionFactories) {
             if (FGHelper.contains(rf.getAliases(), type)) {
-                return rf.createRegion(type, name, args, state, world, source);
+                return rf.createRegion(name, type, args, state, world, source);
+            }
+        }
+        return null;
+    }
+
+    public IRegion createRegion(DataSource source, String type){
+        for (IRegionFactory rf : regionFactories) {
+            if (FGHelper.contains(rf.getAliases(), type)) {
+                return rf.createRegion(source, type);
             }
         }
         return null;
@@ -45,9 +55,18 @@ public class FGFactoryManager {
 
 
     public IFlagSet createFlagSet(String name, String type, int priority, String args, InternalCommandState state, CommandSource source) {
-        for (IFlagSetFactory rf : flagSetFactories) {
-            if (FGHelper.contains(rf.getAliases(), type)) {
-                return rf.createFlagSet(type, name, args, state, source);
+        for (IFlagSetFactory fsf : flagSetFactories) {
+            if (FGHelper.contains(fsf.getAliases(), type)) {
+                return fsf.createFlagSet(name, type, priority, args, state, source);
+            }
+        }
+        return null;
+    }
+
+    public IFlagSet createFlagSet(DataSource source, String type) {
+        for (IFlagSetFactory fsf : flagSetFactories) {
+            if (FGHelper.contains(fsf.getAliases(), type)) {
+                return fsf.createFlagSet(source, type);
             }
         }
         return null;

@@ -9,7 +9,7 @@ import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 import tk.elektrofuchse.fox.foxguard.regions.RectRegion;
 
-import java.util.List;
+import javax.sql.DataSource;
 
 /**
  * Created by Fox on 10/25/2015.
@@ -19,7 +19,7 @@ public class FGRegionFactory implements IRegionFactory {
     String[] rectAliases = {"rectangular", "rectangle", "rect"};
 
     @Override
-    public IRegion createRegion(String type, String name, String arguments, InternalCommandState state, World world, CommandSource source) throws CommandException {
+    public IRegion createRegion(String name, String type, String arguments, InternalCommandState state, World world, CommandSource source) throws CommandException {
         if (FGHelper.contains(rectAliases, type)) {
             if(source instanceof Player)
                 return new RectRegion(name, state.positions, arguments.split(" "), source, (Player)source);
@@ -28,7 +28,17 @@ public class FGRegionFactory implements IRegionFactory {
     }
 
     @Override
+    public IRegion createRegion(DataSource source, String type) {
+        return null;
+    }
+
+    @Override
     public String[] getAliases() {
         return FGHelper.concatAll(rectAliases);
+    }
+
+    @Override
+    public String[] getTypes() {
+        return new String[0];
     }
 }

@@ -7,5 +7,7 @@ public interface IFGFactory {
 
     String[] getAliases();
 
+    String[] getTypes();
+
 
 }
