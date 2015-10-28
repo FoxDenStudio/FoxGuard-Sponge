@@ -134,8 +134,7 @@ public class FoxGuardManager {
     public boolean link(IRegion region, IFlagSet flagSet) {
         if (region == null || flagSet == null || region.getFlagSets().contains(flagSet)) return false;
         if (flagSet instanceof GlobalFlagSet && !(region instanceof GlobalRegion)) return false;
-        region.addFlagSet(flagSet);
-        return true;
+        return region.addFlagSet(flagSet);
     }
 
     public boolean unlink(Server server, String worldName, String regionName, String flagSetName) {
@@ -152,8 +151,7 @@ public class FoxGuardManager {
     public boolean unlink(IRegion region, IFlagSet flagSet) {
         if (region == null || flagSet == null || !region.getFlagSets().contains(flagSet)) return false;
         if (flagSet instanceof GlobalFlagSet && region instanceof GlobalRegion) return false;
-        region.removeFlagSet(flagSet);
-        return true;
+        return region.removeFlagSet(flagSet);
     }
 
     public void createLists(World world) {

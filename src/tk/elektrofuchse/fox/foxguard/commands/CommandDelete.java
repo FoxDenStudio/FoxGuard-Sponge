@@ -65,6 +65,7 @@ public class CommandDelete implements CommandCallable {
                 if (!success)
                     throw new ArgumentParseException(Texts.of("No FlagSet exists with that name!"), args[1], 1);
                 player.sendMessage(Texts.of(TextColors.GREEN, "FlagSet deleted successfully!"));
+
             } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
         } else {
 

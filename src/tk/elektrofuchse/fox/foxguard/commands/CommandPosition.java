@@ -52,6 +52,7 @@ public class CommandPosition implements CommandCallable {
             }
             FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).positions.add(new Vector3i(x, y, z));
             player.sendMessage(Texts.of(TextColors.GREEN, "Successfully added position (" + x + ", " + y + ", " + z + ") to your state buffer!"));
+            return CommandResult.success();
         } else if (source instanceof ConsoleSource) {
 
         } else {

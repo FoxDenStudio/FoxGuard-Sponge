@@ -69,6 +69,7 @@ public class CommandCreate implements CommandCallable {
                     throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1 + flag], 1 + flag);
                 FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).flush(InternalCommandState.StateField.POSITIONS);
                 player.sendMessage(Texts.of(TextColors.GREEN, "Region created successfully"));
+                return CommandResult.success();
             } else if (FGHelper.contains(flagSetsAliases, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 if (args[1].matches("^.*[^0-9a-zA-Z_$].*$"))
@@ -86,6 +87,7 @@ public class CommandCreate implements CommandCallable {
                 if (!success)
                     throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1], 1);
                 player.sendMessage(Texts.of(TextColors.GREEN, "FlagSet created successfully!"));
+                return CommandResult.success();
             } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
         } else {
 
