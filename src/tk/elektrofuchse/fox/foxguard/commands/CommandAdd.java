@@ -13,7 +13,7 @@ import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
-import tk.elektrofuchse.fox.foxguard.commands.util.FGHelper;
+import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
@@ -59,6 +59,7 @@ public class CommandAdd implements CommandCallable {
                 FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedRegions.add(region);
 
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully added Region to your state buffer!"));
+                return CommandResult.success();
             } else if (FGHelper.contains(flagSetsAliases, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 IFlagSet flagSet = FoxGuardManager.getInstance().getFlagSet(args[1]);
@@ -69,6 +70,7 @@ public class CommandAdd implements CommandCallable {
                 FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.add(flagSet);
 
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully added FlagSet to your state buffer!"));
+                return CommandResult.success();
             } else if (FGHelper.contains(positionsAliases, args[0])) {
                 int x, y, z;
                 Vector3i pPos = player.getLocation().getBlockPosition();
@@ -99,6 +101,7 @@ public class CommandAdd implements CommandCallable {
                 }
                 FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).positions.add(new Vector3i(x, y, z));
                 player.sendMessage(Texts.of(TextColors.GREEN, "Successfully added position (" + x + ", " + y + ", " + z + ") to your state buffer!"));
+                return CommandResult.success();
             } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
         } else {
 

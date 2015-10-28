@@ -10,13 +10,11 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
-import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
-import tk.elektrofuchse.fox.foxguard.commands.util.FGHelper;
+import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.regions.util.BoundingBox2;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Created by Fox on 8/18/2015.

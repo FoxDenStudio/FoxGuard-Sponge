@@ -34,37 +34,44 @@ public class CommandUnlink implements CommandCallable {
                     throw new CommandException(Texts.of("You don't have any Regions in your state buffer!"));
                 if (FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.size() == 0)
                     throw new CommandException(Texts.of("You don't have any FlagSets in your state buffer!"));
+                int[] count = {0};
                 FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedRegions.stream().forEach(
                         region -> FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.stream()
                                 .filter(flagSet -> !(flagSet instanceof GlobalFlagSet))
-                                .forEach(flagSet -> FoxGuardManager.getInstance().unlink(region, flagSet)));
-                source.sendMessage(Texts.of(TextColors.GREEN, "Successfully unlinked!"));
+                                .forEach(flagSet -> count[0] += FoxGuardManager.getInstance().unlink(region, flagSet) ? 1 : 0));
+                source.sendMessage(Texts.of(TextColors.GREEN, "Successfully unlinked " + count[0] + "!"));
+                return CommandResult.builder().successCount(count[0]).build();
             } else if (args[0].equals("FULL")) {
                 if (FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedRegions.size() == 0 &&
                         FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.size() == 0)
                     throw new CommandException(Texts.of("You don't have any Regions or FlagSets in your state buffer!"));
+                int[] count = {0};
                 FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedRegions.stream().forEach(
                         region -> {
                             List<IFlagSet> flagSets = new ArrayList<>();
                             region.getFlagSets().stream()
                                     .filter(flagSet -> !(flagSet instanceof GlobalFlagSet))
                                     .forEach(flagSets::add);
-                            flagSets.stream().forEach(flagSet -> FoxGuardManager.getInstance().unlink(region, flagSet));});
+                            flagSets.stream().forEach(flagSet -> count[0] += FoxGuardManager.getInstance().unlink(region, flagSet) ? 1 : 0);
+                        });
                 FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.stream()
                         .filter(flagSet -> !(flagSet instanceof GlobalFlagSet)).forEach(
                         flagSet -> FoxGuardManager.getInstance().getRegionsListCopy().stream().forEach(
-                                region -> FoxGuardManager.getInstance().unlink(region, flagSet)));
-                source.sendMessage(Texts.of(TextColors.GREEN, "Successfully unlinked!"));
+                                region -> count[0] += FoxGuardManager.getInstance().unlink(region, flagSet) ? 1 : 0));
+                source.sendMessage(Texts.of(TextColors.GREEN, "Successfully unlinked " + count[0] + "!"));
+                return CommandResult.builder().successCount(count[0]).build();
             } else if (args[0].equals("ALL")) {
-
+                int[] count = {0};
                 FoxGuardManager.getInstance().getRegionsListCopy().forEach(
                         region -> {
                             List<IFlagSet> flagSets = new ArrayList<>();
                             region.getFlagSets().stream()
-                                .filter(flagSet -> !(flagSet instanceof GlobalFlagSet))
-                                .forEach(flagSets::add);
-                            flagSets.stream().forEach(flagSet -> FoxGuardManager.getInstance().unlink(region, flagSet));});
-                source.sendMessage(Texts.of(TextColors.GREEN, "Successfully unlinked!"));
+                                    .filter(flagSet -> !(flagSet instanceof GlobalFlagSet))
+                                    .forEach(flagSets::add);
+                            flagSets.stream().forEach(flagSet -> count[0] += FoxGuardManager.getInstance().unlink(region, flagSet) ? 1 : 0);
+                        });
+                source.sendMessage(Texts.of(TextColors.GREEN, "Successfully unlinked " + count[0] + "!"));
+                return CommandResult.builder().successCount(count[0]).build();
             }
         } else {
 

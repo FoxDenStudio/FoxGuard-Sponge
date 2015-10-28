@@ -1,4 +1,4 @@
-package tk.elektrofuchse.fox.foxguard.commands.util;
+package tk.elektrofuchse.fox.foxguard.util;
 
 import org.spongepowered.api.Server;
 import org.spongepowered.api.text.format.TextColor;
@@ -47,6 +47,7 @@ public class FGHelper {
         return flagSet.getName().equals(GlobalFlagSet.NAME) ? TextColors.YELLOW : TextColors.RESET;
     }
 
+    @SafeVarargs
     public static <T> T[] concatAll(T[] first, T[]... rest) {
         int totalLength = first.length;
         for (T[] array : rest) {

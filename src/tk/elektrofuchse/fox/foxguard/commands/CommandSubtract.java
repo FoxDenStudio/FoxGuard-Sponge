@@ -1,6 +1,5 @@
 package tk.elektrofuchse.fox.foxguard.commands;
 
-import com.flowpowered.math.vector.Vector3i;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
@@ -13,13 +12,12 @@ import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
-import tk.elektrofuchse.fox.foxguard.commands.util.FGHelper;
+import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Vector;
 
 /**
  * Created by Fox on 10/25/2015.
@@ -69,6 +67,7 @@ public class CommandSubtract implements CommandCallable {
                     throw new ArgumentParseException(Texts.of("Region is not in your state buffer!"), args[1 + flag], 1 + flag);
                 FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedRegions.remove(region);
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully removed Region from your state buffer!"));
+                return CommandResult.success();
             } else if (FGHelper.contains(flagSetsAliases, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name or a number!"));
                 IFlagSet flagSet;
@@ -87,6 +86,7 @@ public class CommandSubtract implements CommandCallable {
                     throw new ArgumentParseException(Texts.of("FlagSet is not in your state buffer!"), args[1], 1);
                 FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.remove(flagSet);
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully removed FlagSet from your state buffer!"));
+                return CommandResult.success();
             } else if (FGHelper.contains(positionsAliases, args[0])) {
                 try {
                     int index = Integer.parseInt(args[1]);
@@ -98,6 +98,7 @@ public class CommandSubtract implements CommandCallable {
                     throw new ArgumentParseException(Texts.of("Not a valid index!"), args[1], 1);
                 }
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully removed position from your state buffer!"));
+                return CommandResult.success();
             } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
         } else {
 
