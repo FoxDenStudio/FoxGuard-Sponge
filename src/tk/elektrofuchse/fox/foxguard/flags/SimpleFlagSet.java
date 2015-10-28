@@ -26,12 +26,17 @@ public class SimpleFlagSet extends FlagSetBase {
     @Override
     public FlagState hasPermission(Player player, ActiveFlags flag) {
         if (flag == null) return FlagState.PASSTHROUGH;
-        if (flag == ActiveFlags.BLOCK_PLACE && player.hasPermission("foxguard.simple.block.place") ||
-                flag == ActiveFlags.BLOCK_BREAK && player.hasPermission("foxguard.simple.block.break")) {
-            return FlagState.TRUE;
-        } else {
-            return FlagState.FALSE;
+        if (flag == ActiveFlags.BLOCK_PLACE) {
+            if (player.hasPermission("foxguard.flags.simple.block.place"))
+                return FlagState.TRUE;
+            else return FlagState.FALSE;
         }
+        if (flag == ActiveFlags.BLOCK_BREAK) {
+            if (player.hasPermission("foxguard.flags.simple.block.break"))
+                return FlagState.TRUE;
+            else return FlagState.FALSE;
+        }
+        return FlagState.PASSTHROUGH;
     }
 
     @Override

@@ -31,7 +31,7 @@ public abstract class FlagSetBase implements IFlagSet {
 
     @Override
     public void setPriority(int priority) {
-        this.priority = priority > 0 ? priority : 1;
+        this.priority = priority > Integer.MIN_VALUE ? priority : Integer.MIN_VALUE + 1;
     }
 
     @Override

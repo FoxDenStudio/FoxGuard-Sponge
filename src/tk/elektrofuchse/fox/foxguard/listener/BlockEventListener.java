@@ -28,9 +28,11 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
     @Override
     public void handle(ChangeBlockEvent event) throws Exception {
         if (!event.getCause().any(Player.class)) return;
-        DebugHelper.printBlockEvent(event);
+        //DebugHelper.printBlockEvent(event);
         ActiveFlags typeFlag;
-        if (event instanceof ChangeBlockEvent.Break) typeFlag = ActiveFlags.BLOCK_BREAK;
+        if (event instanceof ChangeBlockEvent.Modify) typeFlag = ActiveFlags.BLOCK_MODIFY;
+        else if (event instanceof ChangeBlockEvent.Fluid) typeFlag = ActiveFlags.FLUID;
+        else if (event instanceof ChangeBlockEvent.Break) typeFlag = ActiveFlags.BLOCK_BREAK;
         else if (event instanceof ChangeBlockEvent.Place) typeFlag = ActiveFlags.BLOCK_PLACE;
         else return;
         Player player = event.getCause().first(Player.class).get();

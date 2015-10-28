@@ -19,13 +19,12 @@ import tk.elektrofuchse.fox.foxguard.commands.*;
 import tk.elektrofuchse.fox.foxguard.flags.SimpleFlagSet;
 import tk.elektrofuchse.fox.foxguard.listener.BlockEventListener;
 import tk.elektrofuchse.fox.foxguard.listener.PlayerEventListener;
-import tk.elektrofuchse.fox.foxguard.listener.RightClickHandler;
+import tk.elektrofuchse.fox.foxguard.listener.InteractListener;
 import tk.elektrofuchse.fox.foxguard.regions.RectRegion;
 import tk.elektrofuchse.fox.foxguard.regions.util.BoundingBox2;
 
 import javax.sql.DataSource;
 import java.io.File;
-import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
@@ -110,7 +109,7 @@ public class FoxGuardMain {
     private void registerListeners(){
         eventManager.registerListener(this, TargetPlayerEvent.class, new PlayerEventListener());
         eventManager.registerListener(this, ChangeBlockEvent.class, new BlockEventListener());
-        eventManager.registerListener(this, InteractBlockEvent.class, new RightClickHandler());
+        eventManager.registerListener(this, InteractBlockEvent.class, new InteractListener());
 
     }
 

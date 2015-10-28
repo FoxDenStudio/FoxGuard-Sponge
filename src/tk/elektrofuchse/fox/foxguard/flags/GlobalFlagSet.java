@@ -17,12 +17,12 @@ public class GlobalFlagSet extends FlagSetBase {
     public static final String NAME = "_global";
 
     public GlobalFlagSet() {
-        super(NAME, 0);
+        super(NAME, Integer.MIN_VALUE);
     }
 
     @Override
     public void setPriority(int priority) {
-        this.priority = 0;
+        this.priority = Integer.MIN_VALUE;
     }
 
     @Override
