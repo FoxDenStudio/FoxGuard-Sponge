@@ -21,14 +21,16 @@ import org.spongepowered.api.service.user.UserStorage;
 import tk.elektrofuchse.fox.foxguard.commands.*;
 import tk.elektrofuchse.fox.foxguard.flags.SimpleFlagSet;
 import tk.elektrofuchse.fox.foxguard.listener.BlockEventListener;
-import tk.elektrofuchse.fox.foxguard.listener.PlayerEventListener;
 import tk.elektrofuchse.fox.foxguard.listener.InteractListener;
+import tk.elektrofuchse.fox.foxguard.listener.PlayerEventListener;
 import tk.elektrofuchse.fox.foxguard.regions.RectRegion;
 import tk.elektrofuchse.fox.foxguard.regions.util.BoundingBox2;
 
 import javax.sql.DataSource;
 import java.io.File;
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
  * Created by Fox on 8/16/2015.
@@ -66,13 +68,38 @@ public class FoxGuardMain {
         registerCommands();
         registerListeners();
 
+
+        try {
+            DataSource source = this.getDataSource("jdbc:h2:./foxguard/test");
+            try(Connection conn = source.getConnection()){
+                Statement statement = conn.createStatement();
+                statement.execute("DROP ALL OBJECTS ");
+                statement.execute("CREATE TABLE TEST(TEST INTEGER);");
+                statement.execute("INSERT INTO TEST VALUES (5);");
+                statement.execute("DROP ALL OBJECTS;");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            DataSource source = this.getDataSource("jdbc:h2:./foxguard/test");
+            try (Connection conn = source.getConnection()) {
+                Statement statement = conn.createStatement();
+                statement.execute("CREATE TABLE TEST2(TEST2 INTEGER);");
+                statement.execute("INSERT INTO TEST2 VALUES (10);");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Listener
     public void serverStarted(GameStartedServerEvent event) {
         FoxGuardManager.getInstance().loadLists();
         try {
-            FoxGuardStorageManager.getInstance().init();
+            FoxGuardStorageManager.getInstance().initFlagSets();
+            //FoxGuardStorageManager.getInstance().loadFlagSets();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -88,7 +115,6 @@ public class FoxGuardMain {
     @Listener
     public void serverStopping(GameStoppingServerEvent event) {
         try {
-            FoxGuardStorageManager.getInstance().writeRegions();
             FoxGuardStorageManager.getInstance().writeFlagSets();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -98,7 +124,7 @@ public class FoxGuardMain {
     @Listener
     public void worldUnload(UnloadWorldEvent event) {
         try {
-            FoxGuardStorageManager.getInstance().writeWorldRegions(event.getTargetWorld());
+            FoxGuardStorageManager.getInstance().writeWorld(event.getTargetWorld());
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -108,6 +134,7 @@ public class FoxGuardMain {
     public void worldLoad(LoadWorldEvent event) {
         try {
             FoxGuardStorageManager.getInstance().initWorld(event.getTargetWorld());
+            //FoxGuardStorageManager.getInstance().loadWorld(event.getTargetWorld());
         } catch (SQLException e) {
             e.printStackTrace();
         }

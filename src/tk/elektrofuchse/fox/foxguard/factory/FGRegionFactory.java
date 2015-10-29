@@ -29,7 +29,7 @@ public class FGRegionFactory implements IRegionFactory {
     }
 
     @Override
-    public IRegion createRegion(DataSource source, String type) {
+    public IRegion createRegion(DataSource source, String name, String type) {
         return null;
     }
 

@@ -14,9 +14,7 @@ public class PlayerEventListener implements EventListener<TargetPlayerEvent> {
 
     @Override
     public void handle(TargetPlayerEvent event) {
-        if (event instanceof ClientConnectionEvent.Join) {
-            FoxGuardCommandDispatcher.getInstance().getStateMap().put(event.getTargetEntity(), new InternalCommandState());
-        } else if (event instanceof ClientConnectionEvent.Disconnect) {
+        if (event instanceof ClientConnectionEvent.Disconnect) {
             FoxGuardCommandDispatcher.getInstance().getStateMap().remove(event.getTargetEntity());
         }
     }

@@ -98,8 +98,6 @@ public final class FoxGuardCommandDispatcher implements Dispatcher {
         checkNotNull(callable, "callable");
         checkNotNull(callback, "callback");
 
-        // Invoke the callback with the commands that /can/ be registered
-        // noinspection ConstantConditions
         aliases = ImmutableList.copyOf(callback.apply(aliases));
         if (!aliases.isEmpty()) {
             String primary = aliases.get(0);

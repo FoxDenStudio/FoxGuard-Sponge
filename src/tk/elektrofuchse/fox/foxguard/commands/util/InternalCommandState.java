@@ -19,21 +19,21 @@ public class InternalCommandState {
     public List<Vector3i> positions = new ArrayList<>();
 
     public void flush() {
-        selectedRegions = new LinkedList<>();
-        selectedFlagSets = new LinkedList<>();
-        positions = new ArrayList<>();
+        selectedRegions.clear();
+        selectedFlagSets.clear();
+        positions.clear();
     }
 
     public void flush(StateField field) {
         switch (field) {
             case REGIONS:
-                selectedRegions = new LinkedList<>();
+                selectedRegions.clear();
                 break;
             case FLAGSETS:
-                selectedFlagSets = new LinkedList<>();
+                selectedFlagSets.clear();
                 break;
             case POSITIONS:
-                positions = new ArrayList<>();
+                positions.clear();
                 break;
         }
     }

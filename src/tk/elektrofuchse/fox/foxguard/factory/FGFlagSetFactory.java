@@ -17,7 +17,7 @@ public class FGFlagSetFactory implements IFlagSetFactory {
     }
 
     @Override
-    public IFlagSet createFlagSet(DataSource source, String type) {
+    public IFlagSet createFlagSet(DataSource source, String name, String type) {
         return null;
     }
 

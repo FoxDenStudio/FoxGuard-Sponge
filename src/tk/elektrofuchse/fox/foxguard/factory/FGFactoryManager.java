@@ -45,10 +45,10 @@ public class FGFactoryManager {
         return null;
     }
 
-    public IRegion createRegion(DataSource source, String type){
+    public IRegion createRegion(DataSource source, String name, String type){
         for (IRegionFactory rf : regionFactories) {
             if (FGHelper.contains(rf.getAliases(), type)) {
-                return rf.createRegion(source, type);
+                return rf.createRegion(source,name, type);
             }
         }
         return null;
@@ -64,10 +64,10 @@ public class FGFactoryManager {
         return null;
     }
 
-    public IFlagSet createFlagSet(DataSource source, String type) {
+    public IFlagSet createFlagSet(DataSource source, String name, String type) {
         for (IFlagSetFactory fsf : flagSetFactories) {
             if (FGHelper.contains(fsf.getAliases(), type)) {
-                return fsf.createFlagSet(source, type);
+                return fsf.createFlagSet(source, name, type);
             }
         }
         return null;
