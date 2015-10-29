@@ -2,11 +2,9 @@ package tk.elektrofuchse.fox.foxguard.regions;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
-import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
+import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 
 import java.util.LinkedList;
 import java.util.List;

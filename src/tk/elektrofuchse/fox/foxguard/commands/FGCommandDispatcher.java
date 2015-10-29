@@ -1,27 +1,3 @@
-/*
- * This file is part of SpongeAPI, licensed under the MIT License (MIT).
- *
- * Copyright (c) SpongePowered <https://www.spongepowered.org>
- * Copyright (c) contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
 package tk.elektrofuchse.fox.foxguard.commands;
 
 import com.google.common.collect.*;
@@ -35,8 +11,6 @@ import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.command.*;
 import org.spongepowered.api.util.command.dispatcher.Disambiguator;
 import org.spongepowered.api.util.command.dispatcher.Dispatcher;
-import tk.elektrofuchse.fox.foxguard.commands.util.CallbackHashMap;
-import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -44,16 +18,15 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.spongepowered.api.util.SpongeApiTranslationHelper.t;
 import static org.spongepowered.api.util.command.CommandMessageFormatting.NEWLINE_TEXT;
 import static org.spongepowered.api.util.command.CommandMessageFormatting.SPACE_TEXT;
 
 /**
- * Created by Fox on 10/25/2015.
+ * Created by Fox on 10/29/2015.
  * Project: foxguard
  */
-public final class FoxGuardCommandDispatcher implements Dispatcher {
-    
+public class FGCommandDispatcher implements Dispatcher {
+
     public static final Disambiguator FIRST_DISAMBIGUATOR = (source, aliasUsed, availableOptions) -> {
         for (CommandMapping mapping : availableOptions) {
             if (mapping.getPrimaryAlias().toLowerCase().equals(aliasUsed.toLowerCase())) {
@@ -63,23 +36,14 @@ public final class FoxGuardCommandDispatcher implements Dispatcher {
         return Optional.of(availableOptions.get(0));
     };
 
-    private final Disambiguator disambiguatorFunc;
-    private final ListMultimap<String, CommandMapping> commands = ArrayListMultimap.create();
+    protected final Disambiguator disambiguatorFunc;
+    protected final ListMultimap<String, CommandMapping> commands = ArrayListMultimap.create();
 
-    private final Map<CommandSource, InternalCommandState> stateMap = new CallbackHashMap<>((o, m) -> {
-        if (o instanceof CommandSource) {
-            m.put((CommandSource) o, new InternalCommandState());
-        }
-    });
-    private static FoxGuardCommandDispatcher instance;
-
-
-    public FoxGuardCommandDispatcher() {
+    public FGCommandDispatcher() {
         this(FIRST_DISAMBIGUATOR);
-        instance = this;
     }
 
-    public FoxGuardCommandDispatcher(Disambiguator disambiguatorFunc) {
+    public FGCommandDispatcher(Disambiguator disambiguatorFunc) {
         this.disambiguatorFunc = disambiguatorFunc;
     }
 
@@ -236,14 +200,14 @@ public final class FoxGuardCommandDispatcher implements Dispatcher {
             final String[] argSplit = commandLine.split(" ", 2);
             final Optional<CommandMapping> cmdOptional = get(argSplit[0], source);
             if (!cmdOptional.isPresent()) {
-                throw new CommandNotFoundException(t("commands.generic.notFound"), argSplit[0]); // TODO: Fix properly to use a SpongeTranslation??
+                throw new CommandNotFoundException(Texts.of("Command not found!"), argSplit[0]); // TODO: Fix properly to use a SpongeTranslation??
             }
             final String arguments = argSplit.length > 1 ? argSplit[1] : "";
             final CommandCallable spec = cmdOptional.get().getCallable();
             try {
                 return spec.process(source, arguments);
             } catch (CommandNotFoundException e) {
-                throw new CommandException(t("No such child command: %s", e.getCommand()));
+                throw new CommandException(Texts.of("No such child command: %s" + e.getCommand()));
             }
         } else {
             source.sendMessage(Texts.builder()
@@ -286,7 +250,7 @@ public final class FoxGuardCommandDispatcher implements Dispatcher {
         if (this.commands.isEmpty()) {
             return Optional.empty();
         }
-        TextBuilder build = t("Available commands:\n").builder();
+        TextBuilder build = Texts.of("Available commands:\n").builder();
         for (Iterator<CommandMapping> it = filterCommandMappings(source).iterator(); it.hasNext(); ) {
 
             CommandMapping mapping = it.next();
@@ -350,11 +314,4 @@ public final class FoxGuardCommandDispatcher implements Dispatcher {
         return ImmutableMultimap.copyOf(this.commands);
     }
 
-    public Map<CommandSource, InternalCommandState> getStateMap() {
-        return stateMap;
-    }
-
-    public static FoxGuardCommandDispatcher getInstance() {
-        return instance;
-    }
 }

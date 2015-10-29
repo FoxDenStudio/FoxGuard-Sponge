@@ -19,7 +19,7 @@ import org.spongepowered.api.service.event.EventManager;
 import org.spongepowered.api.service.sql.SqlService;
 import org.spongepowered.api.service.user.UserStorage;
 import tk.elektrofuchse.fox.foxguard.commands.*;
-import tk.elektrofuchse.fox.foxguard.flags.SimpleFlagSet;
+import tk.elektrofuchse.fox.foxguard.flagsets.SimpleFlagSet;
 import tk.elektrofuchse.fox.foxguard.listener.BlockEventListener;
 import tk.elektrofuchse.fox.foxguard.listener.PlayerEventListener;
 import tk.elektrofuchse.fox.foxguard.listener.InteractListener;
@@ -54,7 +54,7 @@ public class FoxGuardMain {
 
     private SqlService sql;
     private UserStorage userStorage;
-    private FoxGuardCommandDispatcher fgDispatcher;
+    private FGCommandMainDispatcher fgDispatcher;
 
     @Listener
     public void gameInit(GameInitializationEvent event) {
@@ -121,7 +121,9 @@ public class FoxGuardMain {
     }
 
     private void registerCommands() {
-        fgDispatcher = new FoxGuardCommandDispatcher();
+        fgDispatcher = new FGCommandMainDispatcher();
+        FGCommandDispatcher fgRegionDispatcher = new FGCommandDispatcher();
+        FGCommandDispatcher fgFlagSetDispatcher = new FGCommandDispatcher();
         fgDispatcher.register(new CommandCreate(), "create", "construct", "new", "make", "define", "mk");
         fgDispatcher.register(new CommandDelete(), "delete", "del", "remove", "rem", "rm", "destroy");
         fgDispatcher.register(new CommandModify(), "modify", "mod", "change", "edit", "update");

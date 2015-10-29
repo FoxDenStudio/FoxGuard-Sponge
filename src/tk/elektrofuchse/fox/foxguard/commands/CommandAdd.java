@@ -14,7 +14,7 @@ import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
 import tk.elektrofuchse.fox.foxguard.util.FGHelper;
-import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
+import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
 import java.util.List;
@@ -55,9 +55,9 @@ public class CommandAdd implements CommandCallable {
                 IRegion region = FoxGuardManager.getInstance().getRegion(world, args[1 + flag]);
                 if (region == null)
                     throw new ArgumentParseException(Texts.of("No Regions with this name!"), args[1 + flag], 1 + flag);
-                if (FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedRegions.contains(region))
+                if (FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.contains(region))
                     throw new ArgumentParseException(Texts.of("Region is already in your state buffer!"), args[1 + flag], 1 + flag);
-                FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedRegions.add(region);
+                FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.add(region);
 
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully added Region to your state buffer!"));
                 return CommandResult.success();
@@ -66,9 +66,9 @@ public class CommandAdd implements CommandCallable {
                 IFlagSet flagSet = FoxGuardManager.getInstance().getFlagSet(args[1]);
                 if (flagSet == null)
                     throw new ArgumentParseException(Texts.of("No FlagSets with this name!"), args[1], 1);
-                if (FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.contains(flagSet))
+                if (FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.contains(flagSet))
                     throw new ArgumentParseException(Texts.of("FlagSet is already in your state buffer!"), args[1], 1);
-                FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.add(flagSet);
+                FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.add(flagSet);
 
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully added FlagSet to your state buffer!"));
                 return CommandResult.success();
@@ -100,7 +100,7 @@ public class CommandAdd implements CommandCallable {
                 } else {
                     throw new CommandException(Texts.of("Too many arguments!"));
                 }
-                FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).positions.add(new Vector3i(x, y, z));
+                FGCommandMainDispatcher.getInstance().getStateMap().get(player).positions.add(new Vector3i(x, y, z));
                 player.sendMessage(Texts.of(TextColors.GREEN, "Successfully added position (" + x + ", " + y + ", " + z + ") to your state buffer!"));
                 return CommandResult.success();
             } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);

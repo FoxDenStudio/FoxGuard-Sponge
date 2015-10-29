@@ -1,6 +1,8 @@
 package tk.elektrofuchse.fox.foxguard;
 
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.util.command.CommandSource;
+import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -10,6 +12,7 @@ import java.sql.SQLException;
  * Project: foxguard
  */
 public interface IFGObject {
+
     String getName();
 
     void setName(String name);
@@ -21,4 +24,7 @@ public interface IFGObject {
     Text getDetails(String arguments);
 
     void writeToDatabase(DataSource dataSource) throws SQLException;
+
+    boolean modify(String arguments, InternalCommandState state, CommandSource source);
+
 }

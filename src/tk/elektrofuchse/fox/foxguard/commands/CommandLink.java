@@ -9,8 +9,8 @@ import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandResult;
 import org.spongepowered.api.util.command.CommandSource;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
-import tk.elektrofuchse.fox.foxguard.flags.GlobalFlagSet;
-import tk.elektrofuchse.fox.foxguard.regions.IRegion;
+import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
+import tk.elektrofuchse.fox.foxguard.flagsets.GlobalFlagSet;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,16 +26,17 @@ public class CommandLink implements CommandCallable {
         if (!arguments.isEmpty()) args = arguments.split(" ", 2);
         if (source instanceof Player) {
             Player player = (Player) source;
-            if (FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedRegions.size() == 0)
+            if (FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.size() == 0)
                 throw new CommandException(Texts.of("You don't have any Regions in your state buffer!"));
-            if (FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.size() == 0)
+            if (FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.size() == 0)
                 throw new CommandException(Texts.of("You don't have any FlagSets in your state buffer!"));
             int[] count = {0};
-            FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedRegions.stream().forEach(
-                    region -> FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.stream()
+            FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.stream().forEach(
+                    region -> FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.stream()
                             .filter(flagSet -> !(flagSet instanceof GlobalFlagSet))
                             .forEach(flagSet -> count[0] += FoxGuardManager.getInstance().link(region, flagSet) ? 1 : 0));
             source.sendMessage(Texts.of(TextColors.GREEN, "Successfully linked " + count[0] + "!"));
+            FGCommandMainDispatcher.getInstance().getStateMap().get(player).flush(InternalCommandState.StateField.REGIONS, InternalCommandState.StateField.FLAGSETS);
             return CommandResult.builder().successCount(count[0]).build();
         } else {
 

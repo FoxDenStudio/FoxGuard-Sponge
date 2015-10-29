@@ -9,7 +9,7 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.*;
 import org.spongepowered.api.util.command.source.ConsoleSource;
 import tk.elektrofuchse.fox.foxguard.util.FGHelper;
-import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
+import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
 import java.util.Iterator;
@@ -27,9 +27,9 @@ public class CommandState implements CommandCallable {
         if (source instanceof Player) {
             Player player = (Player) source;
             int flag = 0;
-            if (!FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedRegions.isEmpty()) {
+            if (!FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.isEmpty()) {
                 output.append(Texts.of(TextColors.GREEN, "Regions: "));
-                Iterator<IRegion> regionIterator = FoxGuardCommandDispatcher.getInstance().getStateMap()
+                Iterator<IRegion> regionIterator = FGCommandMainDispatcher.getInstance().getStateMap()
                         .get(player).selectedRegions.iterator();
                 int index = 1;
                 while (regionIterator.hasNext()) {
@@ -40,10 +40,10 @@ public class CommandState implements CommandCallable {
                 output.append(Texts.of("\n"));
                 flag++;
             }
-            if (!FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.isEmpty()) {
+            if (!FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.isEmpty()) {
                 if (flag != 0) output.append(Texts.of("\n"));
                 output.append(Texts.of(TextColors.GREEN, "FlagSets: "));
-                Iterator<IFlagSet> flagSetIterator = FoxGuardCommandDispatcher.getInstance().getStateMap()
+                Iterator<IFlagSet> flagSetIterator = FGCommandMainDispatcher.getInstance().getStateMap()
                         .get(player).selectedFlagSets.iterator();
                 int index = 1;
                 while (flagSetIterator.hasNext()) {
@@ -54,12 +54,12 @@ public class CommandState implements CommandCallable {
                 output.append(Texts.of("\n"));
                 flag++;
             }
-            if (!FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).positions.isEmpty()) {
+            if (!FGCommandMainDispatcher.getInstance().getStateMap().get(player).positions.isEmpty()) {
                 if (flag != 0) output.append(Texts.of("\n"));
                 output.append(Texts.of(TextColors.GREEN, "Positions:"));
                 output.append(Texts.of(TextColors.RESET));
                 int index = 1;
-                for (Vector3i pos : FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).positions) {
+                for (Vector3i pos : FGCommandMainDispatcher.getInstance().getStateMap().get(player).positions) {
                     output.append(
                             Texts.of("\n  " + (index++) + ": " + pos.getX() + ", " + pos.getY() + ", " + pos.getZ())
                     );

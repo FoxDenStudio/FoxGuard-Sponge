@@ -13,8 +13,9 @@ import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
+import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.util.FGHelper;
-import tk.elektrofuchse.fox.foxguard.flags.GlobalFlagSet;
+import tk.elektrofuchse.fox.foxguard.flagsets.GlobalFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.GlobalRegion;
 
 import java.util.List;
@@ -57,6 +58,7 @@ public class CommandDelete implements CommandCallable {
                 boolean success = FoxGuardManager.getInstance().removeRegion(world, args[1 + flag]);
                 if (!success)
                     throw new ArgumentParseException(Texts.of("No Region exists with that name!"), args[1 + flag], 1 + flag);
+
                 player.sendMessage(Texts.of(TextColors.GREEN, "Region deleted successfully!"));
             } else if (FGHelper.contains(flagSetsAliases, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
