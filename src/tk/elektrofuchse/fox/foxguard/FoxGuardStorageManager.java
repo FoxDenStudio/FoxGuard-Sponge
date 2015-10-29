@@ -6,6 +6,7 @@ import tk.elektrofuchse.fox.foxguard.factory.FGFactoryManager;
 import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,7 +25,8 @@ public class FoxGuardStorageManager {
         if (instance == null) instance = this;
     }
 
-    private List<IFGObject> dirty = new ArrayList<>();
+    private List<IFGObject> markedAsDirty = new ArrayList<>();
+    private List<String> markedForDeletion = new ArrayList<>();
 
     public static FoxGuardStorageManager getInstance() {
         new FoxGuardStorageManager();
@@ -126,9 +128,26 @@ public class FoxGuardStorageManager {
             statement.executeBatch();
         }
         for (IFlagSet flagSet : FoxGuardManager.getInstance().getFlagSetsListCopy()) {
-            flagSet.writeToDatabase(FoxGuardMain.getInstance().getDataSource(
+            DataSource source = FoxGuardMain.getInstance().getDataSource(
                     "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() +
-                            "/foxguard/flagsets/" + flagSet.getName()));
+                            "/foxguard/flagsets/" + flagSet.getName());
+            flagSet.writeToDatabase(source);
+            try (Connection conn = source.getConnection()) {
+                Statement statement = conn.createStatement();
+                statement.addBatch("CREATE SCHEMA IF NOT EXISTS FOXGUARD_META;");
+                statement.addBatch("CREATE TABLE IF NOT EXISTS FOXGUARD_META.METADATA(" +
+                        "CATEGORY VARCHAR(16), " +
+                        "NAME VARCHAR(256), " +
+                        "TYPE VARCHAR(256), " +
+                        "PRIORITY INTEGER);");
+                statement.addBatch("DELETE FROM FOXGUARD_META.METADATA");
+                statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, PRIORITY) VALUES (" +
+                        "'flagset', '" +
+                        flagSet.getName() + "', '" +
+                        flagSet.getUniqueType() + "', " +
+                        flagSet.getPriority()+");");
+                statement.executeBatch();
+            }
         }
     }
 
@@ -156,7 +175,61 @@ public class FoxGuardStorageManager {
             statement.executeBatch();
         }
         for (IRegion region : FoxGuardManager.getInstance().getRegionsListCopy(world)) {
-            region.writeToDatabase(FoxGuardMain.getInstance().getDataSource(dataBaseDir + "regions/" + region.getName()));
+            DataSource source = FoxGuardMain.getInstance().getDataSource(dataBaseDir + "regions/" + region.getName());
+            region.writeToDatabase(source);
+            try (Connection conn = source.getConnection()) {
+                Statement statement = conn.createStatement();
+                statement.addBatch("CREATE SCHEMA IF NOT EXISTS FOXGUARD_META;");
+                statement.addBatch("CREATE TABLE IF NOT EXISTS FOXGUARD_META.METADATA(" +
+                        "CATEGORY VARCHAR(16), " +
+                        "NAME VARCHAR(256), " +
+                        "TYPE VARCHAR(256), " +
+                        "WORLD VARCHAR(256));");
+                statement.addBatch("DELETE FROM FOXGUARD_META.METADATA");
+                statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, WORLD) VALUES (" +
+                        "'region', '" +
+                        region.getName() + "', '" +
+                        region.getUniqueType() + "', '" +
+                        region.getWorld().getName() + "');");
+                statement.executeBatch();
+            }
+        }
+    }
+
+    public void markForDeletion(IFGObject object) {
+        Server server = FoxGuardMain.getInstance().getGame().getServer();
+        if (object instanceof IRegion) {
+            IRegion region = (IRegion) object;
+            String dataBaseDir;
+            if (region.getWorld().getProperties().equals(server.getDefaultWorld().get())) {
+                dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/regions/";
+            } else {
+                dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + region.getWorld().getName() + "/foxguard/regions/";
+            }
+            dataBaseDir += region.getName();
+            if (!markedForDeletion.contains(dataBaseDir)) markedForDeletion.add(dataBaseDir);
+        } else if (object instanceof IFlagSet) {
+            String dataBaseDir = "jdvx:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/flagsets/" + object.getName();
+            if (!markedForDeletion.contains(dataBaseDir)) markedForDeletion.add(dataBaseDir);
+        }
+    }
+
+    public void unmarkForDeletion(IFGObject object) {
+        Server server = FoxGuardMain.getInstance().getGame().getServer();
+        if (object instanceof IRegion) {
+            IRegion region = (IRegion) object;
+            String dataBaseDir;
+            if (region.getWorld().getProperties().equals(server.getDefaultWorld().get())) {
+                dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/regions/";
+            } else {
+                dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + region.getWorld().getName() + "/foxguard/regions/";
+            }
+            dataBaseDir += region.getName();
+            markedForDeletion.remove(dataBaseDir);
+        } else if (object instanceof IFlagSet) {
+            if(server.getDefaultWorld().isPresent()){
+            String dataBaseDir = "jdvx:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/flagsets/" + object.getName();
+            markedForDeletion.remove(dataBaseDir);}
         }
     }
 }

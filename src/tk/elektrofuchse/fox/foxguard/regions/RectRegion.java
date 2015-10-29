@@ -123,10 +123,12 @@ public class RectRegion extends OwnableRegionBase {
 
     @Override
     public void writeToDatabase(DataSource dataSource) throws SQLException {
+        super.writeToDatabase(dataSource);
         try (Connection conn = dataSource.getConnection()) {
             Statement statement = conn.createStatement();
-            statement.execute("CREATE TABLE IF NOT EXISTS BOUNDS(X INTEGER, Y INTEGER);\n" +
-                    "INSERT INTO BOUNDS(X, Y) VALUES (" + boundingBox.a.getX() + ", " + boundingBox.a.getY() + ");\n" +
+            statement.execute("CREATE TABLE IF NOT EXISTS BOUNDS(X INTEGER, Y INTEGER);" +
+                    "DELETE FROM BOUNDS;" +
+                    "INSERT INTO BOUNDS(X, Y) VALUES (" + boundingBox.a.getX() + ", " + boundingBox.a.getY() + ");" +
                     "INSERT INTO BOUNDS(X, Y) VALUES (" + boundingBox.b.getX() + ", " + boundingBox.b.getY() + ");");
         }
     }

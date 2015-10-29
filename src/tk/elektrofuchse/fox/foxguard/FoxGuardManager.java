@@ -43,6 +43,7 @@ public class FoxGuardManager {
         if (region.getWorld() != null || getRegion(world, region.getName()) != null) return false;
         region.setWorld(world);
         regions.get(world).add(region);
+        FoxGuardStorageManager.getInstance().unmarkForDeletion(region);
         return true;
     }
 
@@ -53,15 +54,18 @@ public class FoxGuardManager {
         return null;
     }
 
+    public IRegion getRegion(Server server, String worldName, String regionName){
+        Optional<World> world = server.getWorld(worldName);
+        return world.isPresent() ? this.getRegion(world.get(), regionName) : null;
+    }
+
     public Stream<IRegion> getRegionListAsStream(World world) {
         return this.getRegionsListCopy(world).stream();
     }
 
     public List<IRegion> getRegionsListCopy() {
         List<IRegion> list = new LinkedList<>();
-        this.regions.forEach((world, tlist) -> {
-            tlist.forEach(list::add);
-        });
+        this.regions.forEach((world, tlist) -> tlist.forEach(list::add));
         return list;
     }
 
@@ -80,6 +84,7 @@ public class FoxGuardManager {
     public boolean addFlagSet(IFlagSet flagSet) {
         if (getFlagSet(flagSet.getName()) != null) return false;
         flagSets.add(flagSet);
+        FoxGuardStorageManager.getInstance().unmarkForDeletion(flagSet);
         return true;
     }
 
@@ -102,6 +107,7 @@ public class FoxGuardManager {
                     .forEach(region -> region.removeFlagSet(flagSet));
         });
         if (!this.flagSets.contains(flagSet)) return false;
+        FoxGuardStorageManager.getInstance().markForDeletion(flagSet);
         flagSets.remove(flagSet);
         return true;
     }
@@ -117,6 +123,7 @@ public class FoxGuardManager {
 
     public boolean removeRegion(World world, IRegion region) {
         if (region == null || region instanceof GlobalRegion || !this.regions.get(world).contains(region)) return false;
+        FoxGuardStorageManager.getInstance().markForDeletion(region);
         this.regions.get(world).remove(region);
         return true;
     }
@@ -153,6 +160,32 @@ public class FoxGuardManager {
         if (region == null || flagSet == null || !region.getFlagSets().contains(flagSet)) return false;
         if (flagSet instanceof GlobalFlagSet && region instanceof GlobalRegion) return false;
         return region.removeFlagSet(flagSet);
+    }
+
+    public boolean renameRegion(World world, String oldName, String newName){
+        return this.rename(this.getRegion(world, oldName), newName);
+    }
+
+    public boolean renameRegion(Server server, String worldName, String oldName, String newName){
+        return this.rename(this.getRegion(server, worldName, oldName), newName);
+    }
+
+    public boolean rename(IFGObject object, String newName){
+        if(object instanceof IRegion){
+            IRegion region = (IRegion) object;
+            if (this.getRegion(region.getWorld(), newName) != null) return false;
+        }
+        else if(object instanceof IFlagSet){
+            if (this.getFlagSet(newName) != null) return false;
+        }
+        FoxGuardStorageManager.getInstance().markForDeletion(object);
+        object.setName(newName);
+        FoxGuardStorageManager.getInstance().unmarkForDeletion(object);
+        return false;
+    }
+
+    public boolean renameFlagSet(String oldName, String newName){
+        return this.rename(this.getFlagSet(oldName), newName);
     }
 
     public void createLists(World world) {

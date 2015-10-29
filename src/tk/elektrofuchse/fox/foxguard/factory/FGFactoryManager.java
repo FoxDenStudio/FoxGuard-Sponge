@@ -9,6 +9,7 @@ import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
 import javax.sql.DataSource;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,7 +46,7 @@ public class FGFactoryManager {
         return null;
     }
 
-    public IRegion createRegion(DataSource source, String name, String type){
+    public IRegion createRegion(DataSource source, String name, String type) throws SQLException {
         for (IRegionFactory rf : regionFactories) {
             if (FGHelper.contains(rf.getAliases(), type)) {
                 return rf.createRegion(source,name, type);

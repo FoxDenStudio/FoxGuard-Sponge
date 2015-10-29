@@ -68,30 +68,6 @@ public class FoxGuardMain {
         registerCommands();
         registerListeners();
 
-
-        try {
-            DataSource source = this.getDataSource("jdbc:h2:./foxguard/test");
-            try(Connection conn = source.getConnection()){
-                Statement statement = conn.createStatement();
-                statement.execute("DROP ALL OBJECTS ");
-                statement.execute("CREATE TABLE TEST(TEST INTEGER);");
-                statement.execute("INSERT INTO TEST VALUES (5);");
-                statement.execute("DROP ALL OBJECTS;");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        try {
-            DataSource source = this.getDataSource("jdbc:h2:./foxguard/test");
-            try (Connection conn = source.getConnection()) {
-                Statement statement = conn.createStatement();
-                statement.execute("CREATE TABLE TEST2(TEST2 INTEGER);");
-                statement.execute("INSERT INTO TEST2 VALUES (10);");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
     }
 
     @Listener

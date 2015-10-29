@@ -7,6 +7,11 @@ import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 import tk.elektrofuchse.fox.foxguard.pieces.IOwnable;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -50,5 +55,21 @@ abstract public class OwnableRegionBase extends RegionBase implements IOwnable {
             builder.append(Texts.of(TextColors.RESET, p.getName() + " "));
         }
         return builder.build();
+    }
+
+    @Override
+    public void writeToDatabase(DataSource dataSource) throws SQLException {
+        try (Connection conn = dataSource.getConnection()) {
+            Statement statement = conn.createStatement();
+            statement.execute("CREATE TABLE IF NOT EXISTS OWNERS(NAMES VARCHAR(256), USERUUID UUID);" +
+                    "DELETE FROM OWNERS");
+            PreparedStatement insert = conn.prepareStatement("INSERT INTO OWNERS(NAMES, USERUUID) VALUES (?, ?)");
+            for(User owner : ownerList){
+                insert.setString(1, owner.getName());
+                insert.setObject(2, owner.getUniqueId());
+                insert.addBatch();
+            }
+            insert.executeBatch();
+        }
     }
 }
