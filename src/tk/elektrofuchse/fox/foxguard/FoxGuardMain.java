@@ -28,9 +28,7 @@ import tk.elektrofuchse.fox.foxguard.regions.util.BoundingBox2;
 
 import javax.sql.DataSource;
 import java.io.File;
-import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 /**
  * Created by Fox on 8/16/2015.
@@ -58,34 +56,35 @@ public class FoxGuardMain {
     private UserStorage userStorage;
     private FGCommandMainDispatcher fgDispatcher;
 
+    private boolean flagSetsLoaded = false;
+
     @Listener
     public void gameInit(GameInitializationEvent event) {
         instance = this;
         userStorage = game.getServiceManager().provide(UserStorage.class).get();
         new FoxGuardManager(this, game.getServer());
 
-
         registerCommands();
         registerListeners();
-
     }
 
     @Listener
     public void serverStarted(GameStartedServerEvent event) {
-        FoxGuardManager.getInstance().loadLists();
+        FoxGuardManager fgm = FoxGuardManager.getInstance();
+        fgm.setup(game.getServer());
         try {
             FoxGuardStorageManager.getInstance().initFlagSets();
-            //FoxGuardStorageManager.getInstance().loadFlagSets();
+            FoxGuardStorageManager.getInstance().loadFlagSets();
+            flagSetsLoaded = true;
+            FoxGuardStorageManager.getInstance().loadLinks();
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        FoxGuardManager fgm = FoxGuardManager.getInstance();
-        fgm.setup(game.getServer());
-        fgm.addFlagSet(new SimpleFlagSet("test", 1));
+       /* fgm.addFlagSet(new SimpleFlagSet("test", 1));
         fgm.addRegion(game.getServer().getWorld("world").get(),
                 new RectRegion("test", new BoundingBox2(new Vector2i(-100, -100), new Vector2i(100, 100))));
-        fgm.link(game.getServer(), "world", "test", "test");
+        fgm.link(game.getServer(), "world", "test", "test");*/
     }
 
     @Listener
@@ -108,9 +107,11 @@ public class FoxGuardMain {
 
     @Listener
     public void worldLoad(LoadWorldEvent event) {
+        FoxGuardManager.getInstance().populateWorld(event.getTargetWorld());
         try {
             FoxGuardStorageManager.getInstance().initWorld(event.getTargetWorld());
-            //FoxGuardStorageManager.getInstance().loadWorld(event.getTargetWorld());
+            FoxGuardStorageManager.getInstance().loadWorldRegions(event.getTargetWorld());
+            if (flagSetsLoaded) FoxGuardStorageManager.getInstance().loadWorldLinks(event.getTargetWorld());
         } catch (SQLException e) {
             e.printStackTrace();
         }

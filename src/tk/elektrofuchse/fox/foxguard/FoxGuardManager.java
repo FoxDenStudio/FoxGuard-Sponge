@@ -40,6 +40,7 @@ public class FoxGuardManager {
     }
 
     public boolean addRegion(World world, IRegion region) {
+        if (region == null) return false;
         if (region.getWorld() != null || getRegion(world, region.getName()) != null) return false;
         region.setWorld(world);
         regions.get(world).add(region);
@@ -54,7 +55,7 @@ public class FoxGuardManager {
         return null;
     }
 
-    public IRegion getRegion(Server server, String worldName, String regionName){
+    public IRegion getRegion(Server server, String worldName, String regionName) {
         Optional<World> world = server.getWorld(worldName);
         return world.isPresent() ? this.getRegion(world.get(), regionName) : null;
     }
@@ -82,6 +83,7 @@ public class FoxGuardManager {
     }
 
     public boolean addFlagSet(IFlagSet flagSet) {
+        if (flagSet == null) return false;
         if (getFlagSet(flagSet.getName()) != null) return false;
         flagSets.add(flagSet);
         FoxGuardStorageManager.getInstance().unmarkForDeletion(flagSet);
@@ -162,20 +164,19 @@ public class FoxGuardManager {
         return region.removeFlagSet(flagSet);
     }
 
-    public boolean renameRegion(World world, String oldName, String newName){
+    public boolean renameRegion(World world, String oldName, String newName) {
         return this.rename(this.getRegion(world, oldName), newName);
     }
 
-    public boolean renameRegion(Server server, String worldName, String oldName, String newName){
+    public boolean renameRegion(Server server, String worldName, String oldName, String newName) {
         return this.rename(this.getRegion(server, worldName, oldName), newName);
     }
 
-    public boolean rename(IFGObject object, String newName){
-        if(object instanceof IRegion){
+    public boolean rename(IFGObject object, String newName) {
+        if (object instanceof IRegion) {
             IRegion region = (IRegion) object;
             if (this.getRegion(region.getWorld(), newName) != null) return false;
-        }
-        else if(object instanceof IFlagSet){
+        } else if (object instanceof IFlagSet) {
             if (this.getFlagSet(newName) != null) return false;
         }
         FoxGuardStorageManager.getInstance().markForDeletion(object);
@@ -184,7 +185,7 @@ public class FoxGuardManager {
         return false;
     }
 
-    public boolean renameFlagSet(String oldName, String newName){
+    public boolean renameFlagSet(String oldName, String newName) {
         return this.rename(this.getFlagSet(oldName), newName);
     }
 
@@ -208,9 +209,6 @@ public class FoxGuardManager {
 
     public GlobalFlagSet getGlobalFlagSet() {
         return gfs;
-    }
-
-    public void loadLists() {
     }
 
     public static FoxGuardManager getInstance() {
