@@ -2,8 +2,8 @@ package tk.elektrofuchse.fox.foxguard;
 
 import org.spongepowered.api.Server;
 import org.spongepowered.api.world.World;
-import tk.elektrofuchse.fox.foxguard.flags.GlobalFlagSet;
-import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
+import tk.elektrofuchse.fox.foxguard.flagsets.GlobalFlagSet;
+import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.GlobalRegion;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 

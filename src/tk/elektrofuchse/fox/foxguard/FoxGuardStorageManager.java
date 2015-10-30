@@ -3,7 +3,7 @@ package tk.elektrofuchse.fox.foxguard;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.factory.FGFactoryManager;
-import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
+import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
 import javax.sql.DataSource;
@@ -145,7 +145,7 @@ public class FoxGuardStorageManager {
                         "'flagset', '" +
                         flagSet.getName() + "', '" +
                         flagSet.getUniqueType() + "', " +
-                        flagSet.getPriority()+");");
+                        flagSet.getPriority() + ");");
                 statement.executeBatch();
             }
         }
@@ -227,9 +227,10 @@ public class FoxGuardStorageManager {
             dataBaseDir += region.getName();
             markedForDeletion.remove(dataBaseDir);
         } else if (object instanceof IFlagSet) {
-            if(server.getDefaultWorld().isPresent()){
-            String dataBaseDir = "jdvx:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/flagsets/" + object.getName();
-            markedForDeletion.remove(dataBaseDir);}
+            if (server.getDefaultWorld().isPresent()) {
+                String dataBaseDir = "jdvx:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/flagsets/" + object.getName();
+                markedForDeletion.remove(dataBaseDir);
+            }
         }
     }
 }

@@ -26,13 +26,13 @@ public class CommandFlush implements CommandCallable {
             Player player = (Player) source;
             String[] args;
             if (arguments.isEmpty()) {
-                FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).flush();
+                FGCommandMainDispatcher.getInstance().getStateMap().get(player).flush();
             } else {
                 args = arguments.split(" ");
                 for (String arg : args) {
                     InternalCommandState.StateField type = getType(arg);
                     if (type == null) throw new CommandException(Texts.of("\"" + arg + "\" is not a valid type!"));
-                    FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).flush(type);
+                    FGCommandMainDispatcher.getInstance().getStateMap().get(player).flush(type);
                 }
             }
             player.sendMessage(Texts.of(TextColors.GREEN, "Successfully flushed!"));

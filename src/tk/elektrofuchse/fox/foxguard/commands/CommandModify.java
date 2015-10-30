@@ -14,7 +14,7 @@ import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
 import tk.elektrofuchse.fox.foxguard.util.FGHelper;
-import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
+import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
 import java.util.List;
@@ -56,7 +56,7 @@ public class CommandModify implements CommandCallable {
                 if (region == null)
                     throw new CommandException(Texts.of("No region with name \"" + args[1 + flag] + "\"!"));
                 region.modify(args.length < 3 + flag ? "" : args[2 + flag],
-                        FoxGuardCommandDispatcher.getInstance().getStateMap().get(player), player);
+                        FGCommandMainDispatcher.getInstance().getStateMap().get(player), player);
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully modified!"));
             } else if (FGHelper.contains(flagSetsAliases, args[0])) {
                 if (args.length < 1) throw new CommandException(Texts.of("Must specify a name!"));
@@ -64,7 +64,7 @@ public class CommandModify implements CommandCallable {
                 if (flagSet == null)
                     throw new CommandException(Texts.of("No region with name \"" + args[1] + "\"!"));
                 boolean success = flagSet.modify(args.length < 3 ? "" : args[2],
-                        FoxGuardCommandDispatcher.getInstance().getStateMap().get(player), player);
+                        FGCommandMainDispatcher.getInstance().getStateMap().get(player), player);
                 if (success) source.sendMessage(Texts.of(TextColors.GREEN, "Successfully modified!"));
                 else source.sendMessage(Texts.of(TextColors.RED, "Could not modify!"));
             } else {

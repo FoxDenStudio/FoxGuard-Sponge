@@ -11,8 +11,8 @@ import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
-import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
-import tk.elektrofuchse.fox.foxguard.flags.util.ActiveFlags;
+import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
+import tk.elektrofuchse.fox.foxguard.flagsets.util.ActiveFlags;
 
 import java.util.ArrayList;
 import java.util.Collections;

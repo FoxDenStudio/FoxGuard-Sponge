@@ -15,7 +15,7 @@ import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
 import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.factory.FGFactoryManager;
-import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
+import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
 import java.util.List;
@@ -65,11 +65,11 @@ public class CommandCreate implements CommandCallable {
                 IRegion newRegion = FGFactoryManager.getInstance().createRegion(
                         args[1 + flag].toLowerCase(), args[2 + flag],
                         args.length < 4 + flag ? "" : args[3 + flag],
-                        FoxGuardCommandDispatcher.getInstance().getStateMap().get(player), world, player);
+                        FGCommandMainDispatcher.getInstance().getStateMap().get(player), world, player);
                 boolean success = FoxGuardManager.getInstance().addRegion(world, newRegion);
                 if (!success)
                     throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1 + flag], 1 + flag);
-                FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).flush(InternalCommandState.StateField.POSITIONS);
+                FGCommandMainDispatcher.getInstance().getStateMap().get(player).flush(InternalCommandState.StateField.POSITIONS);
                 player.sendMessage(Texts.of(TextColors.GREEN, "Region created successfully"));
                 return CommandResult.success();
                 //----------------------------------------------------------------------------------------------------------------------
@@ -92,7 +92,7 @@ public class CommandCreate implements CommandCallable {
                 IFlagSet newFlagSet = FGFactoryManager.getInstance().createFlagSet(
                         args[1].toLowerCase(), args[2 + flag], priority,
                         args.length < 4 + flag ? "" : args[3 + flag],
-                        FoxGuardCommandDispatcher.getInstance().getStateMap().get(player), player);
+                        FGCommandMainDispatcher.getInstance().getStateMap().get(player), player);
                 boolean success = FoxGuardManager.getInstance().addFlagSet(newFlagSet);
                 if (!success)
                     throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1], 1);

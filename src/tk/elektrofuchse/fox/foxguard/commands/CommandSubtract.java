@@ -13,7 +13,7 @@ import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
 import tk.elektrofuchse.fox.foxguard.util.FGHelper;
-import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
+import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
 import java.util.List;
@@ -55,18 +55,18 @@ public class CommandSubtract implements CommandCallable {
                 IRegion region;
                 try {
                     int index = Integer.parseInt(args[1]);
-                    region = FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedRegions.get(index - 1);
+                    region = FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.get(index - 1);
                 } catch (NumberFormatException e) {
                     region = FoxGuardManager.getInstance().getRegion(world, args[1]);
                 } catch (IndexOutOfBoundsException e) {
                     throw new ArgumentParseException(Texts.of("Index out of bounds! (1 - "
-                            + FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedRegions.size()), args[1], 1);
+                            + FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.size()), args[1], 1);
                 }
                 if (region == null)
                     throw new ArgumentParseException(Texts.of("No Regions with this name!"), args[1 + flag], 1 + flag);
-                if (!FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedRegions.contains(region))
+                if (!FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.contains(region))
                     throw new ArgumentParseException(Texts.of("Region is not in your state buffer!"), args[1 + flag], 1 + flag);
-                FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedRegions.remove(region);
+                FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.remove(region);
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully removed Region from your state buffer!"));
                 return CommandResult.success();
             } else if (FGHelper.contains(flagSetsAliases, args[0])) {
@@ -74,27 +74,27 @@ public class CommandSubtract implements CommandCallable {
                 IFlagSet flagSet;
                 try {
                     int index = Integer.parseInt(args[1]);
-                    flagSet = FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.get(index - 1);
+                    flagSet = FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.get(index - 1);
                 } catch (NumberFormatException e) {
                     flagSet = FoxGuardManager.getInstance().getFlagSet(args[1]);
                 } catch (IndexOutOfBoundsException e) {
                     throw new ArgumentParseException(Texts.of("Index out of bounds! (1 - "
-                            + FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.size()), args[1], 1);
+                            + FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.size()), args[1], 1);
                 }
                 if (flagSet == null)
                     throw new ArgumentParseException(Texts.of("No FlagSets with this name!"), args[1], 1);
-                if (!FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.contains(flagSet))
+                if (!FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.contains(flagSet))
                     throw new ArgumentParseException(Texts.of("FlagSet is not in your state buffer!"), args[1], 1);
-                FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.remove(flagSet);
+                FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.remove(flagSet);
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully removed FlagSet from your state buffer!"));
                 return CommandResult.success();
             } else if (FGHelper.contains(positionsAliases, args[0])) {
                 try {
                     int index = Integer.parseInt(args[1]);
-                    FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).positions.remove(index - 1);
+                    FGCommandMainDispatcher.getInstance().getStateMap().get(player).positions.remove(index - 1);
                 } catch (NumberFormatException e) {
                     throw new ArgumentParseException(Texts.of("Index out of bounds! (1 - "
-                            + FoxGuardCommandDispatcher.getInstance().getStateMap().get(player).positions.size()), args[1], 1);
+                            + FGCommandMainDispatcher.getInstance().getStateMap().get(player).positions.size()), args[1], 1);
                 } catch (IndexOutOfBoundsException e) {
                     throw new ArgumentParseException(Texts.of("Not a valid index!"), args[1], 1);
                 }

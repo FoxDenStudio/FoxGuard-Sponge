@@ -1,7 +1,7 @@
 package tk.elektrofuchse.fox.foxguard.commands.util;
 
 import com.flowpowered.math.vector.Vector3i;
-import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
+import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
 
 import java.util.ArrayList;
@@ -35,6 +35,12 @@ public class InternalCommandState {
             case POSITIONS:
                 positions.clear();
                 break;
+        }
+    }
+
+    public void flush (StateField... fields){
+        for(StateField field : fields){
+            this.flush(field);
         }
     }
 

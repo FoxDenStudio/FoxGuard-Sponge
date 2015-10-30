@@ -1,4 +1,4 @@
-package tk.elektrofuchse.fox.foxguard.flags.util;
+package tk.elektrofuchse.fox.foxguard.flagsets.util;
 
 /**
  * Created by Fox on 8/17/2015.

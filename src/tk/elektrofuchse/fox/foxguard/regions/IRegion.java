@@ -2,12 +2,11 @@ package tk.elektrofuchse.fox.foxguard.regions;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.IFGObject;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
-import tk.elektrofuchse.fox.foxguard.flags.IFlagSet;
+import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 
 import java.util.List;
 
@@ -16,8 +15,6 @@ import java.util.List;
  * Project: foxguard
  */
 public interface IRegion extends IFGObject {
-
-    boolean modify(String arguments, InternalCommandState state, CommandSource source);
 
     boolean isInRegion(int x, int y, int z);
 

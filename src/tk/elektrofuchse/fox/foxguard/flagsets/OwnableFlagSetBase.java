@@ -1,4 +1,4 @@
-package tk.elektrofuchse.fox.foxguard.flags;
+package tk.elektrofuchse.fox.foxguard.flagsets;
 
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.text.Text;
