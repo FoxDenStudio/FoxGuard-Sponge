@@ -1,6 +1,5 @@
 package tk.elektrofuchse.fox.foxguard;
 
-import com.flowpowered.math.vector.Vector2i;
 import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
@@ -19,19 +18,13 @@ import org.spongepowered.api.service.event.EventManager;
 import org.spongepowered.api.service.sql.SqlService;
 import org.spongepowered.api.service.user.UserStorage;
 import tk.elektrofuchse.fox.foxguard.commands.*;
-import tk.elektrofuchse.fox.foxguard.flagsets.SimpleFlagSet;
 import tk.elektrofuchse.fox.foxguard.listener.BlockEventListener;
 import tk.elektrofuchse.fox.foxguard.listener.InteractListener;
 import tk.elektrofuchse.fox.foxguard.listener.PlayerEventListener;
-import tk.elektrofuchse.fox.foxguard.regions.RectRegion;
-import tk.elektrofuchse.fox.foxguard.regions.util.BoundingBox2;
 
 import javax.sql.DataSource;
 import java.io.File;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 
 /**
  * Created by Fox on 8/16/2015.
@@ -86,7 +79,7 @@ public class FoxGuardMain {
 
        /* fgm.addFlagSet(new SimpleFlagSet("test", 1));
         fgm.addRegion(game.getServer().getWorld("world").get(),
-                new RectRegion("test", new BoundingBox2(new Vector2i(-100, -100), new Vector2i(100, 100))));
+                new RectangularRegion("test", new BoundingBox2(new Vector2i(-100, -100), new Vector2i(100, 100))));
         fgm.link(game.getServer(), "world", "test", "test");*/
     }
 

@@ -198,7 +198,7 @@ public class FGCommandDispatcher implements Dispatcher {
             final String[] argSplit = commandLine.split(" ", 2);
             final Optional<CommandMapping> cmdOptional = get(argSplit[0], source);
             if (!cmdOptional.isPresent()) {
-                throw new CommandNotFoundException(Texts.of("Command not found!"), argSplit[0]); // TODO: Fix properly to use a SpongeTranslation??
+                throw new CommandNotFoundException(Texts.of("Command not found!"), argSplit[0]);
             }
             final String arguments = argSplit.length > 1 ? argSplit[1] : "";
             final CommandCallable spec = cmdOptional.get().getCallable();
