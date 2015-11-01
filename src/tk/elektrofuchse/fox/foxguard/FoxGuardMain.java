@@ -53,15 +53,15 @@ public class FoxGuardMain {
     private UserStorage userStorage;
     private FGCommandMainDispatcher fgDispatcher;
 
-    private boolean flagSetsLoaded = false;
+    private boolean loaded = false;
 
     @Listener
     public void gameInit(GameInitializationEvent event) {
         instance = this;
-        userStorage = game.getServiceManager().provide(UserStorage.class).get();
-        new FoxGuardManager(this, game.getServer());
         new FGConfigManager();
         FGConfigManager.getInstance().save();
+        userStorage = game.getServiceManager().provide(UserStorage.class).get();
+        new FoxGuardManager(this, game.getServer());
 
         registerCommands();
         registerListeners();
@@ -71,14 +71,12 @@ public class FoxGuardMain {
     public void serverStarted(GameStartedServerEvent event) {
         FoxGuardManager fgm = FoxGuardManager.getInstance();
         fgm.setup(game.getServer());
-        try {
-            FoxGuardStorageManager.getInstance().initFlagSets();
-            FoxGuardStorageManager.getInstance().loadFlagSets();
-            flagSetsLoaded = true;
-            FoxGuardStorageManager.getInstance().loadLinks();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        FoxGuardStorageManager.getInstance().initFlagSets();
+        FoxGuardStorageManager.getInstance().loadFlagSets();
+        loaded = true;
+        FoxGuardStorageManager.getInstance().loadLinks();
+        if (FGConfigManager.getInstance().forceLoad)
+            FoxGuardStorageManager.getInstance().resolveDeferredObjects();
 
        /* fgm.addFlagSet(new SimpleFlagSet("test", 1));
         fgm.addRegion(game.getServer().getWorld("world").get(),
@@ -88,41 +86,29 @@ public class FoxGuardMain {
 
     @Listener
     public void serverStopping(GameStoppingServerEvent event) {
-        try {
-            FoxGuardStorageManager.getInstance().writeFlagSets();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        FoxGuardStorageManager.getInstance().writeFlagSets();
+    }
+
+    @Listener
+    public void serverStopped(GameStoppedServerEvent event) {
+        FoxGuardStorageManager.getInstance().purgeDatabases();
         FGConfigManager.getInstance().save();
     }
 
     @Listener
-    public void serverStopped(GameStoppedServerEvent event){
-        try {
-            FoxGuardStorageManager.getInstance().purgeDatabases();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Listener
     public void worldUnload(UnloadWorldEvent event) {
-        try {
-            FoxGuardStorageManager.getInstance().writeWorld(event.getTargetWorld());
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        FoxGuardStorageManager.getInstance().writeWorld(event.getTargetWorld());
     }
 
     @Listener
     public void worldLoad(LoadWorldEvent event) {
         FoxGuardManager.getInstance().populateWorld(event.getTargetWorld());
-        try {
-            FoxGuardStorageManager.getInstance().initWorld(event.getTargetWorld());
-            FoxGuardStorageManager.getInstance().loadWorldRegions(event.getTargetWorld());
-            if (flagSetsLoaded) FoxGuardStorageManager.getInstance().loadWorldLinks(event.getTargetWorld());
-        } catch (SQLException e) {
-            e.printStackTrace();
+        FoxGuardStorageManager.getInstance().initWorld(event.getTargetWorld());
+        FoxGuardStorageManager.getInstance().loadWorldRegions(event.getTargetWorld());
+        if (loaded) {
+            FoxGuardStorageManager.getInstance().loadWorldLinks(event.getTargetWorld());
+            if (FGConfigManager.getInstance().forceLoad)
+                FoxGuardStorageManager.getInstance().resolveDeferredObjects();
         }
     }
 
@@ -178,5 +164,9 @@ public class FoxGuardMain {
 
     public File getConfigDirectory() {
         return configDirectory;
+    }
+
+    public boolean isLoaded() {
+        return loaded;
     }
 }

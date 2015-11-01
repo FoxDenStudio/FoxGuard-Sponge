@@ -68,7 +68,7 @@ public class FGFactoryManager {
         return null;
     }
 
-    public IFlagSet createFlagSet(DataSource source, String name, String type, int priority) {
+    public IFlagSet createFlagSet(DataSource source, String name, String type, int priority) throws SQLException {
         for (IFlagSetFactory fsf : flagSetFactories) {
             if (FGHelper.contains(fsf.getTypes(), type)) {
                 IFlagSet flagSet = fsf.createFlagSet(source, name, type, priority);

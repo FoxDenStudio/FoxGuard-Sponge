@@ -45,6 +45,7 @@ public class FoxGuardManager {
         region.setWorld(world);
         regions.get(world).add(region);
         FoxGuardStorageManager.getInstance().unmarkForDeletion(region);
+        FoxGuardStorageManager.getInstance().updateRegion(region);
         return true;
     }
 
@@ -87,6 +88,7 @@ public class FoxGuardManager {
         if (getFlagSet(flagSet.getName()) != null) return false;
         flagSets.add(flagSet);
         FoxGuardStorageManager.getInstance().unmarkForDeletion(flagSet);
+        FoxGuardStorageManager.getInstance().updateFlagSet(flagSet);
         return true;
     }
 
@@ -182,6 +184,7 @@ public class FoxGuardManager {
         FoxGuardStorageManager.getInstance().markForDeletion(object);
         object.setName(newName);
         FoxGuardStorageManager.getInstance().unmarkForDeletion(object);
+        FoxGuardStorageManager.getInstance().update(object);
         return false;
     }
 
