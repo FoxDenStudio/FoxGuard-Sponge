@@ -36,8 +36,7 @@ public class FoxGuardStorageManager {
     public void initFlagSets() throws SQLException {
         Server server = FoxGuardMain.getInstance().getGame().getServer();
         try (Connection conn = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
-            Statement statement = conn.createStatement();
-            statement.execute(
+            conn.createStatement().execute(
                     "CREATE TABLE IF NOT EXISTS FLAGSETS (" +
                             "NAME VARCHAR(256), " +
                             "TYPE VARCHAR(256)," +
@@ -56,8 +55,7 @@ public class FoxGuardStorageManager {
             dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + world.getName() + "/foxguard/";
         }
         try (Connection conn = FoxGuardMain.getInstance().getDataSource(dataBaseDir + "foxguard").getConnection()) {
-            Statement statement = conn.createStatement();
-            statement.execute(
+            conn.createStatement().execute(
                     "CREATE TABLE IF NOT EXISTS REGIONS (" +
                             "NAME VARCHAR(256), " +
                             "TYPE VARCHAR(256));" +
@@ -73,16 +71,23 @@ public class FoxGuardStorageManager {
         try (Connection conn = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
             ResultSet set = conn.createStatement().executeQuery("SELECT * FROM FLAGSETS;");
             while (set.next()) {
-                IFlagSet flagSet;
-                DataSource source = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./" +
+                String databaseDir = "jdbc:h2:./" +
                         server.getDefaultWorld().get().getWorldName() + "/foxguard/flagsets/" +
-                        set.getString("NAME"));
+                        set.getString("NAME");
+                DataSource source = FoxGuardMain.getInstance().getDataSource(databaseDir);
                 try (Connection metaConn = source.getConnection()) {
-                    ResultSet metaSet = metaConn.createStatement().executeQuery("SELECT * FROM FOXGUARD_META.METADATA");
-                    metaSet.next();
-                    FoxGuardManager.getInstance().addFlagSet(
-                            flagSet = FGFactoryManager.getInstance().createFlagSet(
-                                    source, set.getString("NAME"), set.getString("TYPE"), metaSet.getInt("PRIORITY")));
+                    ResultSet metaTables = metaConn.createStatement().executeQuery(
+                            "SELECT COUNT(*) FROM (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'FOXGUARD_META');");
+                    metaTables.first();
+                    if (metaTables.getInt(1) != 0) {
+                        ResultSet metaSet = metaConn.createStatement().executeQuery("SELECT * FROM FOXGUARD_META.METADATA;");
+                        metaSet.first();
+                        FoxGuardManager.getInstance().addFlagSet(
+                                FGFactoryManager.getInstance().createFlagSet(
+                                        source, set.getString("NAME"), set.getString("TYPE"), metaSet.getInt("PRIORITY")));
+                    } else {
+                        markForDeletion(databaseDir);
+                    }
                 }
             }
         }
@@ -90,25 +95,36 @@ public class FoxGuardStorageManager {
 
     public void loadWorldRegions(World world) throws SQLException {
         Server server = FoxGuardMain.getInstance().getGame().getServer();
-        String dataBaseDir;
+        String worldDatabaseDir;
         if (world.getProperties().equals(server.getDefaultWorld().get())) {
-            dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/";
+            worldDatabaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/";
         } else {
-            dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + world.getName() + "/foxguard/";
+            worldDatabaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + world.getName() + "/foxguard/";
         }
 
-        try (Connection conn = FoxGuardMain.getInstance().getDataSource(dataBaseDir + "foxguard").getConnection()) {
+        try (Connection conn = FoxGuardMain.getInstance().getDataSource(worldDatabaseDir + "foxguard").getConnection()) {
             ResultSet regionSet = conn.createStatement().executeQuery("SELECT * FROM REGIONS;");
             while (regionSet.next()) {
-                FoxGuardManager.getInstance().addRegion(world,
-                        FGFactoryManager.getInstance().createRegion(
-                                FoxGuardMain.getInstance().getDataSource(dataBaseDir + "regions/" + regionSet.getString("NAME")),
-                                regionSet.getString("NAME"), regionSet.getString("TYPE")
-                        )
-                );
+                String databaseDir = worldDatabaseDir + "regions/" + regionSet.getString("NAME");
+                DataSource source = FoxGuardMain.getInstance().getDataSource(databaseDir);
+                try (Connection metaConn = source.getConnection()) {
+                    ResultSet metaTables = metaConn.createStatement().executeQuery(
+                            "SELECT COUNT(*) FROM (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'FOXGUARD_META');");
+                    metaTables.first();
+                    if (metaTables.getInt(1) != 0) {
+                        FoxGuardManager.getInstance().addRegion(world,
+                                FGFactoryManager.getInstance().createRegion(
+                                        source,
+                                        regionSet.getString("NAME"), regionSet.getString("TYPE")
+                                )
+                        );
+                    } else {
+                        markForDeletion(databaseDir);
+                    }
+                }
             }
-        }
 
+        }
     }
 
     public void loadWorldLinks(World world) throws SQLException {
@@ -217,40 +233,55 @@ public class FoxGuardStorageManager {
         }
     }
 
+    public void markForDeletion(String databaseDir) {
+        if (!markedForDeletion.contains(databaseDir)) markedForDeletion.add(databaseDir);
+    }
+
     public void markForDeletion(IFGObject object) {
         Server server = FoxGuardMain.getInstance().getGame().getServer();
         if (object instanceof IRegion) {
             IRegion region = (IRegion) object;
-            String dataBaseDir;
+            String databaseDir;
             if (region.getWorld().getProperties().equals(server.getDefaultWorld().get())) {
-                dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/regions/";
+                databaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/regions/";
             } else {
-                dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + region.getWorld().getName() + "/foxguard/regions/";
+                databaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + region.getWorld().getName() + "/foxguard/regions/";
             }
-            dataBaseDir += region.getName();
-            if (!markedForDeletion.contains(dataBaseDir)) markedForDeletion.add(dataBaseDir);
+            databaseDir += region.getName();
+            markForDeletion(databaseDir);
         } else if (object instanceof IFlagSet) {
-            String dataBaseDir = "jdvx:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/flagsets/" + object.getName();
-            if (!markedForDeletion.contains(dataBaseDir)) markedForDeletion.add(dataBaseDir);
+            String databaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/flagsets/" + object.getName();
+            markForDeletion(databaseDir);
         }
+    }
+
+    public void unmarkForDeletion(String databaseDir) {
+        markedForDeletion.remove(databaseDir);
     }
 
     public void unmarkForDeletion(IFGObject object) {
         Server server = FoxGuardMain.getInstance().getGame().getServer();
         if (object instanceof IRegion) {
             IRegion region = (IRegion) object;
-            String dataBaseDir;
+            String databaseDir;
             if (region.getWorld().getProperties().equals(server.getDefaultWorld().get())) {
-                dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/regions/";
+                databaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/regions/";
             } else {
-                dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + region.getWorld().getName() + "/foxguard/regions/";
+                databaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + region.getWorld().getName() + "/foxguard/regions/";
             }
-            dataBaseDir += region.getName();
-            markedForDeletion.remove(dataBaseDir);
+            databaseDir += region.getName();
+            unmarkForDeletion(databaseDir);
         } else if (object instanceof IFlagSet) {
             if (server.getDefaultWorld().isPresent()) {
-                String dataBaseDir = "jdvx:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/flagsets/" + object.getName();
-                markedForDeletion.remove(dataBaseDir);
+                unmarkForDeletion("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/flagsets/" + object.getName());
+            }
+        }
+    }
+
+    public void purgeDatabases() throws SQLException {
+        for (String databaseDir : markedForDeletion) {
+            try (Connection conn = FoxGuardMain.getInstance().getDataSource(databaseDir).getConnection()) {
+                conn.createStatement().execute("DROP ALL OBJECTS DELETE FILES;");
             }
         }
     }

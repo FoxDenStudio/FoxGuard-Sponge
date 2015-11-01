@@ -10,6 +10,7 @@ import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.entity.living.player.TargetPlayerEvent;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
+import org.spongepowered.api.event.game.state.GameStoppedServerEvent;
 import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
 import org.spongepowered.api.event.world.LoadWorldEvent;
 import org.spongepowered.api.event.world.UnloadWorldEvent;
@@ -94,6 +95,15 @@ public class FoxGuardMain {
     public void serverStopping(GameStoppingServerEvent event) {
         try {
             FoxGuardStorageManager.getInstance().writeFlagSets();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Listener
+    public void serverStopped(GameStoppedServerEvent event){
+        try {
+            FoxGuardStorageManager.getInstance().purgeDatabases();
         } catch (SQLException e) {
             e.printStackTrace();
         }
