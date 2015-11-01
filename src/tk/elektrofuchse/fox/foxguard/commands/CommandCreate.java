@@ -66,6 +66,8 @@ public class CommandCreate implements CommandCallable {
                         args[1 + flag].toLowerCase(), args[2 + flag],
                         args.length < 4 + flag ? "" : args[3 + flag],
                         FGCommandMainDispatcher.getInstance().getStateMap().get(player), world, player);
+                if (newRegion == null)
+                    throw new CommandException(Texts.of("Failed to create Region! Perhaps the type is invalid?"));
                 boolean success = FoxGuardManager.getInstance().addRegion(world, newRegion);
                 if (!success)
                     throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1 + flag], 1 + flag);
@@ -94,6 +96,8 @@ public class CommandCreate implements CommandCallable {
                         args[1].toLowerCase(), args[2 + flag], priority,
                         args.length < 4 + flag ? "" : args[3 + flag],
                         FGCommandMainDispatcher.getInstance().getStateMap().get(player), player);
+                if (newFlagSet == null)
+                    throw new CommandException(Texts.of("Failed to create FlagSet! Perhaps the type is invalid?"));
                 boolean success = FoxGuardManager.getInstance().addFlagSet(newFlagSet);
                 if (!success)
                     throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1], 1);
