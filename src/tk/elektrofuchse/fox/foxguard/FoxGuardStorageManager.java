@@ -112,10 +112,13 @@ public class FoxGuardStorageManager {
                             "SELECT COUNT(*) FROM (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'FOXGUARD_META');");
                     metaTables.first();
                     if (metaTables.getInt(1) != 0) {
+                        ResultSet metaSet = metaConn.createStatement().executeQuery("SELECT * FROM FOXGUARD_META.METADATA;");
+                        metaSet.first();
+                        String type = regionSet.getString("TYPE");
                         FoxGuardManager.getInstance().addRegion(world,
                                 FGFactoryManager.getInstance().createRegion(
                                         source,
-                                        regionSet.getString("NAME"), regionSet.getString("TYPE")
+                                        regionSet.getString("NAME"), type
                                 )
                         );
                     } else {
