@@ -52,8 +52,8 @@ public class FoxGuardMain {
     @Inject
     private EventManager eventManager;
     @Inject
-    @ConfigDir(sharedRoot = false)
-    File configDirectory;
+    @ConfigDir(sharedRoot = true)
+    private File configDirectory;
 
     private SqlService sql;
     private UserStorage userStorage;
@@ -66,6 +66,8 @@ public class FoxGuardMain {
         instance = this;
         userStorage = game.getServiceManager().provide(UserStorage.class).get();
         new FoxGuardManager(this, game.getServer());
+        new FGConfigManager();
+        FGConfigManager.getInstance().save();
 
         registerCommands();
         registerListeners();
@@ -97,6 +99,7 @@ public class FoxGuardMain {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        FGConfigManager.getInstance().save();
     }
 
     @Listener
@@ -168,5 +171,9 @@ public class FoxGuardMain {
 
     public UserStorage getUserStorage() {
         return userStorage;
+    }
+
+    public File getConfigDirectory() {
+        return configDirectory;
     }
 }
