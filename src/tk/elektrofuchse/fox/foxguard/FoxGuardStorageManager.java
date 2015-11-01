@@ -71,18 +71,14 @@ public class FoxGuardStorageManager {
         Server server = FoxGuardMain.getInstance().getGame().getServer();
 
         try (Connection conn = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
-            Statement statement = conn.createStatement();
-            ResultSet set;
-            set = statement.executeQuery("SELECT * FROM FLAGSETS;");
-
+            ResultSet set = conn.createStatement().executeQuery("SELECT * FROM FLAGSETS;");
             while (set.next()) {
                 IFlagSet flagSet;
                 DataSource source = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./" +
                         server.getDefaultWorld().get().getWorldName() + "/foxguard/flagsets/" +
                         set.getString("NAME"));
                 try (Connection metaConn = source.getConnection()) {
-                    Statement metaStatement = metaConn.createStatement();
-                    ResultSet metaSet = metaStatement.executeQuery("SELECT * FROM FOXGUARD_META.METADATA");
+                    ResultSet metaSet = metaConn.createStatement().executeQuery("SELECT * FROM FOXGUARD_META.METADATA");
                     metaSet.next();
                     FoxGuardManager.getInstance().addFlagSet(
                             flagSet = FGFactoryManager.getInstance().createFlagSet(
@@ -102,8 +98,7 @@ public class FoxGuardStorageManager {
         }
 
         try (Connection conn = FoxGuardMain.getInstance().getDataSource(dataBaseDir + "foxguard").getConnection()) {
-            Statement statement = conn.createStatement();
-            ResultSet regionSet = statement.executeQuery("SELECT * FROM REGIONS;");
+            ResultSet regionSet = conn.createStatement().executeQuery("SELECT * FROM REGIONS;");
             while (regionSet.next()) {
                 FoxGuardManager.getInstance().addRegion(world,
                         FGFactoryManager.getInstance().createRegion(
@@ -126,8 +121,7 @@ public class FoxGuardStorageManager {
         }
 
         try (Connection conn = FoxGuardMain.getInstance().getDataSource(dataBaseDir + "foxguard").getConnection()) {
-            Statement statement = conn.createStatement();
-            ResultSet linkSet = statement.executeQuery("SELECT  * FROM LINKAGES;");
+            ResultSet linkSet = conn.createStatement().executeQuery("SELECT  * FROM LINKAGES;");
             while (linkSet.next()) {
                 FoxGuardManager.getInstance().link(world, linkSet.getString("REGION"), linkSet.getString("FLAGSET"));
             }

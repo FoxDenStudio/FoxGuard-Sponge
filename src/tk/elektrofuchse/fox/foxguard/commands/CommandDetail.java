@@ -60,7 +60,7 @@ public class CommandDetail implements CommandCallable {
                 if (region == null)
                     throw new CommandException(Texts.of("No region with name \"" + args[1 + flag] + "\"!"));
                 TextBuilder builder = Texts.builder();
-                builder.append(Texts.of(TextColors.GOLD, "------------------------------------------------------\n"));
+                builder.append(Texts.of(TextColors.GOLD, "-----------------------------------------------------\n"));
                 builder.append(Texts.of(TextColors.GREEN, "---Details---\n"));
                 builder.append(region.getDetails(args.length < 3 + flag ? "" : args[2+flag]));
                 builder.append(Texts.of(TextColors.GREEN, "\n---Linked FlagSets---"));
@@ -71,15 +71,18 @@ public class CommandDetail implements CommandCallable {
 
             } else if (FGHelper.contains(flagSetsAliases, args[0])) {
                 if (args.length < 1) throw new CommandException(Texts.of("Must specify a name!"));
+                TextBuilder builder = Texts.builder();
+                builder.append(Texts.of(TextColors.GOLD, "-----------------------------------------------------\n"));
+                builder.append(Texts.of(TextColors.GREEN, "---Details---\n"));
                 IFlagSet flagSet = FoxGuardManager.getInstance().getFlagSet(args[1]);
                 if (flagSet == null)
                     throw new CommandException(Texts.of("No region with name \"" + args[1] + "\"!"));
-
-                player.sendMessage(flagSet.getDetails(args.length < 3 ? "" : args[2]));
+                builder.append(flagSet.getDetails(args.length < 3 ? "" : args[2]));
+                player.sendMessage(builder.build());
             } else {
                 throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
             }
-        } else if (source instanceof ConsoleSource) {
+        } else {
 
         }
 
@@ -110,9 +113,9 @@ public class CommandDetail implements CommandCallable {
     @Override
     public Text getUsage(CommandSource source) {
         if (source instanceof Player)
-            return Texts.of("detail (region [w:<worldname>] | flagset) <name> [args...]");
+            return Texts.of("detail <(region [w:<worldname>] | flagset)> <name> [args...]");
         else if (source instanceof ConsoleSource)
-            return Texts.of("detail (region <worldname> | flagset) <name> [args...]");
+            return Texts.of("detail <(region <worldname> | flagset)> <name> [args...]");
         else return Texts.of("You can't run this command!");
     }
 }

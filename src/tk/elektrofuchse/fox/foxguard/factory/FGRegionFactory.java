@@ -45,9 +45,8 @@ public class FGRegionFactory implements IRegionFactory {
             Vector2i b;
             List<User> userList = new LinkedList<>();
             try (Connection conn = source.getConnection()) {
-                Statement statement = conn.createStatement();
-                ResultSet boundSet = statement.executeQuery("SELECT * FROM BOUNDS");
-                ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS");
+                ResultSet boundSet = conn.createStatement().executeQuery("SELECT * FROM BOUNDS");
+                ResultSet ownerSet = conn.createStatement().executeQuery("SELECT * FROM OWNERS");
                 boundSet.next();
                 a = new Vector2i(boundSet.getInt("X"), boundSet.getInt("Y"));
                 boundSet.next();

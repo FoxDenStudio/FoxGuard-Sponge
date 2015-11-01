@@ -86,7 +86,8 @@ public class CommandCreate implements CommandCallable {
                 try{
                     priority = Integer.parseInt(args[2]);
                     flag = 1;
-                } catch (NumberFormatException ignored){}
+                    args = arguments.split(" ", 5);
+                } catch (NumberFormatException | IndexOutOfBoundsException ignored){}
 
                 if (args.length < 3 + flag) throw new CommandException(Texts.of("Must specify a type!"));
                 IFlagSet newFlagSet = FGFactoryManager.getInstance().createFlagSet(
@@ -129,7 +130,7 @@ public class CommandCreate implements CommandCallable {
     @Override
     public Text getUsage(CommandSource source) {
         if (source instanceof Player)
-            return Texts.of("create (region [w:<world>] | flagset) <name> <priority> <type> [args...]");
-        else return Texts.of("create (region <world> | flagset) <name> <priority> <type> [args...]");
+            return Texts.of("create (region [w:<world>] | flagset) <name> [priority] <type> [args...]");
+        else return Texts.of("create (region <world> | flagset) <name> [priority] <type> [args...]");
     }
 }

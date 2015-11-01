@@ -119,16 +119,16 @@ public class CommandSubtract implements CommandCallable {
 
     @Override
     public Optional<? extends Text> getShortDescription(CommandSource source) {
-        return null;
+        return Optional.empty();
     }
 
     @Override
     public Optional<? extends Text> getHelp(CommandSource source) {
-        return null;
+        return Optional.empty();
     }
 
     @Override
     public Text getUsage(CommandSource source) {
-        return null;
+        return Texts.of("subtract <( region [w:<world>] | flagset | position )> <( <name> | <index> )>");
     }
 }
