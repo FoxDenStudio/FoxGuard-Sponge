@@ -11,8 +11,9 @@ import java.io.Serializable;
  * Project: foxguard
  */
 public class BoundingBox3 implements Serializable {
-    Vector3i a;
-    Vector3i b;
+
+    public Vector3i a;
+    public Vector3i b;
 
     public BoundingBox3(Location parA, Location parB) {
         this(parA.getBlockPosition(), parB.getBlockPosition());

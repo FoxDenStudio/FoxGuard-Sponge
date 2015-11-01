@@ -11,7 +11,7 @@ import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
-import tk.elektrofuchse.fox.foxguard.regions.util.BoundingBox2;
+import tk.elektrofuchse.fox.foxguard.regions.util.BoundingBox3;
 import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 
 import javax.sql.DataSource;
@@ -27,17 +27,17 @@ import java.util.List;
  * Created by Fox on 8/18/2015.
  * Project: foxguard
  */
-public class RectRegion extends OwnableRegionBase {
+public class CuboidRegion extends OwnableRegionBase {
 
-    private final BoundingBox2 boundingBox;
+    private final BoundingBox3 boundingBox;
 
 
-    public RectRegion(String name, BoundingBox2 boundingBox) {
+    public CuboidRegion(String name, BoundingBox3 boundingBox) {
         super(name);
         this.boundingBox = boundingBox;
     }
 
-    public RectRegion(String name, List<Vector3i> positions, String[] args, CommandSource source)
+    public CuboidRegion(String name, List<Vector3i> positions, String[] args, CommandSource source)
             throws CommandException {
         super(name);
         List<Vector3i> allPositions = new LinkedList<>(positions);
@@ -72,15 +72,15 @@ public class RectRegion extends OwnableRegionBase {
             a = a.min(pos);
             b = b.max(pos);
         }
-        this.boundingBox = new BoundingBox2(a, b);
+        this.boundingBox = new BoundingBox3(a, b);
     }
 
-    public RectRegion(String name, List<Vector3i> positions, String[] args, CommandSource source, User... owners) throws CommandException {
+    public CuboidRegion(String name, List<Vector3i> positions, String[] args, CommandSource source, User... owners) throws CommandException {
         this(name, positions, args, source);
         Collections.addAll(ownerList, owners);
     }
 
-    public RectRegion(String name, List<Vector3i> positions, String[] args, CommandSource source, List<User> owners) throws CommandException {
+    public CuboidRegion(String name, List<Vector3i> positions, String[] args, CommandSource source, List<User> owners) throws CommandException {
         this(name, positions, args, source);
         this.ownerList = owners;
     }
@@ -92,23 +92,23 @@ public class RectRegion extends OwnableRegionBase {
 
     @Override
     public boolean isInRegion(int x, int y, int z) {
-        return boundingBox.contains(x, z);
+        return boundingBox.contains(x, y, z);
     }
 
 
     @Override
     public boolean isInRegion(double x, double y, double z) {
-        return boundingBox.contains(x, z);
+        return boundingBox.contains(x, y, z);
     }
 
     @Override
     public String getType() {
-        return "Rect";
+        return "Cuboid";
     }
 
     @Override
     public String getUniqueType() {
-        return "rectangular";
+        return "cuboid";
     }
 
 
@@ -126,10 +126,10 @@ public class RectRegion extends OwnableRegionBase {
         super.writeToDatabase(dataSource);
         try (Connection conn = dataSource.getConnection()) {
             Statement statement = conn.createStatement();
-            statement.execute("CREATE TABLE IF NOT EXISTS BOUNDS(X INTEGER, Y INTEGER);" +
+            statement.execute("CREATE TABLE IF NOT EXISTS BOUNDS(X INTEGER, Y INTEGER, Z INTEGER);" +
                     "DELETE FROM BOUNDS;" +
-                    "INSERT INTO BOUNDS(X, Y) VALUES (" + boundingBox.a.getX() + ", " + boundingBox.a.getY() + ");" +
-                    "INSERT INTO BOUNDS(X, Y) VALUES (" + boundingBox.b.getX() + ", " + boundingBox.b.getY() + ");");
+                    "INSERT INTO BOUNDS(X, Y, Z) VALUES (" + boundingBox.a.getX() + ", " + boundingBox.a.getY() + ", " + boundingBox.a.getZ() + ");" +
+                    "INSERT INTO BOUNDS(X, Y, Z) VALUES (" + boundingBox.b.getX() + ", " + boundingBox.b.getY() + ", " + boundingBox.b.getZ() + ");");
         }
     }
 
