@@ -62,13 +62,13 @@ abstract public class OwnableRegionBase extends RegionBase implements IOwnable {
     }
 
     @Override
-    public void setOwners(List<User> owners) {
-        this.ownerList = owners;
+    public List<User> getOwners() {
+        return ownerList;
     }
 
     @Override
-    public List<User> getOwners() {
-        return ownerList;
+    public void setOwners(List<User> owners) {
+        this.ownerList = owners;
     }
 
     @Override
@@ -88,7 +88,7 @@ abstract public class OwnableRegionBase extends RegionBase implements IOwnable {
             statement.execute("CREATE TABLE IF NOT EXISTS OWNERS(NAMES VARCHAR(256), USERUUID UUID);" +
                     "DELETE FROM OWNERS");
             PreparedStatement insert = conn.prepareStatement("INSERT INTO OWNERS(NAMES, USERUUID) VALUES (?, ?)");
-            for(User owner : ownerList){
+            for (User owner : ownerList) {
                 insert.setString(1, owner.getName());
                 insert.setObject(2, owner.getUniqueId());
                 insert.addBatch();

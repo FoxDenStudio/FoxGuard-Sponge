@@ -27,7 +27,6 @@ package tk.elektrofuchse.fox.foxguard.commands;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
-import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.CommandCallable;
 import org.spongepowered.api.util.command.CommandException;
@@ -35,7 +34,6 @@ import org.spongepowered.api.util.command.CommandResult;
 import org.spongepowered.api.util.command.CommandSource;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 
-import java.awt.*;
 import java.util.List;
 import java.util.Optional;
 

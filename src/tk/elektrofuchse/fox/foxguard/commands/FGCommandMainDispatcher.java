@@ -24,16 +24,14 @@
 package tk.elektrofuchse.fox.foxguard.commands;
 
 import org.spongepowered.api.service.pagination.PaginationService;
-import org.spongepowered.api.util.command.*;
+import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.dispatcher.Disambiguator;
 import org.spongepowered.api.util.command.dispatcher.SimpleDispatcher;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.commands.util.CallbackHashMap;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 
-import java.util.*;
-
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.Map;
 
 /**
  * Created by Fox on 10/25/2015.
@@ -41,13 +39,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public final class FGCommandMainDispatcher extends FGCommandDispatcher {
 
+    private static FGCommandMainDispatcher instance;
     private final Map<CommandSource, InternalCommandState> stateMap = new CallbackHashMap<>((o, m) -> {
         if (o instanceof CommandSource) {
             m.put((CommandSource) o, new InternalCommandState());
         }
     });
-
-    private static FGCommandMainDispatcher instance;
 
     public FGCommandMainDispatcher() {
         this(SimpleDispatcher.FIRST_DISAMBIGUATOR);
@@ -59,12 +56,12 @@ public final class FGCommandMainDispatcher extends FGCommandDispatcher {
         FoxGuardMain.getInstance().getGame().getServiceManager().provide(PaginationService.class).get();
     }
 
-    public Map<CommandSource, InternalCommandState> getStateMap() {
-        return stateMap;
-    }
-
     public static FGCommandMainDispatcher getInstance() {
         return instance;
+    }
+
+    public Map<CommandSource, InternalCommandState> getStateMap() {
+        return stateMap;
     }
 
     public PaginationService getPageService() {

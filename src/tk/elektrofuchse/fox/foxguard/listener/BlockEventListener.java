@@ -33,8 +33,8 @@ import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
-import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FGManager;
+import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.flagsets.util.ActiveFlags;
 

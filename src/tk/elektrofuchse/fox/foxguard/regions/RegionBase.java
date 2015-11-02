@@ -78,13 +78,13 @@ public abstract class RegionBase implements IRegion {
     }
 
     @Override
-    public void setWorld(World world) {
-        if (this.world == null) this.world = world;
+    public World getWorld() {
+        return this.world;
     }
 
     @Override
-    public World getWorld() {
-        return this.world;
+    public void setWorld(World world) {
+        if (this.world == null) this.world = world;
     }
 
     @Override

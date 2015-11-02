@@ -25,9 +25,9 @@
 package tk.elektrofuchse.fox.foxguard.util;
 
 import org.spongepowered.api.world.World;
+import tk.elektrofuchse.fox.foxguard.FGManager;
 import tk.elektrofuchse.fox.foxguard.FGStorageManager;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
-import tk.elektrofuchse.fox.foxguard.FGManager;
 import tk.elektrofuchse.fox.foxguard.factory.FGFactoryManager;
 import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;

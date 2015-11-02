@@ -46,14 +46,12 @@ import java.util.List;
  */
 public class FGStorageManager {
     private static FGStorageManager instance;
+    private List<String> markedForDeletion = new ArrayList<>();
+    private List<DeferredObject> deferedObjects = new LinkedList<>();
 
     private FGStorageManager() {
         if (instance == null) instance = this;
     }
-
-    private List<String> markedForDeletion = new ArrayList<>();
-
-    private List<DeferredObject> deferedObjects = new LinkedList<>();
 
     public static FGStorageManager getInstance() {
         new FGStorageManager();
@@ -405,7 +403,7 @@ public class FGStorageManager {
     }
 
     public void updateFlagSet(IFlagSet flagSet) {
-        if(!FoxGuardMain.getInstance().isLoaded()) return;
+        if (!FoxGuardMain.getInstance().isLoaded()) return;
         Server server = FoxGuardMain.getInstance().getGame().getServer();
         try {
             DataSource source = FoxGuardMain.getInstance().getDataSource(

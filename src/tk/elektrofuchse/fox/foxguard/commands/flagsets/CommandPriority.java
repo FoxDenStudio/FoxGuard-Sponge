@@ -62,7 +62,7 @@ public class CommandPriority implements CommandCallable {
             int failures = 0;
             List<IFlagSet> flagSets = new LinkedList<>();
             FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedFlagSets.stream().forEach(flagSets::add);
-            for (String flagSetName: Arrays.copyOfRange(args, 1, args.length)){
+            for (String flagSetName : Arrays.copyOfRange(args, 1, args.length)) {
                 IFlagSet flagSet = FGManager.getInstance().getFlagSet(flagSetName);
                 if (flagSet != null) {
                     flagSets.add(flagSet);
@@ -77,7 +77,7 @@ public class CommandPriority implements CommandCallable {
                 } catch (NumberFormatException e) {
                     throw new ArgumentParseException(Texts.of("Not a valid priority!"), e, args[0], 1);
                 }
-                for (IFlagSet flagSet: flagSets){
+                for (IFlagSet flagSet : flagSets) {
                     flagSet.setPriority(flagSet.getPriority() + deltaPriority);
                     successes++;
                 }

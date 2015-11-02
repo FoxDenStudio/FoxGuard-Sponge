@@ -35,11 +35,11 @@ import org.spongepowered.api.util.command.CommandResult;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.world.World;
-import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FGManager;
-import tk.elektrofuchse.fox.foxguard.util.FGHelper;
+import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.flagsets.GlobalFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.GlobalRegion;
+import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 
 import java.util.List;
 import java.util.Optional;

@@ -62,8 +62,8 @@ public class InternalCommandState {
         }
     }
 
-    public void flush (StateField... fields){
-        for(StateField field : fields){
+    public void flush(StateField... fields) {
+        for (StateField field : fields) {
             this.flush(field);
         }
     }

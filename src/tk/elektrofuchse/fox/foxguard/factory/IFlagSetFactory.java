@@ -38,7 +38,7 @@ import java.sql.SQLException;
  */
 public interface IFlagSetFactory extends IFGFactory {
 
-    IFlagSet createFlagSet(String name, String type,int priority, String arguments, InternalCommandState state, CommandSource source);
+    IFlagSet createFlagSet(String name, String type, int priority, String arguments, InternalCommandState state, CommandSource source);
 
     IFlagSet createFlagSet(DataSource source, String name, String type, int priority) throws SQLException;
 

@@ -37,11 +37,11 @@ import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.util.command.source.ConsoleSource;
 import org.spongepowered.api.world.World;
-import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FGManager;
-import tk.elektrofuchse.fox.foxguard.util.FGHelper;
+import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
+import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 
 import java.util.List;
 import java.util.Optional;
@@ -86,9 +86,10 @@ public class CommandDetail implements CommandCallable {
                 TextBuilder builder = Texts.builder();
                 builder.append(Texts.of(TextColors.GOLD, "-----------------------------------------------------\n"));
                 builder.append(Texts.of(TextColors.GREEN, "---Details---\n"));
-                builder.append(region.getDetails(args.length < 3 + flag ? "" : args[2+flag]));
+                builder.append(region.getDetails(args.length < 3 + flag ? "" : args[2 + flag]));
                 builder.append(Texts.of(TextColors.GREEN, "\n---Linked FlagSets---"));
-                if(region.getFlagSets().size() == 0) builder.append(Texts.of(TextStyles.ITALIC, "\nNo linked FlagSets!"));
+                if (region.getFlagSets().size() == 0)
+                    builder.append(Texts.of(TextStyles.ITALIC, "\nNo linked FlagSets!"));
                 region.getFlagSets().stream().forEach(flagSet -> builder.append(Texts.of(FGHelper.getColorForFlagSet(flagSet),
                         "\n" + flagSet.getType() + " : " + flagSet.getName())));
                 player.sendMessage(builder.build());

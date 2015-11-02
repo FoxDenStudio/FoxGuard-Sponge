@@ -26,10 +26,8 @@ package tk.elektrofuchse.fox.foxguard.regions;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.IFGObject;
-import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 
 import java.util.List;
@@ -54,8 +52,8 @@ public interface IRegion extends IFGObject {
 
     boolean removeFlagSet(IFlagSet flagSet);
 
-    void setWorld(World world);
-
     World getWorld();
+
+    void setWorld(World world);
 
 }

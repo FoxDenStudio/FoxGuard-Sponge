@@ -50,6 +50,11 @@ public class FGConfigManager {
         load();
     }
 
+    public static FGConfigManager getInstance() {
+        if (instance == null) new FGConfigManager();
+        return instance;
+    }
+
     public void load() {
         File configFile = new File(
                 FoxGuardMain.getInstance().getConfigDirectory().getPath() + "/foxguard.cfg");
@@ -112,10 +117,5 @@ public class FGConfigManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public static FGConfigManager getInstance() {
-        if(instance == null) new FGConfigManager();
-        return instance;
     }
 }

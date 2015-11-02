@@ -57,13 +57,13 @@ abstract public class OwnableFlagSetBase extends FlagSetBase implements IOwnable
     }
 
     @Override
-    public void setOwners(List<User> owners) {
-        this.ownerList = owners;
+    public List<User> getOwners() {
+        return ownerList;
     }
 
     @Override
-    public List<User> getOwners() {
-        return ownerList;
+    public void setOwners(List<User> owners) {
+        this.ownerList = owners;
     }
 
     @Override

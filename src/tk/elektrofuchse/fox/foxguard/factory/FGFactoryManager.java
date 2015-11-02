@@ -43,15 +43,9 @@ import java.util.List;
  */
 public class FGFactoryManager {
 
+    private static FGFactoryManager ourInstance = new FGFactoryManager();
     private final List<IRegionFactory> regionFactories;
     private final List<IFlagSetFactory> flagSetFactories;
-
-
-    private static FGFactoryManager ourInstance = new FGFactoryManager();
-
-    public static FGFactoryManager getInstance() {
-        return ourInstance;
-    }
 
     private FGFactoryManager() {
         regionFactories = new ArrayList<>();
@@ -60,6 +54,9 @@ public class FGFactoryManager {
         flagSetFactories.add(new FGFlagSetFactory());
     }
 
+    public static FGFactoryManager getInstance() {
+        return ourInstance;
+    }
 
     public IRegion createRegion(String name, String type, String args, InternalCommandState state, World world, CommandSource source) throws CommandException {
         for (IRegionFactory rf : regionFactories) {

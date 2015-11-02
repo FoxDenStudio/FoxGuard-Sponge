@@ -26,9 +26,7 @@ package tk.elektrofuchse.fox.foxguard.flagsets;
 
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.util.Tristate;
-import org.spongepowered.api.util.command.CommandSource;
 import tk.elektrofuchse.fox.foxguard.IFGObject;
-import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.flagsets.util.ActiveFlags;
 import tk.elektrofuchse.fox.foxguard.flagsets.util.PassiveFlags;
 

@@ -79,6 +79,10 @@ public class FoxGuardMain {
 
     private boolean loaded = false;
 
+    public static FoxGuardMain getInstance() {
+        return instance;
+    }
+
     @Listener
     public void gameInit(GameInitializationEvent event) {
         instance = this;
@@ -176,10 +180,6 @@ public class FoxGuardMain {
 
     public Game getGame() {
         return game;
-    }
-
-    public static FoxGuardMain getInstance() {
-        return instance;
     }
 
     public UserStorage getUserStorage() {

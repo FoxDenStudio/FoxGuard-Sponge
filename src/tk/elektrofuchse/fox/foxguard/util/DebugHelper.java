@@ -58,7 +58,7 @@ public class DebugHelper {
     public static void printBlockEvent(ChangeBlockEvent event) {
         StringBuilder sb = new StringBuilder().append("-----------------------------------\n");
         sb.append(event.getClass()).append("\n");
-        for(Transaction t : event.getTransactions()){
+        for (Transaction t : event.getTransactions()) {
             sb.append(t).append("\n");
         }
         sb.append("\n");

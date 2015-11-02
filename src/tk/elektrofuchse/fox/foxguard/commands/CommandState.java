@@ -32,9 +32,9 @@ import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.*;
 import org.spongepowered.api.util.command.source.ConsoleSource;
-import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
+import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 
 import java.util.Iterator;
 import java.util.List;

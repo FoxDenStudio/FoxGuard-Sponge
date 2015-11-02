@@ -40,13 +40,12 @@ import java.util.stream.Stream;
  */
 public class FGManager {
 
-    private FoxGuardMain plugin;
-    private Server server;
     private static FGManager instance;
-
     private final Map<World, List<IRegion>> regions;
     private final List<IFlagSet> flagSets;
     private final GlobalFlagSet gfs;
+    private FoxGuardMain plugin;
+    private Server server;
 
 
     public FGManager(FoxGuardMain plugin, Server server) {
@@ -57,6 +56,10 @@ public class FGManager {
         flagSets = new LinkedList<>();
         gfs = new GlobalFlagSet();
         this.addFlagSet(gfs);
+    }
+
+    public static FGManager getInstance() {
+        return instance;
     }
 
     public boolean isRegistered(IFlagSet flagSet) {
@@ -236,10 +239,6 @@ public class FGManager {
 
     public GlobalFlagSet getGlobalFlagSet() {
         return gfs;
-    }
-
-    public static FGManager getInstance() {
-        return instance;
     }
 
     public Server getServer() {

@@ -44,7 +44,10 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Created by Fox on 10/25/2015.
@@ -100,7 +103,7 @@ public class FGRegionFactory implements IRegionFactory {
                 boundSet.next();
                 a = new Vector3i(boundSet.getInt("X"), boundSet.getInt("Y"), boundSet.getInt("Z"));
                 boundSet.next();
-                b = new Vector3i(boundSet.getInt("X"),boundSet.getInt("Y"), boundSet.getInt("Z"));
+                b = new Vector3i(boundSet.getInt("X"), boundSet.getInt("Y"), boundSet.getInt("Z"));
                 while (ownerSet.next()) {
                     Optional<User> user = FoxGuardMain.getInstance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
                     if (user.isPresent()) userList.add(user.get());

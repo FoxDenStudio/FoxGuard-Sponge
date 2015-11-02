@@ -34,13 +34,13 @@ import org.spongepowered.api.util.command.CommandResult;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.world.World;
-import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FGManager;
-import tk.elektrofuchse.fox.foxguard.util.FGHelper;
+import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.factory.FGFactoryManager;
 import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
+import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 
 import java.util.List;
 import java.util.Optional;
@@ -109,11 +109,12 @@ public class CommandCreate implements CommandCallable {
                     throw new CommandException(Texts.of("You may not use \"" + args[1] + "\" as a name!"));
                 int flag = 0;
                 int priority = 0;
-                try{
+                try {
                     priority = Integer.parseInt(args[2]);
                     flag = 1;
                     args = arguments.split(" ", 5);
-                } catch (NumberFormatException | IndexOutOfBoundsException ignored){}
+                } catch (NumberFormatException | IndexOutOfBoundsException ignored) {
+                }
 
                 if (args.length < 3 + flag) throw new CommandException(Texts.of("Must specify a type!"));
                 IFlagSet newFlagSet = FGFactoryManager.getInstance().createFlagSet(
