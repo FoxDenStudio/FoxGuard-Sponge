@@ -1,0 +1,52 @@
+foxguard {
+    command{
+        info {
+            about
+            objects {
+                list
+                detail
+            }
+        }
+        state {
+            state
+            add{
+                regions
+                flagsets
+                positions
+            }
+            subtract
+            flush
+        }
+        modify {
+            objects {
+                create{
+                    flagsets
+                    regions
+                }
+                delete{
+                    flagsets
+                    regions
+                }
+                modify{
+                    flagsets
+                    regions
+                }
+                rename{
+                    flagsets
+                    regions
+                }
+                import{
+                    flagsets
+                    regions
+                }
+                flagsets {
+                    priority
+                }
+            }
+            link {
+                add
+                remove
+            }
+        }
+    }
+}
