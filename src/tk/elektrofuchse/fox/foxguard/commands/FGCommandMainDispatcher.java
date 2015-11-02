@@ -6,6 +6,7 @@ package tk.elektrofuchse.fox.foxguard.commands;
 import org.spongepowered.api.service.pagination.PaginationService;
 import org.spongepowered.api.util.command.*;
 import org.spongepowered.api.util.command.dispatcher.Disambiguator;
+import org.spongepowered.api.util.command.dispatcher.SimpleDispatcher;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.commands.util.CallbackHashMap;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
@@ -27,16 +28,15 @@ public final class FGCommandMainDispatcher extends FGCommandDispatcher {
     });
 
     private static FGCommandMainDispatcher instance;
-    private final PaginationService pageService;
 
     public FGCommandMainDispatcher() {
-        this(FIRST_DISAMBIGUATOR);
+        this(SimpleDispatcher.FIRST_DISAMBIGUATOR);
         instance = this;
     }
 
     public FGCommandMainDispatcher(Disambiguator disambiguatorFunc) {
         super(disambiguatorFunc);
-        pageService = FoxGuardMain.getInstance().getGame().getServiceManager().provide(PaginationService.class).get();
+        FoxGuardMain.getInstance().getGame().getServiceManager().provide(PaginationService.class).get();
     }
 
     public Map<CommandSource, InternalCommandState> getStateMap() {
@@ -48,6 +48,6 @@ public final class FGCommandMainDispatcher extends FGCommandDispatcher {
     }
 
     public PaginationService getPageService() {
-        return pageService;
+        return FoxGuardMain.getInstance().getGame().getServiceManager().provide(PaginationService.class).get();
     }
 }
