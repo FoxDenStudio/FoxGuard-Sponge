@@ -35,7 +35,7 @@ import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
-import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
+import tk.elektrofuchse.fox.foxguard.FGManager;
 import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.factory.FGFactoryManager;
@@ -92,7 +92,7 @@ public class CommandCreate implements CommandCallable {
                         FGCommandMainDispatcher.getInstance().getStateMap().get(player), world, player);
                 if (newRegion == null)
                     throw new CommandException(Texts.of("Failed to create Region! Perhaps the type is invalid?"));
-                boolean success = FoxGuardManager.getInstance().addRegion(world, newRegion);
+                boolean success = FGManager.getInstance().addRegion(world, newRegion);
                 if (!success)
                     throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1 + flag], 1 + flag);
                 FGCommandMainDispatcher.getInstance().getStateMap().get(player).flush(InternalCommandState.StateField.POSITIONS);
@@ -122,7 +122,7 @@ public class CommandCreate implements CommandCallable {
                         FGCommandMainDispatcher.getInstance().getStateMap().get(player), player);
                 if (newFlagSet == null)
                     throw new CommandException(Texts.of("Failed to create FlagSet! Perhaps the type is invalid?"));
-                boolean success = FoxGuardManager.getInstance().addFlagSet(newFlagSet);
+                boolean success = FGManager.getInstance().addFlagSet(newFlagSet);
                 if (!success)
                     throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1], 1);
                 player.sendMessage(Texts.of(TextColors.GREEN, "FlagSet created successfully!"));

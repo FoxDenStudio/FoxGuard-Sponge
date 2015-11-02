@@ -32,10 +32,9 @@ import org.spongepowered.api.util.command.CommandCallable;
 import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandResult;
 import org.spongepowered.api.util.command.CommandSource;
-import org.spongepowered.api.util.command.source.ConsoleSource;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
-import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
+import tk.elektrofuchse.fox.foxguard.FGManager;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.flagsets.GlobalFlagSet;
 import tk.elektrofuchse.fox.foxguard.util.FGHelper;
@@ -64,7 +63,7 @@ public class CommandLink implements CommandCallable {
             FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedRegions.stream().forEach(
                     region -> FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedFlagSets.stream()
                             .filter(flagSet -> !(flagSet instanceof GlobalFlagSet))
-                            .forEach(flagSet -> count[0] += FoxGuardManager.getInstance().link(region, flagSet) ? 1 : 0));
+                            .forEach(flagSet -> count[0] += FGManager.getInstance().link(region, flagSet) ? 1 : 0));
             source.sendMessage(Texts.of(TextColors.GREEN, "Successfully linked " + count[0] + "!"));
             FGCommandMainDispatcher.getInstance().getStateMap().get(source).flush(InternalCommandState.StateField.REGIONS, InternalCommandState.StateField.FLAGSETS);
             return CommandResult.builder().successCount(count[0]).build();
@@ -81,7 +80,7 @@ public class CommandLink implements CommandCallable {
                 } else world = player.getWorld();
                 if (args.length < 1 + flag) throw new CommandException(Texts.of("Must specify items to link!"));
                 if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a flagset!"));
-                boolean success = FoxGuardManager.getInstance().link(world, args[flag], args[1 + flag]);
+                boolean success = FGManager.getInstance().link(world, args[flag], args[1 + flag]);
             } else {
 
             }

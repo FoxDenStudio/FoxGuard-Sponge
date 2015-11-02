@@ -35,7 +35,7 @@ import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
-import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
+import tk.elektrofuchse.fox.foxguard.FGManager;
 import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
@@ -81,7 +81,7 @@ public class CommandSubtract implements CommandCallable {
                     int index = Integer.parseInt(args[1]);
                     region = FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.get(index - 1);
                 } catch (NumberFormatException e) {
-                    region = FoxGuardManager.getInstance().getRegion(world, args[1]);
+                    region = FGManager.getInstance().getRegion(world, args[1]);
                 } catch (IndexOutOfBoundsException e) {
                     throw new ArgumentParseException(Texts.of("Index out of bounds! (1 - "
                             + FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.size()), args[1], 1);
@@ -100,7 +100,7 @@ public class CommandSubtract implements CommandCallable {
                     int index = Integer.parseInt(args[1]);
                     flagSet = FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.get(index - 1);
                 } catch (NumberFormatException e) {
-                    flagSet = FoxGuardManager.getInstance().getFlagSet(args[1]);
+                    flagSet = FGManager.getInstance().getFlagSet(args[1]);
                 } catch (IndexOutOfBoundsException e) {
                     throw new ArgumentParseException(Texts.of("Index out of bounds! (1 - "
                             + FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.size()), args[1], 1);

@@ -44,10 +44,10 @@ import java.util.List;
  * Created by Fox on 10/26/2015.
  * Project: foxguard
  */
-public class FoxGuardStorageManager {
-    private static FoxGuardStorageManager instance;
+public class FGStorageManager {
+    private static FGStorageManager instance;
 
-    private FoxGuardStorageManager() {
+    private FGStorageManager() {
         if (instance == null) instance = this;
     }
 
@@ -55,8 +55,8 @@ public class FoxGuardStorageManager {
 
     private List<DeferredObject> deferedObjects = new LinkedList<>();
 
-    public static FoxGuardStorageManager getInstance() {
-        new FoxGuardStorageManager();
+    public static FGStorageManager getInstance() {
+        new FGStorageManager();
         return instance;
     }
 
@@ -118,7 +118,7 @@ public class FoxGuardStorageManager {
                                     metaSet.getString("NAME").equalsIgnoreCase(flagSetDataSet.getString("NAME")) &&
                                     metaSet.getString("TYPE").equalsIgnoreCase(flagSetDataSet.getString("TYPE")) &&
                                     metaSet.getInt("PRIORITY") == flagSetDataSet.getInt("PRIORITY")) {
-                                FoxGuardManager.getInstance().addFlagSet(
+                                FGManager.getInstance().addFlagSet(
                                         FGFactoryManager.getInstance().createFlagSet(
                                                 source, flagSetDataSet.getString("NAME"), flagSetDataSet.getString("TYPE"), flagSetDataSet.getInt("PRIORITY")));
                             } else if (FGConfigManager.getInstance().forceLoad) {
@@ -193,7 +193,7 @@ public class FoxGuardStorageManager {
                                     metaSet.getString("NAME").equalsIgnoreCase(regionDataSet.getString("NAME")) &&
                                     metaSet.getString("TYPE").equalsIgnoreCase(regionDataSet.getString("TYPE")) &&
                                     metaSet.getString("WORLD").equals(world.getName())) {
-                                FoxGuardManager.getInstance().addRegion(world,
+                                FGManager.getInstance().addRegion(world,
                                         FGFactoryManager.getInstance().createRegion(
                                                 source,
                                                 regionDataSet.getString("NAME"), regionDataSet.getString("TYPE")
@@ -257,7 +257,7 @@ public class FoxGuardStorageManager {
         try (Connection conn = FoxGuardMain.getInstance().getDataSource(dataBaseDir + "foxguard").getConnection()) {
             ResultSet linkSet = conn.createStatement().executeQuery("SELECT  * FROM LINKAGES;");
             while (linkSet.next()) {
-                FoxGuardManager.getInstance().link(world, linkSet.getString("REGION"), linkSet.getString("FLAGSET"));
+                FGManager.getInstance().link(world, linkSet.getString("REGION"), linkSet.getString("FLAGSET"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -274,7 +274,7 @@ public class FoxGuardStorageManager {
         try (Connection conn = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
             Statement statement = conn.createStatement();
             statement.addBatch("DELETE FROM FLAGSETS;");
-            for (IFlagSet flagSet : FoxGuardManager.getInstance().getFlagSetsListCopy()) {
+            for (IFlagSet flagSet : FGManager.getInstance().getFlagSetsListCopy()) {
                 statement.addBatch("INSERT INTO FLAGSETS(NAME, TYPE, PRIORITY) VALUES ('" +
                         flagSet.getName() + "', '" +
                         flagSet.getUniqueType() + "', " +
@@ -285,7 +285,7 @@ public class FoxGuardStorageManager {
             e.printStackTrace();
         }
 
-        for (IFlagSet flagSet : FoxGuardManager.getInstance().getFlagSetsListCopy()) {
+        for (IFlagSet flagSet : FGManager.getInstance().getFlagSetsListCopy()) {
             try {
                 DataSource source = FoxGuardMain.getInstance().getDataSource(
                         "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() +
@@ -324,7 +324,7 @@ public class FoxGuardStorageManager {
         try (Connection conn = FoxGuardMain.getInstance().getDataSource(dataBaseDir + "foxguard").getConnection()) {
             Statement statement = conn.createStatement();
             statement.addBatch("DELETE FROM REGIONS; DELETE FROM LINKAGES;");
-            for (IRegion region : FoxGuardManager.getInstance().getRegionsListCopy(world)) {
+            for (IRegion region : FGManager.getInstance().getRegionsListCopy(world)) {
                 statement.addBatch("INSERT INTO REGIONS(NAME, TYPE) VALUES ('" +
                         region.getName() + "', '" +
                         region.getUniqueType() + "');");
@@ -338,7 +338,7 @@ public class FoxGuardStorageManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        for (IRegion region : FoxGuardManager.getInstance().getRegionsListCopy(world)) {
+        for (IRegion region : FGManager.getInstance().getRegionsListCopy(world)) {
             try {
                 DataSource source = FoxGuardMain.getInstance().getDataSource(dataBaseDir + "regions/" + region.getName());
                 region.writeToDatabase(source);

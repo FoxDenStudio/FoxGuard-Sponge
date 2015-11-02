@@ -32,9 +32,8 @@ import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandResult;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
-import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
+import tk.elektrofuchse.fox.foxguard.FGManager;
 import tk.elektrofuchse.fox.foxguard.commands.FGCommandMainDispatcher;
-import tk.elektrofuchse.fox.foxguard.factory.FGFactoryManager;
 import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 
 import java.util.Arrays;
@@ -64,7 +63,7 @@ public class CommandPriority implements CommandCallable {
             List<IFlagSet> flagSets = new LinkedList<>();
             FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedFlagSets.stream().forEach(flagSets::add);
             for (String flagSetName: Arrays.copyOfRange(args, 1, args.length)){
-                IFlagSet flagSet = FoxGuardManager.getInstance().getFlagSet(flagSetName);
+                IFlagSet flagSet = FGManager.getInstance().getFlagSet(flagSetName);
                 if (flagSet != null) {
                     flagSets.add(flagSet);
                 } else {

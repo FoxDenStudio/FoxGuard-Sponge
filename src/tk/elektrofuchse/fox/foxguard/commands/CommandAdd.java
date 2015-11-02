@@ -36,7 +36,7 @@ import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
-import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
+import tk.elektrofuchse.fox.foxguard.FGManager;
 import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
@@ -76,7 +76,7 @@ public class CommandAdd implements CommandCallable {
                     flag = 1;
                 } else world = player.getWorld();
                 if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a name!"));
-                IRegion region = FoxGuardManager.getInstance().getRegion(world, args[1 + flag]);
+                IRegion region = FGManager.getInstance().getRegion(world, args[1 + flag]);
                 if (region == null)
                     throw new ArgumentParseException(Texts.of("No Regions with this name!"), args[1 + flag], 1 + flag);
                 if (FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.contains(region))
@@ -87,7 +87,7 @@ public class CommandAdd implements CommandCallable {
                 return CommandResult.success();
             } else if (FGHelper.contains(flagSetsAliases, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-                IFlagSet flagSet = FoxGuardManager.getInstance().getFlagSet(args[1]);
+                IFlagSet flagSet = FGManager.getInstance().getFlagSet(args[1]);
                 if (flagSet == null)
                     throw new ArgumentParseException(Texts.of("No FlagSets with this name!"), args[1], 1);
                 if (FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.contains(flagSet))

@@ -25,9 +25,9 @@
 package tk.elektrofuchse.fox.foxguard.util;
 
 import org.spongepowered.api.world.World;
+import tk.elektrofuchse.fox.foxguard.FGStorageManager;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
-import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
-import tk.elektrofuchse.fox.foxguard.FoxGuardStorageManager;
+import tk.elektrofuchse.fox.foxguard.FGManager;
 import tk.elektrofuchse.fox.foxguard.factory.FGFactoryManager;
 import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
@@ -55,20 +55,20 @@ public class DeferredObject {
     public void resolve() throws SQLException {
         if (category.equalsIgnoreCase("flagset")) {
             String name;
-            if (FoxGuardManager.getInstance().getFlagSet(metaName) == null)
+            if (FGManager.getInstance().getFlagSet(metaName) == null)
                 name = metaName;
-            else if (FoxGuardManager.getInstance().getFlagSet(listName) == null)
+            else if (FGManager.getInstance().getFlagSet(listName) == null)
                 name = listName;
             else {
                 int x = 1;
-                while (FoxGuardManager.getInstance().getFlagSet(metaName + x) != null) {
+                while (FGManager.getInstance().getFlagSet(metaName + x) != null) {
                     x++;
                 }
                 name = metaName + x;
             }
             IFlagSet flagSet = FGFactoryManager.getInstance().createFlagSet(dataSource, name, type, priority);
-            FoxGuardStorageManager.getInstance().markForDeletion(databaseDir);
-            FoxGuardManager.getInstance().addFlagSet(flagSet);
+            FGStorageManager.getInstance().markForDeletion(databaseDir);
+            FGManager.getInstance().addFlagSet(flagSet);
             FoxGuardMain.getInstance().getLogger().info("Successfully force loaded FlagSet: " +
                     "(Name: " + name +
                     " Type: " + type +
@@ -81,20 +81,20 @@ public class DeferredObject {
                 world = optWorld.get();
             if (world == null) return;
             String name;
-            if (FoxGuardManager.getInstance().getRegion(world, metaName) == null)
+            if (FGManager.getInstance().getRegion(world, metaName) == null)
                 name = metaName;
-            else if (FoxGuardManager.getInstance().getRegion(world, listName) == null)
+            else if (FGManager.getInstance().getRegion(world, listName) == null)
                 name = listName;
             else {
                 int x = 1;
-                while (FoxGuardManager.getInstance().getRegion(world, metaName + x) != null) {
+                while (FGManager.getInstance().getRegion(world, metaName + x) != null) {
                     x++;
                 }
                 name = metaName + x;
             }
             IRegion region = FGFactoryManager.getInstance().createRegion(dataSource, name, type);
-            FoxGuardStorageManager.getInstance().markForDeletion(databaseDir);
-            FoxGuardManager.getInstance().addRegion(world, region);
+            FGStorageManager.getInstance().markForDeletion(databaseDir);
+            FGManager.getInstance().addRegion(world, region);
             FoxGuardMain.getInstance().getLogger().info("Successfully force loaded Region: " +
                     "(Name: " + name +
                     " Type: " + type +

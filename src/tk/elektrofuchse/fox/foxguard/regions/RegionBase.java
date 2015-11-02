@@ -27,7 +27,7 @@ package tk.elektrofuchse.fox.foxguard.regions;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import org.spongepowered.api.world.World;
-import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
+import tk.elektrofuchse.fox.foxguard.FGManager;
 import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 
 import java.util.LinkedList;
@@ -65,7 +65,7 @@ public abstract class RegionBase implements IRegion {
 
     @Override
     public boolean addFlagSet(IFlagSet flagSet) {
-        if (flagSets.contains(flagSet) || !FoxGuardManager.getInstance().isRegistered(flagSet)) return false;
+        if (flagSets.contains(flagSet) || !FGManager.getInstance().isRegistered(flagSet)) return false;
         this.flagSets.add(flagSet);
         return true;
     }

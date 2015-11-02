@@ -34,7 +34,7 @@ import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
-import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
+import tk.elektrofuchse.fox.foxguard.FGManager;
 import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.flagsets.util.ActiveFlags;
 
@@ -68,7 +68,7 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
 
         for (Transaction<BlockSnapshot> trans : event.getTransactions()) {
             Vector3i loc = trans.getOriginal().getLocation().get().getBlockPosition();
-            FoxGuardManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
+            FGManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
                     .forEach(region -> region.getFlagSets().stream()
                             .filter(flagSet -> !flagSetList.contains(flagSet))
                             .forEach(flagSetList::add));

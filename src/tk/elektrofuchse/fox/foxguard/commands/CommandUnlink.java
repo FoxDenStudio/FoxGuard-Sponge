@@ -32,7 +32,7 @@ import org.spongepowered.api.util.command.CommandCallable;
 import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandResult;
 import org.spongepowered.api.util.command.CommandSource;
-import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
+import tk.elektrofuchse.fox.foxguard.FGManager;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.flagsets.GlobalFlagSet;
 import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
@@ -64,7 +64,7 @@ public class CommandUnlink implements CommandCallable {
                 FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.stream().forEach(
                         region -> FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.stream()
                                 .filter(flagSet -> !(flagSet instanceof GlobalFlagSet))
-                                .forEach(flagSet -> count[0] += FoxGuardManager.getInstance().unlink(region, flagSet) ? 1 : 0));
+                                .forEach(flagSet -> count[0] += FGManager.getInstance().unlink(region, flagSet) ? 1 : 0));
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully unlinked " + count[0] + "!"));
                 FGCommandMainDispatcher.getInstance().getStateMap().get(player).flush(InternalCommandState.StateField.REGIONS, InternalCommandState.StateField.FLAGSETS);
                 return CommandResult.builder().successCount(count[0]).build();
@@ -79,24 +79,24 @@ public class CommandUnlink implements CommandCallable {
                             region.getFlagSets().stream()
                                     .filter(flagSet -> !(flagSet instanceof GlobalFlagSet))
                                     .forEach(flagSets::add);
-                            flagSets.stream().forEach(flagSet -> count[0] += FoxGuardManager.getInstance().unlink(region, flagSet) ? 1 : 0);
+                            flagSets.stream().forEach(flagSet -> count[0] += FGManager.getInstance().unlink(region, flagSet) ? 1 : 0);
                         });
                 FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.stream()
                         .filter(flagSet -> !(flagSet instanceof GlobalFlagSet)).forEach(
-                        flagSet -> FoxGuardManager.getInstance().getRegionsListCopy().stream().forEach(
-                                region -> count[0] += FoxGuardManager.getInstance().unlink(region, flagSet) ? 1 : 0));
+                        flagSet -> FGManager.getInstance().getRegionsListCopy().stream().forEach(
+                                region -> count[0] += FGManager.getInstance().unlink(region, flagSet) ? 1 : 0));
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully unlinked " + count[0] + "!"));
                 FGCommandMainDispatcher.getInstance().getStateMap().get(player).flush(InternalCommandState.StateField.REGIONS, InternalCommandState.StateField.FLAGSETS);
                 return CommandResult.builder().successCount(count[0]).build();
             } else if (args[0].equals("ALL")) {
                 int[] count = {0};
-                FoxGuardManager.getInstance().getRegionsListCopy().forEach(
+                FGManager.getInstance().getRegionsListCopy().forEach(
                         region -> {
                             List<IFlagSet> flagSets = new ArrayList<>();
                             region.getFlagSets().stream()
                                     .filter(flagSet -> !(flagSet instanceof GlobalFlagSet))
                                     .forEach(flagSets::add);
-                            flagSets.stream().forEach(flagSet -> count[0] += FoxGuardManager.getInstance().unlink(region, flagSet) ? 1 : 0);
+                            flagSets.stream().forEach(flagSet -> count[0] += FGManager.getInstance().unlink(region, flagSet) ? 1 : 0);
                         });
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully unlinked " + count[0] + "!"));
                 return CommandResult.builder().successCount(count[0]).build();

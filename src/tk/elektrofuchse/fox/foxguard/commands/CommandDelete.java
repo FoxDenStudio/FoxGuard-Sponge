@@ -36,8 +36,7 @@ import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
-import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
-import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
+import tk.elektrofuchse.fox.foxguard.FGManager;
 import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 import tk.elektrofuchse.fox.foxguard.flagsets.GlobalFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.GlobalRegion;
@@ -79,7 +78,7 @@ public class CommandDelete implements CommandCallable {
                 if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a name!"));
                 if (args[1 + flag].equalsIgnoreCase(GlobalRegion.NAME))
                     throw new CommandException(Texts.of("You may not delete the global Region!"));
-                boolean success = FoxGuardManager.getInstance().removeRegion(world, args[1 + flag]);
+                boolean success = FGManager.getInstance().removeRegion(world, args[1 + flag]);
                 if (!success)
                     throw new ArgumentParseException(Texts.of("No Region exists with that name!"), args[1 + flag], 1 + flag);
 
@@ -88,7 +87,7 @@ public class CommandDelete implements CommandCallable {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 if (args[1].equalsIgnoreCase(GlobalFlagSet.NAME))
                     throw new CommandException(Texts.of("You may not delete the global FlagSet!"));
-                boolean success = FoxGuardManager.getInstance().removeFlagSet(args[1]);
+                boolean success = FGManager.getInstance().removeFlagSet(args[1]);
                 if (!success)
                     throw new ArgumentParseException(Texts.of("No FlagSet exists with that name!"), args[1], 1);
                 player.sendMessage(Texts.of(TextColors.GREEN, "FlagSet deleted successfully!"));

@@ -34,7 +34,7 @@ import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.util.command.source.ConsoleSource;
 import org.spongepowered.api.world.World;
 import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
-import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
+import tk.elektrofuchse.fox.foxguard.FGManager;
 import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 import tk.elektrofuchse.fox.foxguard.flagsets.IFlagSet;
 import tk.elektrofuchse.fox.foxguard.regions.IRegion;
@@ -77,14 +77,14 @@ public class CommandList implements CommandCallable {
                     if (optWorld != null) {
                         if (!optWorld.isPresent())
                             throw new ArgumentParseException(Texts.of("No world found with that name!"), args[1], 1);
-                        FoxGuardManager.getInstance().getRegionsListCopy(optWorld.get()).forEach(regionList::add);
+                        FGManager.getInstance().getRegionsListCopy(optWorld.get()).forEach(regionList::add);
                         worldOffset = 1;
                         allFlag = false;
                         worldName = optWorld.get().getName();
                     }
                 }
                 if (allFlag) {
-                    FoxGuardManager.getInstance().getRegionsListCopy().forEach(regionList::add);
+                    FGManager.getInstance().getRegionsListCopy().forEach(regionList::add);
                 }
 
 
@@ -99,7 +99,7 @@ public class CommandList implements CommandCallable {
                 }
                 source.sendMessage(output.build());
             } else if (contains(flagSetsAliases, args[0])) {
-                List<IFlagSet> flagSetList = FoxGuardManager.getInstance().getFlagSetsListCopy();
+                List<IFlagSet> flagSetList = FGManager.getInstance().getFlagSetsListCopy();
 
                     /*try {
                         page = Integer.parseInt(args[1]);

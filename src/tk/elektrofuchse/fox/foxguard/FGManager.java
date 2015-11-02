@@ -38,18 +38,18 @@ import java.util.stream.Stream;
  * Created by Fox on 8/17/2015.
  * Project: foxguard
  */
-public class FoxGuardManager {
+public class FGManager {
 
     private FoxGuardMain plugin;
     private Server server;
-    private static FoxGuardManager instance;
+    private static FGManager instance;
 
     private final Map<World, List<IRegion>> regions;
     private final List<IFlagSet> flagSets;
     private final GlobalFlagSet gfs;
 
 
-    public FoxGuardManager(FoxGuardMain plugin, Server server) {
+    public FGManager(FoxGuardMain plugin, Server server) {
         if (instance == null) instance = this;
         this.plugin = plugin;
         this.server = server;
@@ -68,8 +68,8 @@ public class FoxGuardManager {
         if (region.getWorld() != null || getRegion(world, region.getName()) != null) return false;
         region.setWorld(world);
         regions.get(world).add(region);
-        FoxGuardStorageManager.getInstance().unmarkForDeletion(region);
-        FoxGuardStorageManager.getInstance().updateRegion(region);
+        FGStorageManager.getInstance().unmarkForDeletion(region);
+        FGStorageManager.getInstance().updateRegion(region);
         return true;
     }
 
@@ -111,8 +111,8 @@ public class FoxGuardManager {
         if (flagSet == null) return false;
         if (getFlagSet(flagSet.getName()) != null) return false;
         flagSets.add(flagSet);
-        FoxGuardStorageManager.getInstance().unmarkForDeletion(flagSet);
-        FoxGuardStorageManager.getInstance().updateFlagSet(flagSet);
+        FGStorageManager.getInstance().unmarkForDeletion(flagSet);
+        FGStorageManager.getInstance().updateFlagSet(flagSet);
         return true;
     }
 
@@ -135,7 +135,7 @@ public class FoxGuardManager {
                     .forEach(region -> region.removeFlagSet(flagSet));
         });
         if (!this.flagSets.contains(flagSet)) return false;
-        FoxGuardStorageManager.getInstance().markForDeletion(flagSet);
+        FGStorageManager.getInstance().markForDeletion(flagSet);
         flagSets.remove(flagSet);
         return true;
     }
@@ -151,7 +151,7 @@ public class FoxGuardManager {
 
     public boolean removeRegion(World world, IRegion region) {
         if (region == null || region instanceof GlobalRegion || !this.regions.get(world).contains(region)) return false;
-        FoxGuardStorageManager.getInstance().markForDeletion(region);
+        FGStorageManager.getInstance().markForDeletion(region);
         this.regions.get(world).remove(region);
         return true;
     }
@@ -205,10 +205,10 @@ public class FoxGuardManager {
         } else if (object instanceof IFlagSet) {
             if (this.getFlagSet(newName) != null) return false;
         }
-        FoxGuardStorageManager.getInstance().markForDeletion(object);
+        FGStorageManager.getInstance().markForDeletion(object);
         object.setName(newName);
-        FoxGuardStorageManager.getInstance().unmarkForDeletion(object);
-        FoxGuardStorageManager.getInstance().update(object);
+        FGStorageManager.getInstance().unmarkForDeletion(object);
+        FGStorageManager.getInstance().update(object);
         return false;
     }
 
@@ -238,7 +238,7 @@ public class FoxGuardManager {
         return gfs;
     }
 
-    public static FoxGuardManager getInstance() {
+    public static FGManager getInstance() {
         return instance;
     }
 
