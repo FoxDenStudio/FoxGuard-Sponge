@@ -9,9 +9,12 @@ import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandResult;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.source.ConsoleSource;
+import org.spongepowered.api.world.World;
+import tk.elektrofuchse.fox.foxguard.FoxGuardMain;
 import tk.elektrofuchse.fox.foxguard.FoxGuardManager;
 import tk.elektrofuchse.fox.foxguard.commands.util.InternalCommandState;
 import tk.elektrofuchse.fox.foxguard.flagsets.GlobalFlagSet;
+import tk.elektrofuchse.fox.foxguard.util.FGHelper;
 
 import java.util.List;
 import java.util.Optional;
@@ -43,7 +46,18 @@ public class CommandLink implements CommandCallable {
             return CommandResult.builder().successCount(count[0]).build();
         } else {
             if (source instanceof Player) {
-
+                Player player = (Player) source;
+                int flag = 0;
+                Optional<World> optWorld = FGHelper.parseWorld(args[0], FoxGuardMain.getInstance().getGame().getServer());
+                World world;
+                if (optWorld != null && optWorld.isPresent()) {
+                    world = optWorld.get();
+                    flag = 1;
+                    args = arguments.split(" ", 3);
+                } else world = player.getWorld();
+                if (args.length < 1 + flag) throw new CommandException(Texts.of("Must specify items to link!"));
+                if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a flagset!"));
+                boolean success = FoxGuardManager.getInstance().link(world, args[flag], args[1 + flag]);
             } else {
 
             }
