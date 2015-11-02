@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2015. gravityfox - https://gravityfox.net/
+ */
+
 package tk.elektrofuchse.fox.foxguard.factory;
 
 import org.spongepowered.api.util.command.CommandSource;

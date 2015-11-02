@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2015. gravityfox - https://gravityfox.net/
+ */
+
 package tk.elektrofuchse.fox.foxguard.factory;
 
 import com.flowpowered.math.vector.Vector2i;
