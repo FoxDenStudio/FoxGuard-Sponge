@@ -24,28 +24,34 @@ foxguard {
                     regions
                 }
                 delete{
-                    flagsets
-                    regions
+                    flagsets.own
+                    regions.own
                 }
                 modify{
-                    flagsets
-                    regions
+                    flagsets.own
+                    regions.own
                 }
                 rename{
-                    flagsets
-                    regions
+                    flagsets.own
+                    regions.own
                 }
                 import{
                     flagsets
                     regions
                 }
                 flagsets {
-                    priority
+                    priority.own
                 }
             }
             link {
-                add
-                remove
+                add {
+                    own
+                    others
+                }
+                remove {
+                    own
+                    others
+                }
             }
         }
     }
