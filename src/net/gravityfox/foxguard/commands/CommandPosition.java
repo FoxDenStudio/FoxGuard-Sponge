@@ -44,6 +44,10 @@ import java.util.Optional;
 public class CommandPosition implements CommandCallable {
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
+        if (!testPermission(source)) {
+            source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
+            return CommandResult.empty();
+        }
         if (source instanceof Player) {
             Player player = (Player) source;
             String[] args = {};

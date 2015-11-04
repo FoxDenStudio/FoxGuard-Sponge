@@ -151,21 +151,29 @@ public class FGCommandDispatcher implements Dispatcher {
 
     @Override
     public CommandResult process(CommandSource source, String inputArguments) throws CommandException {
-
+        if (!testPermission(source)) {
+            source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
+            return CommandResult.empty();
+        }
         if (!inputArguments.isEmpty()) {
             String[] args = inputArguments.split(" ", 2);
             if (args[0].equalsIgnoreCase("help")) {
-                args = inputArguments.split(" ", 3);
-                final Optional<CommandMapping> optCommand = get(args[1], source);
-                if (!optCommand.isPresent()) {
-                    source.sendMessage(Texts.of("That command doesn't exist!"));
+                args = inputArguments.split(" ", 2);
+                if (args.length > 1) {
+                    final Optional<CommandMapping> optCommand = get(args[1], source);
+                    if (!optCommand.isPresent()) {
+                        source.sendMessage(Texts.of("That command doesn't exist!"));
+                        return CommandResult.empty();
+                    }
+                    CommandCallable command = optCommand.get().getCallable();
+                    @SuppressWarnings("unchecked")
+                    final Optional<Text> helpText = (Optional<Text>) command.getHelp(source);
+                    source.sendMessage(helpText.orElse(Texts.builder("Usage: ").append(command.getUsage(source)).build()));
+                    return CommandResult.empty();
+                } else {
+                    source.sendMessage(this.getHelp(source).get());
                     return CommandResult.empty();
                 }
-                CommandCallable command = optCommand.get().getCallable();
-                @SuppressWarnings("unchecked")
-                final Optional<Text> helpText = (Optional<Text>) command.getHelp(source);
-                source.sendMessage(helpText.orElse(Texts.builder("Usage: ").append(command.getUsage(source)).build()));
-                return CommandResult.empty();
             } else {
                 final Optional<CommandMapping> cmdOptional = get(args[0], source);
                 if (!cmdOptional.isPresent())

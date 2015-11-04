@@ -24,6 +24,7 @@
 
 package net.gravityfox.foxguard.commands;
 
+import org.spongepowered.api.service.permission.SubjectData;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
@@ -44,6 +45,10 @@ import java.util.Optional;
 public class CommandAbout implements CommandCallable {
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
+        if(!testPermission(source)){
+            source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
+            return CommandResult.empty();
+        }
         TextBuilder builder = Texts.builder();
         builder.append(Texts.of(TextColors.GOLD, "FoxGuard World Protection Plugin\n"));
         builder.append(Texts.of("Version: " + FoxGuardMain.PLUGIN_VERSION + "\n"));

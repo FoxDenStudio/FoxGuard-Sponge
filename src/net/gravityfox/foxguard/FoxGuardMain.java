@@ -25,6 +25,7 @@
 package net.gravityfox.foxguard;
 
 import com.google.inject.Inject;
+import net.gravityfox.foxguard.commands.flagsets.CommandPriority;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.event.Listener;
@@ -40,16 +41,22 @@ import org.spongepowered.api.event.world.UnloadWorldEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.service.config.ConfigDir;
 import org.spongepowered.api.service.event.EventManager;
+import org.spongepowered.api.service.permission.PermissionService;
+import org.spongepowered.api.service.permission.SubjectData;
 import org.spongepowered.api.service.sql.SqlService;
 import org.spongepowered.api.service.user.UserStorage;
 import net.gravityfox.foxguard.commands.*;
 import net.gravityfox.foxguard.listener.BlockEventListener;
 import net.gravityfox.foxguard.listener.InteractListener;
 import net.gravityfox.foxguard.listener.PlayerEventListener;
+import org.spongepowered.api.util.Tristate;
 
 import javax.sql.DataSource;
 import java.io.File;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Fox on 8/16/2015.
@@ -93,6 +100,7 @@ public class FoxGuardMain {
 
         registerCommands();
         registerListeners();
+        configurePermissions();
     }
 
     @Listener
@@ -165,6 +173,10 @@ public class FoxGuardMain {
         fgDispatcher.register(new CommandFlush(), "flush", "clear");
         fgDispatcher.register(new CommandAbout(), "about", "info");
         fgDispatcher.register(new CommandTest(), "test");
+
+        fgFlagSetDispatcher.register(new CommandPriority(), "priority", "level", "rank");
+
+
         game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
     }
 
@@ -172,6 +184,10 @@ public class FoxGuardMain {
         eventManager.registerListener(this, TargetPlayerEvent.class, new PlayerEventListener());
         eventManager.registerListener(this, ChangeBlockEvent.class, new BlockEventListener());
         eventManager.registerListener(this, InteractBlockEvent.class, new InteractListener());
+    }
+
+    private void configurePermissions(){
+        getPermissionService().getDefaultData().setPermission(SubjectData.GLOBAL_CONTEXT, "foxguard.command.info", Tristate.TRUE);
     }
 
     public Logger getLogger() {
@@ -188,6 +204,10 @@ public class FoxGuardMain {
 
     public File getConfigDirectory() {
         return configDirectory;
+    }
+
+    public PermissionService getPermissionService() {
+        return game.getServiceManager().provide(PermissionService.class).get();
     }
 
     public boolean isLoaded() {
