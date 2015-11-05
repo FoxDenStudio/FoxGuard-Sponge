@@ -24,12 +24,12 @@
 
 package net.gravityfox.foxguard;
 
-import org.spongepowered.api.Server;
-import org.spongepowered.api.world.World;
 import net.gravityfox.foxguard.factory.FGFactoryManager;
 import net.gravityfox.foxguard.flagsets.IFlagSet;
 import net.gravityfox.foxguard.regions.IRegion;
 import net.gravityfox.foxguard.util.DeferredObject;
+import org.spongepowered.api.Server;
+import org.spongepowered.api.world.World;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -400,6 +400,7 @@ public class FGStorageManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        updateLists();
     }
 
     public void updateFlagSet(IFlagSet flagSet) {
@@ -426,6 +427,50 @@ public class FGStorageManager {
                         flagSet.getPriority() + ");");
                 statement.executeBatch();
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        updateLists();
+    }
+
+    public void updateLists() {
+        if (!FoxGuardMain.getInstance().isLoaded()) return;
+        Server server = FoxGuardMain.getInstance().getGame().getServer();
+        for (World world : FoxGuardMain.getInstance().getGame().getServer().getWorlds()) {
+            String dataBaseDir;
+            if (world.getProperties().equals(server.getDefaultWorld().get())) {
+                dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/";
+            } else {
+                dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + world.getName() + "/foxguard/";
+            }
+            try (Connection conn = FoxGuardMain.getInstance().getDataSource(dataBaseDir + "foxguard").getConnection()) {
+                Statement statement = conn.createStatement();
+                statement.addBatch("DELETE FROM REGIONS; DELETE FROM LINKAGES;");
+                for (IRegion region : FGManager.getInstance().getRegionsListCopy(world)) {
+                    statement.addBatch("INSERT INTO REGIONS(NAME, TYPE) VALUES ('" +
+                            region.getName() + "', '" +
+                            region.getUniqueType() + "');");
+                    for (IFlagSet flagSet : region.getFlagSets()) {
+                        statement.addBatch("INSERT INTO LINKAGES(REGION, FLAGSET) VALUES ('" +
+                                region.getName() + "', '" +
+                                flagSet.getName() + "');");
+                    }
+                }
+                statement.executeBatch();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        try (Connection conn = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
+            Statement statement = conn.createStatement();
+            statement.addBatch("DELETE FROM FLAGSETS;");
+            for (IFlagSet flagSet : FGManager.getInstance().getFlagSetsListCopy()) {
+                statement.addBatch("INSERT INTO FLAGSETS(NAME, TYPE, PRIORITY) VALUES ('" +
+                        flagSet.getName() + "', '" +
+                        flagSet.getUniqueType() + "', " +
+                        flagSet.getPriority() + ");");
+            }
+            statement.executeBatch();
         } catch (SQLException e) {
             e.printStackTrace();
         }
