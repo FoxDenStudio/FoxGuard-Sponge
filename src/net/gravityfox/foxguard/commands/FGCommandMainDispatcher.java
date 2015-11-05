@@ -28,7 +28,7 @@ import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.dispatcher.Disambiguator;
 import org.spongepowered.api.util.command.dispatcher.SimpleDispatcher;
 import net.gravityfox.foxguard.FoxGuardMain;
-import net.gravityfox.foxguard.commands.util.CallbackHashMap;
+import net.gravityfox.foxguard.util.CallbackHashMap;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 
 import java.util.Map;

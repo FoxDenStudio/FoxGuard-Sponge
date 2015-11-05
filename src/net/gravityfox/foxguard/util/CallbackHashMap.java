@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package net.gravityfox.foxguard.commands.util;
+package net.gravityfox.foxguard.util;
 
 import java.util.HashMap;
 import java.util.Map;

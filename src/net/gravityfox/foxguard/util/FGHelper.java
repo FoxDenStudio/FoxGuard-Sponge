@@ -27,6 +27,7 @@ package net.gravityfox.foxguard.util;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 import net.gravityfox.foxguard.flagsets.GlobalFlagSet;
 import net.gravityfox.foxguard.flagsets.IFlagSet;
@@ -85,5 +86,18 @@ public class FGHelper {
             offset += array.length;
         }
         return result;
+    }
+
+    public static String readableTristate(Tristate state) {
+        switch (state) {
+            case UNDEFINED:
+                return "Passthrough";
+            case TRUE:
+                return "True";
+            case FALSE:
+                return "False";
+            default:
+                return "Wait wat?";
+        }
     }
 }
