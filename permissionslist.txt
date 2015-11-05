@@ -55,4 +55,18 @@ foxguard {
             }
         }
     }
+    override {
+        place
+        break
+        change
+        fluid
+        attack {
+            players
+            environment
+        }
+        interact{
+            blocks
+            entities
+        }
+    }
 }

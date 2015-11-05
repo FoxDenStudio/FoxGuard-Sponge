@@ -80,7 +80,7 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
             if (flagSet.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
                 break;
             }
-            flagState = flagState.and(flagSet.hasPermission(player, typeFlag));
+            flagState = flagState.and(flagSet.hasPermission(player, typeFlag, event));
             currPriority = flagSet.getPriority();
         }
         if (flagState == Tristate.FALSE) {
