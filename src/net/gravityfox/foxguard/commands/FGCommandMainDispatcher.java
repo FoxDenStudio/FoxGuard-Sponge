@@ -42,8 +42,11 @@ public final class FGCommandMainDispatcher extends FGCommandDispatcher {
     private static FGCommandMainDispatcher instance;
     private final Map<CommandSource, InternalCommandState> stateMap = new CallbackHashMap<>((o, m) -> {
         if (o instanceof CommandSource) {
-            m.put((CommandSource) o, new InternalCommandState());
+            InternalCommandState state = new InternalCommandState();
+            m.put((CommandSource) o, state);
+            return state;
         }
+        return null;
     });
 
     public FGCommandMainDispatcher() {

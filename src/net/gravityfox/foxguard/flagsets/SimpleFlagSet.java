@@ -24,8 +24,12 @@
 
 package net.gravityfox.foxguard.flagsets;
 
-import net.gravityfox.foxguard.util.CallbackHashMap;
+import net.gravityfox.foxguard.FoxGuardMain;
+import net.gravityfox.foxguard.commands.util.InternalCommandState;
+import net.gravityfox.foxguard.flagsets.util.ActiveFlags;
+import net.gravityfox.foxguard.flagsets.util.PassiveFlags;
 import net.gravityfox.foxguard.objects.IMembership;
+import net.gravityfox.foxguard.util.CallbackHashMap;
 import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
@@ -36,16 +40,11 @@ import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.util.command.CommandSource;
-import net.gravityfox.foxguard.commands.util.InternalCommandState;
-import net.gravityfox.foxguard.flagsets.util.ActiveFlags;
-import net.gravityfox.foxguard.flagsets.util.PassiveFlags;
 import org.spongepowered.api.util.command.source.ProxySource;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Fox on 8/17/2015.
@@ -55,19 +54,20 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
 
     private static final String[] ownerAliases = {"owners", "owner", "master", "masters", "creator", "creators",
             "admin", "admins", "administrator", "administrators", "mod", "mods"};
-    private static final String[] memberAliases = {"member", "members", "people", "user", "users",
-            "player", "players"};
+    private static final String[] memberAliases = {"member", "members", "user", "users", "player", "players"};
+    private static final String[] defaultAliases = {"default", "nonmember", "nonmembers", "everyone", "other"};
     private static final String[] groupsAliases = {"group", "groups"};
+    private static final String[] activeflagsAliases = {"activeflags", "active", };
 
     private List<User> memberList = new LinkedList<>();
     private Map<ActiveFlags, Tristate> ownerPermissions = new CallbackHashMap<>((o, m) -> {
-        if (o instanceof ActiveFlags) m.put((ActiveFlags) o, Tristate.TRUE);
+        return Tristate.TRUE;
     });
     private Map<ActiveFlags, Tristate> memberPermissions = new CallbackHashMap<>((o, m) -> {
-        if (o instanceof ActiveFlags) m.put((ActiveFlags) o, Tristate.UNDEFINED);
+        return Tristate.UNDEFINED;
     });
     private Map<ActiveFlags, Tristate> defaultPermissions = new CallbackHashMap<>((o, m) -> {
-        if (o instanceof ActiveFlags) m.put((ActiveFlags) o, Tristate.FALSE);
+        return Tristate.FALSE;
     });
 
     public SimpleFlagSet(String name, int priority) {
@@ -102,9 +102,46 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
                             op = UserOperations.REMOVE;
                         } else if (args[2].equalsIgnoreCase("set")) {
                             op = UserOperations.SET;
+                        } else {
+                            source.sendMessage(Texts.of(TextColors.RED, "Not a valid operation!"));
+                            return false;
                         }
-                        if(args.length > 3){
-                            
+                        if (args.length > 3) {
+                            int successes = 0;
+                            int failures = 0;
+                            List<String> names = new ArrayList<>();
+                            for (String name : Arrays.copyOfRange(args, 3, args.length)) {
+                                names.add(name);
+                            }
+                            List<User> users = new ArrayList<>();
+                            for (String name : names) {
+                                Optional<User> optUser = FoxGuardMain.getInstance().getUserStorage().get(name);
+                                if (optUser.isPresent()) users.add(optUser.get());
+                                else failures++;
+                            }
+                            switch (op) {
+                                case ADD:
+                                    for (User user : users) {
+                                        if (list.add(user))
+                                            successes++;
+                                        else failures++;
+                                    }
+                                    break;
+                                case REMOVE:
+                                    for (User user : users) {
+                                        if (list.remove(user))
+                                            successes++;
+                                        else failures++;
+                                    }
+                                    break;
+                                case SET:
+                                    list.clear();
+                                    for (User user : users) {
+                                        list.add(user);
+                                        successes++;
+                                    }
+                            }
+                            source.sendMessage(Texts.of(TextColors.GREEN, "Modified list with " + successes + " successes and " + failures + " failures."));
                         } else {
                             source.sendMessage(Texts.of(TextColors.RED, "Must specify one or more users!"));
                             return false;
