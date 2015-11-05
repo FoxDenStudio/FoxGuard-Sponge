@@ -60,6 +60,7 @@ public class FGStorageManager {
 
     public void initFlagSets() {
         Server server = FoxGuardMain.getInstance().getGame().getServer();
+
         try (Connection conn = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
             conn.createStatement().execute(
                     "CREATE TABLE IF NOT EXISTS FLAGSETS (" +
@@ -478,6 +479,7 @@ public class FGStorageManager {
 
     public void markForDeletion(String databaseDir) {
         if (FGConfigManager.getInstance().purgeDatabases) {
+            FoxGuardMain.getInstance().getLogger().info("Clearing database " + databaseDir + "...");
             try (Connection conn = FoxGuardMain.getInstance().getDataSource(databaseDir).getConnection()) {
                 conn.createStatement().execute("DROP ALL OBJECTS;");
             } catch (SQLException e) {
@@ -535,7 +537,9 @@ public class FGStorageManager {
 
     public void purgeDatabases() {
         if (FGConfigManager.getInstance().purgeDatabases) {
+            FoxGuardMain.getInstance().getLogger().info("Purging databases...");
             for (String databaseDir : markedForDeletion) {
+                FoxGuardMain.getInstance().getLogger().info("Deleting database " + databaseDir + "...");
                 try (Connection conn = FoxGuardMain.getInstance().getDataSource(databaseDir).getConnection()) {
                     conn.createStatement().execute("DROP ALL OBJECTS DELETE FILES;");
                 } catch (SQLException e) {
@@ -548,8 +552,11 @@ public class FGStorageManager {
     public void resolveDeferredObjects() {
         for (DeferredObject o : deferedObjects) {
             try {
-                o.resolve();
+                IFGObject result = o.resolve();
+                if(result == null)
+                    FoxGuardMain.getInstance().getLogger().info("Unable to resolve deferred object:\n" + o.toString());
             } catch (SQLException e) {
+                FoxGuardMain.getInstance().getLogger().info("Unable to resolve deferred object:\n" + o.toString());
                 e.printStackTrace();
             }
         }

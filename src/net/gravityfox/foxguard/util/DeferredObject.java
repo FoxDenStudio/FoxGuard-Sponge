@@ -24,6 +24,7 @@
 
 package net.gravityfox.foxguard.util;
 
+import net.gravityfox.foxguard.IFGObject;
 import org.spongepowered.api.world.World;
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.FGStorageManager;
@@ -49,10 +50,10 @@ public class DeferredObject {
     public String listName;
     public String metaName;
     public World listWorld = null;
-    public String metaWorld;
-    public int priority;
+    public String metaWorld = null;
+    public int priority = 0;
 
-    public void resolve() throws SQLException {
+    public IFGObject resolve() throws SQLException {
         if (category.equalsIgnoreCase("flagset")) {
             String name;
             if (FGManager.getInstance().getFlagSet(metaName) == null)
@@ -74,12 +75,13 @@ public class DeferredObject {
                     " Type: " + type +
                     " Priority: " + priority +
                     ")");
+            return flagSet;
         } else if (category.equalsIgnoreCase("region")) {
             World world = listWorld;
             Optional<World> optWorld = FoxGuardMain.getInstance().getGame().getServer().getWorld(metaWorld);
             if (optWorld.isPresent())
                 world = optWorld.get();
-            if (world == null) return;
+            if (world == null) return null;
             String name;
             if (FGManager.getInstance().getRegion(world, metaName) == null)
                 name = metaName;
@@ -100,7 +102,21 @@ public class DeferredObject {
                     " Type: " + type +
                     " World: " + world.getName() +
                     ")");
-        }
+            return region;
+        } else return null;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Database: ").append(databaseDir).append("\n");
+        builder.append("Category: ").append(category).append("\n");
+        builder.append("Type: ").append(type).append("\n");
+        builder.append("Listed name: ").append(listName).append("\n");
+        builder.append("Metadata name: ").append(metaName).append("\n");
+        if(listWorld != null) builder.append("Listed world: ").append(listWorld.getName()).append("\n");
+        if(metaWorld != null) builder.append("Metadata world: ").append(metaWorld).append("\n");
+        if(!category.equalsIgnoreCase("region")) builder.append("Priority: ").append(priority).append("\n");
+        return builder.toString();
+    }
 }
