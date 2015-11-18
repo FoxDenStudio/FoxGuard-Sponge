@@ -52,13 +52,13 @@ public class InternalCommandState {
         switch (field) {
             case REGIONS:
                 selectedRegions.clear();
-                break;
+                return;
             case FLAGSETS:
                 selectedFlagSets.clear();
-                break;
+                return;
             case POSITIONS:
                 positions.clear();
-                break;
+                return;
         }
     }
 

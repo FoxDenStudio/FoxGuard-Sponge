@@ -108,7 +108,7 @@ public class CommandModify implements CommandCallable {
 
     @Override
     public boolean testPermission(CommandSource source) {
-        return false;
+        return source.hasPermission("foxguard.command.modify.objects.modify");
     }
 
     @Override

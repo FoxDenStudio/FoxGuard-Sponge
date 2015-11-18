@@ -24,6 +24,7 @@
 
 package net.gravityfox.foxguard.factory;
 
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.util.command.CommandSource;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import net.gravityfox.foxguard.flagsets.IFlagSet;
@@ -44,8 +45,9 @@ public class FGFlagSetFactory implements IFlagSetFactory {
     @Override
     public IFlagSet createFlagSet(String name, String type, int priority, String arguments, InternalCommandState state, CommandSource source) {
         if (type.equalsIgnoreCase("simple")) {
-
-            return new SimpleFlagSet(name, priority);
+            SimpleFlagSet flagSet = new SimpleFlagSet(name, priority);
+            if(source instanceof Player) flagSet.addOwner((Player)source);
+                return flagSet;
         } else return null;
     }
 

@@ -25,6 +25,7 @@
 package net.gravityfox.foxguard.flagsets;
 
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Event;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.Tristate;
@@ -83,12 +84,12 @@ public class GlobalFlagSet extends FlagSetBase {
     }
 
     @Override
-    public Tristate hasPermission(Player player, ActiveFlags flag) {
+    public Tristate hasPermission(Player player, ActiveFlags flag, Event event) {
         return Tristate.TRUE;
     }
 
     @Override
-    public Tristate isFlagAllowed(PassiveFlags flag) {
+    public Tristate isFlagAllowed(PassiveFlags flag, Event event) {
         return Tristate.TRUE;
     }
 }

@@ -22,23 +22,24 @@
  * THE SOFTWARE.
  */
 
-package net.gravityfox.foxguard.pieces;
+package net.gravityfox.foxguard.objects;
 
 import org.spongepowered.api.entity.living.player.User;
 
 import java.util.List;
 
 /**
- * Created by Fox on 8/22/2015.
+ * Created by Fox on 11/5/2015.
  * Project: foxguard
  */
-public interface IOwnable {
+public interface IMembership {
 
-    List<User> getOwners();
+    List<User> getMembers();
 
-    void setOwners(List<User> owners);
+    void setMembers(List<User> members);
 
-    boolean addOwner(User player);
+    boolean addMember(User player);
 
-    boolean removeOwner(User player);
+    boolean removeMember(User player);
+
 }

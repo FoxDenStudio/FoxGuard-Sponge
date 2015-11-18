@@ -22,20 +22,21 @@
  * THE SOFTWARE.
  */
 
-package net.gravityfox.foxguard.commands.util;
+package net.gravityfox.foxguard.util;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 /**
  * Created by Fox on 10/23/2015.
  * Project: foxguard
  */
 public class CallbackHashMap<K, V> extends HashMap<K, V> {
-    final private BiConsumer<Object, Map<K, V>> callback;
+    final private BiFunction<Object, Map<K, V>, V> callback;
 
-    public CallbackHashMap(BiConsumer<Object, Map<K, V>> callback) {
+    public CallbackHashMap(BiFunction<Object, Map<K, V>, V> callback) {
         this.callback = callback;
     }
 
@@ -45,8 +46,7 @@ public class CallbackHashMap<K, V> extends HashMap<K, V> {
         if (value != null) {
             return value;
         } else {
-            callback.accept(key, this);
-            return super.get(key);
+            return callback.apply(key, this);
         }
     }
 }

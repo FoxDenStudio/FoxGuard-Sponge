@@ -145,7 +145,7 @@ public class CommandList implements CommandCallable {
 
     @Override
     public boolean testPermission(CommandSource source) {
-        return source.hasPermission("foxguard.info.list");
+        return source.hasPermission("foxguard.command.info.objects.list");
     }
 
     @Override

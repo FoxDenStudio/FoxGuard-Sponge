@@ -106,7 +106,7 @@ public class CommandDelete implements CommandCallable {
 
     @Override
     public boolean testPermission(CommandSource source) {
-        return source.hasPermission("foxguard.command.modify.delete");
+        return source.hasPermission("foxguard.command.modify.objects.delete");
     }
 
     @Override

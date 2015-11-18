@@ -93,7 +93,7 @@ public class CommandPosition implements CommandCallable {
 
     @Override
     public boolean testPermission(CommandSource source) {
-        return source.hasPermission("foxguard.command.state");
+        return source.hasPermission("foxguard.command.state.add");
     }
 
     @Override

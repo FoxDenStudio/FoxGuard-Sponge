@@ -53,7 +53,7 @@ public class CommandTest implements CommandCallable {
 
     @Override
     public boolean testPermission(CommandSource source) {
-        return source.hasPermission("foxguard.debug.test");
+        return source.hasPermission("foxguard.command.debug.test");
     }
 
     @Override

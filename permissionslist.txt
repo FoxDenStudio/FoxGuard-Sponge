@@ -1,0 +1,72 @@
+foxguard {
+    command{
+        info {
+            about
+            objects {
+                list
+                detail
+            }
+        }
+        state {
+            state
+            add{
+                regions
+                flagsets
+                positions
+            }
+            subtract
+            flush
+        }
+        modify {
+            objects {
+                create{
+                    flagsets
+                    regions
+                }
+                delete{
+                    flagsets.own
+                    regions.own
+                }
+                modify{
+                    flagsets.own
+                    regions.own
+                }
+                rename{
+                    flagsets.own
+                    regions.own
+                }
+                import{
+                    flagsets
+                    regions
+                }
+                flagsets {
+                    priority.own
+                }
+            }
+            link {
+                add {
+                    own
+                    others
+                }
+                remove {
+                    own
+                    others
+                }
+            }
+        }
+    }
+    override {
+        place
+        break
+        change
+        fluid
+        attack {
+            players
+            environment
+        }
+        interact{
+            blocks
+            entities
+        }
+    }
+}

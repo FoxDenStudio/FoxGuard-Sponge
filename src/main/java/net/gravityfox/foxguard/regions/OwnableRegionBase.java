@@ -29,7 +29,7 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
-import net.gravityfox.foxguard.pieces.IOwnable;
+import net.gravityfox.foxguard.objects.IOwnable;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -74,7 +74,7 @@ abstract public class OwnableRegionBase extends RegionBase implements IOwnable {
     @Override
     public Text getDetails(String arguments) {
         TextBuilder builder = Texts.builder();
-        builder.append(Texts.of(TextColors.GREEN, "Owners: "));
+        builder.append(Texts.of(TextColors.GOLD, "Owners: "));
         for (User p : ownerList) {
             builder.append(Texts.of(TextColors.RESET, p.getName() + " "));
         }

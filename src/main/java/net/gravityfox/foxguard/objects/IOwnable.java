@@ -22,20 +22,23 @@
  * THE SOFTWARE.
  */
 
-package net.gravityfox.foxguard.flagsets.util;
+package net.gravityfox.foxguard.objects;
+
+import org.spongepowered.api.entity.living.player.User;
+
+import java.util.List;
 
 /**
- * Created by Fox on 8/17/2015.
+ * Created by Fox on 8/22/2015.
  * Project: foxguard
  */
-public enum ActiveFlags {
-    BLOCK_PLACE, BLOCK_BREAK, BLOCK_MODIFY,
-    BLOCK_INTERACT_PRIMARY, BLOCK_INTERACT_SECONDARY,
-    ENTITY_INTERACT_PRIMARY, ENTITY_INTERACT_SECONDARY,
-    FLUID;
+public interface IOwnable {
 
-    @Override
-    public String toString() {
-        return super.toString();
-    }
+    List<User> getOwners();
+
+    void setOwners(List<User> owners);
+
+    boolean addOwner(User player);
+
+    boolean removeOwner(User player);
 }

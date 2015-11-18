@@ -29,7 +29,7 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
-import net.gravityfox.foxguard.pieces.IOwnable;
+import net.gravityfox.foxguard.objects.IOwnable;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -69,10 +69,16 @@ abstract public class OwnableFlagSetBase extends FlagSetBase implements IOwnable
     @Override
     public Text getDetails(String arguments) {
         TextBuilder builder = Texts.builder();
-        builder.append(Texts.of(TextColors.GREEN, "Owners: "));
+        builder.append(Texts.of(TextColors.GOLD, "Owners: "));
         for (User p : ownerList) {
             builder.append(Texts.of(TextColors.RESET, p.getName() + " "));
         }
         return builder.build();
+    }
+
+    public enum UserOperations{
+        ADD,
+        REMOVE,
+        SET
     }
 }

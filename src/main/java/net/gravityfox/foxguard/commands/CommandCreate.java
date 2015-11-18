@@ -143,7 +143,7 @@ public class CommandCreate implements CommandCallable {
 
     @Override
     public boolean testPermission(CommandSource source) {
-        return source.hasPermission("foxguard.command.modify.create");
+        return source.hasPermission("foxguard.command.modify.objects.create");
     }
 
     @Override

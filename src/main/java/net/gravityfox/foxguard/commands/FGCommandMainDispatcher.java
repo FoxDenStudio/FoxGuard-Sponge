@@ -28,7 +28,7 @@ import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.dispatcher.Disambiguator;
 import org.spongepowered.api.util.command.dispatcher.SimpleDispatcher;
 import net.gravityfox.foxguard.FoxGuardMain;
-import net.gravityfox.foxguard.commands.util.CallbackHashMap;
+import net.gravityfox.foxguard.util.CallbackHashMap;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 
 import java.util.Map;
@@ -42,8 +42,11 @@ public final class FGCommandMainDispatcher extends FGCommandDispatcher {
     private static FGCommandMainDispatcher instance;
     private final Map<CommandSource, InternalCommandState> stateMap = new CallbackHashMap<>((o, m) -> {
         if (o instanceof CommandSource) {
-            m.put((CommandSource) o, new InternalCommandState());
+            InternalCommandState state = new InternalCommandState();
+            m.put((CommandSource) o, state);
+            return state;
         }
+        return null;
     });
 
     public FGCommandMainDispatcher() {
