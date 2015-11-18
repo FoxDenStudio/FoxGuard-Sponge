@@ -46,6 +46,7 @@ import net.gravityfox.foxguard.commands.*;
 import net.gravityfox.foxguard.listener.BlockEventListener;
 import net.gravityfox.foxguard.listener.InteractListener;
 import net.gravityfox.foxguard.listener.PlayerEventListener;
+import org.spongepowered.api.world.World;
 
 import javax.sql.DataSource;
 import java.io.File;
@@ -105,11 +106,10 @@ public class FoxGuardMain {
         FGStorageManager.getInstance().loadLinks();
         if (FGConfigManager.getInstance().forceLoad)
             FGStorageManager.getInstance().resolveDeferredObjects();
-
-       /* fgm.addFlagSet(new SimpleFlagSet("test", 1));
-        fgm.addRegion(game.getServer().getWorld("world").get(),
-                new RectangularRegion("test", new BoundingBox2(new Vector2i(-100, -100), new Vector2i(100, 100))));
-        fgm.link(game.getServer(), "world", "test", "test");*/
+        FGStorageManager.getInstance().writeFlagSets();
+        for(World world : game.getServer().getWorlds()){
+            FGStorageManager.getInstance().writeWorld(world);
+        }
     }
 
     @Listener

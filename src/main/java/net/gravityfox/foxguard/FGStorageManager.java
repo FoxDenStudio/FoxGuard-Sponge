@@ -24,12 +24,12 @@
 
 package net.gravityfox.foxguard;
 
-import org.spongepowered.api.Server;
-import org.spongepowered.api.world.World;
 import net.gravityfox.foxguard.factory.FGFactoryManager;
 import net.gravityfox.foxguard.flagsets.IFlagSet;
 import net.gravityfox.foxguard.regions.IRegion;
 import net.gravityfox.foxguard.util.DeferredObject;
+import org.spongepowered.api.Server;
+import org.spongepowered.api.world.World;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -60,6 +60,7 @@ public class FGStorageManager {
 
     public void initFlagSets() {
         Server server = FoxGuardMain.getInstance().getGame().getServer();
+
         try (Connection conn = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
             conn.createStatement().execute(
                     "CREATE TABLE IF NOT EXISTS FLAGSETS (" +
@@ -400,6 +401,7 @@ public class FGStorageManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        updateLists();
     }
 
     public void updateFlagSet(IFlagSet flagSet) {
@@ -429,10 +431,55 @@ public class FGStorageManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        updateLists();
+    }
+
+    public void updateLists() {
+        if (!FoxGuardMain.getInstance().isLoaded()) return;
+        Server server = FoxGuardMain.getInstance().getGame().getServer();
+        for (World world : FoxGuardMain.getInstance().getGame().getServer().getWorlds()) {
+            String dataBaseDir;
+            if (world.getProperties().equals(server.getDefaultWorld().get())) {
+                dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/";
+            } else {
+                dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + world.getName() + "/foxguard/";
+            }
+            try (Connection conn = FoxGuardMain.getInstance().getDataSource(dataBaseDir + "foxguard").getConnection()) {
+                Statement statement = conn.createStatement();
+                statement.addBatch("DELETE FROM REGIONS; DELETE FROM LINKAGES;");
+                for (IRegion region : FGManager.getInstance().getRegionsListCopy(world)) {
+                    statement.addBatch("INSERT INTO REGIONS(NAME, TYPE) VALUES ('" +
+                            region.getName() + "', '" +
+                            region.getUniqueType() + "');");
+                    for (IFlagSet flagSet : region.getFlagSets()) {
+                        statement.addBatch("INSERT INTO LINKAGES(REGION, FLAGSET) VALUES ('" +
+                                region.getName() + "', '" +
+                                flagSet.getName() + "');");
+                    }
+                }
+                statement.executeBatch();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        try (Connection conn = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
+            Statement statement = conn.createStatement();
+            statement.addBatch("DELETE FROM FLAGSETS;");
+            for (IFlagSet flagSet : FGManager.getInstance().getFlagSetsListCopy()) {
+                statement.addBatch("INSERT INTO FLAGSETS(NAME, TYPE, PRIORITY) VALUES ('" +
+                        flagSet.getName() + "', '" +
+                        flagSet.getUniqueType() + "', " +
+                        flagSet.getPriority() + ");");
+            }
+            statement.executeBatch();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public void markForDeletion(String databaseDir) {
         if (FGConfigManager.getInstance().purgeDatabases) {
+            FoxGuardMain.getInstance().getLogger().info("Clearing database " + databaseDir + "...");
             try (Connection conn = FoxGuardMain.getInstance().getDataSource(databaseDir).getConnection()) {
                 conn.createStatement().execute("DROP ALL OBJECTS;");
             } catch (SQLException e) {
@@ -490,7 +537,9 @@ public class FGStorageManager {
 
     public void purgeDatabases() {
         if (FGConfigManager.getInstance().purgeDatabases) {
+            FoxGuardMain.getInstance().getLogger().info("Purging databases...");
             for (String databaseDir : markedForDeletion) {
+                FoxGuardMain.getInstance().getLogger().info("Deleting database " + databaseDir + "...");
                 try (Connection conn = FoxGuardMain.getInstance().getDataSource(databaseDir).getConnection()) {
                     conn.createStatement().execute("DROP ALL OBJECTS DELETE FILES;");
                 } catch (SQLException e) {
@@ -503,8 +552,11 @@ public class FGStorageManager {
     public void resolveDeferredObjects() {
         for (DeferredObject o : deferedObjects) {
             try {
-                o.resolve();
+                IFGObject result = o.resolve();
+                if(result == null)
+                    FoxGuardMain.getInstance().getLogger().info("Unable to resolve deferred object:\n" + o.toString());
             } catch (SQLException e) {
+                FoxGuardMain.getInstance().getLogger().info("Unable to resolve deferred object:\n" + o.toString());
                 e.printStackTrace();
             }
         }
