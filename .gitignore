@@ -5,3 +5,4 @@ server/
 libsarchive/
 printouts/
 /*.iml
+out/
