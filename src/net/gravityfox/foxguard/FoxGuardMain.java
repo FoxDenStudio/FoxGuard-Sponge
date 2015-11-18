@@ -25,7 +25,11 @@
 package net.gravityfox.foxguard;
 
 import com.google.inject.Inject;
+import net.gravityfox.foxguard.commands.*;
 import net.gravityfox.foxguard.commands.flagsets.CommandPriority;
+import net.gravityfox.foxguard.listener.BlockEventListener;
+import net.gravityfox.foxguard.listener.InteractListener;
+import net.gravityfox.foxguard.listener.PlayerEventListener;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.event.Listener;
@@ -45,18 +49,11 @@ import org.spongepowered.api.service.permission.PermissionService;
 import org.spongepowered.api.service.permission.SubjectData;
 import org.spongepowered.api.service.sql.SqlService;
 import org.spongepowered.api.service.user.UserStorage;
-import net.gravityfox.foxguard.commands.*;
-import net.gravityfox.foxguard.listener.BlockEventListener;
-import net.gravityfox.foxguard.listener.InteractListener;
-import net.gravityfox.foxguard.listener.PlayerEventListener;
 import org.spongepowered.api.util.Tristate;
 
 import javax.sql.DataSource;
 import java.io.File;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Fox on 8/16/2015.
@@ -156,9 +153,10 @@ public class FoxGuardMain {
     }
 
     private void registerCommands() {
-        fgDispatcher = new FGCommandMainDispatcher();
-        FGCommandDispatcher fgRegionDispatcher = new FGCommandDispatcher();
-        FGCommandDispatcher fgFlagSetDispatcher = new FGCommandDispatcher();
+        fgDispatcher = new FGCommandMainDispatcher("/foxguard");
+        FGCommandDispatcher fgRegionDispatcher = new FGCommandDispatcher("/foxguard regions");
+        FGCommandDispatcher fgFlagSetDispatcher = new FGCommandDispatcher("/foxguard flagsets");
+
         fgDispatcher.register(new CommandCreate(), "create", "construct", "new", "make", "define", "mk");
         fgDispatcher.register(new CommandDelete(), "delete", "del", "remove", "rem", "rm", "destroy");
         fgDispatcher.register(new CommandModify(), "modify", "mod", "change", "edit", "update");
@@ -174,8 +172,9 @@ public class FoxGuardMain {
         fgDispatcher.register(new CommandAbout(), "about", "info");
         fgDispatcher.register(new CommandTest(), "test");
 
-        fgFlagSetDispatcher.register(new CommandPriority(), "priority", "level", "rank");
+        fgFlagSetDispatcher.register(new CommandPriority(), "priority", "prio", "level", "rank");
 
+        fgDispatcher.register(fgFlagSetDispatcher, "flagset","flagsets", "flag", "flags", "f");
 
         game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
     }
@@ -186,7 +185,7 @@ public class FoxGuardMain {
         eventManager.registerListener(this, InteractBlockEvent.class, new InteractListener());
     }
 
-    private void configurePermissions(){
+    private void configurePermissions() {
         getPermissionService().getDefaultData().setPermission(SubjectData.GLOBAL_CONTEXT, "foxguard.command.info", Tristate.TRUE);
     }
 

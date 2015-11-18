@@ -52,13 +52,15 @@ public class FGCommandDispatcher implements Dispatcher {
 
     protected final Disambiguator disambiguator;
     protected final ListMultimap<String, CommandMapping> commands = ArrayListMultimap.create();
+    protected String usagePrefix;
 
-    public FGCommandDispatcher(Disambiguator disambiguator) {
+    public FGCommandDispatcher(String usagePrefix, Disambiguator disambiguator) {
+        this.usagePrefix = usagePrefix;
         this.disambiguator = disambiguator;
     }
 
-    public FGCommandDispatcher() {
-        this(SimpleDispatcher.FIRST_DISAMBIGUATOR);
+    public FGCommandDispatcher(String usagePrefix) {
+        this(usagePrefix, SimpleDispatcher.FIRST_DISAMBIGUATOR);
     }
 
     public Optional<CommandMapping> register(CommandCallable callable, String... alias) {
@@ -168,7 +170,7 @@ public class FGCommandDispatcher implements Dispatcher {
                     CommandCallable command = optCommand.get().getCallable();
                     @SuppressWarnings("unchecked")
                     final Optional<Text> helpText = (Optional<Text>) command.getHelp(source);
-                    source.sendMessage(helpText.orElse(Texts.builder("Usage: ").append(command.getUsage(source)).build()));
+                    source.sendMessage(helpText.orElse(Texts.of("Usage: " + usagePrefix + " ").builder().append(command.getUsage(source)).build()));
                     return CommandResult.empty();
                 } else {
                     source.sendMessage(this.getHelp(source).get());
@@ -189,7 +191,7 @@ public class FGCommandDispatcher implements Dispatcher {
                     Text text = e.getText();
                     if (text == null) text = Texts.of("There was an error processing command: " + args[0]);
                     source.sendMessage(text.builder().color(TextColors.RED).build());
-                    source.sendMessage(Texts.builder().append(Texts.of("Usage: /foxguard "))
+                    source.sendMessage(Texts.of("Usage: " + usagePrefix + " ").builder()
                             .append(command.getUsage(source)).color(TextColors.RED).build());
                     return CommandResult.empty();
                 }
@@ -284,4 +286,6 @@ public class FGCommandDispatcher implements Dispatcher {
         }
         return build.build();
     }
+
+
 }

@@ -46,14 +46,13 @@ public final class FGCommandMainDispatcher extends FGCommandDispatcher {
         }
     });
 
-    public FGCommandMainDispatcher() {
-        this(SimpleDispatcher.FIRST_DISAMBIGUATOR);
-        instance = this;
+    public FGCommandMainDispatcher(String primaryAlias) {
+        this(primaryAlias, SimpleDispatcher.FIRST_DISAMBIGUATOR);
     }
 
-    public FGCommandMainDispatcher(Disambiguator disambiguatorFunc) {
-        super(disambiguatorFunc);
-        FoxGuardMain.getInstance().getGame().getServiceManager().provide(PaginationService.class).get();
+    public FGCommandMainDispatcher(String primaryAlias, Disambiguator disambiguatorFunc) {
+        super(primaryAlias, disambiguatorFunc);
+        instance = this;
     }
 
     public static FGCommandMainDispatcher getInstance() {
