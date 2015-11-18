@@ -25,6 +25,11 @@
 package net.gravityfox.foxguard;
 
 import com.google.inject.Inject;
+import net.gravityfox.foxguard.commands.*;
+import net.gravityfox.foxguard.commands.flagsets.CommandPriority;
+import net.gravityfox.foxguard.listener.BlockEventListener;
+import net.gravityfox.foxguard.listener.InteractListener;
+import net.gravityfox.foxguard.listener.PlayerEventListener;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.event.Listener;
@@ -40,12 +45,11 @@ import org.spongepowered.api.event.world.UnloadWorldEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.service.config.ConfigDir;
 import org.spongepowered.api.service.event.EventManager;
+import org.spongepowered.api.service.permission.PermissionService;
+import org.spongepowered.api.service.permission.SubjectData;
 import org.spongepowered.api.service.sql.SqlService;
 import org.spongepowered.api.service.user.UserStorage;
-import net.gravityfox.foxguard.commands.*;
-import net.gravityfox.foxguard.listener.BlockEventListener;
-import net.gravityfox.foxguard.listener.InteractListener;
-import net.gravityfox.foxguard.listener.PlayerEventListener;
+import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
 import javax.sql.DataSource;
@@ -94,6 +98,7 @@ public class FoxGuardMain {
 
         registerCommands();
         registerListeners();
+        configurePermissions();
     }
 
     @Listener
@@ -107,7 +112,7 @@ public class FoxGuardMain {
         if (FGConfigManager.getInstance().forceLoad)
             FGStorageManager.getInstance().resolveDeferredObjects();
         FGStorageManager.getInstance().writeFlagSets();
-        for(World world : game.getServer().getWorlds()){
+        for (World world : game.getServer().getWorlds()) {
             FGStorageManager.getInstance().writeWorld(world);
         }
     }
@@ -148,9 +153,10 @@ public class FoxGuardMain {
     }
 
     private void registerCommands() {
-        fgDispatcher = new FGCommandMainDispatcher();
-        FGCommandDispatcher fgRegionDispatcher = new FGCommandDispatcher();
-        FGCommandDispatcher fgFlagSetDispatcher = new FGCommandDispatcher();
+        fgDispatcher = new FGCommandMainDispatcher("/foxguard");
+        FGCommandDispatcher fgRegionDispatcher = new FGCommandDispatcher("/foxguard regions");
+        FGCommandDispatcher fgFlagSetDispatcher = new FGCommandDispatcher("/foxguard flagsets");
+
         fgDispatcher.register(new CommandCreate(), "create", "construct", "new", "make", "define", "mk");
         fgDispatcher.register(new CommandDelete(), "delete", "del", "remove", "rem", "rm", "destroy");
         fgDispatcher.register(new CommandModify(), "modify", "mod", "change", "edit", "update");
@@ -165,6 +171,11 @@ public class FoxGuardMain {
         fgDispatcher.register(new CommandFlush(), "flush", "clear");
         fgDispatcher.register(new CommandAbout(), "about", "info");
         fgDispatcher.register(new CommandTest(), "test");
+
+        fgFlagSetDispatcher.register(new CommandPriority(), "priority", "prio", "level", "rank");
+
+        fgDispatcher.register(fgFlagSetDispatcher, "flagset", "flagsets", "flag", "flags", "f");
+
         game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
     }
 
@@ -172,6 +183,10 @@ public class FoxGuardMain {
         eventManager.registerListener(this, TargetPlayerEvent.class, new PlayerEventListener());
         eventManager.registerListener(this, ChangeBlockEvent.class, new BlockEventListener());
         eventManager.registerListener(this, InteractBlockEvent.class, new InteractListener());
+    }
+
+    private void configurePermissions() {
+        getPermissionService().getDefaultData().setPermission(SubjectData.GLOBAL_CONTEXT, "foxguard.command.info", Tristate.TRUE);
     }
 
     public Logger getLogger() {
@@ -188,6 +203,10 @@ public class FoxGuardMain {
 
     public File getConfigDirectory() {
         return configDirectory;
+    }
+
+    public PermissionService getPermissionService() {
+        return game.getServiceManager().provide(PermissionService.class).get();
     }
 
     public boolean isLoaded() {

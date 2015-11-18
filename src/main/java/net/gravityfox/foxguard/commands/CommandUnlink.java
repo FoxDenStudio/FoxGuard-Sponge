@@ -48,6 +48,10 @@ import java.util.Optional;
 public class CommandUnlink implements CommandCallable {
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
+        if (!testPermission(source)) {
+            source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
+            return CommandResult.empty();
+        }
         String[] args = {};
         if (!arguments.isEmpty()) args = arguments.split(" ", 2);
         if (source instanceof Player) {

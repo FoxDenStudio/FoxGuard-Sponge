@@ -3,8 +3,14 @@ foxguard {
         info {
             about
             objects {
-                list
-                detail
+                list {
+                    regions
+                    flagsets
+                }
+                detail {
+                    regions
+                    flagsets
+                }
             }
         }
         state {

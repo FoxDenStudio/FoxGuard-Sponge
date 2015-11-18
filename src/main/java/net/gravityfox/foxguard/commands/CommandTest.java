@@ -27,6 +27,7 @@ package net.gravityfox.foxguard.commands;
 
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.CommandCallable;
 import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandResult;
@@ -42,6 +43,10 @@ import java.util.Optional;
 public class CommandTest implements CommandCallable {
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
+        if (!testPermission(source)) {
+            source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
+            return CommandResult.empty();
+        }
         source.sendMessage(Texts.of(Thread.getAllStackTraces().keySet().toString()));
         return CommandResult.empty();
     }
