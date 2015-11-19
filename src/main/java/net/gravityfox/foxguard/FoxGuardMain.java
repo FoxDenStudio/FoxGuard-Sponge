@@ -155,7 +155,8 @@ public class FoxGuardMain {
     private void registerCommands() {
         fgDispatcher = new FGCommandMainDispatcher("/foxguard");
         FGCommandDispatcher fgRegionDispatcher = new FGCommandDispatcher("/foxguard regions");
-        FGCommandDispatcher fgFlagSetDispatcher = new FGCommandDispatcher("/foxguard flagsets");
+        FGCommandDispatcher fgFlagSetDispatcher = new FGCommandDispatcher("/foxguard flagsets",
+                "Commands spcifically meant for managing FlagSets.");
 
         fgDispatcher.register(new CommandCreate(), "create", "construct", "new", "make", "define", "mk");
         fgDispatcher.register(new CommandDelete(), "delete", "del", "remove", "rem", "rm", "destroy");
@@ -174,7 +175,7 @@ public class FoxGuardMain {
 
         fgFlagSetDispatcher.register(new CommandPriority(), "priority", "prio", "level", "rank");
 
-        fgDispatcher.register(fgFlagSetDispatcher, "flagset", "flagsets", "flag", "flags", "f");
+        fgDispatcher.register(fgFlagSetDispatcher, "flagsets", "flagset", "flag", "flags", "f");
 
         game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
     }

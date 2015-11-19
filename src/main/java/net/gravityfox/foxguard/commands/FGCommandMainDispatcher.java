@@ -24,6 +24,8 @@
 package net.gravityfox.foxguard.commands;
 
 import org.spongepowered.api.service.pagination.PaginationService;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.dispatcher.Disambiguator;
 import org.spongepowered.api.util.command.dispatcher.SimpleDispatcher;
@@ -32,6 +34,7 @@ import net.gravityfox.foxguard.util.CallbackHashMap;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Created by Fox on 10/25/2015.
@@ -54,7 +57,7 @@ public final class FGCommandMainDispatcher extends FGCommandDispatcher {
     }
 
     public FGCommandMainDispatcher(String primaryAlias, Disambiguator disambiguatorFunc) {
-        super(primaryAlias, disambiguatorFunc);
+        super(primaryAlias, null, disambiguatorFunc);
         instance = this;
     }
 
@@ -68,5 +71,10 @@ public final class FGCommandMainDispatcher extends FGCommandDispatcher {
 
     public PaginationService getPageService() {
         return FoxGuardMain.getInstance().getGame().getServiceManager().provide(PaginationService.class).get();
+    }
+
+    @Override
+    public Optional<? extends Text> getShortDescription(CommandSource source) {
+        return Optional.of(Texts.of("FoxGuard commands for managing world protection. Use /help foxguard for subcommands."));
     }
 }

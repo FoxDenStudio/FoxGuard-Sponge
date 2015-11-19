@@ -53,14 +53,24 @@ public class FGCommandDispatcher implements Dispatcher {
     protected final Disambiguator disambiguator;
     protected final ListMultimap<String, CommandMapping> commands = ArrayListMultimap.create();
     protected String usagePrefix;
+    protected Text shortDescription;
 
-    public FGCommandDispatcher(String usagePrefix, Disambiguator disambiguator) {
+    public FGCommandDispatcher(String usagePrefix, String shortDescription, Disambiguator disambiguator) {
         this.usagePrefix = usagePrefix;
+        if (shortDescription == null || shortDescription.isEmpty()) {
+            this.shortDescription = null;
+        } else {
+            this.shortDescription = Texts.of(shortDescription);
+        }
         this.disambiguator = disambiguator;
     }
 
+    public FGCommandDispatcher(String usagePrefix, String shortDescription) {
+        this(usagePrefix, shortDescription, SimpleDispatcher.FIRST_DISAMBIGUATOR);
+    }
+
     public FGCommandDispatcher(String usagePrefix) {
-        this(usagePrefix, SimpleDispatcher.FIRST_DISAMBIGUATOR);
+        this(usagePrefix, null, SimpleDispatcher.FIRST_DISAMBIGUATOR);
     }
 
     public Optional<CommandMapping> register(CommandCallable callable, String... alias) {
@@ -160,7 +170,7 @@ public class FGCommandDispatcher implements Dispatcher {
         if (!inputArguments.isEmpty()) {
             String[] args = inputArguments.split(" ", 2);
             if (args[0].equalsIgnoreCase("help")) {
-                args = inputArguments.split(" ", 2);
+                //args = inputArguments.split(" ", 2);
                 if (args.length > 1) {
                     final Optional<CommandMapping> optCommand = get(args[1], source);
                     if (!optCommand.isPresent()) {
@@ -238,7 +248,7 @@ public class FGCommandDispatcher implements Dispatcher {
 
     @Override
     public Optional<? extends Text> getShortDescription(CommandSource source) {
-        return Optional.empty();
+        return Optional.ofNullable(shortDescription);
     }
 
     @Override

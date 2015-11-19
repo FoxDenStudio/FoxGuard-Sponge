@@ -161,7 +161,7 @@ public class CommandAdd implements CommandCallable {
     @Override
     public Text getUsage(CommandSource source) {
         if (source instanceof Player)
-            return Texts.of("detail (region [w:<worldname>] | flagset) <name>");
-        else return Texts.of("detail (region <worldname> | flagset) <name>");
+            return Texts.of("detail <region [w:<worldname>] | flagset> <name>");
+        else return Texts.of("detail <region <worldname> | flagset> <name>");
     }
 }
