@@ -25,6 +25,7 @@
 package net.gravityfox.foxguard.listener;
 
 import com.flowpowered.math.vector.Vector3i;
+import net.gravityfox.foxguard.util.DebugHelper;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.living.player.Player;
@@ -52,7 +53,8 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
     @Override
     public void handle(ChangeBlockEvent event) throws Exception {
         if (!event.getCause().any(Player.class)) return;
-        //DebugHelper.printBlockEvent(event);
+        if (event instanceof ChangeBlockEvent.Fluid) return;
+        DebugHelper.printBlockEvent(event);
         ActiveFlags typeFlag;
         if (event instanceof ChangeBlockEvent.Modify) typeFlag = ActiveFlags.BLOCK_MODIFY;
         else if (event instanceof ChangeBlockEvent.Fluid) typeFlag = ActiveFlags.FLUID;
@@ -61,7 +63,7 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
         else return;
         Player player = event.getCause().first(Player.class).get();
 
-        FoxGuardMain.getInstance().getLogger().info(player.getName());
+        //FoxGuardMain.getInstance().getLogger().info(player.getName());
 
         List<IFlagSet> flagSetList = new ArrayList<>();
         World world = event.getTargetWorld();

@@ -164,6 +164,6 @@ public class CommandList implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("list (regions [w:<world>] | flagsets) [page]");
+        return Texts.of("list <regions [w:<world>] | flagsets> [page]");
     }
 }

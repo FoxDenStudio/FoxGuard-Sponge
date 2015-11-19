@@ -118,21 +118,21 @@ public class CommandUnlink implements CommandCallable {
 
     @Override
     public boolean testPermission(CommandSource source) {
-        return source.hasPermission("foxguard.command.modify.remove");
+        return source.hasPermission("foxguard.command.modify.link.remove");
     }
 
     @Override
     public Optional<? extends Text> getShortDescription(CommandSource source) {
-        return null;
+        return Optional.empty();
     }
 
     @Override
     public Optional<? extends Text> getHelp(CommandSource source) {
-        return null;
+        return Optional.empty();
     }
 
     @Override
     public Text getUsage(CommandSource source) {
-        return null;
+        return Texts.of("unlink (FULL | ALL)");
     }
 }

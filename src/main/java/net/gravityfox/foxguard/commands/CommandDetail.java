@@ -142,9 +142,8 @@ public class CommandDetail implements CommandCallable {
     @Override
     public Text getUsage(CommandSource source) {
         if (source instanceof Player)
-            return Texts.of("detail <(region [w:<worldname>] | flagset)> <name> [args...]");
-        else if (source instanceof ConsoleSource)
-            return Texts.of("detail <(region <worldname> | flagset)> <name> [args...]");
-        else return Texts.of("You can't run this command!");
+            return Texts.of("detail <region [w:<worldname>] | flagset> <name> [args...]");
+        else return Texts.of("detail <region <worldname> | flagset> <name> [args...]");
+
     }
 }
