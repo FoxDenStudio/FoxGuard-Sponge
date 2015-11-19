@@ -14,3 +14,5 @@ deploy:
     secure: BPoZgT0O4Ye8ozlQoXtXc/0lAFfdInpMjV9/Sifk2GB5uHm3wpnaIkN4z+iTWcgt0UQIhw0amjb/2G/B6JPtUpOAM12IFgeevJCBQsjoi6F/uTtcWskBID90TccJPy1R9F9/sF7Dgc7wS1vLjLhvptgJinKfO2hEz/l2KbY4y/xiTDEhSPSO8svDkCSfSJ8Qg+JCiORUEHoWjroCTN3cX+o8yROmgGl1CKLQAcHvx6gS+dDOeMvqncmHcaCiLSb6buv4941/eG6Y3pKGVfFsXyL9nCRt23tw0Pc4+w0SGAQ+Jkjmrk7bExbyGtue+n0BtskBgsBa2xgOFI7/TZf52PZwXf+sn4EcAkUGmR8c1ymllbuBbp1h/GJHpU+wzPWQuMsD3w6Q8S2oQKvO6yV43KkqzkoltNHp/IA+vO6/3tMPEVTExKB3cWatzp36Uq2rlyqJ5OyuREnHBLELbyA+pbWldE4QU7RLaNOh6463Uq18rOl/3e6jA1+l0nZarPe9x0w6KX1S4wnRlSypQNx2fzFNR/T6pAh5dOtSZoFqMBExhSLtrCCZIuIbj7cCyQLuUA+SN4cI6z+aPJzutU/P7nqYDVD9h9fH/v0+vFyZut/2lohsoK6ZUPj4XvPVUasHvlXHeZYbkBjadg9PoysBwbUxPA6e36undYStLmO/N+8=
   file: "./build/libs/foxguard*.jar"
   skip_cleanup: true
+  on:
+    tags: true
