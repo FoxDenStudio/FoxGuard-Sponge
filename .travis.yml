@@ -11,8 +11,7 @@ notifications:
 deploy:
   file_glob: true
   provider: releases
-  api-key:
-    secure: $KEY
+  api-key: $KEY
   file: "./build/libs/foxguard*.jar"
   skip_cleanup: true
   on:
