@@ -44,7 +44,10 @@ import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.source.ProxySource;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 
 /**
@@ -58,7 +61,7 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
     private static final String[] memberAliases = {"member", "members", "user", "users", "player", "players"};
     private static final String[] defaultAliases = {"default", "nonmember", "nonmembers", "everyone", "other"};
     private static final String[] groupsAliases = {"group", "groups"};
-    private static final String[] activeflagsAliases = {"activeflags", "active", };
+    private static final String[] activeflagsAliases = {"activeflags", "active",};
 
     private List<User> memberList = new LinkedList<>();
     private Map<ActiveFlags, Tristate> ownerPermissions = new CallbackHashMap<>((o, m) -> {
@@ -191,10 +194,12 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
     @Override
     public Text getDetails(String arguments) {
         TextBuilder builder = super.getDetails(arguments).builder();
+        builder.append(Texts.of("\n"));
         builder.append(Texts.of(TextColors.GREEN, "Members: "));
         for (User p : memberList) {
             builder.append(Texts.of(TextColors.RESET, p.getName() + " "));
         }
+        builder.append(Texts.of("\n"));
         builder.append(Texts.of(TextColors.GOLD, "Owner permissions:\n"));
         for (ActiveFlags f : ownerPermissions.keySet()) {
             builder.append(Texts.of(f.toString() + ": " + FGHelper.readableTristate(ownerPermissions.get(f)) + "\n"));
@@ -212,7 +217,19 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
 
     @Override
     public void writeToDatabase(DataSource dataSource) throws SQLException {
-
+        super.writeToDatabase(dataSource);
+        try (Connection conn = dataSource.getConnection()) {
+            Statement statement = conn.createStatement();
+            statement.execute("CREATE TABLE IF NOT EXISTS MEMBERS(NAMES VARCHAR(256), USERUUID UUID);" +
+                    "DELETE FROM OWNERS");
+            PreparedStatement insert = conn.prepareStatement("INSERT INTO MEMBERS(NAMES, USERUUID) VALUES (?, ?)");
+            for (User member : memberList) {
+                insert.setString(1, member.getName());
+                insert.setObject(2, member.getUniqueId());
+                insert.addBatch();
+            }
+            insert.executeBatch();
+        }
     }
 
     @Override

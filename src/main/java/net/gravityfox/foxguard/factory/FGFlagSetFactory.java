@@ -25,7 +25,12 @@
 
 package net.gravityfox.foxguard.factory;
 
+import com.flowpowered.math.vector.Vector2i;
+import net.gravityfox.foxguard.FoxGuardMain;
+import net.gravityfox.foxguard.regions.RectangularRegion;
+import net.gravityfox.foxguard.regions.util.BoundingBox2;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.util.command.CommandSource;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import net.gravityfox.foxguard.flagsets.IFlagSet;
@@ -33,6 +38,13 @@ import net.gravityfox.foxguard.flagsets.SimpleFlagSet;
 import net.gravityfox.foxguard.util.FGHelper;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Created by Fox on 10/25/2015.
@@ -53,11 +65,25 @@ public class FGFlagSetFactory implements IFlagSetFactory {
     }
 
     @Override
-    public IFlagSet createFlagSet(DataSource source, String name, String type, int priority) {
-        if (type.equalsIgnoreCase("simple")) {
-
-            return new SimpleFlagSet(name, priority);
-        } else return null;
+    public IFlagSet createFlagSet(DataSource source, String name, String type, int priority) throws SQLException {
+        List<User> ownerList = new LinkedList<>();
+        List<User> memberList = new LinkedList<>();
+        try (Connection conn = source.getConnection()) {
+            ResultSet ownerSet = conn.createStatement().executeQuery("SELECT * FROM OWNERS");
+            ResultSet memberSet = conn.createStatement().executeQuery("SELECT * FROM MEMBERS");
+            while (ownerSet.next()) {
+                Optional<User> user = FoxGuardMain.getInstance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
+                if (user.isPresent()) ownerList.add(user.get());
+            }
+            while (memberSet.next()) {
+                Optional<User> user = FoxGuardMain.getInstance().getUserStorage().get((UUID) memberSet.getObject("USERUUID"));
+                if (user.isPresent()) memberList.add(user.get());
+            }
+        }
+        SimpleFlagSet flagSet = new SimpleFlagSet(name, priority);
+        flagSet.setOwners(ownerList);
+        flagSet.setMembers(memberList);
+        return flagSet;
     }
 
     @Override
