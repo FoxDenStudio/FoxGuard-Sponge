@@ -120,7 +120,7 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
                             List<User> users = new ArrayList<>();
                             for (String name : names) {
                                 Optional<User> optUser = FoxGuardMain.getInstance().getUserStorage().get(name);
-                                if (optUser.isPresent()) users.add(optUser.get());
+                                if (optUser.isPresent() && !isOnList(users, optUser.get())) users.add(optUser.get());
                                 else failures++;
                             }
                             switch (op) {
@@ -171,8 +171,8 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
 
     @Override
     public Tristate hasPermission(Player player, ActiveFlags flag, Event event) {
-        if (ownerList.contains(player)) return ownerPermissions.get(flag);
-        if (memberList.contains(player)) return memberPermissions.get(flag);
+        if (isOnList(ownerList, player)) return ownerPermissions.get(flag);
+        if (isOnList(memberList, player)) return memberPermissions.get(flag);
         return defaultPermissions.get(flag);
     }
 
@@ -250,5 +250,12 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
     @Override
     public boolean removeMember(User player) {
         return memberList.remove(player);
+    }
+
+    private boolean isOnList(List<User> list, User user){
+        for(User u : list){
+            if(u.getUniqueId().equals(user.getUniqueId())) return true;
+        }
+        return false;
     }
 }
