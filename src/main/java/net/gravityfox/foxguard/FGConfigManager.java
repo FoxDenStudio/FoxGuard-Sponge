@@ -105,8 +105,8 @@ public class FGConfigManager {
         root.getNode("storage", "purgeDatabases").setComment("Sets whether to aggressively delete databases that appear corrupted or are no longer used. Default: true\n" +
                 "This is meant to keep the database store clean and free of clutter. It also improves load times.\n" +
                 "The caveat is that corrupted databases are deleted without warning. This normally isn't an issue, even in server crashes.\n" +
-                "However, modifying databases and moving the files around triggers the cleanup.\n" +
-                "If force loading is off or simply fails to load the database, it would just be discarded.\n" +
+                "However, modifying databases and moving the files around can trigger the cleanup.\n" +
+                "If force loading is off or the plugin simply fails to load the database, it would just be discarded.\n" +
                 "Setting this option to false will prevent databases from being deleted.\n" +
                 "However, they will still be overwritten if a new database is made with the same name.")
                 .setValue(purgeDatabases);

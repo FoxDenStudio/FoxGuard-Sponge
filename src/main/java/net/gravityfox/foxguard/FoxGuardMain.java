@@ -63,7 +63,7 @@ import java.sql.SQLException;
 @Plugin(id = "foxguard", name = "FoxGuard", version = FoxGuardMain.PLUGIN_VERSION)
 public class FoxGuardMain {
 
-    public static final String PLUGIN_VERSION = "0.7";
+    public static final String PLUGIN_VERSION = "0.8";
 
     private static FoxGuardMain instance;
 
