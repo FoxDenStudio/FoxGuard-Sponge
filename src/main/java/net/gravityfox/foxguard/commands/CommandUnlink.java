@@ -54,7 +54,7 @@ public class CommandUnlink implements CommandCallable {
             return CommandResult.empty();
         }
         String[] args = {};
-        if (!arguments.isEmpty()) args = arguments.split(" ", 2);
+        if (!arguments.isEmpty()) args = arguments.split(" +", 2);
         if (source instanceof Player) {
             Player player = (Player) source;
             if (args.length == 0) {

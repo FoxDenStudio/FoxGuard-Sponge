@@ -63,7 +63,7 @@ public class CommandCreate implements CommandCallable {
             return CommandResult.empty();
         }
         String[] args = {};
-        if (!arguments.isEmpty()) args = arguments.split(" ", 4);
+        if (!arguments.isEmpty()) args = arguments.split(" +", 4);
         if (source instanceof Player) {
             Player player = (Player) source;
             if (args.length == 0) {
@@ -81,7 +81,7 @@ public class CommandCreate implements CommandCallable {
                 if (optWorld != null && optWorld.isPresent()) {
                     world = optWorld.get();
                     flag = 1;
-                    args = arguments.split(" ", 5);
+                    args = arguments.split(" +", 5);
                 } else world = player.getWorld();
                 if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a name!"));
                 if (args[1 + flag].matches("^.*[^0-9a-zA-Z_$].*$"))
@@ -117,7 +117,7 @@ public class CommandCreate implements CommandCallable {
                 try {
                     priority = Integer.parseInt(args[2]);
                     flag = 1;
-                    args = arguments.split(" ", 5);
+                    args = arguments.split(" +", 5);
                 } catch (NumberFormatException | IndexOutOfBoundsException ignored) {
                 }
 

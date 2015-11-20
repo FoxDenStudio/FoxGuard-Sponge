@@ -61,7 +61,7 @@ public class CommandSubtract implements CommandCallable {
             return CommandResult.empty();
         }
         String[] args = {};
-        if (!arguments.isEmpty()) args = arguments.split(" ");
+        if (!arguments.isEmpty()) args = arguments.split(" +");
         if (source instanceof Player) {
             Player player = (Player) source;
             if (args.length == 0) {
@@ -78,7 +78,7 @@ public class CommandSubtract implements CommandCallable {
                 if (optWorld != null && optWorld.isPresent()) {
                     world = optWorld.get();
                     flag = 1;
-                    args = arguments.split(" ", 5);
+                    args = arguments.split(" +", 5);
                 } else world = player.getWorld();
                 if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a name or a number!"));
                 IRegion region;

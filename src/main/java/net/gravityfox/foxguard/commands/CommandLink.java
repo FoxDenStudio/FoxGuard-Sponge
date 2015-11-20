@@ -55,7 +55,7 @@ public class CommandLink implements CommandCallable {
             return CommandResult.empty();
         }
         String[] args = {};
-        if (!arguments.isEmpty()) args = arguments.split(" ", 2);
+        if (!arguments.isEmpty()) args = arguments.split(" +", 2);
         if (args.length == 0) {
             if (FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedRegions.size() == 0 &&
                     FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedFlagSets.size() == 0)
@@ -81,7 +81,7 @@ public class CommandLink implements CommandCallable {
                 if (optWorld != null && optWorld.isPresent()) {
                     world = optWorld.get();
                     flag = 1;
-                    args = arguments.split(" ", 3);
+                    args = arguments.split(" +", 3);
                 } else world = player.getWorld();
                 if (args.length < 1 + flag) throw new CommandException(Texts.of("Must specify items to link!"));
                 if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a flagset!"));

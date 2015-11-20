@@ -62,7 +62,7 @@ public class CommandAdd implements CommandCallable {
             return CommandResult.empty();
         }
         String[] args = {};
-        if (!arguments.isEmpty()) args = arguments.split(" ");
+        if (!arguments.isEmpty()) args = arguments.split(" +");
         if (source instanceof Player) {
             Player player = (Player) source;
             if (args.length == 0) {

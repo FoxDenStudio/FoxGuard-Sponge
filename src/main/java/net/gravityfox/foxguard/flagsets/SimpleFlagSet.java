@@ -143,6 +143,7 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
                                     }
                             }
                             source.sendMessage(Texts.of(TextColors.GREEN, "Modified list with " + successes + " successes and " + failures + " failures."));
+                            return true;
                         } else {
                             source.sendMessage(Texts.of(TextColors.RED, "Must specify one or more users!"));
                             return false;
@@ -163,7 +164,6 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
             source.sendMessage(Texts.of(TextColors.RED, "Must specify parameters!"));
             return false;
         }
-        return false;
     }
 
     @Override
@@ -207,7 +207,7 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
         for (ActiveFlags f : defaultPermissions.keySet()) {
             builder.append(Texts.of(f.toString() + ": " + FGHelper.readableTristate(ownerPermissions.get(f)) + "\n"));
         }
-        return Texts.of("");
+        return builder.build();
     }
 
     @Override

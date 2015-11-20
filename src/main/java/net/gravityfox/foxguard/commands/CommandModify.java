@@ -61,7 +61,7 @@ public class CommandModify implements CommandCallable {
             return CommandResult.empty();
         }
         String[] args = {};
-        if (!arguments.isEmpty()) args = arguments.split(" ", 3);
+        if (!arguments.isEmpty()) args = arguments.split(" +", 3);
         if (source instanceof Player) {
             Player player = (Player) source;
             if (args.length == 0) {
@@ -78,7 +78,7 @@ public class CommandModify implements CommandCallable {
                 if (optWorld != null && optWorld.isPresent()) {
                     world = optWorld.get();
                     flag = 1;
-                    args = arguments.split(" ", 4);
+                    args = arguments.split(" +", 4);
                 } else world = player.getWorld();
                 if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a name!"));
                 IRegion region = FGManager.getInstance().getRegion(world, args[1 + flag]);

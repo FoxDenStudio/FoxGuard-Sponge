@@ -64,12 +64,12 @@ public class FGRegionFactory implements IRegionFactory {
     public IRegion createRegion(String name, String type, String arguments, InternalCommandState state, World world, CommandSource source) throws CommandException {
         if (FGHelper.contains(rectAliases, type)) {
             if (source instanceof Player)
-                return new RectangularRegion(name, state.positions, arguments.split(" "), source, (Player) source);
-            else return new RectangularRegion(name, state.positions, arguments.split(" "), source);
+                return new RectangularRegion(name, state.positions, arguments.split(" +"), source, (Player) source);
+            else return new RectangularRegion(name, state.positions, arguments.split(" +"), source);
         } else if (FGHelper.contains(cuboidAliases, type)) {
             if (source instanceof Player)
-                return new CuboidRegion(name, state.positions, arguments.split(" "), source, (Player) source);
-            else return new CuboidRegion(name, state.positions, arguments.split(" "), source);
+                return new CuboidRegion(name, state.positions, arguments.split(" +"), source, (Player) source);
+            else return new CuboidRegion(name, state.positions, arguments.split(" +"), source);
         } else return null;
     }
 

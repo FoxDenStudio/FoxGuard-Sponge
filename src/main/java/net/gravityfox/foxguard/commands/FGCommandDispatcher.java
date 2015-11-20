@@ -169,9 +169,9 @@ public class FGCommandDispatcher implements Dispatcher {
             return CommandResult.empty();
         }
         if (!inputArguments.isEmpty()) {
-            String[] args = inputArguments.split(" ", 2);
+            String[] args = inputArguments.split(" +", 2);
             if (args[0].equalsIgnoreCase("help")) {
-                //args = inputArguments.split(" ", 2);
+                //args = inputArguments.split(" +", 2);
                 if (args.length > 1) {
                     final Optional<CommandMapping> optCommand = get(args[1], source);
                     if (!optCommand.isPresent()) {
@@ -179,6 +179,10 @@ public class FGCommandDispatcher implements Dispatcher {
                         return CommandResult.empty();
                     }
                     CommandCallable command = optCommand.get().getCallable();
+                    if (!command.testPermission(source)) {
+                        source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to view help for this command!"));
+                        return CommandResult.empty();
+                    }
                     @SuppressWarnings("unchecked")
                     final Optional<Text> helpText = (Optional<Text>) command.getHelp(source);
                     source.sendMessage(helpText.orElse(Texts.of("Usage: " + usagePrefix + " ").builder().append(command.getUsage(source)).build()));
@@ -218,7 +222,7 @@ public class FGCommandDispatcher implements Dispatcher {
 
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
-        final String[] args = arguments.split(" ", 2);
+        final String[] args = arguments.split(" +", 2);
         Optional<CommandMapping> cmdOptional = get(args[0], source);
         if (args.length == 1) {
             return filterCommands(source).stream().filter(new StartsWithPredicate(args[0])).collect(GuavaCollectors.toImmutableList());

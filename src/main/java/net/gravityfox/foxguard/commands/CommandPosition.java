@@ -52,7 +52,7 @@ public class CommandPosition implements CommandCallable {
         if (source instanceof Player) {
             Player player = (Player) source;
             String[] args = {};
-            if (!arguments.isEmpty()) args = arguments.split(" ");
+            if (!arguments.isEmpty()) args = arguments.split(" +");
             int x, y, z;
             Vector3i pPos = player.getLocation().getBlockPosition();
             if (args.length == 0) {

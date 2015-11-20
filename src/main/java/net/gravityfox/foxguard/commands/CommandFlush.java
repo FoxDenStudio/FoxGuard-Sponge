@@ -57,7 +57,7 @@ public class CommandFlush implements CommandCallable {
             if (arguments.isEmpty()) {
                 FGCommandMainDispatcher.getInstance().getStateMap().get(player).flush();
             } else {
-                args = arguments.split(" ");
+                args = arguments.split(" +");
                 for (String arg : args) {
                     InternalCommandState.StateField type = getType(arg);
                     if (type == null) throw new CommandException(Texts.of("\"" + arg + "\" is not a valid type!"));

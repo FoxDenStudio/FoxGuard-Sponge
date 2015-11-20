@@ -63,7 +63,7 @@ public class CommandList implements CommandCallable {
         if (source instanceof Player || (source instanceof ConsoleSource)) {
 
             String[] args = {};
-            if (!arguments.isEmpty()) args = arguments.split(" ");
+            if (!arguments.isEmpty()) args = arguments.split(" +");
             int page = 1;
 
             if (args.length == 0) {

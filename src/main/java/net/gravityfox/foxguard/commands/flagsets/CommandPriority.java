@@ -55,7 +55,7 @@ public class CommandPriority implements CommandCallable {
             return CommandResult.empty();
         }
         String[] args = {};
-        if (!arguments.isEmpty()) args = arguments.split(" ");
+        if (!arguments.isEmpty()) args = arguments.split(" +");
         if (args.length == 0) {
             source.sendMessage(Texts.builder()
                     .append(Texts.of(TextColors.GREEN, "Usage: "))
