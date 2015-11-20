@@ -25,10 +25,7 @@
 
 package net.gravityfox.foxguard.factory;
 
-import com.flowpowered.math.vector.Vector2i;
 import net.gravityfox.foxguard.FoxGuardMain;
-import net.gravityfox.foxguard.regions.RectangularRegion;
-import net.gravityfox.foxguard.regions.util.BoundingBox2;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.util.command.CommandSource;
@@ -59,31 +56,33 @@ public class FGFlagSetFactory implements IFlagSetFactory {
     public IFlagSet createFlagSet(String name, String type, int priority, String arguments, InternalCommandState state, CommandSource source) {
         if (type.equalsIgnoreCase("simple")) {
             SimpleFlagSet flagSet = new SimpleFlagSet(name, priority);
-            if(source instanceof Player) flagSet.addOwner((Player)source);
-                return flagSet;
+            if (source instanceof Player) flagSet.addOwner((Player) source);
+            return flagSet;
         } else return null;
     }
 
     @Override
     public IFlagSet createFlagSet(DataSource source, String name, String type, int priority) throws SQLException {
-        List<User> ownerList = new LinkedList<>();
-        List<User> memberList = new LinkedList<>();
-        try (Connection conn = source.getConnection()) {
-            ResultSet ownerSet = conn.createStatement().executeQuery("SELECT * FROM OWNERS");
-            ResultSet memberSet = conn.createStatement().executeQuery("SELECT * FROM MEMBERS");
-            while (ownerSet.next()) {
-                Optional<User> user = FoxGuardMain.getInstance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
-                if (user.isPresent()) ownerList.add(user.get());
+        if (type.equalsIgnoreCase("simple")) {
+            List<User> ownerList = new LinkedList<>();
+            List<User> memberList = new LinkedList<>();
+            try (Connection conn = source.getConnection()) {
+                ResultSet ownerSet = conn.createStatement().executeQuery("SELECT * FROM OWNERS");
+                ResultSet memberSet = conn.createStatement().executeQuery("SELECT * FROM MEMBERS");
+                while (ownerSet.next()) {
+                    Optional<User> user = FoxGuardMain.getInstance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
+                    if (user.isPresent() && !FGHelper.isUserOnList(ownerList, user.get())) ownerList.add(user.get());
+                }
+                while (memberSet.next()) {
+                    Optional<User> user = FoxGuardMain.getInstance().getUserStorage().get((UUID) memberSet.getObject("USERUUID"));
+                    if (user.isPresent() && !FGHelper.isUserOnList(memberList, user.get())) memberList.add(user.get());
+                }
             }
-            while (memberSet.next()) {
-                Optional<User> user = FoxGuardMain.getInstance().getUserStorage().get((UUID) memberSet.getObject("USERUUID"));
-                if (user.isPresent()) memberList.add(user.get());
-            }
-        }
-        SimpleFlagSet flagSet = new SimpleFlagSet(name, priority);
-        flagSet.setOwners(ownerList);
-        flagSet.setMembers(memberList);
-        return flagSet;
+            SimpleFlagSet flagSet = new SimpleFlagSet(name, priority);
+            flagSet.setOwners(ownerList);
+            flagSet.setMembers(memberList);
+            return flagSet;
+        } else return null;
     }
 
     @Override

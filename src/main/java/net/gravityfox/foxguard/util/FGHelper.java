@@ -26,6 +26,7 @@
 package net.gravityfox.foxguard.util;
 
 import org.spongepowered.api.Server;
+import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
@@ -36,6 +37,7 @@ import net.gravityfox.foxguard.regions.GlobalRegion;
 import net.gravityfox.foxguard.regions.IRegion;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -100,5 +102,14 @@ public class FGHelper {
             default:
                 return "Wait wat?";
         }
+    }
+
+    public static boolean isUserOnList(List<User> list, User user) {
+        //System.out.println(user.getUniqueId());
+        for (User u : list) {
+            //System.out.println(u.getUniqueId());
+            if (u.getUniqueId().equals(user.getUniqueId())) return true;
+        }
+        return false;
     }
 }

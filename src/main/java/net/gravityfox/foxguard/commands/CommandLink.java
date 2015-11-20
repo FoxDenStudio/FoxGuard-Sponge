@@ -86,6 +86,12 @@ public class CommandLink implements CommandCallable {
                 if (args.length < 1 + flag) throw new CommandException(Texts.of("Must specify items to link!"));
                 if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a flagset!"));
                 boolean success = FGManager.getInstance().link(world, args[flag], args[1 + flag]);
+                if (success) {
+                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully linked!"));
+                    return CommandResult.success();
+                } else {
+                    source.sendMessage(Texts.of(TextColors.RED, "There was an error linking. Check their names and also make sure they haven't already been linked."));
+                }
             } else {
 
             }

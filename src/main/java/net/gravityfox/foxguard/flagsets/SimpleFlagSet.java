@@ -125,22 +125,23 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
                             List<User> users = new ArrayList<>();
                             for (String name : names) {
                                 Optional<User> optUser = FoxGuardMain.getInstance().getUserStorage().get(name);
-                                if (optUser.isPresent() && !isOnList(users, optUser.get())) users.add(optUser.get());
+                                if (optUser.isPresent() && !FGHelper.isUserOnList(users, optUser.get())) users.add(optUser.get());
                                 else failures++;
                             }
                             switch (op) {
                                 case ADD:
                                     for (User user : users) {
-                                        if (list.add(user))
+                                        if (!FGHelper.isUserOnList(list, user) && list.add(user))
                                             successes++;
                                         else failures++;
                                     }
                                     break;
                                 case REMOVE:
-                                    for (User user : users) {
-                                        if (list.remove(user))
+                                    for (User cUser : list) {
+                                        if(FGHelper.isUserOnList(users, cUser)){
+                                            list.remove(cUser);
                                             successes++;
-                                        else failures++;
+                                        } else failures++;
                                     }
                                     break;
                                 case SET:
@@ -202,8 +203,8 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
                 return this.causeLess;
             }
         }
-        if (isOnList(ownerList, user)) return ownerPermissions.get(flag);
-        if (isOnList(memberList, user)) return memberPermissions.get(flag);
+        if (FGHelper.isUserOnList(ownerList, user)) return ownerPermissions.get(flag);
+        if (FGHelper.isUserOnList(memberList, user)) return memberPermissions.get(flag);
         return defaultPermissions.get(flag);
     }
 
@@ -243,6 +244,8 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
         for (ActiveFlags f : defaultPermissions.keySet()) {
             builder.append(Texts.of(f.toString() + ": " + FGHelper.readableTristate(ownerPermissions.get(f)) + "\n"));
         }
+        builder.append(Texts.of(TextColors.GRAY, "Causeless setting: "));
+        builder.append(Texts.of(TextColors.RESET, FGHelper.readableTristate(causeLess) + "\n"));
         return builder.build();
     }
 
@@ -252,7 +255,7 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
         try (Connection conn = dataSource.getConnection()) {
             Statement statement = conn.createStatement();
             statement.execute("CREATE TABLE IF NOT EXISTS MEMBERS(NAMES VARCHAR(256), USERUUID UUID);" +
-                    "DELETE FROM OWNERS");
+                    "DELETE FROM MEMBERS");
             PreparedStatement insert = conn.prepareStatement("INSERT INTO MEMBERS(NAMES, USERUUID) VALUES (?, ?)");
             for (User member : memberList) {
                 insert.setString(1, member.getName());
@@ -283,10 +286,4 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
         return memberList.remove(player);
     }
 
-    private boolean isOnList(List<User> list, User user) {
-        for (User u : list) {
-            if (u.getUniqueId().equals(user.getUniqueId())) return true;
-        }
-        return false;
-    }
 }
