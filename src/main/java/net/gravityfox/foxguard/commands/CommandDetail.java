@@ -100,7 +100,7 @@ public class CommandDetail implements CommandCallable {
                 player.sendMessage(builder.build());
 
             } else if (FGHelper.contains(flagSetsAliases, args[0])) {
-                if (args.length < 1) throw new CommandException(Texts.of("Must specify a name!"));
+                if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 TextBuilder builder = Texts.builder();
                 builder.append(Texts.of(TextColors.GOLD, "-----------------------------------------------------\n"));
                 builder.append(Texts.of(TextColors.GREEN, "---Details---\n"));

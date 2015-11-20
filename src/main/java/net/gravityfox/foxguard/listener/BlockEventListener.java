@@ -30,6 +30,7 @@ import net.gravityfox.foxguard.util.DebugHelper;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.text.Texts;
@@ -50,19 +51,23 @@ import java.util.List;
  */
 public class BlockEventListener implements EventListener<ChangeBlockEvent> {
 
-
     @Override
     public void handle(ChangeBlockEvent event) throws Exception {
-        if (!event.getCause().any(Player.class)) return;
-        if (event instanceof ChangeBlockEvent.Fluid) return;
-        DebugHelper.printBlockEvent(event);
+        User user = null;
+        if (!event.getCause().any(Player.class)) {
+            user = event.getCause().first(Player.class).get();
+        } else if (!event.getCause().any(User.class)) {
+            user = event.getCause().first(User.class).get();
+        }
+        //if (event instanceof ChangeBlockEvent.Fluid) return;
+        //DebugHelper.printBlockEvent(event);
         ActiveFlags typeFlag;
         if (event instanceof ChangeBlockEvent.Modify) typeFlag = ActiveFlags.BLOCK_MODIFY;
         else if (event instanceof ChangeBlockEvent.Fluid) typeFlag = ActiveFlags.FLUID;
         else if (event instanceof ChangeBlockEvent.Break) typeFlag = ActiveFlags.BLOCK_BREAK;
         else if (event instanceof ChangeBlockEvent.Place) typeFlag = ActiveFlags.BLOCK_PLACE;
         else return;
-        Player player = event.getCause().first(Player.class).get();
+
 
         //FoxGuardMain.getInstance().getLogger().info(player.getName());
 
@@ -83,11 +88,12 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
             if (flagSet.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
                 break;
             }
-            flagState = flagState.and(flagSet.hasPermission(player, typeFlag, event));
+            flagState = flagState.and(flagSet.hasPermission(user, typeFlag, event));
             currPriority = flagSet.getPriority();
         }
         if (flagState == Tristate.FALSE) {
-            player.sendMessage(Texts.of("You don't have permission."));
+            if (user instanceof Player)
+                ((Player) user).sendMessage(Texts.of("You don't have permission."));
             event.setCancelled(true);
         }
     }

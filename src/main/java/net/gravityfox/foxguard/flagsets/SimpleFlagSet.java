@@ -61,7 +61,12 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
     private static final String[] memberAliases = {"member", "members", "user", "users", "player", "players"};
     private static final String[] defaultAliases = {"default", "nonmember", "nonmembers", "everyone", "other"};
     private static final String[] groupsAliases = {"group", "groups"};
-    private static final String[] activeflagsAliases = {"activeflags", "active",};
+    private static final String[] activeflagsAliases = {"activeflags", "active"};
+    private static final String[] trueAliases = {"true", "t"};
+    private static final String[] falseAliases = {"false", "f"};
+    private static final String[] undefinedAliases = {"undefined", "undef", "un", "u"};
+
+    private Tristate causeLess = Tristate.UNDEFINED;
 
     private List<User> memberList = new LinkedList<>();
     private Map<ActiveFlags, Tristate> ownerPermissions = new CallbackHashMap<>((o, m) -> {
@@ -159,6 +164,25 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
                     source.sendMessage(Texts.of(TextColors.RED, "Must specify a group!"));
                     return false;
                 }
+            } else if (args[0].equalsIgnoreCase("causeless")) {
+                if(args.length > 1){
+                    if(FGHelper.contains(trueAliases, args[1])){
+                        this.causeLess = Tristate.TRUE;
+                        return true;
+                    } else if (FGHelper.contains(falseAliases, args[1])) {
+                        this.causeLess = Tristate.FALSE;
+                        return true;
+                    } else if (FGHelper.contains(undefinedAliases, args[1])) {
+                        this.causeLess = Tristate.UNDEFINED;
+                        return true;
+                    } else {
+                        source.sendMessage(Texts.of(TextColors.RED, "Not a valid option!"));
+                        return false;
+                    }
+                } else {
+                    source.sendMessage(Texts.of(TextColors.RED, "Must specify an option!"));
+                    return false;
+                }
             } else {
                 source.sendMessage(Texts.of(TextColors.RED, "Not a valid SimpleFlagset command!"));
                 return false;
@@ -170,9 +194,16 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
     }
 
     @Override
-    public Tristate hasPermission(Player player, ActiveFlags flag, Event event) {
-        if (isOnList(ownerList, player)) return ownerPermissions.get(flag);
-        if (isOnList(memberList, player)) return memberPermissions.get(flag);
+    public Tristate hasPermission(User user, ActiveFlags flag, Event event) {
+        if (user == null) {
+            if (this.causeLess == Tristate.UNDEFINED) {
+                return defaultPermissions.get(flag);
+            } else {
+                return this.causeLess;
+            }
+        }
+        if (isOnList(ownerList, user)) return ownerPermissions.get(flag);
+        if (isOnList(memberList, user)) return memberPermissions.get(flag);
         return defaultPermissions.get(flag);
     }
 
@@ -252,9 +283,9 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
         return memberList.remove(player);
     }
 
-    private boolean isOnList(List<User> list, User user){
-        for(User u : list){
-            if(u.getUniqueId().equals(user.getUniqueId())) return true;
+    private boolean isOnList(List<User> list, User user) {
+        for (User u : list) {
+            if (u.getUniqueId().equals(user.getUniqueId())) return true;
         }
         return false;
     }

@@ -26,11 +26,14 @@
 package net.gravityfox.foxguard.flagsets;
 
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.util.Tristate;
 import net.gravityfox.foxguard.IFGObject;
 import net.gravityfox.foxguard.flagsets.util.ActiveFlags;
 import net.gravityfox.foxguard.flagsets.util.PassiveFlags;
+
+import javax.annotation.Nullable;
 
 /**
  * Created by Fox on 8/17/2015.
@@ -38,7 +41,7 @@ import net.gravityfox.foxguard.flagsets.util.PassiveFlags;
  */
 public interface IFlagSet extends IFGObject, Comparable<IFlagSet> {
 
-    Tristate hasPermission(Player player, ActiveFlags flag, Event event);
+    Tristate hasPermission(@Nullable User user, ActiveFlags flag, Event event);
 
     Tristate isFlagAllowed(PassiveFlags flag, Event event);
 
