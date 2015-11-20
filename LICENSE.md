@@ -1,7 +1,7 @@
 
 This file is part of FoxGuard, licensed under the MIT License (MIT).
 
-Copyright (c) 2015. gravityfox - https://gravityfox.net/
+Copyright (c) 2015 - 2015. gravityfox - https://gravityfox.net/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
