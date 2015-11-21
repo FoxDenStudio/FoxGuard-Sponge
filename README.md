@@ -20,6 +20,17 @@ FlagSets can be as simple as a "block everything for everyone" or as complicated
 This offers both performance and power, and allows users to use only what they need.
 It also allows other plugins to add their own Regions and FlagSets for plugin interoperability or simply more options.
 
+## Building from source
+If you have git installed:
+`git clone https://github.com/gravityfox/FoxGuard.git`
+If you don't have git:
+Download the latest source as a zip from the GitHub page.
+
+If you have gradle installed:
+`gradle build`
+If you don't have gradle installed:
+`gradlew build`
+
 ## Note from the author about the plugin 
 When I started writing this plugin it was meant as a one-off compile and forget plugin to protect a spawn area for a friend.
 The dimension was supposed to be hard coded and it was only supposed to take a day or two. I named it as such because I couldn't actually think of a good name.
