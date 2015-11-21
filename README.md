@@ -19,3 +19,12 @@ Essentially, Regions can be a simple as rectangular plots of land, or as complex
 FlagSets can be as simple as a "block everything for everyone" or as complicated as the United States government.
 This offers both performance and power, and allows users to use only what they need.
 It also allows other plugins to add their own Regions and FlagSets for plugin interoperability or simply more options.
+
+## Note from the author about the plugin 
+When I started writing this plugin it was meant as a one-off compile and forget plugin to protect a spawn area for a friend.
+The dimension was supposed to be hard coded and it was only supposed to take a day or two. I named it as such because i couldn't actually think of a good name.
+Well, it was supposed to be a temporary replacement of WorldGuard and I'm a fox soo... that's the name.
+Somehow, this one-off project evolved into something bigger, and I started getting more involved with Sponge in general.
+One day I needed to ask a quick question so I decided to hop on the #spongedev irc channel. There I met some the most awesome people ever.
+So shoutout to all the Sponge devs. You guys are the best.
+Note over.
