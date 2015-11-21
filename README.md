@@ -21,6 +21,7 @@ This offers both performance and power, and allows users to use only what they n
 It also allows other plugins to add their own Regions and FlagSets for plugin interoperability or simply more options.
 
 ## Building from source
+### Downloading
 If you have git installed:
 
 `git clone https://github.com/gravityfox/FoxGuard.git`
@@ -29,6 +30,8 @@ If you don't have git:
 
 Download the latest source as a zip from the GitHub page.
 
+### Building
+Open a command line inside the directory. Make sure that the directory has been uncompressed/unzipped if you downloaded it that way.
 
 If you have gradle installed:
 
