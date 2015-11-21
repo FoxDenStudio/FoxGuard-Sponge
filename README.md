@@ -22,13 +22,20 @@ It also allows other plugins to add their own Regions and FlagSets for plugin in
 
 ## Building from source
 If you have git installed:
+
 `git clone https://github.com/gravityfox/FoxGuard.git`
+
 If you don't have git:
+
 Download the latest source as a zip from the GitHub page.
 
+
 If you have gradle installed:
+
 `gradle build`
+
 If you don't have gradle installed:
+
 `gradlew build`
 
 ## Note from the author about the plugin 
