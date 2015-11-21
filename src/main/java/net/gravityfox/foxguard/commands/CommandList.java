@@ -115,7 +115,7 @@ public class CommandList implements CommandCallable {
                 while (flagSetListIterator.hasNext()) {
                     IFlagSet flagSet = flagSetListIterator.next();
                     output.append(Texts.of(FGHelper.getColorForFlagSet(flagSet),
-                            flagSet.getType() + " : " + flagSet.getName()));
+                            flagSet.getShortTypeName() + " : " + flagSet.getName()));
                     if (flagSetListIterator.hasNext()) output.append(Texts.of("\n"));
                 }
                 source.sendMessage(output.build());
@@ -132,7 +132,7 @@ public class CommandList implements CommandCallable {
 
 
     private String getRegionName(IRegion region, boolean dispWorld) {
-        return region.getType() + " : " + (dispWorld ? region.getWorld().getName() + " : " : "") + region.getName();
+        return region.getShortTypeName() + " : " + (dispWorld ? region.getWorld().getName() + " : " : "") + region.getName();
     }
 
     private boolean contains(String[] aliases, String input) {

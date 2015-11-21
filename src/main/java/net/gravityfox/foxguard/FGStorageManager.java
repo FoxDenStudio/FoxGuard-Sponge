@@ -276,7 +276,7 @@ public class FGStorageManager {
             for (IFlagSet flagSet : FGManager.getInstance().getFlagSetsListCopy()) {
                 statement.addBatch("INSERT INTO FLAGSETS(NAME, TYPE, PRIORITY) VALUES ('" +
                         flagSet.getName() + "', '" +
-                        flagSet.getUniqueType() + "', " +
+                        flagSet.getUniqueTypeString() + "', " +
                         flagSet.getPriority() + ");");
             }
             statement.executeBatch();
@@ -302,7 +302,7 @@ public class FGStorageManager {
                     statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, PRIORITY) VALUES (" +
                             "'flagset', '" +
                             flagSet.getName() + "', '" +
-                            flagSet.getUniqueType() + "', " +
+                            flagSet.getUniqueTypeString() + "', " +
                             flagSet.getPriority() + ");");
                     statement.executeBatch();
                 }
@@ -326,7 +326,7 @@ public class FGStorageManager {
             for (IRegion region : FGManager.getInstance().getRegionsListCopy(world)) {
                 statement.addBatch("INSERT INTO REGIONS(NAME, TYPE) VALUES ('" +
                         region.getName() + "', '" +
-                        region.getUniqueType() + "');");
+                        region.getUniqueTypeString() + "');");
                 for (IFlagSet flagSet : region.getFlagSets()) {
                     statement.addBatch("INSERT INTO LINKAGES(REGION, FLAGSET) VALUES ('" +
                             region.getName() + "', '" +
@@ -353,7 +353,7 @@ public class FGStorageManager {
                     statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, WORLD) VALUES (" +
                             "'region', '" +
                             region.getName() + "', '" +
-                            region.getUniqueType() + "', '" +
+                            region.getUniqueTypeString() + "', '" +
                             region.getWorld().getName() + "');");
                     statement.executeBatch();
                 }
@@ -394,7 +394,7 @@ public class FGStorageManager {
                 statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, WORLD) VALUES (" +
                         "'region', '" +
                         region.getName() + "', '" +
-                        region.getUniqueType() + "', '" +
+                        region.getUniqueTypeString() + "', '" +
                         region.getWorld().getName() + "');");
                 statement.executeBatch();
             }
@@ -424,7 +424,7 @@ public class FGStorageManager {
                 statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, PRIORITY) VALUES (" +
                         "'flagset', '" +
                         flagSet.getName() + "', '" +
-                        flagSet.getUniqueType() + "', " +
+                        flagSet.getUniqueTypeString() + "', " +
                         flagSet.getPriority() + ");");
                 statement.executeBatch();
             }
@@ -450,7 +450,7 @@ public class FGStorageManager {
                 for (IRegion region : FGManager.getInstance().getRegionsListCopy(world)) {
                     statement.addBatch("INSERT INTO REGIONS(NAME, TYPE) VALUES ('" +
                             region.getName() + "', '" +
-                            region.getUniqueType() + "');");
+                            region.getUniqueTypeString() + "');");
                     for (IFlagSet flagSet : region.getFlagSets()) {
                         statement.addBatch("INSERT INTO LINKAGES(REGION, FLAGSET) VALUES ('" +
                                 region.getName() + "', '" +
@@ -468,7 +468,7 @@ public class FGStorageManager {
             for (IFlagSet flagSet : FGManager.getInstance().getFlagSetsListCopy()) {
                 statement.addBatch("INSERT INTO FLAGSETS(NAME, TYPE, PRIORITY) VALUES ('" +
                         flagSet.getName() + "', '" +
-                        flagSet.getUniqueType() + "', " +
+                        flagSet.getUniqueTypeString() + "', " +
                         flagSet.getPriority() + ");");
             }
             statement.executeBatch();

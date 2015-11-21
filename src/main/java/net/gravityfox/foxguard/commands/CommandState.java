@@ -63,7 +63,7 @@ public class CommandState implements CommandCallable {
                 while (regionIterator.hasNext()) {
                     IRegion region = regionIterator.next();
                     output.append(Texts.of(FGHelper.getColorForRegion(region),
-                            "\n  " + (index++) + ": " + region.getType() + " : " + region.getWorld().getName() + " : " + region.getName()));
+                            "\n  " + (index++) + ": " + region.getShortTypeName() + " : " + region.getWorld().getName() + " : " + region.getName()));
                 }
                 output.append(Texts.of("\n"));
                 flag++;
@@ -77,7 +77,7 @@ public class CommandState implements CommandCallable {
                 while (flagSetIterator.hasNext()) {
                     IFlagSet flagSet = flagSetIterator.next();
                     output.append(Texts.of(FGHelper.getColorForFlagSet(flagSet),
-                            "\n  " + (index++) + ": " + flagSet.getType() + " : " + flagSet.getName()));
+                            "\n  " + (index++) + ": " + flagSet.getShortTypeName() + " : " + flagSet.getName()));
                 }
                 output.append(Texts.of("\n"));
                 flag++;

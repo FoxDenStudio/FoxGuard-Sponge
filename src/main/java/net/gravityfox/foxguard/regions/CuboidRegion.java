@@ -126,12 +126,17 @@ public class CuboidRegion extends OwnableRegionBase {
     }
 
     @Override
-    public String getType() {
+    public String getShortTypeName() {
+        return "Cube";
+    }
+
+    @Override
+    public String getLongTypeName() {
         return "Cuboid";
     }
 
     @Override
-    public String getUniqueType() {
+    public String getUniqueTypeString() {
         return "cuboid";
     }
 

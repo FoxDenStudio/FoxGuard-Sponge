@@ -68,12 +68,13 @@ public class CommandPriority implements CommandCallable {
             FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedFlagSets.stream().forEach(flagSets::add);
             for (String flagSetName : Arrays.copyOfRange(args, 1, args.length)) {
                 IFlagSet flagSet = FGManager.getInstance().getFlagSet(flagSetName);
-                if (flagSet != null) {
+                if (flagSet != null && !flagSets.contains(flagSet)) {
                     flagSets.add(flagSet);
                 } else {
                     failures++;
                 }
             }
+            if (flagSets.size() < 1) throw new CommandException(Texts.of("You must specify at least one FlagSet!"));
             if (args[0].startsWith("~")) {
                 int deltaPriority;
                 try {
@@ -85,7 +86,6 @@ public class CommandPriority implements CommandCallable {
                     flagSet.setPriority(flagSet.getPriority() + deltaPriority);
                     successes++;
                 }
-
             } else {
                 int priority;
                 try {
@@ -115,12 +115,15 @@ public class CommandPriority implements CommandCallable {
 
     @Override
     public Optional<? extends Text> getShortDescription(CommandSource source) {
-        return Optional.empty();
+        return Optional.of(Texts.of("Sets or changes the priority of one or more FlagSets."));
     }
 
     @Override
     public Optional<? extends Text> getHelp(CommandSource source) {
-        return Optional.empty();
+        return Optional.of(Texts.of("This command will modify the priorities of all FlagSets currently in your state buffer.\n" +
+                "This command takes a minimum of one parameter, which is the priority that all FlagSets will be set to.\n" +
+                "Prefixing this value with a tilde (\" ~ \") instead increments or decrements the priority of each FlagSet by that value.\n" +
+                "Any arguments after the priority are understood to be additional FlagSet names not already in your state buffer."));
     }
 
     @Override

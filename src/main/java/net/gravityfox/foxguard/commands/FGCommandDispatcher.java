@@ -184,7 +184,13 @@ public class FGCommandDispatcher implements Dispatcher {
                     }
                     @SuppressWarnings("unchecked")
                     final Optional<Text> helpText = (Optional<Text>) command.getHelp(source);
-                    source.sendMessage(helpText.orElse(Texts.of("Usage: " + usagePrefix + " ").builder().append(command.getUsage(source)).build()));
+                    TextBuilder builder = Texts.builder();
+                    if (helpText.isPresent()) builder.append(Texts.of(TextColors.GREEN, "----------"),
+                            Texts.of(TextColors.GOLD, "Command \""),
+                            Texts.of(TextColors.GOLD, optCommand.get().getPrimaryAlias()),
+                            Texts.of(TextColors.GOLD, "\" Help"),
+                            Texts.of(TextColors.GREEN, "----------\n"));
+                    source.sendMessage(builder.append(helpText.orElse(Texts.of("Usage: " + usagePrefix + " ").builder().append(command.getUsage(source)).build())).build());
                     return CommandResult.empty();
                 } else {
                     source.sendMessage(this.getHelp(source).get());

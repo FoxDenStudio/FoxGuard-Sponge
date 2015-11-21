@@ -213,12 +213,17 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
     }
 
     @Override
-    public String getType() {
+    public String getShortTypeName() {
         return "Simple";
     }
 
     @Override
-    public String getUniqueType() {
+    public String getLongTypeName() {
+        return "Simple";
+    }
+
+    @Override
+    public String getUniqueTypeString() {
         return "simple";
     }
 

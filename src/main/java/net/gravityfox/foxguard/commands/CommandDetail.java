@@ -35,7 +35,6 @@ import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandResult;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
-import org.spongepowered.api.util.command.source.ConsoleSource;
 import org.spongepowered.api.world.World;
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.FoxGuardMain;
@@ -89,23 +88,32 @@ public class CommandDetail implements CommandCallable {
                     throw new CommandException(Texts.of("No region with name \"" + args[1 + flag] + "\"!"));
                 TextBuilder builder = Texts.builder();
                 builder.append(Texts.of(TextColors.GOLD, "-----------------------------------------------------\n"));
+                builder.append(Texts.of(TextColors.GREEN, "---General---\n"));
+                builder.append(Texts.of(TextColors.GOLD, "Name: "), Texts.of(TextColors.RESET, region.getName() + "\n"));
+                builder.append(Texts.of(TextColors.GOLD, "Type: "), Texts.of(TextColors.RESET, region.getLongTypeName() + "\n"));
+                builder.append(Texts.of(TextColors.GOLD, "World: "), Texts.of(TextColors.RESET, region.getWorld().getName() + "\n"));
                 builder.append(Texts.of(TextColors.GREEN, "---Details---\n"));
                 builder.append(region.getDetails(args.length < 3 + flag ? "" : args[2 + flag]));
                 builder.append(Texts.of(TextColors.GREEN, "\n---Linked FlagSets---"));
                 if (region.getFlagSets().size() == 0)
                     builder.append(Texts.of(TextStyles.ITALIC, "\nNo linked FlagSets!"));
                 region.getFlagSets().stream().forEach(flagSet -> builder.append(Texts.of(FGHelper.getColorForFlagSet(flagSet),
-                        "\n" + flagSet.getType() + " : " + flagSet.getName())));
+                        "\n" + flagSet.getShortTypeName() + " : " + flagSet.getName())));
                 player.sendMessage(builder.build());
 
             } else if (FGHelper.contains(flagSetsAliases, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-                TextBuilder builder = Texts.builder();
-                builder.append(Texts.of(TextColors.GOLD, "-----------------------------------------------------\n"));
-                builder.append(Texts.of(TextColors.GREEN, "---Details---\n"));
+
                 IFlagSet flagSet = FGManager.getInstance().getFlagSet(args[1]);
                 if (flagSet == null)
                     throw new CommandException(Texts.of("No region with name \"" + args[1] + "\"!"));
+                TextBuilder builder = Texts.builder();
+                builder.append(Texts.of(TextColors.GOLD, "-----------------------------------------------------\n"));
+                builder.append(Texts.of(TextColors.GREEN, "---General---\n"));
+                builder.append(Texts.of(TextColors.GOLD, "Name: "), Texts.of(TextColors.RESET, flagSet.getName() + "\n"));
+                builder.append(Texts.of(TextColors.GOLD, "Type: "), Texts.of(TextColors.RESET, flagSet.getLongTypeName() + "\n"));
+                builder.append(Texts.of(TextColors.GOLD, "Priority: "), Texts.of(TextColors.RESET, flagSet.getPriority() + "\n"));
+                builder.append(Texts.of(TextColors.GREEN, "---Details---\n"));
                 builder.append(flagSet.getDetails(args.length < 3 ? "" : args[2]));
                 player.sendMessage(builder.build());
             } else {

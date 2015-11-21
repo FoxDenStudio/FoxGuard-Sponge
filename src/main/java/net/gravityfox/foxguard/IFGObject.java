@@ -41,9 +41,11 @@ public interface IFGObject {
 
     void setName(String name);
 
-    String getType();
+    String getShortTypeName();
 
-    String getUniqueType();
+    String getLongTypeName();
+
+    String getUniqueTypeString();
 
     Text getDetails(String arguments);
 

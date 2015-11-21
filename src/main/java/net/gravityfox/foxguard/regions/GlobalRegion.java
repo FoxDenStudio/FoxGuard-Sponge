@@ -51,12 +51,17 @@ public class GlobalRegion extends RegionBase {
     }
 
     @Override
-    public String getType() {
+    public String getShortTypeName() {
         return "Global";
     }
 
     @Override
-    public String getUniqueType() {
+    public String getLongTypeName() {
+        return "Global";
+    }
+
+    @Override
+    public String getUniqueTypeString() {
         return "global";
     }
 

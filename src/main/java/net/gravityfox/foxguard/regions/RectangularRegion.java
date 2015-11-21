@@ -119,12 +119,17 @@ public class RectangularRegion extends OwnableRegionBase {
     }
 
     @Override
-    public String getType() {
+    public String getShortTypeName() {
         return "Rect";
     }
 
     @Override
-    public String getUniqueType() {
+    public String getLongTypeName() {
+        return "Rectangular";
+    }
+
+    @Override
+    public String getUniqueTypeString() {
         return "rectangular";
     }
 
