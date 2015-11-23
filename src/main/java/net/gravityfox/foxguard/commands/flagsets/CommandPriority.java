@@ -24,6 +24,7 @@
 
 package net.gravityfox.foxguard.commands.flagsets;
 
+import com.google.common.collect.ImmutableList;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
@@ -36,10 +37,7 @@ import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.commands.FGCommandMainDispatcher;
 import net.gravityfox.foxguard.flagsets.IFlagSet;
 
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Created by Fox on 10/29/2015.
@@ -106,7 +104,7 @@ public class CommandPriority implements CommandCallable {
 
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
-        return null;
+        return ImmutableList.of();
     }
 
     @Override

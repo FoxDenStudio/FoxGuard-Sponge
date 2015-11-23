@@ -25,6 +25,7 @@
 package net.gravityfox.foxguard.commands;
 
 import com.flowpowered.math.vector.Vector3i;
+import com.google.common.collect.ImmutableList;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
@@ -41,6 +42,7 @@ import net.gravityfox.foxguard.flagsets.IFlagSet;
 import net.gravityfox.foxguard.regions.IRegion;
 import net.gravityfox.foxguard.util.FGHelper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -140,7 +142,7 @@ public class CommandAdd implements CommandCallable {
 
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
-        return null;
+        return ImmutableList.of();
     }
 
     @Override

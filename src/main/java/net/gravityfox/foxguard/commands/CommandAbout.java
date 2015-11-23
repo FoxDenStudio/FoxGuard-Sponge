@@ -24,6 +24,7 @@
 
 package net.gravityfox.foxguard.commands;
 
+import com.google.common.collect.ImmutableList;
 import org.spongepowered.api.service.permission.SubjectData;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
@@ -35,6 +36,7 @@ import org.spongepowered.api.util.command.CommandResult;
 import org.spongepowered.api.util.command.CommandSource;
 import net.gravityfox.foxguard.FoxGuardMain;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,7 +61,7 @@ public class CommandAbout implements CommandCallable {
 
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
-        return null;
+        return ImmutableList.of();
     }
 
     @Override

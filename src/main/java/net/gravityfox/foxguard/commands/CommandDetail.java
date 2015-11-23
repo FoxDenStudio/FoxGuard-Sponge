@@ -42,6 +42,7 @@ import net.gravityfox.foxguard.flagsets.IFlagSet;
 import net.gravityfox.foxguard.regions.IRegion;
 import net.gravityfox.foxguard.util.FGHelper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -128,7 +129,7 @@ public class CommandDetail implements CommandCallable {
 
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
-        return null;
+        return new ArrayList<>();
     }
 
     @Override

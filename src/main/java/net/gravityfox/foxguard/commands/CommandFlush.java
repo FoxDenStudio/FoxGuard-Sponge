@@ -24,6 +24,7 @@
 
 package net.gravityfox.foxguard.commands;
 
+import com.google.common.collect.ImmutableList;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
@@ -31,6 +32,7 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.*;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -86,7 +88,7 @@ public class CommandFlush implements CommandCallable {
 
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
-        return null;
+        return ImmutableList.of();
     }
 
     @Override

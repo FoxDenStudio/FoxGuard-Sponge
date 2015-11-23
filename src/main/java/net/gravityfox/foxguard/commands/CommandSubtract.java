@@ -24,6 +24,7 @@
 
 package net.gravityfox.foxguard.commands;
 
+import com.google.common.collect.ImmutableList;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
@@ -137,7 +138,7 @@ public class CommandSubtract implements CommandCallable {
 
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
-        return null;
+        return ImmutableList.of();
     }
 
     @Override

@@ -202,7 +202,7 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
                 return false;
             }
         } else {
-            source.sendMessage(Texts.of(TextColors.RED, "Must specify parameters!"));
+            source.sendMessage(Texts.of(TextColors.RED, "Must specify a command!"));
             return false;
         }
     }
