@@ -8,6 +8,8 @@ env: GRADLE_OPTS="-Xms1g -Xmx3g"
 script: gradle build
 notifications:
   email: false
+before_deploy:
+  - rvm 1.9.3 do gem install mime-types -v 2.6.2
 deploy:
   file_glob: true
   provider: releases
