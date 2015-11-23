@@ -230,9 +230,9 @@ public class FGCommandDispatcher implements Dispatcher {
         Optional<CommandMapping> cmdOptional = get(args[0], source);
         if (args.length == 1) {
             List<String> potentialCommands = filterCommandMappings(source).stream().map(CommandMapping::getPrimaryAlias)
-                    .filter(new StartsWithPredicate(args[0])).collect(Collectors.toList());
+                    .collect(Collectors.toList());
             potentialCommands.add("help");
-            return ImmutableList.copyOf(potentialCommands);
+            return potentialCommands.stream().filter(new StartsWithPredicate(args[0])).collect(GuavaCollectors.toImmutableList());
         } else if (!cmdOptional.isPresent()) {
             return ImmutableList.of();
         }

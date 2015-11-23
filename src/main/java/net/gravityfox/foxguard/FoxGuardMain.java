@@ -172,12 +172,13 @@ public class FoxGuardMain {
         fgDispatcher.register(new CommandFlush(), "flush", "clear");
         fgDispatcher.register(new CommandAbout(), "about", "info");
         fgDispatcher.register(new CommandTest(), "test");
+        fgDispatcher.register(new CommandSave(), "save", "saveall", "save-all");
 
         fgFlagSetDispatcher.register(new CommandPriority(), "priority", "prio", "level", "rank");
 
         fgDispatcher.register(fgFlagSetDispatcher, "flagsets", "flagset", "flag", "flags", "f");
 
-        game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
+        game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "");
     }
 
     private void registerListeners() {

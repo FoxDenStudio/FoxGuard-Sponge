@@ -282,7 +282,7 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
         try (Connection conn = dataSource.getConnection()) {
             Statement statement = conn.createStatement();
             statement.execute("CREATE TABLE IF NOT EXISTS MEMBERS(NAMES VARCHAR(256), USERUUID UUID);" +
-                    "DELETE FROM MEMBERS");
+                    "DELETE FROM MEMBERS;");
             PreparedStatement insert = conn.prepareStatement("INSERT INTO MEMBERS(NAMES, USERUUID) VALUES (?, ?)");
             for (User member : memberList) {
                 insert.setString(1, member.getName());
@@ -290,6 +290,9 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
                 insert.addBatch();
             }
             insert.executeBatch();
+            statement.execute("CREATE TABLE IF NOT EXISTS MAP(KEY VARCHAR (256), VALUE VARCHAR (256));" +
+                    "DELETE FROM MAP;");
+            statement.execute("INSERT INTO MAP(KEY, VALUE) VALUES (\"passive\", \""+ this.passiveOption.name() +"\")");
         }
     }
 
@@ -313,7 +316,15 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
         return memberList.remove(player);
     }
 
-    private enum PassiveOptions {
+    public PassiveOptions getPassiveOption() {
+        return passiveOption;
+    }
+
+    public void setPassiveOption(PassiveOptions passiveOption) {
+        this.passiveOption = passiveOption;
+    }
+
+    public enum PassiveOptions {
         ALLOW, DENY, PASSTHROUGH, OWNER, MEMBER, DEFAULT;
 
         public String toString() {
@@ -332,6 +343,23 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
                     return "Default";
                 default:
                     return "Awut...?";
+            }
+        }
+
+        public static PassiveOptions from(String name){
+            switch (name){
+                case "ALLOW":
+                    return ALLOW;
+                case "DENY":
+                    return DENY;
+                case "OWNER":
+                    return OWNER;
+                case "MEMBER":
+                    return MEMBER;
+                case "DEFAULT":
+                    return DEFAULT;
+                default:
+                    return PASSTHROUGH;
             }
         }
     }

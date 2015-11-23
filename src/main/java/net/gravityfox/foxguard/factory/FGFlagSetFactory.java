@@ -65,9 +65,11 @@ public class FGFlagSetFactory implements IFlagSetFactory {
         if (type.equalsIgnoreCase("simple")) {
             List<User> ownerList = new LinkedList<>();
             List<User> memberList = new LinkedList<>();
+            SimpleFlagSet.PassiveOptions po = SimpleFlagSet.PassiveOptions.DEFAULT;
             try (Connection conn = source.getConnection()) {
                 ResultSet ownerSet = conn.createStatement().executeQuery("SELECT * FROM OWNERS");
                 ResultSet memberSet = conn.createStatement().executeQuery("SELECT * FROM MEMBERS");
+                ResultSet mapSet = conn.createStatement().executeQuery("SELECT * FROM MAP");
                 while (ownerSet.next()) {
                     Optional<User> user = FoxGuardMain.getInstance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
                     if (user.isPresent() && !FGHelper.isUserOnList(ownerList, user.get())) ownerList.add(user.get());
@@ -76,10 +78,19 @@ public class FGFlagSetFactory implements IFlagSetFactory {
                     Optional<User> user = FoxGuardMain.getInstance().getUserStorage().get((UUID) memberSet.getObject("USERUUID"));
                     if (user.isPresent() && !FGHelper.isUserOnList(memberList, user.get())) memberList.add(user.get());
                 }
+                while (mapSet.next()) {
+                    String key = mapSet.getString("KEY");
+                    switch (key) {
+                        case "passive":
+                            po = SimpleFlagSet.PassiveOptions.from(mapSet.getString("VALUE"));
+                            break;
+                    }
+                }
             }
             SimpleFlagSet flagSet = new SimpleFlagSet(name, priority);
             flagSet.setOwners(ownerList);
             flagSet.setMembers(memberList);
+            flagSet.setPassiveOption(po);
             return flagSet;
         } else return null;
     }
