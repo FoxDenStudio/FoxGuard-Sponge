@@ -178,7 +178,7 @@ public class FoxGuardMain {
 
         fgDispatcher.register(fgFlagSetDispatcher, "flagsets", "flagset", "flag", "flags", "f");
 
-        game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "");
+        game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
     }
 
     private void registerListeners() {
