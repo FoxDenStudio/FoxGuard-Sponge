@@ -157,6 +157,6 @@ public class CommandSubtract implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("subtract < region [w:<world>] | flagset | position > < <name> | <index> >");
+        return Texts.of("subtract <region [w:<world>] | flagset | position> < <name> | <index> >");
     }
 }

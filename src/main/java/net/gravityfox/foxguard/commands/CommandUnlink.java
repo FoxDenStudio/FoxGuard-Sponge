@@ -133,6 +133,6 @@ public class CommandUnlink implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("unlink (FULL | ALL)");
+        return Texts.of("unlink [FULL | ALL]");
     }
 }

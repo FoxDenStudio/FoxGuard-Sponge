@@ -41,8 +41,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.spongepowered.api.util.command.CommandMessageFormatting.NEWLINE_TEXT;
-import static org.spongepowered.api.util.command.CommandMessageFormatting.SPACE_TEXT;
+import static org.spongepowered.api.util.command.CommandMessageFormatting.*;
 
 /**
  * Created by Fox on 11/2/2015.
@@ -52,11 +51,11 @@ public class FGCommandDispatcher implements Dispatcher {
 
     protected final Disambiguator disambiguator;
     protected final ListMultimap<String, CommandMapping> commands = ArrayListMultimap.create();
-    protected String usagePrefix;
+    protected String dispatcherPrefix;
     protected Text shortDescription;
 
-    public FGCommandDispatcher(String usagePrefix, String shortDescription, Disambiguator disambiguator) {
-        this.usagePrefix = usagePrefix;
+    public FGCommandDispatcher(String dispatcherPrefix, String shortDescription, Disambiguator disambiguator) {
+        this.dispatcherPrefix = dispatcherPrefix;
         if (shortDescription == null || shortDescription.isEmpty()) {
             this.shortDescription = null;
         } else {
@@ -65,12 +64,12 @@ public class FGCommandDispatcher implements Dispatcher {
         this.disambiguator = disambiguator;
     }
 
-    public FGCommandDispatcher(String usagePrefix, String shortDescription) {
-        this(usagePrefix, shortDescription, SimpleDispatcher.FIRST_DISAMBIGUATOR);
+    public FGCommandDispatcher(String dispatcherPrefix, String shortDescription) {
+        this(dispatcherPrefix, shortDescription, SimpleDispatcher.FIRST_DISAMBIGUATOR);
     }
 
-    public FGCommandDispatcher(String usagePrefix) {
-        this(usagePrefix, null, SimpleDispatcher.FIRST_DISAMBIGUATOR);
+    public FGCommandDispatcher(String dispatcherPrefix) {
+        this(dispatcherPrefix, null, SimpleDispatcher.FIRST_DISAMBIGUATOR);
     }
 
     public Optional<CommandMapping> register(CommandCallable callable, String... alias) {
@@ -110,7 +109,7 @@ public class FGCommandDispatcher implements Dispatcher {
 
     @Override
     public Set<String> getAliases() {
-        Set<String> aliases = new HashSet<String>();
+        Set<String> aliases = new HashSet<>();
 
         for (CommandMapping mapping : this.commands.values()) {
             aliases.addAll(mapping.getAllAliases());
@@ -190,7 +189,7 @@ public class FGCommandDispatcher implements Dispatcher {
                             Texts.of(TextColors.GOLD, optCommand.get().getPrimaryAlias()),
                             Texts.of(TextColors.GOLD, "\" Help"),
                             Texts.of(TextColors.GREEN, "----------\n"));
-                    source.sendMessage(builder.append(helpText.orElse(Texts.of("Usage: " + usagePrefix + " ").builder().append(command.getUsage(source)).build())).build());
+                    source.sendMessage(builder.append(helpText.orElse(Texts.of("Usage: " + dispatcherPrefix + " ").builder().append(command.getUsage(source)).build())).build());
                     return CommandResult.empty();
                 } else {
                     source.sendMessage(this.getHelp(source).get());
@@ -211,7 +210,7 @@ public class FGCommandDispatcher implements Dispatcher {
                     Text text = e.getText();
                     if (text == null) text = Texts.of("There was an error processing command: " + args[0]);
                     source.sendMessage(text.builder().color(TextColors.RED).build());
-                    source.sendMessage(Texts.of("Usage: " + usagePrefix + " ").builder()
+                    source.sendMessage(Texts.of("Usage: " + dispatcherPrefix + " ").builder()
                             .append(command.getUsage(source)).color(TextColors.RED).build());
                     return CommandResult.empty();
                 }
@@ -230,7 +229,10 @@ public class FGCommandDispatcher implements Dispatcher {
         final String[] args = arguments.split(" +", 2);
         Optional<CommandMapping> cmdOptional = get(args[0], source);
         if (args.length == 1) {
-            return filterCommands(source).stream().filter(new StartsWithPredicate(args[0])).collect(GuavaCollectors.toImmutableList());
+            List<String> potentialCommands = filterCommandMappings(source).stream().map(CommandMapping::getPrimaryAlias)
+                    .filter(new StartsWithPredicate(args[0])).collect(Collectors.toList());
+            potentialCommands.add("help");
+            return ImmutableList.copyOf(potentialCommands);
         } else if (!cmdOptional.isPresent()) {
             return ImmutableList.of();
         }
@@ -266,15 +268,15 @@ public class FGCommandDispatcher implements Dispatcher {
         if (this.commands.isEmpty()) {
             return Optional.empty();
         }
-        TextBuilder build = Texts.of("Available commands:\n").builder();
+        TextBuilder build = Texts.of(TextColors.GREEN, "Available commands:\n").builder();
         for (Iterator<CommandMapping> it = filterCommandMappings(source).iterator(); it.hasNext(); ) {
 
             CommandMapping mapping = it.next();
             @SuppressWarnings("unchecked")
             final Optional<Text> description = (Optional<Text>) mapping.getCallable().getShortDescription(source);
-            build.append(Texts.builder(mapping.getPrimaryAlias())
-                            .color(TextColors.GREEN)
-                            .onClick(TextActions.suggestCommand("/" + mapping.getPrimaryAlias())).build(),
+            build.append(Texts.builder(mapping.getPrimaryAlias() + ":")
+                            .color(TextColors.GOLD)
+                            .onClick(TextActions.suggestCommand(this.dispatcherPrefix + " " + mapping.getPrimaryAlias())).build(),
                     SPACE_TEXT, description.orElse(mapping.getCallable().getUsage(source)));
             if (it.hasNext()) {
                 build.append(NEWLINE_TEXT);
@@ -299,9 +301,7 @@ public class FGCommandDispatcher implements Dispatcher {
         for (Iterator<String> it = commands.iterator(); it.hasNext(); ) {
             build.append(Texts.of(it.next()));
             if (it.hasNext()) {
-                build.append(CommandMessageFormatting.SPACE_TEXT);
-                build.append(CommandMessageFormatting.PIPE_TEXT);
-                build.append(CommandMessageFormatting.SPACE_TEXT);
+                build.append(Texts.of(" | "));
             }
         }
         return build.build();

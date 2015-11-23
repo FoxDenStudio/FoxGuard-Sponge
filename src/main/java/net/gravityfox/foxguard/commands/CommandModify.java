@@ -83,9 +83,10 @@ public class CommandModify implements CommandCallable {
                 IRegion region = FGManager.getInstance().getRegion(world, args[1 + flag]);
                 if (region == null)
                     throw new CommandException(Texts.of("No region with name \"" + args[1 + flag] + "\"!"));
-                region.modify(args.length < 3 + flag ? "" : args[2 + flag],
+                boolean success = region.modify(args.length < 3 + flag ? "" : args[2 + flag],
                         FGCommandMainDispatcher.getInstance().getStateMap().get(player), player);
-                source.sendMessage(Texts.of(TextColors.GREEN, "Successfully modified!"));
+                if (success) source.sendMessage(Texts.of(TextColors.GREEN, "Successfully modified!"));
+                else source.sendMessage(Texts.of(TextColors.RED, "Modification Failed!"));
             } else if (FGHelper.contains(flagSetsAliases, args[0])) {
                 if (args.length < 1) throw new CommandException(Texts.of("Must specify a name!"));
                 IFlagSet flagSet = FGManager.getInstance().getFlagSet(args[1]);
@@ -94,7 +95,7 @@ public class CommandModify implements CommandCallable {
                 boolean success = flagSet.modify(args.length < 3 ? "" : args[2],
                         FGCommandMainDispatcher.getInstance().getStateMap().get(player), player);
                 if (success) source.sendMessage(Texts.of(TextColors.GREEN, "Successfully modified!"));
-                else source.sendMessage(Texts.of(TextColors.RED, "Could not modify!"));
+                else source.sendMessage(Texts.of(TextColors.RED, "Modification Failed!"));
             } else {
                 throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
             }

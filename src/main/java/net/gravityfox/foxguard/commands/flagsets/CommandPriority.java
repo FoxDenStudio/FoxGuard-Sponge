@@ -98,9 +98,10 @@ public class CommandPriority implements CommandCallable {
                     successes++;
                 }
             }
-
+            source.sendMessage(Texts.of(TextColors.GREEN, "Successfully changed priorities with "
+                    + successes + " successes and " + failures + " failures!"));
+            return CommandResult.builder().successCount(successes).build();
         }
-        return CommandResult.empty();
     }
 
     @Override

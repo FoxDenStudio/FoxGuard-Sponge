@@ -57,6 +57,8 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
 
     private static final String[] ownerAliases = {"owners", "owner", "master", "masters", "creator", "creators",
             "admin", "admins", "administrator", "administrators", "mod", "mods"};
+    private static final String[] permissionAliases = {"permissions", "permission", "perms", "perm", "flags", "flag"};
+    private static final String[] passiveAliases = {"passive", "causeless", "userless", "environment"};
     private static final String[] memberAliases = {"member", "members", "user", "users", "player", "players"};
     private static final String[] defaultAliases = {"default", "nonmember", "nonmembers", "everyone", "other"};
     private static final String[] groupsAliases = {"group", "groups"};
@@ -65,7 +67,7 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
     private static final String[] falseAliases = {"false", "f", "deny", "d"};
     private static final String[] passthroughAliases = {"passthrough", "pass", "p", "undefined", "undef", "un", "u"};
 
-    private CauselessOption causeLess = CauselessOption.PASSTHROUGH;
+    private PassiveOptions passiveOption = PassiveOptions.PASSTHROUGH;
 
     private List<User> memberList = new LinkedList<>();
     private Map<ActiveFlags, Tristate> ownerPermissions = new CallbackHashMap<>((o, m) -> {
@@ -165,25 +167,27 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
                     source.sendMessage(Texts.of(TextColors.RED, "Must specify a group!"));
                     return false;
                 }
-            } else if (args[0].equalsIgnoreCase("causeless")) {
+            } else if ( FGHelper.contains(permissionAliases, args[0])) {
+                return true;
+            } else if (FGHelper.contains(passiveAliases, args[0])) {
                 if (args.length > 1) {
                     if (FGHelper.contains(trueAliases, args[1])) {
-                        this.causeLess = CauselessOption.ALLOW;
+                        this.passiveOption = PassiveOptions.ALLOW;
                         return true;
                     } else if (FGHelper.contains(falseAliases, args[1])) {
-                        this.causeLess = CauselessOption.DENY;
+                        this.passiveOption = PassiveOptions.DENY;
                         return true;
                     } else if (FGHelper.contains(passthroughAliases, args[1])) {
-                        this.causeLess = CauselessOption.PASSTHROUGH;
+                        this.passiveOption = PassiveOptions.PASSTHROUGH;
                         return true;
                     } else if (FGHelper.contains(ownerAliases, args[1])) {
-                        this.causeLess = CauselessOption.OWNER;
+                        this.passiveOption = PassiveOptions.OWNER;
                         return true;
                     } else if (FGHelper.contains(memberAliases, args[1])) {
-                        this.causeLess = CauselessOption.MEMBER;
+                        this.passiveOption = PassiveOptions.MEMBER;
                         return true;
                     } else if (FGHelper.contains(defaultAliases, args[1])) {
-                        this.causeLess = CauselessOption.DEFAULT;
+                        this.passiveOption = PassiveOptions.DEFAULT;
                         return true;
                     } else {
                         source.sendMessage(Texts.of(TextColors.RED, "Not a valid option!"));
@@ -206,7 +210,7 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
     @Override
     public Tristate hasPermission(User user, ActiveFlags flag, Event event) {
         if (user == null) {
-            switch (this.causeLess) {
+            switch (this.passiveOption) {
                 case OWNER:
                     return this.ownerPermissions.get(flag);
                 case MEMBER:
@@ -267,8 +271,8 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
         for (ActiveFlags f : this.defaultPermissions.keySet()) {
             builder.append(Texts.of(f.toString() + ": " + FGHelper.readableTristate(ownerPermissions.get(f)) + "\n"));
         }
-        builder.append(Texts.of(TextColors.GRAY, "Causeless setting: "));
-        builder.append(Texts.of(TextColors.RESET, this.causeLess.toString() + "\n"));
+        builder.append(Texts.of(TextColors.GRAY, "Passive setting: "));
+        builder.append(Texts.of(TextColors.RESET, this.passiveOption.toString() + "\n"));
         return builder.build();
     }
 
@@ -309,7 +313,7 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
         return memberList.remove(player);
     }
 
-    private enum CauselessOption {
+    private enum PassiveOptions {
         ALLOW, DENY, PASSTHROUGH, OWNER, MEMBER, DEFAULT;
 
         public String toString() {

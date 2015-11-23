@@ -63,14 +63,14 @@ public class CommandLink implements CommandCallable {
                 throw new CommandException(Texts.of("You don't have any Regions in your state buffer!"));
             if (FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedFlagSets.size() == 0)
                 throw new CommandException(Texts.of("You don't have any FlagSets in your state buffer!"));
-            int[] count = {0};
+            int[] successes = {0};
             FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedRegions.stream().forEach(
                     region -> FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedFlagSets.stream()
                             .filter(flagSet -> !(flagSet instanceof GlobalFlagSet))
-                            .forEach(flagSet -> count[0] += FGManager.getInstance().link(region, flagSet) ? 1 : 0));
-            source.sendMessage(Texts.of(TextColors.GREEN, "Successfully linked " + count[0] + "!"));
+                            .forEach(flagSet -> successes[0] += FGManager.getInstance().link(region, flagSet) ? 1 : 0));
+            source.sendMessage(Texts.of(TextColors.GREEN, "Successfully linked " + successes[0] + "!"));
             FGCommandMainDispatcher.getInstance().getStateMap().get(source).flush(InternalCommandState.StateField.REGIONS, InternalCommandState.StateField.FLAGSETS);
-            return CommandResult.builder().successCount(count[0]).build();
+            return CommandResult.builder().successCount(successes[0]).build();
         } else {
             if (source instanceof Player) {
                 Player player = (Player) source;
@@ -89,7 +89,7 @@ public class CommandLink implements CommandCallable {
                     source.sendMessage(Texts.of(TextColors.GREEN, "Successfully linked!"));
                     return CommandResult.success();
                 } else {
-                    source.sendMessage(Texts.of(TextColors.RED, "There was an error linking. Check their names and also make sure they haven't already been linked."));
+                    source.sendMessage(Texts.of(TextColors.RED, "There was an error linking. Check their names and alsoke sure they haven't already been linked."));
                 }
             } else {
 

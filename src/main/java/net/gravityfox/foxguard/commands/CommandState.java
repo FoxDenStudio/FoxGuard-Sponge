@@ -52,13 +52,11 @@ public class CommandState implements CommandCallable {
             return CommandResult.empty();
         }
         TextBuilder output = Texts.builder().append(Texts.of(TextColors.GOLD, "-----------------------------------------------------\n"));
-        if (source instanceof Player) {
-            Player player = (Player) source;
             int flag = 0;
-            if (!FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.isEmpty()) {
+            if (!FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedRegions.isEmpty()) {
                 output.append(Texts.of(TextColors.GREEN, "Regions: "));
                 Iterator<IRegion> regionIterator = FGCommandMainDispatcher.getInstance().getStateMap()
-                        .get(player).selectedRegions.iterator();
+                        .get(source).selectedRegions.iterator();
                 int index = 1;
                 while (regionIterator.hasNext()) {
                     IRegion region = regionIterator.next();
@@ -68,11 +66,11 @@ public class CommandState implements CommandCallable {
                 output.append(Texts.of("\n"));
                 flag++;
             }
-            if (!FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.isEmpty()) {
+            if (!FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedFlagSets.isEmpty()) {
                 if (flag != 0) output.append(Texts.of("\n"));
                 output.append(Texts.of(TextColors.GREEN, "FlagSets: "));
                 Iterator<IFlagSet> flagSetIterator = FGCommandMainDispatcher.getInstance().getStateMap()
-                        .get(player).selectedFlagSets.iterator();
+                        .get(source).selectedFlagSets.iterator();
                 int index = 1;
                 while (flagSetIterator.hasNext()) {
                     IFlagSet flagSet = flagSetIterator.next();
@@ -82,27 +80,21 @@ public class CommandState implements CommandCallable {
                 output.append(Texts.of("\n"));
                 flag++;
             }
-            if (!FGCommandMainDispatcher.getInstance().getStateMap().get(player).positions.isEmpty()) {
+            if (!FGCommandMainDispatcher.getInstance().getStateMap().get(source).positions.isEmpty()) {
                 if (flag != 0) output.append(Texts.of("\n"));
                 output.append(Texts.of(TextColors.GREEN, "Positions:"));
                 output.append(Texts.of(TextColors.RESET));
                 int index = 1;
-                for (Vector3i pos : FGCommandMainDispatcher.getInstance().getStateMap().get(player).positions) {
+                for (Vector3i pos : FGCommandMainDispatcher.getInstance().getStateMap().get(source).positions) {
                     output.append(
                             Texts.of("\n  " + (index++) + ": " + pos.getX() + ", " + pos.getY() + ", " + pos.getZ())
                     );
                 }
                 flag++;
             }
-            if (flag == 0) player.sendMessage(Texts.of("Your current state buffer is clear!"));
-            else player.sendMessage(output.build());
+            if (flag == 0) source.sendMessage(Texts.of("Your current state buffer is clear!"));
+            else source.sendMessage(output.build());
 
-
-        } else if (source instanceof ConsoleSource) {
-
-        } else {
-            throw new CommandPermissionException(Texts.of("You must be a player or console to use this command!"));
-        }
         return CommandResult.empty();
     }
 
