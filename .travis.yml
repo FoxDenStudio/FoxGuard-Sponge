@@ -9,7 +9,7 @@ script: gradle build
 notifications:
   email: false
 after_success:
-  - mv "./build/libs/foxguard*.jar" "./build/libs/foxguard-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}-SNAPSHOT.jar"
+  - for f in "./build/libs/foxguard*.jar"; do mv ${f} "./build/libs/foxguard-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}-SNAPSHOT.jar"; done
 before_deploy:
   - rvm 1.9.3 do gem install mime-types -v 2.6.2
 deploy:

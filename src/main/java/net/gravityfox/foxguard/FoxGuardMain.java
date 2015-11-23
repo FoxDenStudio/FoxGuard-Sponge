@@ -104,7 +104,6 @@ public class FoxGuardMain {
     @Listener
     public void serverStarted(GameStartedServerEvent event) {
         FGManager fgm = FGManager.getInstance();
-        fgm.setup(game.getServer());
         FGStorageManager.getInstance().initFlagSets();
         FGStorageManager.getInstance().loadFlagSets();
         loaded = true;

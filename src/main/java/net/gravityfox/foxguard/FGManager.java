@@ -24,6 +24,7 @@
 
 package net.gravityfox.foxguard;
 
+import net.gravityfox.foxguard.util.CallbackHashMap;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.world.World;
 import net.gravityfox.foxguard.flagsets.GlobalFlagSet;
@@ -52,7 +53,7 @@ public class FGManager {
         if (instance == null) instance = this;
         this.plugin = plugin;
         this.server = server;
-        regions = new HashMap<>();
+        regions = new CallbackHashMap<>((key, map) -> new LinkedList<>());
         flagSets = new LinkedList<>();
         gfs = new GlobalFlagSet();
         this.addFlagSet(gfs);
@@ -228,13 +229,6 @@ public class FGManager {
         GlobalRegion gr = new GlobalRegion();
         gr.addFlagSet(this.gfs);
         addRegion(world, gr);
-
-    }
-
-    public void setup(Server server) {
-        server.getWorlds().stream()
-                .filter(world -> this.regions.get(world) == null)
-                .forEach(this::populateWorld);
     }
 
     public GlobalFlagSet getGlobalFlagSet() {
