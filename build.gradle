@@ -3,7 +3,7 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
 group 'tk.elektrofuchse.fox.foxguard'
-version '0.8-SNAPSHOT'
+version '0.8.3-SNAPSHOT'
 
 apply plugin: 'java'
 
@@ -35,10 +35,3 @@ sourceSets {
         }
     }
 }
-
-task copyJar(type: Copy) {
-    from 'build/libs/'
-    into modsDirectory
-    include this.name + '*.jar'
-}
-copyJar.group = 'custom'
