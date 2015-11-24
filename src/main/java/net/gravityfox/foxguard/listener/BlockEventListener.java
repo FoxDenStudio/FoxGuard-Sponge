@@ -52,6 +52,7 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
 
     @Override
     public void handle(ChangeBlockEvent event) throws Exception {
+        if(event.isCancelled()) return;
         User user;
         if (event.getCause().any(Player.class)) {
             user = event.getCause().first(Player.class).get();
@@ -60,7 +61,6 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
         } else {
             user = null;
         }
-        //if (event instanceof ChangeBlockEvent.Fluid) return;
         //DebugHelper.printBlockEvent(event);
         ActiveFlags typeFlag;
         if (event instanceof ChangeBlockEvent.Modify) typeFlag = ActiveFlags.BLOCK_MODIFY;
@@ -94,8 +94,11 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
         }
         if (flagState == Tristate.FALSE) {
             if (user instanceof Player)
-                ((Player) user).sendMessage(Texts.of("You don't have permission."));
+                ((Player) user).sendMessage(Texts.of("You don't have permission!"));
             event.setCancelled(true);
+        } else {
+            //makes sure that flagsets are unable to cancel the event directly.
+            event.setCancelled(false);
         }
     }
 
