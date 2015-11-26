@@ -119,14 +119,19 @@ public class CommandSubtract implements CommandCallable {
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully removed FlagSet from your state buffer!"));
                 return CommandResult.success();
             } else if (FGHelper.contains(positionsAliases, args[0])) {
+                int index = FGCommandMainDispatcher.getInstance().getStateMap().get(player).positions.size();
+                if (args.length > 1) {
+                    try {
+                        index = Integer.parseInt(args[1]);
+                    } catch (NumberFormatException e) {
+                        throw new ArgumentParseException(Texts.of("Not a valid index!"), args[1], 1);
+                    }
+                }
                 try {
-                    int index = Integer.parseInt(args[1]);
                     FGCommandMainDispatcher.getInstance().getStateMap().get(player).positions.remove(index - 1);
-                } catch (NumberFormatException e) {
+                } catch (IndexOutOfBoundsException e) {
                     throw new ArgumentParseException(Texts.of("Index out of bounds! (1 - "
                             + FGCommandMainDispatcher.getInstance().getStateMap().get(player).positions.size()), args[1], 1);
-                } catch (IndexOutOfBoundsException e) {
-                    throw new ArgumentParseException(Texts.of("Not a valid index!"), args[1], 1);
                 }
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully removed position from your state buffer!"));
                 return CommandResult.success();
