@@ -26,6 +26,7 @@ package net.gravityfox.foxguard.factory;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
+import net.gravityfox.foxguard.regions.ElevationRegion;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.util.command.CommandException;
@@ -44,6 +45,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -57,59 +59,96 @@ public class FGRegionFactory implements IRegionFactory {
 
     static final String[] rectAliases = {"square", "rectangular", "rectangle", "rect"};
     static final String[] cuboidAliases = {"box", "cube", "cuboid", "cuboidal", "rectangularprism", "rectangleprism", "rectprism"};
-    static final String[] types = {"rectangular", "cuboid"};
+    static final String[] elevAliases = {"elevation", "elev", "height", "y", "vertical", "vert", "level", "updown"};
+    static final String[] types = {"rectangular", "cuboid", "elevation"};
 
     @Override
     public IRegion createRegion(String name, String type, String arguments, InternalCommandState state, World world, CommandSource source) throws CommandException {
+        String[] args = {};
+        if(!arguments.isEmpty()) args = arguments.split(" +");
         if (FGHelper.contains(rectAliases, type)) {
             if (source instanceof Player)
-                return new RectangularRegion(name, state.positions, arguments.split(" +"), source, (Player) source);
-            else return new RectangularRegion(name, state.positions, arguments.split(" +"), source);
+                return new RectangularRegion(name, state.positions, args, source, (Player) source);
+            else return new RectangularRegion(name, state.positions, args, source);
         } else if (FGHelper.contains(cuboidAliases, type)) {
             if (source instanceof Player)
-                return new CuboidRegion(name, state.positions, arguments.split(" +"), source, (Player) source);
-            else return new CuboidRegion(name, state.positions, arguments.split(" +"), source);
+                return new CuboidRegion(name, state.positions, args, source, (Player) source);
+            else return new CuboidRegion(name, state.positions, args, source);
+        } else if (FGHelper.contains(elevAliases, type)) {
+            if (source instanceof Player)
+                return new ElevationRegion(name, state.positions, args, source, (Player) source);
+            else return new ElevationRegion(name, state.positions, args, source);
         } else return null;
     }
 
     @Override
     public IRegion createRegion(DataSource source, String name, String type) throws SQLException {
         if (type.equalsIgnoreCase("rectangular")) {
-            Vector2i a;
-            Vector2i b;
+            Vector2i a, b;
             List<User> userList = new LinkedList<>();
             try (Connection conn = source.getConnection()) {
-                ResultSet boundSet = conn.createStatement().executeQuery("SELECT * FROM BOUNDS");
-                ResultSet ownerSet = conn.createStatement().executeQuery("SELECT * FROM OWNERS");
-                boundSet.next();
-                a = new Vector2i(boundSet.getInt("X"), boundSet.getInt("Z"));
-                boundSet.next();
-                b = new Vector2i(boundSet.getInt("X"), boundSet.getInt("Z"));
-                while (ownerSet.next()) {
-                    Optional<User> user = FoxGuardMain.getInstance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
-                    if (user.isPresent()) userList.add(user.get());
+                try (Statement statement = conn.createStatement()) {
+                    try (ResultSet boundSet = statement.executeQuery("SELECT * FROM BOUNDS")) {
+                        boundSet.next();
+                        a = new Vector2i(boundSet.getInt("X"), boundSet.getInt("Z"));
+                        boundSet.next();
+                        b = new Vector2i(boundSet.getInt("X"), boundSet.getInt("Z"));
+                    }
+                    try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {
+                        while (ownerSet.next()) {
+                            Optional<User> user = FoxGuardMain.getInstance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
+                            if (user.isPresent()) userList.add(user.get());
+                        }
+                    }
                 }
+
             }
             RectangularRegion region = new RectangularRegion(name, new BoundingBox2(a, b));
             region.setOwners(userList);
             return region;
         } else if (type.equalsIgnoreCase("cuboid")) {
-            Vector3i a;
-            Vector3i b;
+            Vector3i a, b;
             List<User> userList = new LinkedList<>();
             try (Connection conn = source.getConnection()) {
-                ResultSet boundSet = conn.createStatement().executeQuery("SELECT * FROM BOUNDS");
-                ResultSet ownerSet = conn.createStatement().executeQuery("SELECT * FROM OWNERS");
-                boundSet.next();
-                a = new Vector3i(boundSet.getInt("X"), boundSet.getInt("Y"), boundSet.getInt("Z"));
-                boundSet.next();
-                b = new Vector3i(boundSet.getInt("X"), boundSet.getInt("Y"), boundSet.getInt("Z"));
-                while (ownerSet.next()) {
-                    Optional<User> user = FoxGuardMain.getInstance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
-                    if (user.isPresent()) userList.add(user.get());
+                try (Statement statement = conn.createStatement()) {
+                    try (ResultSet boundSet = statement.executeQuery("SELECT * FROM BOUNDS")) {
+                        boundSet.next();
+                        a = new Vector3i(boundSet.getInt("X"), boundSet.getInt("Y"), boundSet.getInt("Z"));
+                        boundSet.next();
+                        b = new Vector3i(boundSet.getInt("X"), boundSet.getInt("Y"), boundSet.getInt("Z"));
+                    }
+                    try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {
+                        while (ownerSet.next()) {
+                            Optional<User> user = FoxGuardMain.getInstance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
+                            if (user.isPresent()) userList.add(user.get());
+                        }
+                    }
                 }
             }
             CuboidRegion region = new CuboidRegion(name, new BoundingBox3(a, b));
+            region.setOwners(userList);
+            return region;
+        } else if (type.equalsIgnoreCase("elevation")) {
+            int lowerBound, upperBound;
+            List<User> userList = new LinkedList<>();
+            try (Connection conn = source.getConnection()) {
+                try (Statement statement = conn.createStatement()) {
+                    try (ResultSet boundSet = statement.executeQuery("SELECT * FROM BOUNDS")) {
+                        boundSet.next();
+                        lowerBound = boundSet.getInt("Y");
+                        boundSet.next();
+                        upperBound = boundSet.getInt("Y");
+                    }
+                    try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {
+                        while (ownerSet.next()) {
+                            Optional<User> user = FoxGuardMain.getInstance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
+                            if (user.isPresent()) userList.add(user.get());
+                        }
+                    }
+                }
+
+            }
+            ElevationRegion region = new ElevationRegion(name, lowerBound, upperBound);
             region.setOwners(userList);
             return region;
         } else return null;
@@ -117,7 +156,7 @@ public class FGRegionFactory implements IRegionFactory {
 
     @Override
     public String[] getAliases() {
-        return FGHelper.concatAll(rectAliases, cuboidAliases);
+        return FGHelper.concatAll(rectAliases, cuboidAliases, elevAliases);
     }
 
     @Override

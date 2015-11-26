@@ -84,7 +84,8 @@ public class CommandAdd implements CommandCallable {
                 if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a name!"));
                 IRegion region = FGManager.getInstance().getRegion(world, args[1 + flag]);
                 if (region == null)
-                    throw new ArgumentParseException(Texts.of("No Regions with this name!"), args[1 + flag], 1 + flag);
+                    throw new ArgumentParseException(Texts.of("No Regions with this name!"),
+                            arguments, args[0].length() + (flag == 1 ? args[1].length() + 1 : 0) + args[1+flag].length()/2 );
                 if (FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.contains(region))
                     throw new ArgumentParseException(Texts.of("Region is already in your state buffer!"), args[1 + flag], 1 + flag);
                 FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.add(region);

@@ -167,7 +167,7 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
                     source.sendMessage(Texts.of(TextColors.RED, "Must specify a group!"));
                     return false;
                 }
-            } else if ( FGHelper.contains(permissionAliases, args[0])) {
+            } else if (FGHelper.contains(permissionAliases, args[0])) {
                 return true;
             } else if (FGHelper.contains(passiveAliases, args[0])) {
                 if (args.length > 1) {
@@ -265,11 +265,11 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
         }
         builder.append(Texts.of(TextColors.GREEN, "Member permissions:\n"));
         for (ActiveFlags f : this.memberPermissions.keySet()) {
-            builder.append(Texts.of(f.toString() + ": " + FGHelper.readableTristate(ownerPermissions.get(f)) + "\n"));
+            builder.append(Texts.of(f.toString() + ": " + FGHelper.readableTristate(memberPermissions.get(f)) + "\n"));
         }
         builder.append(Texts.of(TextColors.RED, "Default permissions:\n"));
         for (ActiveFlags f : this.defaultPermissions.keySet()) {
-            builder.append(Texts.of(f.toString() + ": " + FGHelper.readableTristate(ownerPermissions.get(f)) + "\n"));
+            builder.append(Texts.of(f.toString() + ": " + FGHelper.readableTristate(defaultPermissions.get(f)) + "\n"));
         }
         builder.append(Texts.of(TextColors.GRAY, "Passive setting: "));
         builder.append(Texts.of(TextColors.RESET, this.passiveOption.toString() + "\n"));
@@ -280,19 +280,21 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
     public void writeToDatabase(DataSource dataSource) throws SQLException {
         super.writeToDatabase(dataSource);
         try (Connection conn = dataSource.getConnection()) {
-            Statement statement = conn.createStatement();
-            statement.execute("CREATE TABLE IF NOT EXISTS MEMBERS(NAMES VARCHAR(256), USERUUID UUID);" +
-                    "DELETE FROM MEMBERS;");
-            PreparedStatement insert = conn.prepareStatement("INSERT INTO MEMBERS(NAMES, USERUUID) VALUES (?, ?)");
-            for (User member : memberList) {
-                insert.setString(1, member.getName());
-                insert.setObject(2, member.getUniqueId());
-                insert.addBatch();
+            try (Statement statement = conn.createStatement()) {
+                statement.execute("CREATE TABLE IF NOT EXISTS MEMBERS(NAMESCOL VARCHAR(256), USERUUID UUID);" +
+                        "DELETE FROM MEMBERS;");
+                try (PreparedStatement insert = conn.prepareStatement("INSERT INTO MEMBERS(NAMESCOL, USERUUID) VALUES (?, ?)")) {
+                    for (User member : memberList) {
+                        insert.setString(1, member.getName());
+                        insert.setObject(2, member.getUniqueId());
+                        insert.addBatch();
+                    }
+                    insert.executeBatch();
+                }
+                statement.execute("CREATE TABLE IF NOT EXISTS MAP(KEYCOL VARCHAR (256), VALUECOL VARCHAR (256));" +
+                        "DELETE FROM MAP;");
+                statement.execute("INSERT INTO MAP(KEYCOL, VALUECOL) VALUES (\'passive\', \'" + this.passiveOption.name() + "\')");
             }
-            insert.executeBatch();
-            statement.execute("CREATE TABLE IF NOT EXISTS MAP(KEY VARCHAR (256), VALUE VARCHAR (256));" +
-                    "DELETE FROM MAP;");
-            statement.execute("INSERT INTO MAP(KEY, VALUE) VALUES (\"passive\", \""+ this.passiveOption.name() +"\")");
         }
     }
 
@@ -346,8 +348,8 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
             }
         }
 
-        public static PassiveOptions from(String name){
-            switch (name){
+        public static PassiveOptions from(String name) {
+            switch (name) {
                 case "ALLOW":
                     return ALLOW;
                 case "DENY":

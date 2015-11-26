@@ -86,7 +86,7 @@ public class CommandDetail implements CommandCallable {
                 if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a name!"));
                 IRegion region = FGManager.getInstance().getRegion(world, args[1 + flag]);
                 if (region == null)
-                    throw new CommandException(Texts.of("No region with name \"" + args[1 + flag] + "\"!"));
+                    throw new CommandException(Texts.of("No Region with name \"" + args[1 + flag] + "\"!"));
                 TextBuilder builder = Texts.builder();
                 builder.append(Texts.of(TextColors.GOLD, "-----------------------------------------------------\n"));
                 builder.append(Texts.of(TextColors.GREEN, "---General---\n"));
@@ -107,7 +107,7 @@ public class CommandDetail implements CommandCallable {
 
                 IFlagSet flagSet = FGManager.getInstance().getFlagSet(args[1]);
                 if (flagSet == null)
-                    throw new CommandException(Texts.of("No region with name \"" + args[1] + "\"!"));
+                    throw new CommandException(Texts.of("No FlagSet with name \"" + args[1] + "\"!"));
                 TextBuilder builder = Texts.builder();
                 builder.append(Texts.of(TextColors.GOLD, "-----------------------------------------------------\n"));
                 builder.append(Texts.of(TextColors.GREEN, "---General---\n"));

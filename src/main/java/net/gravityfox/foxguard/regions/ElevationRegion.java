@@ -1,4 +1,5 @@
 /*
+ *
  * This file is part of FoxGuard, licensed under the MIT License (MIT).
  *
  * Copyright (c) 2015 - 2015. gravityfox - https://gravityfox.net/
@@ -25,6 +26,9 @@
 package net.gravityfox.foxguard.regions;
 
 import com.flowpowered.math.vector.Vector3i;
+import net.gravityfox.foxguard.commands.util.InternalCommandState;
+import net.gravityfox.foxguard.regions.util.BoundingBox2;
+import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.text.Text;
@@ -34,9 +38,6 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
-import net.gravityfox.foxguard.commands.util.InternalCommandState;
-import net.gravityfox.foxguard.regions.util.BoundingBox2;
-import net.gravityfox.foxguard.util.FGHelper;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -46,58 +47,52 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Created by Fox on 8/18/2015.
- * Project: foxguard
+ * Created by Fox on 11/25/2015.
+ * Project: SpongeForge
  */
-public class RectangularRegion extends OwnableRegionBase {
+public class ElevationRegion extends OwnableRegionBase {
 
-    private final BoundingBox2 boundingBox;
+    private int upperBound;
+    private int lowerBound;
 
-
-    public RectangularRegion(String name, BoundingBox2 boundingBox) {
+    public ElevationRegion(String name, int lowerBound, int upperBound) {
         super(name);
-        this.boundingBox = boundingBox;
+        this.upperBound = upperBound;
+        this.lowerBound = lowerBound;
     }
 
-    public RectangularRegion(String name, List<Vector3i> positions, String[] args, CommandSource source)
+    public ElevationRegion(String name, List<Vector3i> positions, String[] args, CommandSource source)
             throws CommandException {
         super(name);
         List<Vector3i> allPositions = new LinkedList<>(positions);
-        for (int i = 0; i < args.length - 1; i += 2) {
-            int x, z;
+        for (int i = 0; i < args.length ; i++) {
+            int y;
             try {
-                x = FGHelper.parseCoordinate(source instanceof Player ?
-                        ((Player) source).getLocation().getBlockX() : 0, args[i]);
+                y = FGHelper.parseCoordinate(source instanceof Player ?
+                        ((Player) source).getLocation().getBlockY() : 0, args[i]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(
-                        Texts.of("Unable to parse \"" + args[i] + "\"!"), e, args[i], i);
+                        Texts.of("Unable to parse \"" + args[i] + "\"!"), e, args[i], 1);
             }
-            try {
-                z = FGHelper.parseCoordinate(source instanceof Player ?
-                        ((Player) source).getLocation().getBlockZ() : 0, args[i + 1]);
-            } catch (NumberFormatException e) {
-                throw new ArgumentParseException(
-                        Texts.of("Unable to parse \"" + args[i + 1] + "\"!"), e, args[i + 1], i + 1);
-            }
-            allPositions.add(new Vector3i(x, 0, z));
+            allPositions.add(new Vector3i(0,y,0));
         }
         if (allPositions.isEmpty()) throw new CommandException(Texts.of("No parameters specified!"));
-        Vector3i a = allPositions.get(0), b = allPositions.get(0);
+        int a = allPositions.get(0).getY(), b = allPositions.get(0).getY();
         for (Vector3i pos : allPositions) {
-            a = a.min(pos);
-            b = b.max(pos);
+            a = Math.min(a, pos.getY());
+            b = Math.max(b, pos.getY());
         }
-        this.boundingBox = new BoundingBox2(a, b);
+        this.lowerBound = a;
+        this.upperBound = b;
     }
 
-    public RectangularRegion(String name, List<Vector3i> positions, String[] args, CommandSource source, User... owners) throws CommandException {
+    public ElevationRegion(String name, List<Vector3i> positions, String[] args, CommandSource source, User... owners) throws CommandException {
         this(name, positions, args, source);
         Collections.addAll(ownerList, owners);
     }
 
-    public RectangularRegion(String name, List<Vector3i> positions, String[] args, CommandSource source, List<User> owners) throws CommandException {
+    public ElevationRegion(String name, List<Vector3i> positions, String[] args, CommandSource source, List<User> owners) throws CommandException {
         this(name, positions, args, source);
         this.ownerList = owners;
     }
@@ -109,37 +104,22 @@ public class RectangularRegion extends OwnableRegionBase {
 
     @Override
     public boolean isInRegion(int x, int y, int z) {
-        return boundingBox.contains(x, z);
+        return y >= lowerBound && y <= upperBound;
     }
-
 
     @Override
     public boolean isInRegion(double x, double y, double z) {
-        return boundingBox.contains(x, z);
+        return y > lowerBound && y < upperBound + 1;
     }
-
-    @Override
-    public String getShortTypeName() {
-        return "Rect";
-    }
-
-    @Override
-    public String getLongTypeName() {
-        return "Rectangular";
-    }
-
-    @Override
-    public String getUniqueTypeString() {
-        return "rectangular";
-    }
-
 
     @Override
     public Text getDetails(String arguments) {
         TextBuilder builder = Texts.builder();
         builder.append(super.getDetails(arguments));
         builder.append(Texts.of(TextColors.GREEN, "\nBounds: "));
-        builder.append(Texts.of(TextColors.RESET, boundingBox.toString()));
+        builder.append(Texts.of(TextColors.RESET, lowerBound));
+        builder.append(Texts.of(", "));
+        builder.append(Texts.of(upperBound));
         return builder.build();
     }
 
@@ -148,17 +128,42 @@ public class RectangularRegion extends OwnableRegionBase {
         super.writeToDatabase(dataSource);
         try (Connection conn = dataSource.getConnection()) {
             try (Statement statement = conn.createStatement()) {
-                statement.execute("CREATE TABLE IF NOT EXISTS BOUNDS(X INTEGER, Z INTEGER);" +
+                statement.execute("CREATE TABLE IF NOT EXISTS BOUNDS(Y INTEGER);" +
                         "DELETE FROM BOUNDS;" +
-                        "INSERT INTO BOUNDS(X, Z) VALUES (" + boundingBox.a.getX() + ", " + boundingBox.a.getY() + ");" +
-                        "INSERT INTO BOUNDS(X, Z) VALUES (" + boundingBox.b.getX() + ", " + boundingBox.b.getY() + ");");
+                        "INSERT INTO BOUNDS(Y) VALUES (" + lowerBound + ");" +
+                        "INSERT INTO BOUNDS(Y) VALUES (" + upperBound + ");");
             }
         }
     }
 
-    @Override
-    public String toString() {
-        return this.boundingBox.toString();
+    public int getUpperBound() {
+        return upperBound;
     }
 
+    public void setUpperBound(int upperBound) {
+        this.upperBound = upperBound;
+    }
+
+    public int getLowerBound() {
+        return lowerBound;
+    }
+
+    public void setLowerBound(int lowerBound) {
+        this.lowerBound = lowerBound;
+    }
+
+    @Override
+    public String getShortTypeName() {
+        return "Elev";
+    }
+
+    @Override
+    public String getLongTypeName() {
+        return "Elevation";
+    }
+
+    @Override
+    public String getUniqueTypeString() {
+        return "elevation";
+    }
 }

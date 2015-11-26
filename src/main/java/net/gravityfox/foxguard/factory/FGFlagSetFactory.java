@@ -37,6 +37,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -67,23 +68,30 @@ public class FGFlagSetFactory implements IFlagSetFactory {
             List<User> memberList = new LinkedList<>();
             SimpleFlagSet.PassiveOptions po = SimpleFlagSet.PassiveOptions.DEFAULT;
             try (Connection conn = source.getConnection()) {
-                ResultSet ownerSet = conn.createStatement().executeQuery("SELECT * FROM OWNERS");
-                ResultSet memberSet = conn.createStatement().executeQuery("SELECT * FROM MEMBERS");
-                ResultSet mapSet = conn.createStatement().executeQuery("SELECT * FROM MAP");
-                while (ownerSet.next()) {
-                    Optional<User> user = FoxGuardMain.getInstance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
-                    if (user.isPresent() && !FGHelper.isUserOnList(ownerList, user.get())) ownerList.add(user.get());
-                }
-                while (memberSet.next()) {
-                    Optional<User> user = FoxGuardMain.getInstance().getUserStorage().get((UUID) memberSet.getObject("USERUUID"));
-                    if (user.isPresent() && !FGHelper.isUserOnList(memberList, user.get())) memberList.add(user.get());
-                }
-                while (mapSet.next()) {
-                    String key = mapSet.getString("KEY");
-                    switch (key) {
-                        case "passive":
-                            po = SimpleFlagSet.PassiveOptions.from(mapSet.getString("VALUE"));
-                            break;
+                try (Statement statement = conn.createStatement()) {
+                    try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {
+                        while (ownerSet.next()) {
+                            Optional<User> user = FoxGuardMain.getInstance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
+                            if (user.isPresent() && !FGHelper.isUserOnList(ownerList, user.get()))
+                                ownerList.add(user.get());
+                        }
+                    }
+                    try (ResultSet memberSet = statement.executeQuery("SELECT * FROM MEMBERS")) {
+                        while (memberSet.next()) {
+                            Optional<User> user = FoxGuardMain.getInstance().getUserStorage().get((UUID) memberSet.getObject("USERUUID"));
+                            if (user.isPresent() && !FGHelper.isUserOnList(memberList, user.get()))
+                                memberList.add(user.get());
+                        }
+                    }
+                    try (ResultSet mapSet = statement.executeQuery("SELECT * FROM MAP")) {
+                        while (mapSet.next()) {
+                            String key = mapSet.getString("KEYCOL");
+                            switch (key) {
+                                case "passive":
+                                    po = SimpleFlagSet.PassiveOptions.from(mapSet.getString("VALUECOL"));
+                                    break;
+                            }
+                        }
                     }
                 }
             }

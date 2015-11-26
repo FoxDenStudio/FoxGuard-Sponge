@@ -83,16 +83,16 @@ public class CommandModify implements CommandCallable {
                 if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a name!"));
                 IRegion region = FGManager.getInstance().getRegion(world, args[1 + flag]);
                 if (region == null)
-                    throw new CommandException(Texts.of("No region with name \"" + args[1 + flag] + "\"!"));
+                    throw new CommandException(Texts.of("No Region with name \"" + args[1 + flag] + "\"!"));
                 boolean success = region.modify(args.length < 3 + flag ? "" : args[2 + flag],
                         FGCommandMainDispatcher.getInstance().getStateMap().get(player), player);
                 if (success) source.sendMessage(Texts.of(TextColors.GREEN, "Successfully modified!"));
                 else source.sendMessage(Texts.of(TextColors.RED, "Modification Failed!"));
             } else if (FGHelper.contains(flagSetsAliases, args[0])) {
-                if (args.length < 1) throw new CommandException(Texts.of("Must specify a name!"));
+                if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 IFlagSet flagSet = FGManager.getInstance().getFlagSet(args[1]);
                 if (flagSet == null)
-                    throw new CommandException(Texts.of("No region with name \"" + args[1] + "\"!"));
+                    throw new CommandException(Texts.of("No FlagSet with name \"" + args[1] + "\"!"));
                 boolean success = flagSet.modify(args.length < 3 ? "" : args[2],
                         FGCommandMainDispatcher.getInstance().getStateMap().get(player), player);
                 if (success) source.sendMessage(Texts.of(TextColors.GREEN, "Successfully modified!"));

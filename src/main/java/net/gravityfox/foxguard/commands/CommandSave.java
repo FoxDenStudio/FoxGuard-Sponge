@@ -56,7 +56,7 @@ public class CommandSave implements CommandCallable {
         for(World world : FoxGuardMain.getInstance().getGame().getServer().getWorlds()){
             FGStorageManager.getInstance().writeWorld(world);
         }
-        source.sendMessage(Texts.of(TextColors.GREEN, "Successfully Saved!"));
+        source.sendMessage(Texts.of(TextColors.GREEN, "Successfully saved!"));
         return CommandResult.success();
     }
 
