@@ -61,13 +61,6 @@ public class FGHelper {
         return null;
     }
 
-    public static boolean contains(String[] aliases, String input) {
-        for (String alias : aliases) {
-            if (alias.equalsIgnoreCase(input)) return true;
-        }
-        return false;
-    }
-
     public static TextColor getColorForRegion(IRegion region) {
         return region.getName().equals(GlobalRegion.NAME) ? TextColors.YELLOW : TextColors.RESET;
     }

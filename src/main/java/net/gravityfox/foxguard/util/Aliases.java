@@ -31,8 +31,26 @@ package net.gravityfox.foxguard.util;
  */
 public class Aliases {
 
-    public static String[] regionsAliases = {"regions", "region", "reg", "r"};
-    public static String[] flagSetsAliases = {"flagsets", "flagset", "flags", "flag", "f"};
-    public static String[] positionsAliases = {"positions", "position", "points", "point", "locations", "location", "pos", "loc", "locs", "p"};
+    public static final String[] regionsAliases = {"regions", "region", "reg", "r"};
+    public static final String[] flagSetsAliases = {"flagsets", "flagset", "flags", "flag", "f"};
+    public static final String[] positionsAliases = {"positions", "position", "points", "point", "locations", "location", "pos", "loc", "locs", "p"};
+    public static final String[] ownerAliases = {"owners", "owner", "master", "masters", "creator", "creators",
+            "admin", "admins", "administrator", "administrators", "mod", "mods"};
+    public static final String[] permissionAliases = {"permissions", "permission", "perms", "perm", "flags", "flag"};
+    public static final String[] passiveAliases = {"passive", "causeless", "userless", "environment"};
+    public static final String[] memberAliases = {"member", "members", "user", "users", "player", "players"};
+    public static final String[] defaultAliases = {"default", "nonmember", "nonmembers", "everyone", "other"};
+    public static final String[] groupsAliases = {"group", "groups"};
+    public static final String[] activeflagsAliases = {"activeflags", "active"};
+    public static final String[] trueAliases = {"true", "t", "allow", "a"};
+    public static final String[] falseAliases = {"false", "f", "deny", "d"};
+    public static final String[] passthroughAliases = {"passthrough", "pass", "p", "undefined", "undef", "un", "u"};
+    public static final String[] setAliases = {"set"};
 
+    public static boolean isAlias(String[] aliases, String input) {
+        for (String alias : aliases) {
+            if (alias.equalsIgnoreCase(input)) return true;
+        }
+        return false;
+    }
 }

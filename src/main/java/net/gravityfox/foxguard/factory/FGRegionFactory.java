@@ -52,6 +52,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static net.gravityfox.foxguard.util.Aliases.isAlias;
+
 /**
  * Created by Fox on 10/25/2015.
  * Project: foxguard
@@ -67,15 +69,15 @@ public class FGRegionFactory implements IRegionFactory {
     public IRegion createRegion(String name, String type, String arguments, InternalCommandState state, World world, CommandSource source) throws CommandException {
         String[] args = {};
         if (!arguments.isEmpty()) args = arguments.split(" +");
-        if (FGHelper.contains(rectAliases, type)) {
+        if (isAlias(rectAliases, type)) {
             if (source instanceof Player)
                 return new RectangularRegion(name, state.positions, args, source, (Player) source);
             else return new RectangularRegion(name, state.positions, args, source);
-        } else if (FGHelper.contains(cuboidAliases, type)) {
+        } else if (isAlias(cuboidAliases, type)) {
             if (source instanceof Player)
                 return new CuboidRegion(name, state.positions, args, source, (Player) source);
             else return new CuboidRegion(name, state.positions, args, source);
-        } else if (FGHelper.contains(elevAliases, type)) {
+        } else if (isAlias(elevAliases, type)) {
             if (source instanceof Player)
                 return new ElevationRegion(name, state.positions, args, source, (Player) source);
             else return new ElevationRegion(name, state.positions, args, source);

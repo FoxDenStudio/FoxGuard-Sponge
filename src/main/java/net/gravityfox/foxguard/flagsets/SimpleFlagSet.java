@@ -49,23 +49,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 
+import static net.gravityfox.foxguard.util.Aliases.*;
+
 /**
  * Created by Fox on 8/17/2015.
  * Project: foxguard
  */
 public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
-
-    private static final String[] ownerAliases = {"owners", "owner", "master", "masters", "creator", "creators",
-            "admin", "admins", "administrator", "administrators", "mod", "mods"};
-    private static final String[] permissionAliases = {"permissions", "permission", "perms", "perm", "flags", "flag"};
-    private static final String[] passiveAliases = {"passive", "causeless", "userless", "environment"};
-    private static final String[] memberAliases = {"member", "members", "user", "users", "player", "players"};
-    private static final String[] defaultAliases = {"default", "nonmember", "nonmembers", "everyone", "other"};
-    private static final String[] groupsAliases = {"group", "groups"};
-    private static final String[] activeflagsAliases = {"activeflags", "active"};
-    private static final String[] trueAliases = {"true", "t", "allow", "a"};
-    private static final String[] falseAliases = {"false", "f", "deny", "d"};
-    private static final String[] passthroughAliases = {"passthrough", "pass", "p", "undefined", "undef", "un", "u"};
 
     private PassiveOptions passiveOption = PassiveOptions.PASSTHROUGH;
 
@@ -93,12 +83,12 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
         String[] args = {};
         if (!arguments.isEmpty()) args = arguments.split(" +");
         if (args.length > 0) {
-            if (FGHelper.contains(groupsAliases, args[0])) {
+            if (isAlias(groupsAliases, args[0])) {
                 if (args.length > 1) {
                     List<User> list;
-                    if (FGHelper.contains(ownerAliases, args[1])) {
+                    if (isAlias(ownerAliases, args[1])) {
                         list = this.ownerList;
-                    } else if (FGHelper.contains(memberAliases, args[1])) {
+                    } else if (isAlias(memberAliases, args[1])) {
                         list = this.memberList;
                     } else {
                         source.sendMessage(Texts.of(TextColors.RED, "Not a valid group!"));
@@ -167,26 +157,26 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
                     source.sendMessage(Texts.of(TextColors.RED, "Must specify a group!"));
                     return false;
                 }
-            } else if (FGHelper.contains(permissionAliases, args[0])) {
+            } else if (isAlias(permissionAliases, args[0])) {
                 return true;
-            } else if (FGHelper.contains(passiveAliases, args[0])) {
+            } else if (isAlias(passiveAliases, args[0])) {
                 if (args.length > 1) {
-                    if (FGHelper.contains(trueAliases, args[1])) {
+                    if (isAlias(trueAliases, args[1])) {
                         this.passiveOption = PassiveOptions.ALLOW;
                         return true;
-                    } else if (FGHelper.contains(falseAliases, args[1])) {
+                    } else if (isAlias(falseAliases, args[1])) {
                         this.passiveOption = PassiveOptions.DENY;
                         return true;
-                    } else if (FGHelper.contains(passthroughAliases, args[1])) {
+                    } else if (isAlias(passthroughAliases, args[1])) {
                         this.passiveOption = PassiveOptions.PASSTHROUGH;
                         return true;
-                    } else if (FGHelper.contains(ownerAliases, args[1])) {
+                    } else if (isAlias(ownerAliases, args[1])) {
                         this.passiveOption = PassiveOptions.OWNER;
                         return true;
-                    } else if (FGHelper.contains(memberAliases, args[1])) {
+                    } else if (isAlias(memberAliases, args[1])) {
                         this.passiveOption = PassiveOptions.MEMBER;
                         return true;
-                    } else if (FGHelper.contains(defaultAliases, args[1])) {
+                    } else if (isAlias(defaultAliases, args[1])) {
                         this.passiveOption = PassiveOptions.DEFAULT;
                         return true;
                     } else {
@@ -209,6 +199,7 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
 
     @Override
     public Tristate isAllowed(User user, Flags flag, Event event) {
+        if (!isEnabled) return Tristate.UNDEFINED;
         if (user == null) {
             switch (this.passiveOption) {
                 case OWNER:

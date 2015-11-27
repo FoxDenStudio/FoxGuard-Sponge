@@ -47,8 +47,7 @@ import org.spongepowered.api.world.World;
 import java.util.List;
 import java.util.Optional;
 
-import static net.gravityfox.foxguard.util.Aliases.flagSetsAliases;
-import static net.gravityfox.foxguard.util.Aliases.regionsAliases;
+import static net.gravityfox.foxguard.util.Aliases.*;
 
 /**
  * Created by Fox on 8/18/2015.
@@ -73,7 +72,7 @@ public class CommandCreate implements CommandCallable {
                         .build());
                 return CommandResult.empty();
                 //----------------------------------------------------------------------------------------------------------------------
-            } else if (FGHelper.contains(regionsAliases, args[0])) {
+            } else if (isAlias(regionsAliases, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 int flag = 0;
                 Optional<World> optWorld = FGHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
@@ -104,7 +103,7 @@ public class CommandCreate implements CommandCallable {
                 player.sendMessage(Texts.of(TextColors.GREEN, "Region created successfully"));
                 return CommandResult.success();
                 //----------------------------------------------------------------------------------------------------------------------
-            } else if (FGHelper.contains(flagSetsAliases, args[0])) {
+            } else if (isAlias(flagSetsAliases, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 if (args[1].matches("^.*[^0-9a-zA-Z_$].*$"))
                     throw new ArgumentParseException(Texts.of("Name must be alphanumeric!"), args[1], 1);

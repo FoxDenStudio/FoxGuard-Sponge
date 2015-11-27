@@ -28,7 +28,6 @@ package net.gravityfox.foxguard.factory;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import net.gravityfox.foxguard.flagsets.IFlagSet;
 import net.gravityfox.foxguard.regions.IRegion;
-import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.world.World;
@@ -37,6 +36,8 @@ import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import static net.gravityfox.foxguard.util.Aliases.isAlias;
 
 /**
  * Created by Fox on 10/22/2015.
@@ -61,7 +62,7 @@ public class FGFactoryManager {
 
     public IRegion createRegion(String name, String type, String args, InternalCommandState state, World world, CommandSource source) throws CommandException {
         for (IRegionFactory rf : regionFactories) {
-            if (FGHelper.contains(rf.getAliases(), type)) {
+            if (isAlias(rf.getAliases(), type)) {
                 IRegion region = rf.createRegion(name, type, args, state, world, source);
                 if (region != null) return region;
             }
@@ -71,7 +72,7 @@ public class FGFactoryManager {
 
     public IRegion createRegion(DataSource source, String name, String type) throws SQLException {
         for (IRegionFactory rf : regionFactories) {
-            if (FGHelper.contains(rf.getTypes(), type)) {
+            if (isAlias(rf.getTypes(), type)) {
                 IRegion region = rf.createRegion(source, name, type);
                 if (region != null) return region;
             }
@@ -82,7 +83,7 @@ public class FGFactoryManager {
 
     public IFlagSet createFlagSet(String name, String type, int priority, String args, InternalCommandState state, CommandSource source) {
         for (IFlagSetFactory fsf : flagSetFactories) {
-            if (FGHelper.contains(fsf.getAliases(), type)) {
+            if (isAlias(fsf.getAliases(), type)) {
                 IFlagSet flagSet = fsf.createFlagSet(name, type, priority, args, state, source);
                 if (flagSet != null) return flagSet;
             }
@@ -92,7 +93,7 @@ public class FGFactoryManager {
 
     public IFlagSet createFlagSet(DataSource source, String name, String type, int priority) throws SQLException {
         for (IFlagSetFactory fsf : flagSetFactories) {
-            if (FGHelper.contains(fsf.getTypes(), type)) {
+            if (isAlias(fsf.getTypes(), type)) {
                 IFlagSet flagSet = fsf.createFlagSet(source, name, type, priority);
                 if (flagSet != null) return flagSet;
             }
