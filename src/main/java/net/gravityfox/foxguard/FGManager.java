@@ -25,15 +25,18 @@
 
 package net.gravityfox.foxguard;
 
-import net.gravityfox.foxguard.util.CallbackHashMap;
-import org.spongepowered.api.Server;
-import org.spongepowered.api.world.World;
 import net.gravityfox.foxguard.flagsets.GlobalFlagSet;
 import net.gravityfox.foxguard.flagsets.IFlagSet;
 import net.gravityfox.foxguard.regions.GlobalRegion;
 import net.gravityfox.foxguard.regions.IRegion;
+import net.gravityfox.foxguard.util.CallbackHashMap;
+import org.spongepowered.api.Server;
+import org.spongepowered.api.world.World;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**

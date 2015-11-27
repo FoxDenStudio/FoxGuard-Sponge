@@ -25,10 +25,10 @@
 
 package net.gravityfox.foxguard.listener;
 
+import net.gravityfox.foxguard.commands.FGCommandMainDispatcher;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.entity.living.player.TargetPlayerEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
-import net.gravityfox.foxguard.commands.FGCommandMainDispatcher;
 
 /**
  * Created by Fox on 8/20/2015.

@@ -26,6 +26,11 @@
 package net.gravityfox.foxguard.commands;
 
 import com.google.common.collect.ImmutableList;
+import net.gravityfox.foxguard.FGManager;
+import net.gravityfox.foxguard.FoxGuardMain;
+import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.regions.IRegion;
+import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
@@ -36,24 +41,17 @@ import org.spongepowered.api.util.command.CommandResult;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.world.World;
-import net.gravityfox.foxguard.FGManager;
-import net.gravityfox.foxguard.FoxGuardMain;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
-import net.gravityfox.foxguard.regions.IRegion;
-import net.gravityfox.foxguard.util.FGHelper;
 
 import java.util.List;
 import java.util.Optional;
+
+import static net.gravityfox.foxguard.util.Aliases.*;
 
 /**
  * Created by Fox on 10/25/2015.
  * Project: foxguard
  */
 public class CommandSubtract implements CommandCallable {
-
-    String[] regionsAliases = {"regions", "region", "reg", "r"};
-    String[] flagSetsAliases = {"flagsets", "flagset", "flags", "flag", "f"};
-    String[] positionsAliases = {"positions", "position", "points", "point", "locations", "location", "pos", "loc", "locs", "p"};
 
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {

@@ -27,9 +27,9 @@ package net.gravityfox.foxguard.regions;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import org.spongepowered.api.world.World;
 import net.gravityfox.foxguard.IFGObject;
 import net.gravityfox.foxguard.flagsets.IFlagSet;
+import org.spongepowered.api.world.World;
 
 import java.util.List;
 

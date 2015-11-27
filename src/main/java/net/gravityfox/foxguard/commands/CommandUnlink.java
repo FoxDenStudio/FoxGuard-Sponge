@@ -26,6 +26,10 @@
 package net.gravityfox.foxguard.commands;
 
 import com.google.common.collect.ImmutableList;
+import net.gravityfox.foxguard.FGManager;
+import net.gravityfox.foxguard.commands.util.InternalCommandState;
+import net.gravityfox.foxguard.flagsets.GlobalFlagSet;
+import net.gravityfox.foxguard.flagsets.IFlagSet;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
@@ -34,10 +38,6 @@ import org.spongepowered.api.util.command.CommandCallable;
 import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandResult;
 import org.spongepowered.api.util.command.CommandSource;
-import net.gravityfox.foxguard.FGManager;
-import net.gravityfox.foxguard.commands.util.InternalCommandState;
-import net.gravityfox.foxguard.flagsets.GlobalFlagSet;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +48,7 @@ import java.util.Optional;
  * Project: foxguard
  */
 public class CommandUnlink implements CommandCallable {
+
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {

@@ -25,12 +25,12 @@
 
 package net.gravityfox.foxguard.flagsets;
 
+import net.gravityfox.foxguard.objects.IOwnable;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
-import net.gravityfox.foxguard.objects.IOwnable;
 
 import javax.sql.DataSource;
 import java.sql.Connection;

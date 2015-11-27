@@ -26,6 +26,9 @@
 package net.gravityfox.foxguard.listener;
 
 import com.flowpowered.math.vector.Vector3i;
+import net.gravityfox.foxguard.FGManager;
+import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.flagsets.util.Flags;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.living.player.Player;
@@ -35,9 +38,6 @@ import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
-import net.gravityfox.foxguard.FGManager;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
-import net.gravityfox.foxguard.flagsets.util.Flags;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,7 +51,7 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
 
     @Override
     public void handle(ChangeBlockEvent event) throws Exception {
-        if(event.isCancelled()) return;
+        if (event.isCancelled()) return;
         User user;
         if (event.getCause().any(Player.class)) {
             user = event.getCause().first(Player.class).get();

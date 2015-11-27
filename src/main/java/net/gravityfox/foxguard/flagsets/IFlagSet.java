@@ -25,11 +25,11 @@
 
 package net.gravityfox.foxguard.flagsets;
 
+import net.gravityfox.foxguard.IFGObject;
+import net.gravityfox.foxguard.flagsets.util.Flags;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.util.Tristate;
-import net.gravityfox.foxguard.IFGObject;
-import net.gravityfox.foxguard.flagsets.util.Flags;
 
 import javax.annotation.Nullable;
 

@@ -26,7 +26,7 @@
 package net.gravityfox.foxguard.commands;
 
 import com.google.common.collect.ImmutableList;
-import org.spongepowered.api.service.permission.SubjectData;
+import net.gravityfox.foxguard.FoxGuardMain;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
@@ -35,9 +35,7 @@ import org.spongepowered.api.util.command.CommandCallable;
 import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandResult;
 import org.spongepowered.api.util.command.CommandSource;
-import net.gravityfox.foxguard.FoxGuardMain;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,7 +46,7 @@ import java.util.Optional;
 public class CommandAbout implements CommandCallable {
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
-        if(!testPermission(source)){
+        if (!testPermission(source)) {
             source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }

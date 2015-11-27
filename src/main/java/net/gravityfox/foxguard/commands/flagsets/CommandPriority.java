@@ -26,6 +26,9 @@
 package net.gravityfox.foxguard.commands.flagsets;
 
 import com.google.common.collect.ImmutableList;
+import net.gravityfox.foxguard.FGManager;
+import net.gravityfox.foxguard.commands.FGCommandMainDispatcher;
+import net.gravityfox.foxguard.flagsets.IFlagSet;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
@@ -34,11 +37,11 @@ import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandResult;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
-import net.gravityfox.foxguard.FGManager;
-import net.gravityfox.foxguard.commands.FGCommandMainDispatcher;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by Fox on 10/29/2015.

@@ -25,13 +25,13 @@
 
 package net.gravityfox.foxguard.factory;
 
-import org.spongepowered.api.util.command.CommandException;
-import org.spongepowered.api.util.command.CommandSource;
-import org.spongepowered.api.world.World;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import net.gravityfox.foxguard.flagsets.IFlagSet;
 import net.gravityfox.foxguard.regions.IRegion;
 import net.gravityfox.foxguard.util.FGHelper;
+import org.spongepowered.api.util.command.CommandException;
+import org.spongepowered.api.util.command.CommandSource;
+import org.spongepowered.api.world.World;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;

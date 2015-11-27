@@ -26,26 +26,23 @@
 package net.gravityfox.foxguard.commands;
 
 import com.google.common.collect.ImmutableList;
+import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.*;
-import net.gravityfox.foxguard.commands.util.InternalCommandState;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import static net.gravityfox.foxguard.util.Aliases.*;
 
 /**
  * Created by Fox on 8/20/2015.
  * Project: foxguard
  */
 public class CommandFlush implements CommandCallable {
-
-    String[] regionsAliases = {"regions", "region", "reg", "r"};
-    String[] flagSetsAliases = {"flagsets", "flagset", "flags", "flag", "f"};
-    String[] positionsAliases = {"positions", "position", "points", "point", "locations", "location", "pos", "loc", "locs", "p"};
 
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {

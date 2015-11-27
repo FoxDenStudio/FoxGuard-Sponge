@@ -25,14 +25,14 @@
 
 package net.gravityfox.foxguard.util;
 
-import net.gravityfox.foxguard.IFGObject;
-import org.spongepowered.api.world.World;
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.FGStorageManager;
 import net.gravityfox.foxguard.FoxGuardMain;
+import net.gravityfox.foxguard.IFGObject;
 import net.gravityfox.foxguard.factory.FGFactoryManager;
 import net.gravityfox.foxguard.flagsets.IFlagSet;
 import net.gravityfox.foxguard.regions.IRegion;
+import org.spongepowered.api.world.World;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -115,9 +115,9 @@ public class DeferredObject {
         builder.append("Type: ").append(type).append("\n");
         builder.append("Listed name: ").append(listName).append("\n");
         builder.append("Metadata name: ").append(metaName).append("\n");
-        if(listWorld != null) builder.append("Listed world: ").append(listWorld.getName()).append("\n");
-        if(metaWorld != null) builder.append("Metadata world: ").append(metaWorld).append("\n");
-        if(!category.equalsIgnoreCase("region")) builder.append("Priority: ").append(priority).append("\n");
+        if (listWorld != null) builder.append("Listed world: ").append(listWorld.getName()).append("\n");
+        if (metaWorld != null) builder.append("Metadata world: ").append(metaWorld).append("\n");
+        if (!category.equalsIgnoreCase("region")) builder.append("Priority: ").append(priority).append("\n");
         return builder.toString();
     }
 }

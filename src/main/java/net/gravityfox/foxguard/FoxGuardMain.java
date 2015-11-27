@@ -57,6 +57,8 @@ import javax.sql.DataSource;
 import java.io.File;
 import java.sql.SQLException;
 
+import static net.gravityfox.foxguard.util.Aliases.flagSetsAliases;
+
 /**
  * Created by Fox on 8/16/2015.
  * Project: foxguard
@@ -176,7 +178,7 @@ public class FoxGuardMain {
 
         fgFlagSetDispatcher.register(new CommandPriority(), "priority", "prio", "level", "rank");
 
-        fgDispatcher.register(fgFlagSetDispatcher, "flagsets", "flagset", "flag", "flags", "f");
+        fgDispatcher.register(fgFlagSetDispatcher, flagSetsAliases);
 
         game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
     }

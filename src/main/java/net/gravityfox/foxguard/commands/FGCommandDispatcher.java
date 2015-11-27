@@ -42,7 +42,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.spongepowered.api.util.command.CommandMessageFormatting.*;
+import static org.spongepowered.api.util.command.CommandMessageFormatting.NEWLINE_TEXT;
+import static org.spongepowered.api.util.command.CommandMessageFormatting.SPACE_TEXT;
 
 /**
  * Created by Fox on 11/2/2015.

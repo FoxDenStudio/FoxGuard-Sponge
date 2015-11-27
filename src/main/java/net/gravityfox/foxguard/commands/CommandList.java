@@ -26,6 +26,11 @@
 package net.gravityfox.foxguard.commands;
 
 import com.google.common.collect.ImmutableList;
+import net.gravityfox.foxguard.FGManager;
+import net.gravityfox.foxguard.FoxGuardMain;
+import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.regions.IRegion;
+import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
@@ -35,25 +40,20 @@ import org.spongepowered.api.util.command.*;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.util.command.source.ConsoleSource;
 import org.spongepowered.api.world.World;
-import net.gravityfox.foxguard.FGManager;
-import net.gravityfox.foxguard.FoxGuardMain;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
-import net.gravityfox.foxguard.regions.IRegion;
-import net.gravityfox.foxguard.util.FGHelper;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Optional;
 
+import static net.gravityfox.foxguard.util.Aliases.flagSetsAliases;
+import static net.gravityfox.foxguard.util.Aliases.regionsAliases;
+
 /**
  * Created by Fox on 8/18/2015.
  * Project: foxguard
  */
 public class CommandList implements CommandCallable {
-
-    String[] regionsAliases = {"regions", "region", "reg", "r"};
-    String[] flagSetsAliases = {"flagsets", "flagset", "flags", "flag", "f"};
 
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {

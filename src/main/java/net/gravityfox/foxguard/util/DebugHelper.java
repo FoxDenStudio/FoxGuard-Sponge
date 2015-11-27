@@ -25,11 +25,11 @@
 
 package net.gravityfox.foxguard.util;
 
+import net.gravityfox.foxguard.FoxGuardMain;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.cause.CauseTracked;
-import net.gravityfox.foxguard.FoxGuardMain;
 
 /**
  * Created by Fox on 10/21/2015.

@@ -27,16 +27,17 @@ package net.gravityfox.foxguard.commands;
 
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
-import org.spongepowered.api.entity.living.player.Player;
+import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.regions.IRegion;
+import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.util.command.*;
-import org.spongepowered.api.util.command.source.ConsoleSource;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
-import net.gravityfox.foxguard.regions.IRegion;
-import net.gravityfox.foxguard.util.FGHelper;
+import org.spongepowered.api.util.command.CommandCallable;
+import org.spongepowered.api.util.command.CommandException;
+import org.spongepowered.api.util.command.CommandResult;
+import org.spongepowered.api.util.command.CommandSource;
 
 import java.util.Iterator;
 import java.util.List;
@@ -47,6 +48,7 @@ import java.util.Optional;
  * Project: foxguard
  */
 public class CommandState implements CommandCallable {
+
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {
@@ -54,48 +56,48 @@ public class CommandState implements CommandCallable {
             return CommandResult.empty();
         }
         TextBuilder output = Texts.builder().append(Texts.of(TextColors.GOLD, "-----------------------------------------------------\n"));
-            int flag = 0;
-            if (!FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedRegions.isEmpty()) {
-                output.append(Texts.of(TextColors.GREEN, "Regions: "));
-                Iterator<IRegion> regionIterator = FGCommandMainDispatcher.getInstance().getStateMap()
-                        .get(source).selectedRegions.iterator();
-                int index = 1;
-                while (regionIterator.hasNext()) {
-                    IRegion region = regionIterator.next();
-                    output.append(Texts.of(FGHelper.getColorForRegion(region),
-                            "\n  " + (index++) + ": " + region.getShortTypeName() + " : " + region.getWorld().getName() + " : " + region.getName()));
-                }
-                output.append(Texts.of("\n"));
-                flag++;
+        int flag = 0;
+        if (!FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedRegions.isEmpty()) {
+            output.append(Texts.of(TextColors.GREEN, "Regions: "));
+            Iterator<IRegion> regionIterator = FGCommandMainDispatcher.getInstance().getStateMap()
+                    .get(source).selectedRegions.iterator();
+            int index = 1;
+            while (regionIterator.hasNext()) {
+                IRegion region = regionIterator.next();
+                output.append(Texts.of(FGHelper.getColorForRegion(region),
+                        "\n  " + (index++) + ": " + region.getShortTypeName() + " : " + region.getWorld().getName() + " : " + region.getName()));
             }
-            if (!FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedFlagSets.isEmpty()) {
-                if (flag != 0) output.append(Texts.of("\n"));
-                output.append(Texts.of(TextColors.GREEN, "FlagSets: "));
-                Iterator<IFlagSet> flagSetIterator = FGCommandMainDispatcher.getInstance().getStateMap()
-                        .get(source).selectedFlagSets.iterator();
-                int index = 1;
-                while (flagSetIterator.hasNext()) {
-                    IFlagSet flagSet = flagSetIterator.next();
-                    output.append(Texts.of(FGHelper.getColorForFlagSet(flagSet),
-                            "\n  " + (index++) + ": " + flagSet.getShortTypeName() + " : " + flagSet.getName()));
-                }
-                output.append(Texts.of("\n"));
-                flag++;
+            output.append(Texts.of("\n"));
+            flag++;
+        }
+        if (!FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedFlagSets.isEmpty()) {
+            if (flag != 0) output.append(Texts.of("\n"));
+            output.append(Texts.of(TextColors.GREEN, "FlagSets: "));
+            Iterator<IFlagSet> flagSetIterator = FGCommandMainDispatcher.getInstance().getStateMap()
+                    .get(source).selectedFlagSets.iterator();
+            int index = 1;
+            while (flagSetIterator.hasNext()) {
+                IFlagSet flagSet = flagSetIterator.next();
+                output.append(Texts.of(FGHelper.getColorForFlagSet(flagSet),
+                        "\n  " + (index++) + ": " + flagSet.getShortTypeName() + " : " + flagSet.getName()));
             }
-            if (!FGCommandMainDispatcher.getInstance().getStateMap().get(source).positions.isEmpty()) {
-                if (flag != 0) output.append(Texts.of("\n"));
-                output.append(Texts.of(TextColors.GREEN, "Positions:"));
-                output.append(Texts.of(TextColors.RESET));
-                int index = 1;
-                for (Vector3i pos : FGCommandMainDispatcher.getInstance().getStateMap().get(source).positions) {
-                    output.append(
-                            Texts.of("\n  " + (index++) + ": " + pos.getX() + ", " + pos.getY() + ", " + pos.getZ())
-                    );
-                }
-                flag++;
+            output.append(Texts.of("\n"));
+            flag++;
+        }
+        if (!FGCommandMainDispatcher.getInstance().getStateMap().get(source).positions.isEmpty()) {
+            if (flag != 0) output.append(Texts.of("\n"));
+            output.append(Texts.of(TextColors.GREEN, "Positions:"));
+            output.append(Texts.of(TextColors.RESET));
+            int index = 1;
+            for (Vector3i pos : FGCommandMainDispatcher.getInstance().getStateMap().get(source).positions) {
+                output.append(
+                        Texts.of("\n  " + (index++) + ": " + pos.getX() + ", " + pos.getY() + ", " + pos.getZ())
+                );
             }
-            if (flag == 0) source.sendMessage(Texts.of("Your current state buffer is clear!"));
-            else source.sendMessage(output.build());
+            flag++;
+        }
+        if (flag == 0) source.sendMessage(Texts.of("Your current state buffer is clear!"));
+        else source.sendMessage(output.build());
 
         return CommandResult.empty();
     }

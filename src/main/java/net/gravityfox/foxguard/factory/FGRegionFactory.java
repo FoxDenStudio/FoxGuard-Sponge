@@ -27,20 +27,20 @@ package net.gravityfox.foxguard.factory;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
-import net.gravityfox.foxguard.regions.ElevationRegion;
-import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.entity.living.player.User;
-import org.spongepowered.api.util.command.CommandException;
-import org.spongepowered.api.util.command.CommandSource;
-import org.spongepowered.api.world.World;
 import net.gravityfox.foxguard.FoxGuardMain;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import net.gravityfox.foxguard.regions.CuboidRegion;
+import net.gravityfox.foxguard.regions.ElevationRegion;
 import net.gravityfox.foxguard.regions.IRegion;
 import net.gravityfox.foxguard.regions.RectangularRegion;
 import net.gravityfox.foxguard.regions.util.BoundingBox2;
 import net.gravityfox.foxguard.regions.util.BoundingBox3;
 import net.gravityfox.foxguard.util.FGHelper;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.util.command.CommandException;
+import org.spongepowered.api.util.command.CommandSource;
+import org.spongepowered.api.world.World;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -66,7 +66,7 @@ public class FGRegionFactory implements IRegionFactory {
     @Override
     public IRegion createRegion(String name, String type, String arguments, InternalCommandState state, World world, CommandSource source) throws CommandException {
         String[] args = {};
-        if(!arguments.isEmpty()) args = arguments.split(" +");
+        if (!arguments.isEmpty()) args = arguments.split(" +");
         if (FGHelper.contains(rectAliases, type)) {
             if (source instanceof Player)
                 return new RectangularRegion(name, state.positions, args, source, (Player) source);

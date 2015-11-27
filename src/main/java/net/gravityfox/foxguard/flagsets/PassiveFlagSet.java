@@ -40,6 +40,7 @@ import javax.annotation.Nullable;
  */
 public class PassiveFlagSet extends OwnableFlagSetBase {
 
+
     public PassiveFlagSet(String name, int priority) {
         super(name, priority);
     }

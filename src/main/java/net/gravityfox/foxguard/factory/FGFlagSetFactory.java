@@ -26,13 +26,13 @@
 package net.gravityfox.foxguard.factory;
 
 import net.gravityfox.foxguard.FoxGuardMain;
-import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.entity.living.player.User;
-import org.spongepowered.api.util.command.CommandSource;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import net.gravityfox.foxguard.flagsets.IFlagSet;
 import net.gravityfox.foxguard.flagsets.SimpleFlagSet;
 import net.gravityfox.foxguard.util.FGHelper;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.util.command.CommandSource;
 
 import javax.sql.DataSource;
 import java.sql.Connection;

@@ -26,6 +26,13 @@
 package net.gravityfox.foxguard.commands;
 
 import com.google.common.collect.ImmutableList;
+import net.gravityfox.foxguard.FGManager;
+import net.gravityfox.foxguard.FoxGuardMain;
+import net.gravityfox.foxguard.commands.util.InternalCommandState;
+import net.gravityfox.foxguard.factory.FGFactoryManager;
+import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.regions.IRegion;
+import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
@@ -36,17 +43,12 @@ import org.spongepowered.api.util.command.CommandResult;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.world.World;
-import net.gravityfox.foxguard.FGManager;
-import net.gravityfox.foxguard.FoxGuardMain;
-import net.gravityfox.foxguard.commands.util.InternalCommandState;
-import net.gravityfox.foxguard.factory.FGFactoryManager;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
-import net.gravityfox.foxguard.regions.IRegion;
-import net.gravityfox.foxguard.util.FGHelper;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import static net.gravityfox.foxguard.util.Aliases.flagSetsAliases;
+import static net.gravityfox.foxguard.util.Aliases.regionsAliases;
 
 /**
  * Created by Fox on 8/18/2015.
@@ -54,10 +56,6 @@ import java.util.Optional;
  */
 public class CommandCreate implements CommandCallable {
 
-    String[] regionsAliases = {"regions", "region", "reg", "r"};
-    String[] flagSetsAliases = {"flagsets", "flagset", "flags", "flag", "f"};
-
-    //create region [w:<world>] name type args...
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {

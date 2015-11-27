@@ -27,7 +27,6 @@ package net.gravityfox.foxguard.regions;
 
 import com.flowpowered.math.vector.Vector3i;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
-import net.gravityfox.foxguard.regions.util.BoundingBox2;
 import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
@@ -66,7 +65,7 @@ public class ElevationRegion extends OwnableRegionBase {
             throws CommandException {
         super(name);
         List<Vector3i> allPositions = new LinkedList<>(positions);
-        for (int i = 0; i < args.length ; i++) {
+        for (int i = 0; i < args.length; i++) {
             int y;
             try {
                 y = FGHelper.parseCoordinate(source instanceof Player ?
@@ -75,7 +74,7 @@ public class ElevationRegion extends OwnableRegionBase {
                 throw new ArgumentParseException(
                         Texts.of("Unable to parse \"" + args[i] + "\"!"), e, args[i], 1);
             }
-            allPositions.add(new Vector3i(0,y,0));
+            allPositions.add(new Vector3i(0, y, 0));
         }
         if (allPositions.isEmpty()) throw new CommandException(Texts.of("No parameters specified!"));
         int a = allPositions.get(0).getY(), b = allPositions.get(0).getY();

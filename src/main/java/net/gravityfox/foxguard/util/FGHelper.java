@@ -25,16 +25,16 @@
 
 package net.gravityfox.foxguard.util;
 
+import net.gravityfox.foxguard.flagsets.GlobalFlagSet;
+import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.regions.GlobalRegion;
+import net.gravityfox.foxguard.regions.IRegion;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
-import net.gravityfox.foxguard.flagsets.GlobalFlagSet;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
-import net.gravityfox.foxguard.regions.GlobalRegion;
-import net.gravityfox.foxguard.regions.IRegion;
 
 import java.util.Arrays;
 import java.util.List;

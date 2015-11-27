@@ -26,6 +26,9 @@
 package net.gravityfox.foxguard.regions;
 
 import com.flowpowered.math.vector.Vector3i;
+import net.gravityfox.foxguard.commands.util.InternalCommandState;
+import net.gravityfox.foxguard.regions.util.BoundingBox2;
+import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.text.Text;
@@ -35,9 +38,6 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
-import net.gravityfox.foxguard.commands.util.InternalCommandState;
-import net.gravityfox.foxguard.regions.util.BoundingBox2;
-import net.gravityfox.foxguard.util.FGHelper;
 
 import javax.sql.DataSource;
 import java.sql.Connection;

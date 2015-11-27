@@ -27,10 +27,10 @@ package net.gravityfox.foxguard.regions;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
+import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.command.CommandSource;
-import net.gravityfox.foxguard.commands.util.InternalCommandState;
 
 import javax.sql.DataSource;
 

@@ -27,14 +27,16 @@ package net.gravityfox.foxguard.commands;
 
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
+import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.util.command.*;
+import org.spongepowered.api.util.command.CommandCallable;
+import org.spongepowered.api.util.command.CommandException;
+import org.spongepowered.api.util.command.CommandResult;
+import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
-import org.spongepowered.api.util.command.source.ConsoleSource;
-import net.gravityfox.foxguard.util.FGHelper;
 
 import java.util.List;
 import java.util.Optional;
@@ -44,6 +46,7 @@ import java.util.Optional;
  * Project: foxguard
  */
 public class CommandPosition implements CommandCallable {
+
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {
@@ -84,7 +87,7 @@ public class CommandPosition implements CommandCallable {
             FGCommandMainDispatcher.getInstance().getStateMap().get(player).positions.add(new Vector3i(x, y, z));
             player.sendMessage(Texts.of(TextColors.GREEN, "Successfully added position (" + x + ", " + y + ", " + z + ") to your state buffer!"));
             return CommandResult.success();
-        } else  {
+        } else {
 
         }
         return CommandResult.empty();

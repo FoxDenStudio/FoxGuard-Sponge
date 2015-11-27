@@ -23,26 +23,16 @@
  * THE SOFTWARE.
  */
 
-package net.gravityfox.foxguard.factory;
-
-import net.gravityfox.foxguard.commands.util.InternalCommandState;
-import net.gravityfox.foxguard.regions.IRegion;
-import org.spongepowered.api.util.command.CommandException;
-import org.spongepowered.api.util.command.CommandSource;
-import org.spongepowered.api.world.World;
-
-import javax.sql.DataSource;
-import java.sql.SQLException;
+package net.gravityfox.foxguard.util;
 
 /**
- * Created by Fox on 10/22/2015.
- * Project: foxguard
+ * Created by Fox on 11/26/2015.
+ * Project: SpongeForge
  */
+public class Aliases {
 
-public interface IRegionFactory extends IFGFactory {
-
-    IRegion createRegion(String name, String type, String arguments, InternalCommandState state, World world, CommandSource source) throws CommandException;
-
-    IRegion createRegion(DataSource source, String name, String type) throws SQLException;
+    public static String[] regionsAliases = {"regions", "region", "reg", "r"};
+    public static String[] flagSetsAliases = {"flagsets", "flagset", "flags", "flag", "f"};
+    public static String[] positionsAliases = {"positions", "position", "points", "point", "locations", "location", "pos", "loc", "locs", "p"};
 
 }
