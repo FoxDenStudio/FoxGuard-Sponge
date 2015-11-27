@@ -333,22 +333,5 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
                     return "Awut...?";
             }
         }
-
-        public static PassiveOptions from(String name) {
-            switch (name) {
-                case "ALLOW":
-                    return ALLOW;
-                case "DENY":
-                    return DENY;
-                case "OWNER":
-                    return OWNER;
-                case "MEMBER":
-                    return MEMBER;
-                case "DEFAULT":
-                    return DEFAULT;
-                default:
-                    return PASSTHROUGH;
-            }
-        }
     }
 }

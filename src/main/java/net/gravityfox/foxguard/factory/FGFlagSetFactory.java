@@ -28,10 +28,15 @@ package net.gravityfox.foxguard.factory;
 import net.gravityfox.foxguard.FoxGuardMain;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.flagsets.PassiveFlagSet;
 import net.gravityfox.foxguard.flagsets.SimpleFlagSet;
+import net.gravityfox.foxguard.flagsets.util.Flags;
+import net.gravityfox.foxguard.util.Aliases;
+import net.gravityfox.foxguard.util.CallbackHashMap;
 import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.util.command.CommandSource;
 
 import javax.sql.DataSource;
@@ -50,13 +55,18 @@ import java.util.UUID;
  */
 public class FGFlagSetFactory implements IFlagSetFactory {
 
-    String[] simpleAliases = {"simple"};
-    String[] types = {"simple"};
+    String[] simpleAliases = {"simple", "simp"};
+    String[] passiveAliases = {"passive", "pass"};
+    String[] types = {"simple", "passive"};
 
     @Override
     public IFlagSet createFlagSet(String name, String type, int priority, String arguments, InternalCommandState state, CommandSource source) {
-        if (type.equalsIgnoreCase("simple")) {
+        if (Aliases.isAlias(simpleAliases, type)) {
             SimpleFlagSet flagSet = new SimpleFlagSet(name, priority);
+            if (source instanceof Player) flagSet.addOwner((Player) source);
+            return flagSet;
+        } else if (Aliases.isAlias(passiveAliases, type)) {
+            PassiveFlagSet flagSet = new PassiveFlagSet(name, priority);
             if (source instanceof Player) flagSet.addOwner((Player) source);
             return flagSet;
         } else return null;
@@ -89,7 +99,11 @@ public class FGFlagSetFactory implements IFlagSetFactory {
                             String key = mapSet.getString("KEYCOL");
                             switch (key) {
                                 case "passive":
-                                    po = SimpleFlagSet.PassiveOptions.from(mapSet.getString("VALUECOL"));
+                                    try {
+                                        po = SimpleFlagSet.PassiveOptions.valueOf(mapSet.getString("VALUECOL"));
+                                    } catch (IllegalArgumentException ignored) {
+                                        po = SimpleFlagSet.PassiveOptions.PASSTHROUGH;
+                                    }
                                     break;
                             }
                         }
@@ -101,12 +115,38 @@ public class FGFlagSetFactory implements IFlagSetFactory {
             flagSet.setMembers(memberList);
             flagSet.setPassiveOption(po);
             return flagSet;
+        } else if (type.equalsIgnoreCase("passive")) {
+            List<User> ownerList = new LinkedList<>();
+            CallbackHashMap<Flags, Tristate> flagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
+            try (Connection conn = source.getConnection()) {
+                try (Statement statement = conn.createStatement()) {
+                    try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {
+                        while (ownerSet.next()) {
+                            Optional<User> user = FoxGuardMain.getInstance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
+                            if (user.isPresent() && !FGHelper.isUserOnList(ownerList, user.get()))
+                                ownerList.add(user.get());
+                        }
+                    }
+                    try (ResultSet passiveMapEntrySet = statement.executeQuery("SELECT * FROM FLAGMAP")) {
+                        while (passiveMapEntrySet.next()) {
+                            try {
+                                flagMap.put(Flags.valueOf(passiveMapEntrySet.getString("KEYCOL")),
+                                        Tristate.valueOf(passiveMapEntrySet.getString("VALUECOL")));
+                            } catch (IllegalArgumentException ignored) {
+                            }
+                        }
+                    }
+                }
+            }
+            PassiveFlagSet flagSet = new PassiveFlagSet(name, priority, flagMap);
+            flagSet.setOwners(ownerList);
+            return flagSet;
         } else return null;
     }
 
     @Override
     public String[] getAliases() {
-        return FGHelper.concatAll(simpleAliases);
+        return FGHelper.concatAll(simpleAliases, passiveAliases);
     }
 
     @Override

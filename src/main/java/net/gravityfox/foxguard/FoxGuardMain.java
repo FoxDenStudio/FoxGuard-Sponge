@@ -31,11 +31,13 @@ import net.gravityfox.foxguard.commands.flagsets.CommandPriority;
 import net.gravityfox.foxguard.listener.BlockEventListener;
 import net.gravityfox.foxguard.listener.InteractListener;
 import net.gravityfox.foxguard.listener.PlayerEventListener;
+import net.gravityfox.foxguard.listener.SpawnEntityEventListener;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
+import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.event.entity.living.player.TargetPlayerEvent;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
@@ -187,6 +189,7 @@ public class FoxGuardMain {
         eventManager.registerListener(this, TargetPlayerEvent.class, new PlayerEventListener());
         eventManager.registerListener(this, ChangeBlockEvent.class, new BlockEventListener());
         eventManager.registerListener(this, InteractBlockEvent.class, new InteractListener());
+        eventManager.registerListener(this, SpawnEntityEvent.class, new SpawnEntityEventListener());
     }
 
     private void configurePermissions() {

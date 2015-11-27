@@ -25,6 +25,8 @@
 
 package net.gravityfox.foxguard.util;
 
+import org.spongepowered.api.util.Tristate;
+
 /**
  * Created by Fox on 11/26/2015.
  * Project: SpongeForge
@@ -45,12 +47,24 @@ public class Aliases {
     public static final String[] trueAliases = {"true", "t", "allow", "a"};
     public static final String[] falseAliases = {"false", "f", "deny", "d"};
     public static final String[] passthroughAliases = {"passthrough", "pass", "p", "undefined", "undef", "un", "u"};
-    public static final String[] setAliases = {"set"};
+    public static final String[] setAliases = {"set", "flag", "rule"};
 
     public static boolean isAlias(String[] aliases, String input) {
         for (String alias : aliases) {
             if (alias.equalsIgnoreCase(input)) return true;
         }
         return false;
+    }
+
+    public static Tristate tristateFrom(String name){
+        if(isAlias(trueAliases, name)){
+            return Tristate.TRUE;
+        } else if (isAlias(falseAliases, name)) {
+            return Tristate.FALSE;
+        } else if (isAlias(passthroughAliases, name)) {
+            return Tristate.UNDEFINED;
+        } else {
+            return null;
+        }
     }
 }

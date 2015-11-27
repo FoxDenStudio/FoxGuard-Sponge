@@ -31,15 +31,27 @@ package net.gravityfox.foxguard.flagsets.util;
  */
 public enum Flags {
     // Active
-    BLOCK_PLACE, BLOCK_BREAK, BLOCK_MODIFY,
-    BLOCK_INTERACT_PRIMARY, BLOCK_INTERACT_SECONDARY,
-    ENTITY_INTERACT_PRIMARY, ENTITY_INTERACT_SECONDARY,
-    FLUID,
+    BLOCK_PLACE("Place-Blocks"),
+    BLOCK_BREAK("Break-Blocks"),
+    BLOCK_MODIFY("Modify-Blocks"),
+    BLOCK_INTERACT_PRIMARY("Attack-Blocks"),
+    BLOCK_INTERACT_SECONDARY("Interact-Blocks"),
+    ENTITY_INTERACT_PRIMARY("Attack-Entities"),
+    ENTITY_INTERACT_SECONDARY("Interact-Entities"),
+    FLUID("Fluids"),
     // Passive
-    SPAWN_MOB_HOSTILE, SPAWN_MOB_PASSIVE;
+    SPAWN_MOB_HOSTILE("Spawn-Hostile-Mobs"),
+    SPAWN_MOB_PASSIVE("Spawn-Passive-Mobs");
+
+    String humanName;
+
+    Flags(String name){
+        this.humanName = name;
+    }
 
     @Override
     public String toString() {
-        return super.toString();
+        return humanName;
     }
+
 }

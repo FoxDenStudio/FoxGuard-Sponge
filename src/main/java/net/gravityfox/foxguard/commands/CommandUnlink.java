@@ -107,6 +107,8 @@ public class CommandUnlink implements CommandCallable {
                         });
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully unlinked " + count[0] + "!"));
                 return CommandResult.builder().successCount(count[0]).build();
+            } else {
+                throw new CommandException(Texts.of("Not a supported Unlink operation!"));
             }
         } else {
 

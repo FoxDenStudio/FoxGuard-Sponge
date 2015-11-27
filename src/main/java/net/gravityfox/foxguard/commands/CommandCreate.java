@@ -109,7 +109,7 @@ public class CommandCreate implements CommandCallable {
                     throw new ArgumentParseException(Texts.of("Name must be alphanumeric!"), args[1], 1);
                 if (args[1].matches("^[^a-zA-Z_$].*$"))
                     throw new ArgumentParseException(Texts.of("Name can't start with a number!"), args[1], 1);
-                if (args[1].equalsIgnoreCase("all") || args[1].equalsIgnoreCase("state"))
+                if (args[1].equalsIgnoreCase("all") || args[1].equalsIgnoreCase("state") || args[1].equalsIgnoreCase("full"))
                     throw new CommandException(Texts.of("You may not use \"" + args[1] + "\" as a name!"));
                 int flag = 0;
                 int priority = 0;

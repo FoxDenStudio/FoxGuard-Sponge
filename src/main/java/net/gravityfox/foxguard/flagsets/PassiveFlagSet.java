@@ -28,11 +28,13 @@ package net.gravityfox.foxguard.flagsets;
 import net.gravityfox.foxguard.FoxGuardMain;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import net.gravityfox.foxguard.flagsets.util.Flags;
+import net.gravityfox.foxguard.util.CallbackHashMap;
 import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
@@ -41,11 +43,11 @@ import org.spongepowered.api.util.command.source.ProxySource;
 
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.sql.Statement;
+import java.util.*;
 
 import static net.gravityfox.foxguard.util.Aliases.*;
 
@@ -55,15 +57,25 @@ import static net.gravityfox.foxguard.util.Aliases.*;
  */
 public class PassiveFlagSet extends OwnableFlagSetBase {
 
+    Flags[] availableFlags = {Flags.SPAWN_MOB_PASSIVE, Flags.SPAWN_MOB_HOSTILE};
+
+    private Map<Flags, Tristate> passiveMap;
 
     public PassiveFlagSet(String name, int priority) {
+        this(name, priority, new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED));
+    }
+
+    public PassiveFlagSet(String name, int priority, CallbackHashMap<Flags, Tristate> map) {
         super(name, priority);
+        this.passiveMap = map;
     }
 
     @Override
     public Tristate isAllowed(@Nullable User user, Flags flag, Event event) {
         if (!isEnabled) return Tristate.UNDEFINED;
-
+        if (FGHelper.contains(availableFlags, flag)) {
+            return passiveMap.get(flag);
+        }
         return Tristate.UNDEFINED;
     }
 
@@ -137,27 +149,77 @@ public class PassiveFlagSet extends OwnableFlagSetBase {
                     return false;
                 }
 
-            } else if (isAlias(passiveAliases, args[0])) {
-
+            } else if (isAlias(setAliases, args[0])) {
+                if (args.length > 1) {
+                    Flags flag = flagFrom(args[1]);
+                    if(flag == null){
+                        source.sendMessage(Texts.of(TextColors.RED, "Not a valid flag!"));
+                        return false;
+                    }
+                    if(args.length > 2){
+                        Tristate tristate = tristateFrom(args[2]);
+                        if(tristate == null){
+                            source.sendMessage(Texts.of(TextColors.RED, "Not a valid value!"));
+                            return false;
+                        }
+                        passiveMap.put(flag, tristate);
+                        source.sendMessage(Texts.of(TextColors.GREEN, "Successfully set flag!"));
+                        return true;
+                    } else {
+                        source.sendMessage(Texts.of(TextColors.RED, "Must specify a value!"));
+                        return false;
+                    }
+                } else {
+                    source.sendMessage(Texts.of(TextColors.RED, "Must specify a flag!"));
+                    return false;
+                }
             } else {
-                source.sendMessage(Texts.of(TextColors.RED, "Not a valid SimpleFlagset command!"));
+                source.sendMessage(Texts.of(TextColors.RED, "Not a valid PassiveFlagset command!"));
                 return false;
             }
         } else {
             source.sendMessage(Texts.of(TextColors.RED, "Must specify a command!"));
             return false;
         }
-        return false;
+
+    }
+
+    private Flags flagFrom(String name){
+        if(name.equalsIgnoreCase("spawnmobpassive")){
+            return Flags.SPAWN_MOB_PASSIVE;
+        } else if(name.equalsIgnoreCase("spawnmobhostile")){
+            return Flags.SPAWN_MOB_HOSTILE;
+        } else return null;
     }
 
     @Override
     public Text getDetails(String arguments) {
-        return super.getDetails(arguments);
+        TextBuilder builder = super.getDetails(arguments).builder();
+        builder.append(Texts.of("\n"));
+        builder.append(Texts.of(TextColors.GOLD, "Passive Flags:\n"));
+        for (Flags f : this.passiveMap.keySet()) {
+            builder.append(Texts.of(f.toString() + ": " + FGHelper.readableTristate(this.passiveMap.get(f)) + "\n"));
+        }
+        return builder.build();
     }
 
     @Override
     public void writeToDatabase(DataSource dataSource) throws SQLException {
         super.writeToDatabase(dataSource);
+        try (Connection conn = dataSource.getConnection()) {
+            try (Statement statement = conn.createStatement()) {
+                statement.execute("CREATE TABLE IF NOT EXISTS FLAGMAP(KEYCOL VARCHAR (256), VALUECOL VARCHAR (256));" +
+                        "DELETE FROM FLAGMAP;");
+            }
+            try (PreparedStatement statement = conn.prepareStatement("INSERT INTO FLAGMAP(KEYCOL, VALUECOL) VALUES (? , ?)")) {
+                for (Map.Entry<Flags, Tristate> entry : passiveMap.entrySet()) {
+                    statement.setString(1, entry.getKey().name());
+                    statement.setString(2, entry.getValue().name());
+                    statement.addBatch();
+                }
+                statement.executeBatch();
+            }
+        }
     }
 
     @Override
