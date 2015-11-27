@@ -69,7 +69,7 @@ public class CommandSubtract implements CommandCallable {
                         .append(getUsage(source))
                         .build());
                 return CommandResult.empty();
-            } else if (isAlias(regionsAliases, args[0])) {
+            } else if (isAlias(REGIONS_ALIASES, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 int flag = 0;
                 Optional<World> optWorld = FGHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
@@ -97,7 +97,7 @@ public class CommandSubtract implements CommandCallable {
                 FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.remove(region);
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully removed Region from your state buffer!"));
                 return CommandResult.success();
-            } else if (isAlias(flagSetsAliases, args[0])) {
+            } else if (isAlias(FLAG_SETS_ALIASES, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name or a number!"));
                 IFlagSet flagSet;
                 try {
@@ -116,7 +116,7 @@ public class CommandSubtract implements CommandCallable {
                 FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.remove(flagSet);
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully removed FlagSet from your state buffer!"));
                 return CommandResult.success();
-            } else if (isAlias(positionsAliases, args[0])) {
+            } else if (isAlias(POSITIONS_ALIASES, args[0])) {
                 int index = FGCommandMainDispatcher.getInstance().getStateMap().get(player).positions.size();
                 if (args.length > 1) {
                     try {

@@ -33,21 +33,20 @@ import org.spongepowered.api.util.Tristate;
  */
 public class Aliases {
 
-    public static final String[] regionsAliases = {"regions", "region", "reg", "r"};
-    public static final String[] flagSetsAliases = {"flagsets", "flagset", "flags", "flag", "f"};
-    public static final String[] positionsAliases = {"positions", "position", "points", "point", "locations", "location", "pos", "loc", "locs", "p"};
-    public static final String[] ownerAliases = {"owners", "owner", "master", "masters", "creator", "creators",
+    public static final String[] REGIONS_ALIASES = {"regions", "region", "reg", "r"};
+    public static final String[] FLAG_SETS_ALIASES = {"flagsets", "flagset", "flags", "flag", "f"};
+    public static final String[] POSITIONS_ALIASES = {"positions", "position", "points", "point", "locations", "location", "pos", "loc", "locs", "p"};
+    public static final String[] OWNER_ALIASES = {"owners", "owner", "master", "masters", "creator", "creators",
             "admin", "admins", "administrator", "administrators", "mod", "mods"};
-    public static final String[] permissionAliases = {"permissions", "permission", "perms", "perm", "flags", "flag"};
-    public static final String[] passiveAliases = {"passive", "causeless", "userless", "environment"};
-    public static final String[] memberAliases = {"member", "members", "user", "users", "player", "players"};
-    public static final String[] defaultAliases = {"default", "nonmember", "nonmembers", "everyone", "other"};
-    public static final String[] groupsAliases = {"group", "groups"};
-    public static final String[] activeflagsAliases = {"activeflags", "active"};
-    public static final String[] trueAliases = {"true", "t", "allow", "a"};
-    public static final String[] falseAliases = {"false", "f", "deny", "d"};
-    public static final String[] passthroughAliases = {"passthrough", "pass", "p", "undefined", "undef", "un", "u"};
-    public static final String[] setAliases = {"set", "flag", "rule"};
+    public static final String[] PERMISSION_ALIASES = {"permissions", "permission", "perms", "perm", "flags", "flag"};
+    public static final String[] PASSIVE_ALIASES = {"passive", "causeless", "userless", "environment"};
+    public static final String[] MEMBER_ALIASES = {"member", "members", "user", "users", "player", "players"};
+    public static final String[] DEFAULT_ALIASES = {"default", "nonmember", "nonmembers", "everyone", "other"};
+    public static final String[] GROUPS_ALIASES = {"group", "groups"};
+    public static final String[] TRUE_ALIASES = {"true", "t", "allow", "a"};
+    public static final String[] FALSE_ALIASES = {"false", "f", "deny", "d"};
+    public static final String[] PASSTHROUGH_ALIASES = {"passthrough", "pass", "p", "undefined", "undef", "un", "u"};
+    public static final String[] SET_ALIASES = {"set", "flag", "rule"};
 
     public static boolean isAlias(String[] aliases, String input) {
         for (String alias : aliases) {
@@ -57,11 +56,11 @@ public class Aliases {
     }
 
     public static Tristate tristateFrom(String name) {
-        if (isAlias(trueAliases, name)) {
+        if (isAlias(TRUE_ALIASES, name)) {
             return Tristate.TRUE;
-        } else if (isAlias(falseAliases, name)) {
+        } else if (isAlias(FALSE_ALIASES, name)) {
             return Tristate.FALSE;
-        } else if (isAlias(passthroughAliases, name)) {
+        } else if (isAlias(PASSTHROUGH_ALIASES, name)) {
             return Tristate.UNDEFINED;
         } else {
             return null;

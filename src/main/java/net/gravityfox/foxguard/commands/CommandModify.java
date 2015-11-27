@@ -70,7 +70,7 @@ public class CommandModify implements CommandCallable {
                         .append(getUsage(source))
                         .build());
                 return CommandResult.empty();
-            } else if (isAlias(regionsAliases, args[0])) {
+            } else if (isAlias(REGIONS_ALIASES, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 int flag = 0;
                 Optional<World> optWorld = FGHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
@@ -88,7 +88,7 @@ public class CommandModify implements CommandCallable {
                         FGCommandMainDispatcher.getInstance().getStateMap().get(player), player);
                 if (success) source.sendMessage(Texts.of(TextColors.GREEN, "Successfully modified!"));
                 else source.sendMessage(Texts.of(TextColors.RED, "Modification Failed!"));
-            } else if (isAlias(flagSetsAliases, args[0])) {
+            } else if (isAlias(FLAG_SETS_ALIASES, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 IFlagSet flagSet = FGManager.getInstance().getFlagSet(args[1]);
                 if (flagSet == null)

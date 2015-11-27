@@ -46,8 +46,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Optional;
 
-import static net.gravityfox.foxguard.util.Aliases.flagSetsAliases;
-import static net.gravityfox.foxguard.util.Aliases.regionsAliases;
+import static net.gravityfox.foxguard.util.Aliases.FLAG_SETS_ALIASES;
+import static net.gravityfox.foxguard.util.Aliases.REGIONS_ALIASES;
 
 /**
  * Created by Fox on 8/18/2015.
@@ -73,7 +73,7 @@ public class CommandList implements CommandCallable {
                         .append(getUsage(source))
                         .build());
                 return CommandResult.empty();
-            } else if (contains(regionsAliases, args[0])) {
+            } else if (contains(REGIONS_ALIASES, args[0])) {
                 List<IRegion> regionList = new LinkedList<>();
                 boolean allFlag = true;
                 int worldOffset = 0;
@@ -104,7 +104,7 @@ public class CommandList implements CommandCallable {
                     if (regionListIterator.hasNext()) output.append(Texts.of("\n"));
                 }
                 source.sendMessage(output.build());
-            } else if (contains(flagSetsAliases, args[0])) {
+            } else if (contains(FLAG_SETS_ALIASES, args[0])) {
                 List<IFlagSet> flagSetList = FGManager.getInstance().getFlagSetsListCopy();
 
                     /*try {
@@ -166,6 +166,6 @@ public class CommandList implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("list <regions [w:<world>] | flagsets> [page]");
+        return Texts.of("list <regions [w:<world>] | flagsets>");
     }
 }

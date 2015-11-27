@@ -71,7 +71,7 @@ public class CommandDetail implements CommandCallable {
                         .append(getUsage(source))
                         .build());
                 return CommandResult.empty();
-            } else if (isAlias(regionsAliases, args[0])) {
+            } else if (isAlias(REGIONS_ALIASES, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 int flag = 0;
                 Optional<World> optWorld = FGHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
@@ -100,7 +100,7 @@ public class CommandDetail implements CommandCallable {
                         "\n" + flagSet.getShortTypeName() + " : " + flagSet.getName())));
                 player.sendMessage(builder.build());
 
-            } else if (isAlias(flagSetsAliases, args[0])) {
+            } else if (isAlias(FLAG_SETS_ALIASES, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
 
                 IFlagSet flagSet = FGManager.getInstance().getFlagSet(args[1]);

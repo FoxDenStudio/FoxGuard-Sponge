@@ -70,7 +70,7 @@ public class CommandDelete implements CommandCallable {
                         .append(getUsage(source))
                         .build());
                 return CommandResult.empty();
-            } else if (isAlias(regionsAliases, args[0])) {
+            } else if (isAlias(REGIONS_ALIASES, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 int flag = 0;
                 Optional<World> optWorld = FGHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
@@ -88,7 +88,7 @@ public class CommandDelete implements CommandCallable {
                     throw new ArgumentParseException(Texts.of("No Region exists with that name!"), args[1 + flag], 1 + flag);
 
                 player.sendMessage(Texts.of(TextColors.GREEN, "Region deleted successfully!"));
-            } else if (isAlias(flagSetsAliases, args[0])) {
+            } else if (isAlias(FLAG_SETS_ALIASES, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 if (args[1].equalsIgnoreCase(GlobalFlagSet.NAME))
                     throw new CommandException(Texts.of("You may not delete the global FlagSet!"));

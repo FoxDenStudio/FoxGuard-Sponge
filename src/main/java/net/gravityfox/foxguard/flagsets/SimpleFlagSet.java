@@ -83,12 +83,12 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
         String[] args = {};
         if (!arguments.isEmpty()) args = arguments.split(" +");
         if (args.length > 0) {
-            if (isAlias(groupsAliases, args[0])) {
+            if (isAlias(GROUPS_ALIASES, args[0])) {
                 if (args.length > 1) {
                     List<User> list;
-                    if (isAlias(ownerAliases, args[1])) {
+                    if (isAlias(OWNER_ALIASES, args[1])) {
                         list = this.ownerList;
-                    } else if (isAlias(memberAliases, args[1])) {
+                    } else if (isAlias(MEMBER_ALIASES, args[1])) {
                         list = this.memberList;
                     } else {
                         source.sendMessage(Texts.of(TextColors.RED, "Not a valid group!"));
@@ -157,26 +157,26 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
                     source.sendMessage(Texts.of(TextColors.RED, "Must specify a group!"));
                     return false;
                 }
-            } else if (isAlias(permissionAliases, args[0])) {
+            } else if (isAlias(PERMISSION_ALIASES, args[0])) {
                 return true;
-            } else if (isAlias(passiveAliases, args[0])) {
+            } else if (isAlias(PASSIVE_ALIASES, args[0])) {
                 if (args.length > 1) {
-                    if (isAlias(trueAliases, args[1])) {
+                    if (isAlias(TRUE_ALIASES, args[1])) {
                         this.passiveOption = PassiveOptions.ALLOW;
                         return true;
-                    } else if (isAlias(falseAliases, args[1])) {
+                    } else if (isAlias(FALSE_ALIASES, args[1])) {
                         this.passiveOption = PassiveOptions.DENY;
                         return true;
-                    } else if (isAlias(passthroughAliases, args[1])) {
+                    } else if (isAlias(PASSTHROUGH_ALIASES, args[1])) {
                         this.passiveOption = PassiveOptions.PASSTHROUGH;
                         return true;
-                    } else if (isAlias(ownerAliases, args[1])) {
+                    } else if (isAlias(OWNER_ALIASES, args[1])) {
                         this.passiveOption = PassiveOptions.OWNER;
                         return true;
-                    } else if (isAlias(memberAliases, args[1])) {
+                    } else if (isAlias(MEMBER_ALIASES, args[1])) {
                         this.passiveOption = PassiveOptions.MEMBER;
                         return true;
-                    } else if (isAlias(defaultAliases, args[1])) {
+                    } else if (isAlias(DEFAULT_ALIASES, args[1])) {
                         this.passiveOption = PassiveOptions.DEFAULT;
                         return true;
                     } else {

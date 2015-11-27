@@ -71,9 +71,9 @@ public class CommandFlush implements CommandCallable {
     }
 
     public InternalCommandState.StateField getType(String input) {
-        if (contains(regionsAliases, input)) return InternalCommandState.StateField.REGIONS;
-        else if (contains(flagSetsAliases, input)) return InternalCommandState.StateField.FLAGSETS;
-        else if (contains(positionsAliases, input)) return InternalCommandState.StateField.POSITIONS;
+        if (contains(REGIONS_ALIASES, input)) return InternalCommandState.StateField.REGIONS;
+        else if (contains(FLAG_SETS_ALIASES, input)) return InternalCommandState.StateField.FLAGSETS;
+        else if (contains(POSITIONS_ALIASES, input)) return InternalCommandState.StateField.POSITIONS;
         else return null;
     }
 

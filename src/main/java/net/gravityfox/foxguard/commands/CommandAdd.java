@@ -70,7 +70,7 @@ public class CommandAdd implements CommandCallable {
                         .append(getUsage(source))
                         .build());
                 return CommandResult.empty();
-            } else if (isAlias(regionsAliases, args[0])) {
+            } else if (isAlias(REGIONS_ALIASES, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 int flag = 0;
                 Optional<World> optWorld = FGHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
@@ -90,7 +90,7 @@ public class CommandAdd implements CommandCallable {
 
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully added Region to your state buffer!"));
                 return CommandResult.success();
-            } else if (isAlias(flagSetsAliases, args[0])) {
+            } else if (isAlias(FLAG_SETS_ALIASES, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 IFlagSet flagSet = FGManager.getInstance().getFlagSet(args[1]);
                 if (flagSet == null)
@@ -101,7 +101,7 @@ public class CommandAdd implements CommandCallable {
 
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully added FlagSet to your state buffer!"));
                 return CommandResult.success();
-            } else if (isAlias(positionsAliases, args[0])) {
+            } else if (isAlias(POSITIONS_ALIASES, args[0])) {
                 int x, y, z;
                 Vector3i pPos = player.getLocation().getBlockPosition();
                 if (args.length == 1) {
@@ -162,7 +162,7 @@ public class CommandAdd implements CommandCallable {
     @Override
     public Text getUsage(CommandSource source) {
         if (source instanceof Player)
-            return Texts.of("detail <region [w:<worldname>] | flagset> <name>");
-        else return Texts.of("detail <region <worldname> | flagset> <name>");
+            return Texts.of("add <region [w:<worldname>] | flagset> <name>");
+        else return Texts.of("add <region <worldname> | flagset> <name>");
     }
 }

@@ -73,6 +73,7 @@ public class PassiveFlagSet extends OwnableFlagSetBase {
     @Override
     public Tristate isAllowed(@Nullable User user, Flags flag, Event event) {
         if (!isEnabled) return Tristate.UNDEFINED;
+        if (user != null) return Tristate.UNDEFINED;
         if (FGHelper.contains(availableFlags, flag)) {
             return passiveMap.get(flag);
         }
@@ -88,7 +89,7 @@ public class PassiveFlagSet extends OwnableFlagSetBase {
         String[] args = {};
         if (!arguments.isEmpty()) args = arguments.split(" +");
         if (args.length > 0) {
-            if (isAlias(ownerAliases, args[1])) {
+            if (isAlias(OWNER_ALIASES, args[1])) {
                 if (args.length > 1) {
                     UserOperations op;
                     if (args[2].equalsIgnoreCase("add")) {
@@ -149,7 +150,7 @@ public class PassiveFlagSet extends OwnableFlagSetBase {
                     return false;
                 }
 
-            } else if (isAlias(setAliases, args[0])) {
+            } else if (isAlias(SET_ALIASES, args[0])) {
                 if (args.length > 1) {
                     Flags flag = flagFrom(args[1]);
                     if (flag == null) {

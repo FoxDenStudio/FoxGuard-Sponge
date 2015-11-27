@@ -42,9 +42,8 @@ public class CallbackHashMap<K, V> extends HashMap<K, V> {
 
     @Override
     public V get(Object key) {
-        V value = super.get(key);
-        if (value != null) {
-            return value;
+        if(containsKey(key)){
+            return super.get(key);
         } else {
             return callback.apply(key, this);
         }

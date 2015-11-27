@@ -56,7 +56,7 @@ import javax.sql.DataSource;
 import java.io.File;
 import java.sql.SQLException;
 
-import static net.gravityfox.foxguard.util.Aliases.flagSetsAliases;
+import static net.gravityfox.foxguard.util.Aliases.FLAG_SETS_ALIASES;
 
 /**
  * Created by Fox on 8/16/2015.
@@ -65,7 +65,7 @@ import static net.gravityfox.foxguard.util.Aliases.flagSetsAliases;
 @Plugin(id = "foxguard", name = "FoxGuard", version = FoxGuardMain.PLUGIN_VERSION)
 public class FoxGuardMain {
 
-    public static final String PLUGIN_VERSION = "0.8.6";
+    public static final String PLUGIN_VERSION = "0.8.7";
 
     private static FoxGuardMain instance;
 
@@ -181,7 +181,7 @@ public class FoxGuardMain {
 
         fgFlagSetDispatcher.register(new CommandPriority(), "priority", "prio", "level", "rank");
 
-        fgDispatcher.register(fgFlagSetDispatcher, flagSetsAliases);
+        fgDispatcher.register(fgFlagSetDispatcher, FLAG_SETS_ALIASES);
 
         game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
     }
@@ -195,6 +195,7 @@ public class FoxGuardMain {
 
     private void configurePermissions() {
         getPermissionService().getDefaultData().setPermission(SubjectData.GLOBAL_CONTEXT, "foxguard.command.info", Tristate.TRUE);
+        getPermissionService().getDefaultData().setPermission(SubjectData.GLOBAL_CONTEXT, "foxguard.override", Tristate.FALSE);
     }
 
     public Logger getLogger() {
