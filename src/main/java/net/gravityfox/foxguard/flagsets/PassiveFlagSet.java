@@ -152,13 +152,13 @@ public class PassiveFlagSet extends OwnableFlagSetBase {
             } else if (isAlias(setAliases, args[0])) {
                 if (args.length > 1) {
                     Flags flag = flagFrom(args[1]);
-                    if(flag == null){
+                    if (flag == null) {
                         source.sendMessage(Texts.of(TextColors.RED, "Not a valid flag!"));
                         return false;
                     }
-                    if(args.length > 2){
+                    if (args.length > 2) {
                         Tristate tristate = tristateFrom(args[2]);
-                        if(tristate == null){
+                        if (tristate == null) {
                             source.sendMessage(Texts.of(TextColors.RED, "Not a valid value!"));
                             return false;
                         }
@@ -184,10 +184,10 @@ public class PassiveFlagSet extends OwnableFlagSetBase {
 
     }
 
-    private Flags flagFrom(String name){
-        if(name.equalsIgnoreCase("spawnmobpassive")){
+    private Flags flagFrom(String name) {
+        if (name.equalsIgnoreCase("spawnmobpassive")) {
             return Flags.SPAWN_MOB_PASSIVE;
-        } else if(name.equalsIgnoreCase("spawnmobhostile")){
+        } else if (name.equalsIgnoreCase("spawnmobhostile")) {
             return Flags.SPAWN_MOB_HOSTILE;
         } else return null;
     }

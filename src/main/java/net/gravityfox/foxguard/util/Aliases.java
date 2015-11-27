@@ -56,8 +56,8 @@ public class Aliases {
         return false;
     }
 
-    public static Tristate tristateFrom(String name){
-        if(isAlias(trueAliases, name)){
+    public static Tristate tristateFrom(String name) {
+        if (isAlias(trueAliases, name)) {
             return Tristate.TRUE;
         } else if (isAlias(falseAliases, name)) {
             return Tristate.FALSE;

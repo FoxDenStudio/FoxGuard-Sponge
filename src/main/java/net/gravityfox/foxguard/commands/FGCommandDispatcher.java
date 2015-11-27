@@ -169,6 +169,7 @@ public class FGCommandDispatcher implements Dispatcher {
             return CommandResult.empty();
         }
         if (!inputArguments.isEmpty()) {
+            inputArguments = inputArguments.trim();
             String[] args = inputArguments.split(" +", 2);
             if (args[0].equalsIgnoreCase("help")) {
                 //args = inputArguments.split(" +", 2);

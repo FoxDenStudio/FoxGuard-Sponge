@@ -45,7 +45,7 @@ public enum Flags {
 
     String humanName;
 
-    Flags(String name){
+    Flags(String name) {
         this.humanName = name;
     }
 

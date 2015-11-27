@@ -39,10 +39,7 @@ import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.event.entity.living.player.TargetPlayerEvent;
-import org.spongepowered.api.event.game.state.GameInitializationEvent;
-import org.spongepowered.api.event.game.state.GameStartedServerEvent;
-import org.spongepowered.api.event.game.state.GameStoppedServerEvent;
-import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
+import org.spongepowered.api.event.game.state.*;
 import org.spongepowered.api.event.world.LoadWorldEvent;
 import org.spongepowered.api.event.world.UnloadWorldEvent;
 import org.spongepowered.api.plugin.Plugin;
@@ -85,7 +82,6 @@ public class FoxGuardMain {
 
     private SqlService sql;
     private UserStorage userStorage;
-    private FGCommandMainDispatcher fgDispatcher;
 
     private boolean loaded = false;
 
@@ -93,11 +89,17 @@ public class FoxGuardMain {
         return instance;
     }
 
+    //my uuid - f275f223-1643-4fac-9fb8-44aaf5b4b371
+
     @Listener
-    public void gameInit(GameInitializationEvent event) {
+    public void gamePreInit(GamePreInitializationEvent event) {
         instance = this;
         new FGConfigManager();
         FGConfigManager.getInstance().save();
+    }
+
+    @Listener
+    public void gameInit(GameInitializationEvent event) {
         userStorage = game.getServiceManager().provide(UserStorage.class).get();
         new FGManager(this, game.getServer());
 
@@ -108,7 +110,6 @@ public class FoxGuardMain {
 
     @Listener
     public void serverStarted(GameStartedServerEvent event) {
-        FGManager fgm = FGManager.getInstance();
         FGStorageManager.getInstance().initFlagSets();
         FGStorageManager.getInstance().loadFlagSets();
         loaded = true;
@@ -143,9 +144,9 @@ public class FoxGuardMain {
         FGStorageManager.getInstance().initWorld(event.getTargetWorld());
         FGStorageManager.getInstance().loadWorldRegions(event.getTargetWorld());
         if (loaded) {
-            FGStorageManager.getInstance().loadWorldLinks(event.getTargetWorld());
             if (FGConfigManager.getInstance().forceLoad)
                 FGStorageManager.getInstance().resolveDeferredObjects();
+            FGStorageManager.getInstance().loadWorldLinks(event.getTargetWorld());
         }
     }
 
@@ -157,7 +158,7 @@ public class FoxGuardMain {
     }
 
     private void registerCommands() {
-        fgDispatcher = new FGCommandMainDispatcher("/foxguard");
+        FGCommandMainDispatcher fgDispatcher = new FGCommandMainDispatcher("/foxguard");
         FGCommandDispatcher fgRegionDispatcher = new FGCommandDispatcher("/foxguard regions");
         FGCommandDispatcher fgFlagSetDispatcher = new FGCommandDispatcher("/foxguard flagsets",
                 "Commands spcifically meant for managing FlagSets.");

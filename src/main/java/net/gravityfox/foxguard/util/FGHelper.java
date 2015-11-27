@@ -69,7 +69,7 @@ public class FGHelper {
         return flagSet.getName().equals(GlobalFlagSet.NAME) ? TextColors.YELLOW : TextColors.RESET;
     }
 
-    public static <T> boolean contains(T[] array, T value){
+    public static <T> boolean contains(T[] array, T value) {
         for (T element : array) {
             if (element.equals(value)) return true;
         }
