@@ -65,7 +65,7 @@ import static net.gravityfox.foxguard.util.Aliases.flagSetsAliases;
 @Plugin(id = "foxguard", name = "FoxGuard", version = FoxGuardMain.PLUGIN_VERSION)
 public class FoxGuardMain {
 
-    public static final String PLUGIN_VERSION = "0.8.3";
+    public static final String PLUGIN_VERSION = "0.8.6";
 
     private static FoxGuardMain instance;
 
