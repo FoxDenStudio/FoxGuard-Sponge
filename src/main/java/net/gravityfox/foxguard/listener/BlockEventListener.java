@@ -26,7 +26,6 @@
 package net.gravityfox.foxguard.listener;
 
 import com.flowpowered.math.vector.Vector3i;
-import net.gravityfox.foxguard.util.DebugHelper;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.living.player.Player;
@@ -37,9 +36,8 @@ import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 import net.gravityfox.foxguard.FGManager;
-import net.gravityfox.foxguard.FoxGuardMain;
 import net.gravityfox.foxguard.flagsets.IFlagSet;
-import net.gravityfox.foxguard.flagsets.util.ActiveFlags;
+import net.gravityfox.foxguard.flagsets.util.Flags;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -63,11 +61,11 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
             user = null;
         }
         //DebugHelper.printBlockEvent(event);
-        ActiveFlags typeFlag;
-        if (event instanceof ChangeBlockEvent.Modify) typeFlag = ActiveFlags.BLOCK_MODIFY;
-        else if (event instanceof ChangeBlockEvent.Fluid) typeFlag = ActiveFlags.FLUID;
-        else if (event instanceof ChangeBlockEvent.Break) typeFlag = ActiveFlags.BLOCK_BREAK;
-        else if (event instanceof ChangeBlockEvent.Place) typeFlag = ActiveFlags.BLOCK_PLACE;
+        Flags typeFlag;
+        if (event instanceof ChangeBlockEvent.Modify) typeFlag = Flags.BLOCK_MODIFY;
+        else if (event instanceof ChangeBlockEvent.Fluid) typeFlag = Flags.FLUID;
+        else if (event instanceof ChangeBlockEvent.Break) typeFlag = Flags.BLOCK_BREAK;
+        else if (event instanceof ChangeBlockEvent.Place) typeFlag = Flags.BLOCK_PLACE;
         else return;
 
 
@@ -90,7 +88,7 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
             if (flagSet.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
                 break;
             }
-            flagState = flagState.and(flagSet.hasPermission(user, typeFlag, event));
+            flagState = flagState.and(flagSet.isAllowed(user, typeFlag, event));
             currPriority = flagSet.getPriority();
         }
         if (flagState == Tristate.FALSE) {

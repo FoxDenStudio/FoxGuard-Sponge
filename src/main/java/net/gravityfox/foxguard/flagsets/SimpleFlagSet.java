@@ -27,8 +27,7 @@ package net.gravityfox.foxguard.flagsets;
 
 import net.gravityfox.foxguard.FoxGuardMain;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
-import net.gravityfox.foxguard.flagsets.util.ActiveFlags;
-import net.gravityfox.foxguard.flagsets.util.PassiveFlags;
+import net.gravityfox.foxguard.flagsets.util.Flags;
 import net.gravityfox.foxguard.objects.IMembership;
 import net.gravityfox.foxguard.util.CallbackHashMap;
 import net.gravityfox.foxguard.util.FGHelper;
@@ -71,13 +70,13 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
     private PassiveOptions passiveOption = PassiveOptions.PASSTHROUGH;
 
     private List<User> memberList = new LinkedList<>();
-    private Map<ActiveFlags, Tristate> ownerPermissions = new CallbackHashMap<>((o, m) -> {
+    private Map<Flags, Tristate> ownerPermissions = new CallbackHashMap<>((o, m) -> {
         return Tristate.TRUE;
     });
-    private Map<ActiveFlags, Tristate> memberPermissions = new CallbackHashMap<>((o, m) -> {
+    private Map<Flags, Tristate> memberPermissions = new CallbackHashMap<>((o, m) -> {
         return Tristate.UNDEFINED;
     });
-    private Map<ActiveFlags, Tristate> defaultPermissions = new CallbackHashMap<>((o, m) -> {
+    private Map<Flags, Tristate> defaultPermissions = new CallbackHashMap<>((o, m) -> {
         return Tristate.FALSE;
     });
 
@@ -209,7 +208,7 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
     }
 
     @Override
-    public Tristate hasPermission(User user, ActiveFlags flag, Event event) {
+    public Tristate isAllowed(User user, Flags flag, Event event) {
         if (user == null) {
             switch (this.passiveOption) {
                 case OWNER:
@@ -229,11 +228,6 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
         if (FGHelper.isUserOnList(this.ownerList, user)) return this.ownerPermissions.get(flag);
         if (FGHelper.isUserOnList(this.memberList, user)) return this.memberPermissions.get(flag);
         return this.defaultPermissions.get(flag);
-    }
-
-    @Override
-    public Tristate isFlagAllowed(PassiveFlags flag, Event event) {
-        return Tristate.UNDEFINED;
     }
 
     @Override
@@ -261,15 +255,15 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
         }
         builder.append(Texts.of("\n"));
         builder.append(Texts.of(TextColors.GOLD, "Owner permissions:\n"));
-        for (ActiveFlags f : this.ownerPermissions.keySet()) {
+        for (Flags f : this.ownerPermissions.keySet()) {
             builder.append(Texts.of(f.toString() + ": " + FGHelper.readableTristate(ownerPermissions.get(f)) + "\n"));
         }
         builder.append(Texts.of(TextColors.GREEN, "Member permissions:\n"));
-        for (ActiveFlags f : this.memberPermissions.keySet()) {
+        for (Flags f : this.memberPermissions.keySet()) {
             builder.append(Texts.of(f.toString() + ": " + FGHelper.readableTristate(memberPermissions.get(f)) + "\n"));
         }
         builder.append(Texts.of(TextColors.RED, "Default permissions:\n"));
-        for (ActiveFlags f : this.defaultPermissions.keySet()) {
+        for (Flags f : this.defaultPermissions.keySet()) {
             builder.append(Texts.of(f.toString() + ": " + FGHelper.readableTristate(defaultPermissions.get(f)) + "\n"));
         }
         builder.append(Texts.of(TextColors.GRAY, "Passive setting: "));

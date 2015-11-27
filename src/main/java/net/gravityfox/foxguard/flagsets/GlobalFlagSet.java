@@ -32,8 +32,7 @@ import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.util.command.CommandSource;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
-import net.gravityfox.foxguard.flagsets.util.ActiveFlags;
-import net.gravityfox.foxguard.flagsets.util.PassiveFlags;
+import net.gravityfox.foxguard.flagsets.util.Flags;
 
 import javax.sql.DataSource;
 
@@ -90,12 +89,8 @@ public class GlobalFlagSet extends FlagSetBase {
     }
 
     @Override
-    public Tristate hasPermission(User user, ActiveFlags flag, Event event) {
+    public Tristate isAllowed(User user, Flags flag, Event event) {
         return Tristate.TRUE;
     }
 
-    @Override
-    public Tristate isFlagAllowed(PassiveFlags flag, Event event) {
-        return Tristate.TRUE;
-    }
 }

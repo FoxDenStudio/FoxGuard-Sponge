@@ -23,11 +23,50 @@
  * THE SOFTWARE.
  */
 
-package net.gravityfox.foxguard.flagsets.util;
+package net.gravityfox.foxguard.flagsets;
+
+import net.gravityfox.foxguard.commands.util.InternalCommandState;
+import net.gravityfox.foxguard.flagsets.util.Flags;
+import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.event.Event;
+import org.spongepowered.api.util.Tristate;
+import org.spongepowered.api.util.command.CommandSource;
+
+import javax.annotation.Nullable;
 
 /**
- * Created by Fox on 8/17/2015.
- * Project: foxguard
+ * Created by Fox on 11/26/2015.
+ * Project: SpongeForge
  */
-public enum PassiveFlags {
+public class PassiveFlagSet extends OwnableFlagSetBase {
+
+    public PassiveFlagSet(String name, int priority) {
+        super(name, priority);
+    }
+
+    @Override
+    public Tristate isAllowed(@Nullable User user, Flags flag, Event event) {
+        return Tristate.UNDEFINED;
+    }
+
+    @Override
+    public String getShortTypeName() {
+        return "Pass";
+    }
+
+    @Override
+    public String getLongTypeName() {
+        return "Passive";
+    }
+
+    @Override
+    public String getUniqueTypeString() {
+        return "passive";
+    }
+
+    @Override
+    public boolean modify(String arguments, InternalCommandState state, CommandSource source) {
+        return false;
+    }
+
 }

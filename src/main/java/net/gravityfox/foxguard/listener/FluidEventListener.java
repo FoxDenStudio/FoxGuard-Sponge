@@ -25,23 +25,8 @@
 
 package net.gravityfox.foxguard.listener;
 
-import com.flowpowered.math.vector.Vector3i;
-import net.gravityfox.foxguard.FGManager;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
-import net.gravityfox.foxguard.flagsets.util.ActiveFlags;
-import net.gravityfox.foxguard.util.DebugHelper;
-import org.spongepowered.api.block.BlockSnapshot;
-import org.spongepowered.api.data.Transaction;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
-import org.spongepowered.api.text.Texts;
-import org.spongepowered.api.util.Tristate;
-import org.spongepowered.api.world.World;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Created by Fox on 10/22/2015.
