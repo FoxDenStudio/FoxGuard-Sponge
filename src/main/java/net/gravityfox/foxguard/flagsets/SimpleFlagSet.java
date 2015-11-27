@@ -258,7 +258,7 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
             builder.append(Texts.of(f.toString() + ": " + FGHelper.readableTristate(defaultPermissions.get(f)) + "\n"));
         }
         builder.append(Texts.of(TextColors.GRAY, "Passive setting: "));
-        builder.append(Texts.of(TextColors.RESET, this.passiveOption.toString() + "\n"));
+        builder.append(Texts.of(TextColors.RESET, this.passiveOption.toString()));
         return builder.build();
     }
 

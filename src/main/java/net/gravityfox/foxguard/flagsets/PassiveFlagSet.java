@@ -196,9 +196,9 @@ public class PassiveFlagSet extends OwnableFlagSetBase {
     public Text getDetails(String arguments) {
         TextBuilder builder = super.getDetails(arguments).builder();
         builder.append(Texts.of("\n"));
-        builder.append(Texts.of(TextColors.GOLD, "Passive Flags:\n"));
+        builder.append(Texts.of(TextColors.GOLD, "Passive Flags:"));
         for (Flags f : this.passiveMap.keySet()) {
-            builder.append(Texts.of(f.toString() + ": " + FGHelper.readableTristate(this.passiveMap.get(f)) + "\n"));
+            builder.append(Texts.of("\n" + f.toString() + ": " + FGHelper.readableTristate(this.passiveMap.get(f))));
         }
         return builder.build();
     }
