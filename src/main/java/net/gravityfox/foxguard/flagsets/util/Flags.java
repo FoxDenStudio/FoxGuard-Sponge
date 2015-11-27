@@ -30,10 +30,13 @@ package net.gravityfox.foxguard.flagsets.util;
  * Project: foxguard
  */
 public enum Flags {
+    // Active
     BLOCK_PLACE, BLOCK_BREAK, BLOCK_MODIFY,
     BLOCK_INTERACT_PRIMARY, BLOCK_INTERACT_SECONDARY,
     ENTITY_INTERACT_PRIMARY, ENTITY_INTERACT_SECONDARY,
-    FLUID;
+    FLUID,
+    // Passive
+    SPAWN_MOB_HOSTILE, SPAWN_MOB_PASSIVE;
 
     @Override
     public String toString() {
