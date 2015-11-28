@@ -89,7 +89,7 @@ public class GlobalHandler extends HandlerBase {
     }
 
     @Override
-    public Tristate isAllowed(User user, Flags flag, Event event) {
+    public Tristate handle(User user, Flags flag, Event event) {
         return Tristate.TRUE;
     }
 

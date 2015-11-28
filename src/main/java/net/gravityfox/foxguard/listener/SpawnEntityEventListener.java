@@ -86,7 +86,7 @@ public class SpawnEntityEventListener implements EventListener<SpawnEntityEvent>
             if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
                 break;
             }
-            flagState = flagState.and(handler.isAllowed(user, typeFlag, event));
+            flagState = flagState.and(handler.handle(user, typeFlag, event));
             currPriority = handler.getPriority();
         }
         if (flagState == Tristate.FALSE) {

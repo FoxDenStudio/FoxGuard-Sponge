@@ -39,7 +39,7 @@ import javax.annotation.Nullable;
  */
 public interface IHandler extends IFGObject, Comparable<IHandler> {
 
-    Tristate isAllowed(@Nullable User user, Flags flag, Event event);
+    Tristate handle(@Nullable User user, Flags flag, Event event);
 
     boolean isEnabled();
 

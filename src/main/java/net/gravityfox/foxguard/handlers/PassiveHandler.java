@@ -71,7 +71,7 @@ public class PassiveHandler extends OwnableHandlerBase {
     }
 
     @Override
-    public Tristate isAllowed(@Nullable User user, Flags flag, Event event) {
+    public Tristate handle(@Nullable User user, Flags flag, Event event) {
         if (!isEnabled) return Tristate.UNDEFINED;
         if (user != null) return Tristate.UNDEFINED;
         if (FGHelper.contains(availableFlags, flag)) {

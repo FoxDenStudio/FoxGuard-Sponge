@@ -243,7 +243,7 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
     }
 
     @Override
-    public Tristate isAllowed(User user, Flags flag, Event event) {
+    public Tristate handle(User user, Flags flag, Event event) {
         if (!isEnabled) return Tristate.UNDEFINED;
         if (user == null) {
             switch (this.passiveOption) {
