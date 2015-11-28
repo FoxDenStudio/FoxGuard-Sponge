@@ -5,11 +5,11 @@ foxguard {
             objects {
                 list {
                     regions
-                    flagsets
+                    handlers
                 }
                 detail {
                     regions
-                    flagsets
+                    handlers
                 }
             }
         }
@@ -17,7 +17,7 @@ foxguard {
             state
             add{
                 regions
-                flagsets
+                handlers
                 positions
             }
             subtract
@@ -26,26 +26,26 @@ foxguard {
         modify {
             objects {
                 create{
-                    flagsets
+                    handlers
                     regions
                 }
                 delete{
-                    flagsets.own
+                    handlers.own
                     regions.own
                 }
                 modify{
-                    flagsets.own
+                    handlers.own
                     regions.own
                 }
                 rename{
-                    flagsets.own
+                    handlers.own
                     regions.own
                 }
                 import{
-                    flagsets
+                    handlers
                     regions
                 }
-                flagsets {
+                handlers {
                     priority.own
                 }
             }

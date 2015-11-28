@@ -38,8 +38,8 @@ public enum Flags {
     ENTITY_INTERACT_PRIMARY("entityattack","Attack-Entities"),
     ENTITY_INTERACT_SECONDARY("entityinteract","Interact-Entities"),
     FLUID("fluids","Fluids"),
-    SPAWN_MOB_HOSTILE("spawnmobpassive","Spawn-Hostile-Mobs"),
-    SPAWN_MOB_PASSIVE("spawnmobhostile","Spawn-Passive-Mobs");
+    SPAWN_MOB_HOSTILE("spawnmobhostile","Spawn-Hostile-Mobs"),
+    SPAWN_MOB_PASSIVE("spawnmobpassive","Spawn-Passive-Mobs");
 
     String humanName;
     String flagName;
