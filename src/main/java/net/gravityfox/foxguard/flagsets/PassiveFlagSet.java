@@ -89,7 +89,7 @@ public class PassiveFlagSet extends OwnableFlagSetBase {
         String[] args = {};
         if (!arguments.isEmpty()) args = arguments.split(" +");
         if (args.length > 0) {
-            if (isAlias(OWNER_ALIASES, args[1])) {
+            if (isAlias(OWNER_GROUP_ALIASES, args[1])) {
                 if (args.length > 1) {
                     UserOperations op;
                     if (args[2].equalsIgnoreCase("add")) {
@@ -152,7 +152,7 @@ public class PassiveFlagSet extends OwnableFlagSetBase {
 
             } else if (isAlias(SET_ALIASES, args[0])) {
                 if (args.length > 1) {
-                    Flags flag = flagFrom(args[1]);
+                    Flags flag = Flags.flagFrom(args[1]);
                     if (flag == null) {
                         source.sendMessage(Texts.of(TextColors.RED, "Not a valid flag!"));
                         return false;
@@ -185,14 +185,6 @@ public class PassiveFlagSet extends OwnableFlagSetBase {
 
     }
 
-    private Flags flagFrom(String name) {
-        if (name.equalsIgnoreCase("spawnmobpassive")) {
-            return Flags.SPAWN_MOB_PASSIVE;
-        } else if (name.equalsIgnoreCase("spawnmobhostile")) {
-            return Flags.SPAWN_MOB_HOSTILE;
-        } else return null;
-    }
-
     @Override
     public Text getDetails(String arguments) {
         TextBuilder builder = super.getDetails(arguments).builder();
@@ -209,10 +201,10 @@ public class PassiveFlagSet extends OwnableFlagSetBase {
         super.writeToDatabase(dataSource);
         try (Connection conn = dataSource.getConnection()) {
             try (Statement statement = conn.createStatement()) {
-                statement.execute("CREATE TABLE IF NOT EXISTS FLAGMAP(KEYCOL VARCHAR (256), VALUECOL VARCHAR (256));" +
+                statement.execute("CREATE TABLE IF NOT EXISTS FLAGMAP(KEY VARCHAR (256), VALUE VARCHAR (256));" +
                         "DELETE FROM FLAGMAP;");
             }
-            try (PreparedStatement statement = conn.prepareStatement("INSERT INTO FLAGMAP(KEYCOL, VALUECOL) VALUES (? , ?)")) {
+            try (PreparedStatement statement = conn.prepareStatement("INSERT INTO FLAGMAP(KEY, VALUE) VALUES (? , ?)")) {
                 for (Map.Entry<Flags, Tristate> entry : passiveMap.entrySet()) {
                     statement.setString(1, entry.getKey().name());
                     statement.setString(2, entry.getValue().name());

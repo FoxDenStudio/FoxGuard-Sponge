@@ -86,10 +86,10 @@ abstract public class OwnableFlagSetBase extends FlagSetBase implements IOwnable
     public void writeToDatabase(DataSource dataSource) throws SQLException {
         try (Connection conn = dataSource.getConnection()) {
             try (Statement statement = conn.createStatement()) {
-                statement.execute("CREATE TABLE IF NOT EXISTS OWNERS(NAMESCOL VARCHAR(256), USERUUID UUID);" +
+                statement.execute("CREATE TABLE IF NOT EXISTS OWNERS(NAMES VARCHAR(256), USERUUID UUID);" +
                         "DELETE FROM OWNERS");
             }
-            try (PreparedStatement insert = conn.prepareStatement("INSERT INTO OWNERS(NAMESCOL, USERUUID) VALUES (?, ?)")) {
+            try (PreparedStatement insert = conn.prepareStatement("INSERT INTO OWNERS(NAMES, USERUUID) VALUES (?, ?)")) {
                 for (User owner : ownerList) {
                     insert.setString(1, owner.getName());
                     insert.setObject(2, owner.getUniqueId());

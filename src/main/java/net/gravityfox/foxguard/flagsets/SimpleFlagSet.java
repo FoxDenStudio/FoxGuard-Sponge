@@ -60,18 +60,25 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
     private PassiveOptions passiveOption = PassiveOptions.PASSTHROUGH;
 
     private List<User> memberList = new LinkedList<>();
-    private Map<Flags, Tristate> ownerPermissions = new CallbackHashMap<>((o, m) -> {
-        return Tristate.TRUE;
-    });
-    private Map<Flags, Tristate> memberPermissions = new CallbackHashMap<>((o, m) -> {
-        return Tristate.UNDEFINED;
-    });
-    private Map<Flags, Tristate> defaultPermissions = new CallbackHashMap<>((o, m) -> {
-        return Tristate.FALSE;
-    });
+    private Map<Flags, Tristate> ownerPermissions;
+    private Map<Flags, Tristate> memberPermissions;
+    private Map<Flags, Tristate> defaultPermissions;
 
     public SimpleFlagSet(String name, int priority) {
+        this(name, priority,
+                new CallbackHashMap<>((o, m) -> Tristate.TRUE),
+                new CallbackHashMap<>((o, m) -> Tristate.UNDEFINED),
+                new CallbackHashMap<>((o, m) -> Tristate.FALSE));
+    }
+
+    public SimpleFlagSet(String name, int priority,
+                         Map<Flags, Tristate> ownerPermissions,
+                         Map<Flags, Tristate> memberPermissions,
+                         Map<Flags, Tristate> defaultPermissions) {
         super(name, priority);
+        this.ownerPermissions = ownerPermissions;
+        this.memberPermissions = memberPermissions;
+        this.defaultPermissions = defaultPermissions;
     }
 
     @Override
@@ -86,9 +93,9 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
             if (isAlias(GROUPS_ALIASES, args[0])) {
                 if (args.length > 1) {
                     List<User> list;
-                    if (isAlias(OWNER_ALIASES, args[1])) {
+                    if (isAlias(OWNER_GROUP_ALIASES, args[1])) {
                         list = this.ownerList;
-                    } else if (isAlias(MEMBER_ALIASES, args[1])) {
+                    } else if (isAlias(MEMBER_GROUP_ALIASES, args[1])) {
                         list = this.memberList;
                     } else {
                         source.sendMessage(Texts.of(TextColors.RED, "Not a valid group!"));
@@ -157,8 +164,46 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
                     source.sendMessage(Texts.of(TextColors.RED, "Must specify a group!"));
                     return false;
                 }
-            } else if (isAlias(PERMISSION_ALIASES, args[0])) {
-                return true;
+            } else if (isAlias(SET_ALIASES, args[0])) {
+                Map<Flags, Tristate> map;
+                if (args.length > 1) {
+                    if (isAlias(OWNER_GROUP_ALIASES, args[1])) {
+                        map = ownerPermissions;
+                    } else if (isAlias(MEMBER_GROUP_ALIASES, args[1])) {
+                        map = memberPermissions;
+                    } else if (isAlias(DEFAULT_GROUP_ALIASES, args[1])) {
+                        map = defaultPermissions;
+                    } else {
+                        source.sendMessage(Texts.of(TextColors.RED, "Not a valid group!"));
+                        return false;
+                    }
+                } else {
+                    source.sendMessage(Texts.of(TextColors.RED, "Must specify a group!"));
+                    return false;
+                }
+                if (args.length > 2) {
+                    Flags flag = Flags.flagFrom(args[2]);
+                    if (flag == null) {
+                        source.sendMessage(Texts.of(TextColors.RED, "Not a valid flag!"));
+                        return false;
+                    }
+                    if (args.length > 3) {
+                        Tristate tristate = tristateFrom(args[3]);
+                        if (tristate == null) {
+                            source.sendMessage(Texts.of(TextColors.RED, "Not a valid value!"));
+                            return false;
+                        }
+                        map.put(flag, tristate);
+                        source.sendMessage(Texts.of(TextColors.GREEN, "Successfully set flag!"));
+                        return true;
+                    } else {
+                        source.sendMessage(Texts.of(TextColors.RED, "Must specify a value!"));
+                        return false;
+                    }
+                } else {
+                    source.sendMessage(Texts.of(TextColors.RED, "Must specify a flag!"));
+                    return false;
+                }
             } else if (isAlias(PASSIVE_ALIASES, args[0])) {
                 if (args.length > 1) {
                     if (isAlias(TRUE_ALIASES, args[1])) {
@@ -170,13 +215,13 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
                     } else if (isAlias(PASSTHROUGH_ALIASES, args[1])) {
                         this.passiveOption = PassiveOptions.PASSTHROUGH;
                         return true;
-                    } else if (isAlias(OWNER_ALIASES, args[1])) {
+                    } else if (isAlias(OWNER_GROUP_ALIASES, args[1])) {
                         this.passiveOption = PassiveOptions.OWNER;
                         return true;
-                    } else if (isAlias(MEMBER_ALIASES, args[1])) {
+                    } else if (isAlias(MEMBER_GROUP_ALIASES, args[1])) {
                         this.passiveOption = PassiveOptions.MEMBER;
                         return true;
-                    } else if (isAlias(DEFAULT_ALIASES, args[1])) {
+                    } else if (isAlias(DEFAULT_GROUP_ALIASES, args[1])) {
                         this.passiveOption = PassiveOptions.DEFAULT;
                         return true;
                     } else {
@@ -257,7 +302,7 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
         for (Flags f : this.defaultPermissions.keySet()) {
             builder.append(Texts.of(f.toString() + ": " + FGHelper.readableTristate(defaultPermissions.get(f)) + "\n"));
         }
-        builder.append(Texts.of(TextColors.GRAY, "Passive setting: "));
+        builder.append(Texts.of(TextColors.AQUA, "Passive setting: "));
         builder.append(Texts.of(TextColors.RESET, this.passiveOption.toString()));
         return builder.build();
     }
@@ -267,9 +312,9 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
         super.writeToDatabase(dataSource);
         try (Connection conn = dataSource.getConnection()) {
             try (Statement statement = conn.createStatement()) {
-                statement.execute("CREATE TABLE IF NOT EXISTS MEMBERS(NAMESCOL VARCHAR(256), USERUUID UUID);" +
+                statement.execute("CREATE TABLE IF NOT EXISTS MEMBERS(NAMES VARCHAR(256), USERUUID UUID);" +
                         "DELETE FROM MEMBERS;");
-                try (PreparedStatement insert = conn.prepareStatement("INSERT INTO MEMBERS(NAMESCOL, USERUUID) VALUES (?, ?)")) {
+                try (PreparedStatement insert = conn.prepareStatement("INSERT INTO MEMBERS(NAMES, USERUUID) VALUES (?, ?)")) {
                     for (User member : memberList) {
                         insert.setString(1, member.getName());
                         insert.setObject(2, member.getUniqueId());
@@ -277,9 +322,40 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
                     }
                     insert.executeBatch();
                 }
-                statement.execute("CREATE TABLE IF NOT EXISTS MAP(KEYCOL VARCHAR (256), VALUECOL VARCHAR (256));" +
+                statement.execute("CREATE TABLE IF NOT EXISTS MAP(KEY VARCHAR (256), VALUE VARCHAR (256));" +
                         "DELETE FROM MAP;");
-                statement.execute("INSERT INTO MAP(KEYCOL, VALUECOL) VALUES (\'passive\', \'" + this.passiveOption.name() + "\')");
+                statement.execute("INSERT INTO MAP(KEY, VALUE) VALUES ('passive', '" + this.passiveOption.name() + "')");
+
+                statement.execute("CREATE TABLE IF NOT EXISTS OWNERFLAGMAP(KEY VARCHAR (256), VALUE VARCHAR (256));" +
+                        "DELETE FROM OWNERFLAGMAP;");
+                statement.execute("CREATE TABLE IF NOT EXISTS MEMBERFLAGMAP(KEY VARCHAR (256), VALUE VARCHAR (256));" +
+                        "DELETE FROM MEMBERFLAGMAP;");
+                statement.execute("CREATE TABLE IF NOT EXISTS DEFAULTFLAGMAP(KEY VARCHAR (256), VALUE VARCHAR (256));" +
+                        "DELETE FROM DEFAULTFLAGMAP;");
+            }
+            try (PreparedStatement statement = conn.prepareStatement("INSERT INTO OWNERFLAGMAP(KEY, VALUE) VALUES (? , ?)")) {
+                for (Map.Entry<Flags, Tristate> entry : ownerPermissions.entrySet()) {
+                    statement.setString(1, entry.getKey().name());
+                    statement.setString(2, entry.getValue().name());
+                    statement.addBatch();
+                }
+                statement.executeBatch();
+            }
+            try (PreparedStatement statement = conn.prepareStatement("INSERT INTO MEMBERFLAGMAP(KEY, VALUE) VALUES (? , ?)")) {
+                for (Map.Entry<Flags, Tristate> entry : memberPermissions.entrySet()) {
+                    statement.setString(1, entry.getKey().name());
+                    statement.setString(2, entry.getValue().name());
+                    statement.addBatch();
+                }
+                statement.executeBatch();
+            }
+            try (PreparedStatement statement = conn.prepareStatement("INSERT INTO DEFAULTFLAGMAP(KEY, VALUE) VALUES (? , ?)")) {
+                for (Map.Entry<Flags, Tristate> entry : defaultPermissions.entrySet()) {
+                    statement.setString(1, entry.getKey().name());
+                    statement.setString(2, entry.getValue().name());
+                    statement.addBatch();
+                }
+                statement.executeBatch();
             }
         }
     }

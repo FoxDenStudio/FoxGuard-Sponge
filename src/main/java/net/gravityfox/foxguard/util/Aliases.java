@@ -36,17 +36,16 @@ public class Aliases {
     public static final String[] REGIONS_ALIASES = {"regions", "region", "reg", "r"};
     public static final String[] FLAG_SETS_ALIASES = {"flagsets", "flagset", "flags", "flag", "f"};
     public static final String[] POSITIONS_ALIASES = {"positions", "position", "points", "point", "locations", "location", "pos", "loc", "locs", "p"};
-    public static final String[] OWNER_ALIASES = {"owners", "owner", "master", "masters", "creator", "creators",
+    public static final String[] OWNER_GROUP_ALIASES = {"owners", "owner", "master", "masters", "creator", "creators",
             "admin", "admins", "administrator", "administrators", "mod", "mods"};
-    public static final String[] PERMISSION_ALIASES = {"permissions", "permission", "perms", "perm", "flags", "flag"};
+    public static final String[] SET_ALIASES = {"set", "perm", "flag", "rule", "perms", "flags", "rules", "permission", "permissions"};
     public static final String[] PASSIVE_ALIASES = {"passive", "causeless", "userless", "environment"};
-    public static final String[] MEMBER_ALIASES = {"member", "members", "user", "users", "player", "players"};
-    public static final String[] DEFAULT_ALIASES = {"default", "nonmember", "nonmembers", "everyone", "other"};
+    public static final String[] MEMBER_GROUP_ALIASES = {"member", "members", "user", "users", "player", "players"};
+    public static final String[] DEFAULT_GROUP_ALIASES = {"default", "nonmember", "nonmembers", "everyone", "other"};
     public static final String[] GROUPS_ALIASES = {"group", "groups"};
     public static final String[] TRUE_ALIASES = {"true", "t", "allow", "a"};
     public static final String[] FALSE_ALIASES = {"false", "f", "deny", "d"};
     public static final String[] PASSTHROUGH_ALIASES = {"passthrough", "pass", "p", "undefined", "undef", "un", "u"};
-    public static final String[] SET_ALIASES = {"set", "flag", "rule"};
 
     public static boolean isAlias(String[] aliases, String input) {
         for (String alias : aliases) {

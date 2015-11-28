@@ -78,6 +78,9 @@ public class FGFlagSetFactory implements IFlagSetFactory {
             List<User> ownerList = new LinkedList<>();
             List<User> memberList = new LinkedList<>();
             SimpleFlagSet.PassiveOptions po = SimpleFlagSet.PassiveOptions.DEFAULT;
+            CallbackHashMap<Flags, Tristate> ownerFlagMap = new CallbackHashMap<>((key, map) -> Tristate.TRUE);
+            CallbackHashMap<Flags, Tristate> memberFlagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
+            CallbackHashMap<Flags, Tristate> defaultFlagMap = new CallbackHashMap<>((key, map) -> Tristate.FALSE);
             try (Connection conn = source.getConnection()) {
                 try (Statement statement = conn.createStatement()) {
                     try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {
@@ -96,11 +99,11 @@ public class FGFlagSetFactory implements IFlagSetFactory {
                     }
                     try (ResultSet mapSet = statement.executeQuery("SELECT * FROM MAP")) {
                         while (mapSet.next()) {
-                            String key = mapSet.getString("KEYCOL");
+                            String key = mapSet.getString("KEY");
                             switch (key) {
                                 case "passive":
                                     try {
-                                        po = SimpleFlagSet.PassiveOptions.valueOf(mapSet.getString("VALUECOL"));
+                                        po = SimpleFlagSet.PassiveOptions.valueOf(mapSet.getString("VALUE"));
                                     } catch (IllegalArgumentException ignored) {
                                         po = SimpleFlagSet.PassiveOptions.PASSTHROUGH;
                                     }
@@ -108,9 +111,36 @@ public class FGFlagSetFactory implements IFlagSetFactory {
                             }
                         }
                     }
+                    try (ResultSet passiveMapEntrySet = statement.executeQuery("SELECT * FROM OWNERFLAGMAP")) {
+                        while (passiveMapEntrySet.next()) {
+                            try {
+                                ownerFlagMap.put(Flags.valueOf(passiveMapEntrySet.getString("KEY")),
+                                        Tristate.valueOf(passiveMapEntrySet.getString("VALUE")));
+                            } catch (IllegalArgumentException ignored) {
+                            }
+                        }
+                    }
+                    try (ResultSet passiveMapEntrySet = statement.executeQuery("SELECT * FROM MEMBERFLAGMAP")) {
+                        while (passiveMapEntrySet.next()) {
+                            try {
+                                memberFlagMap.put(Flags.valueOf(passiveMapEntrySet.getString("KEY")),
+                                        Tristate.valueOf(passiveMapEntrySet.getString("VALUE")));
+                            } catch (IllegalArgumentException ignored) {
+                            }
+                        }
+                    }
+                    try (ResultSet passiveMapEntrySet = statement.executeQuery("SELECT * FROM DEFAULTFLAGMAP")) {
+                        while (passiveMapEntrySet.next()) {
+                            try {
+                                defaultFlagMap.put(Flags.valueOf(passiveMapEntrySet.getString("KEY")),
+                                        Tristate.valueOf(passiveMapEntrySet.getString("VALUE")));
+                            } catch (IllegalArgumentException ignored) {
+                            }
+                        }
+                    }
                 }
             }
-            SimpleFlagSet flagSet = new SimpleFlagSet(name, priority);
+            SimpleFlagSet flagSet = new SimpleFlagSet(name, priority, ownerFlagMap, memberFlagMap, defaultFlagMap);
             flagSet.setOwners(ownerList);
             flagSet.setMembers(memberList);
             flagSet.setPassiveOption(po);
@@ -130,8 +160,8 @@ public class FGFlagSetFactory implements IFlagSetFactory {
                     try (ResultSet passiveMapEntrySet = statement.executeQuery("SELECT * FROM FLAGMAP")) {
                         while (passiveMapEntrySet.next()) {
                             try {
-                                flagMap.put(Flags.valueOf(passiveMapEntrySet.getString("KEYCOL")),
-                                        Tristate.valueOf(passiveMapEntrySet.getString("VALUECOL")));
+                                flagMap.put(Flags.valueOf(passiveMapEntrySet.getString("KEY")),
+                                        Tristate.valueOf(passiveMapEntrySet.getString("VALUE")));
                             } catch (IllegalArgumentException ignored) {
                             }
                         }

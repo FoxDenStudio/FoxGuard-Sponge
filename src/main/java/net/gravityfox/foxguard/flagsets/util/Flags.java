@@ -49,6 +49,31 @@ public enum Flags {
         this.humanName = name;
     }
 
+    public static Flags flagFrom(String name) {
+        if (name.equalsIgnoreCase("blockplace")) {
+            return BLOCK_PLACE;
+        } else if (name.equalsIgnoreCase("blockbreak")) {
+            return BLOCK_BREAK;
+        } else if (name.equalsIgnoreCase("blockmodify")) {
+            return BLOCK_MODIFY;
+        } else if (name.equalsIgnoreCase("blockattack")) {
+            return BLOCK_INTERACT_PRIMARY;
+        } else if (name.equalsIgnoreCase("blockinteract")) {
+            return BLOCK_INTERACT_SECONDARY;
+        } else if (name.equalsIgnoreCase("entityattack")) {
+            return ENTITY_INTERACT_PRIMARY;
+        } else if (name.equalsIgnoreCase("entityinteract")) {
+            return ENTITY_INTERACT_SECONDARY;
+        } else if (name.equalsIgnoreCase("fluids")) {
+            return FLUID;
+        } else if (name.equalsIgnoreCase("spawnmobpassive")) {
+            return SPAWN_MOB_PASSIVE;
+        } else if (name.equalsIgnoreCase("spawnmobhostile")) {
+            return SPAWN_MOB_HOSTILE;
+        } else return null;
+
+    }
+
     @Override
     public String toString() {
         return humanName;

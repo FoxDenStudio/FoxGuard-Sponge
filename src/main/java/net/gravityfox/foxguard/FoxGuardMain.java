@@ -26,12 +26,16 @@
 package net.gravityfox.foxguard;
 
 import com.google.inject.Inject;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.pool.HikariPool;
+import com.zaxxer.hikari.pool.PoolElf;
 import net.gravityfox.foxguard.commands.*;
 import net.gravityfox.foxguard.commands.flagsets.CommandPriority;
 import net.gravityfox.foxguard.listener.BlockEventListener;
 import net.gravityfox.foxguard.listener.InteractListener;
 import net.gravityfox.foxguard.listener.PlayerEventListener;
 import net.gravityfox.foxguard.listener.SpawnEntityEventListener;
+import org.apache.logging.log4j.LogManager;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.event.Listener;
@@ -55,6 +59,7 @@ import org.spongepowered.api.world.World;
 import javax.sql.DataSource;
 import java.io.File;
 import java.sql.SQLException;
+import java.util.logging.Level;
 
 import static net.gravityfox.foxguard.util.Aliases.FLAG_SETS_ALIASES;
 
@@ -65,7 +70,7 @@ import static net.gravityfox.foxguard.util.Aliases.FLAG_SETS_ALIASES;
 @Plugin(id = "foxguard", name = "FoxGuard", version = FoxGuardMain.PLUGIN_VERSION)
 public class FoxGuardMain {
 
-    public static final String PLUGIN_VERSION = "0.8.7";
+    public static final String PLUGIN_VERSION = "0.8.8";
 
     private static FoxGuardMain instance;
 
