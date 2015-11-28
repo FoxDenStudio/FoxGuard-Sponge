@@ -29,6 +29,7 @@ import net.gravityfox.foxguard.FoxGuardMain;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import net.gravityfox.foxguard.flagsets.IFlagSet;
 import net.gravityfox.foxguard.flagsets.PassiveFlagSet;
+import net.gravityfox.foxguard.flagsets.PermissionFlagSet;
 import net.gravityfox.foxguard.flagsets.SimpleFlagSet;
 import net.gravityfox.foxguard.flagsets.util.Flags;
 import net.gravityfox.foxguard.util.Aliases;
@@ -57,7 +58,18 @@ public class FGFlagSetFactory implements IFlagSetFactory {
 
     String[] simpleAliases = {"simple", "simp"};
     String[] passiveAliases = {"passive", "pass"};
-    String[] types = {"simple", "passive"};
+    String[] permissionAliases = {"permission", "permissions", "perm", "perms"};
+    String[] types = {"simple", "passive", "permission"};
+
+    @Override
+    public String[] getAliases() {
+        return FGHelper.concatAll(simpleAliases, passiveAliases, permissionAliases);
+    }
+
+    @Override
+    public String[] getTypes() {
+        return types;
+    }
 
     @Override
     public IFlagSet createFlagSet(String name, String type, int priority, String arguments, InternalCommandState state, CommandSource source) {
@@ -69,7 +81,9 @@ public class FGFlagSetFactory implements IFlagSetFactory {
             PassiveFlagSet flagSet = new PassiveFlagSet(name, priority);
             if (source instanceof Player) flagSet.addOwner((Player) source);
             return flagSet;
-        } else return null;
+        } else if (Aliases.isAlias(permissionAliases, type)) {
+            return new PermissionFlagSet(name, priority);
+        }else return null;
     }
 
     @Override
@@ -171,16 +185,8 @@ public class FGFlagSetFactory implements IFlagSetFactory {
             PassiveFlagSet flagSet = new PassiveFlagSet(name, priority, flagMap);
             flagSet.setOwners(ownerList);
             return flagSet;
+        } else if (type.equalsIgnoreCase("permission")) {
+            return new PermissionFlagSet(name, priority);
         } else return null;
-    }
-
-    @Override
-    public String[] getAliases() {
-        return FGHelper.concatAll(simpleAliases, passiveAliases);
-    }
-
-    @Override
-    public String[] getTypes() {
-        return types;
     }
 }

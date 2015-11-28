@@ -30,53 +30,39 @@ package net.gravityfox.foxguard.flagsets.util;
  * Project: foxguard
  */
 public enum Flags {
-    // Active
-    BLOCK_PLACE("Place-Blocks"),
-    BLOCK_BREAK("Break-Blocks"),
-    BLOCK_MODIFY("Modify-Blocks"),
-    BLOCK_INTERACT_PRIMARY("Attack-Blocks"),
-    BLOCK_INTERACT_SECONDARY("Interact-Blocks"),
-    ENTITY_INTERACT_PRIMARY("Attack-Entities"),
-    ENTITY_INTERACT_SECONDARY("Interact-Entities"),
-    FLUID("Fluids"),
-    // Passive
-    SPAWN_MOB_HOSTILE("Spawn-Hostile-Mobs"),
-    SPAWN_MOB_PASSIVE("Spawn-Passive-Mobs");
+    BLOCK_PLACE("blockplace","Place-Blocks"),
+    BLOCK_BREAK("blockbreak","Break-Blocks"),
+    BLOCK_MODIFY("blockmodify","Modify-Blocks"),
+    BLOCK_INTERACT_PRIMARY("blockattack","Attack-Blocks"),
+    BLOCK_INTERACT_SECONDARY("blockinteract","Interact-Blocks"),
+    ENTITY_INTERACT_PRIMARY("entityattack","Attack-Entities"),
+    ENTITY_INTERACT_SECONDARY("entityinteract","Interact-Entities"),
+    FLUID("fluids","Fluids"),
+    SPAWN_MOB_HOSTILE("spawnmobpassive","Spawn-Hostile-Mobs"),
+    SPAWN_MOB_PASSIVE("spawnmobhostile","Spawn-Passive-Mobs");
 
     String humanName;
+    String flagName;
 
-    Flags(String name) {
-        this.humanName = name;
+    Flags(String flagName, String humanName) {
+        this.humanName = humanName;
+        this.flagName = flagName;
     }
 
     public static Flags flagFrom(String name) {
-        if (name.equalsIgnoreCase("blockplace")) {
-            return BLOCK_PLACE;
-        } else if (name.equalsIgnoreCase("blockbreak")) {
-            return BLOCK_BREAK;
-        } else if (name.equalsIgnoreCase("blockmodify")) {
-            return BLOCK_MODIFY;
-        } else if (name.equalsIgnoreCase("blockattack")) {
-            return BLOCK_INTERACT_PRIMARY;
-        } else if (name.equalsIgnoreCase("blockinteract")) {
-            return BLOCK_INTERACT_SECONDARY;
-        } else if (name.equalsIgnoreCase("entityattack")) {
-            return ENTITY_INTERACT_PRIMARY;
-        } else if (name.equalsIgnoreCase("entityinteract")) {
-            return ENTITY_INTERACT_SECONDARY;
-        } else if (name.equalsIgnoreCase("fluids")) {
-            return FLUID;
-        } else if (name.equalsIgnoreCase("spawnmobpassive")) {
-            return SPAWN_MOB_PASSIVE;
-        } else if (name.equalsIgnoreCase("spawnmobhostile")) {
-            return SPAWN_MOB_HOSTILE;
-        } else return null;
-
+        for(Flags flag : Flags.values()){
+            if(flag.flagName.equalsIgnoreCase(name)) return flag;
+        }
+        return null;
     }
 
     @Override
     public String toString() {
         return humanName;
+    }
+
+    public String flagName(){
+        return flagName;
     }
 
 }

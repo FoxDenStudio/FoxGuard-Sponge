@@ -292,15 +292,15 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
         builder.append(Texts.of("\n"));
         builder.append(Texts.of(TextColors.GOLD, "Owner permissions:\n"));
         for (Flags f : this.ownerPermissions.keySet()) {
-            builder.append(Texts.of(f.toString() + ": " + FGHelper.readableTristate(ownerPermissions.get(f)) + "\n"));
+            builder.append(Texts.of("  " + f.toString() + ": " + FGHelper.readableTristate(ownerPermissions.get(f)) + "\n"));
         }
         builder.append(Texts.of(TextColors.GREEN, "Member permissions:\n"));
         for (Flags f : this.memberPermissions.keySet()) {
-            builder.append(Texts.of(f.toString() + ": " + FGHelper.readableTristate(memberPermissions.get(f)) + "\n"));
+            builder.append(Texts.of("  " + f.toString() + ": " + FGHelper.readableTristate(memberPermissions.get(f)) + "\n"));
         }
         builder.append(Texts.of(TextColors.RED, "Default permissions:\n"));
         for (Flags f : this.defaultPermissions.keySet()) {
-            builder.append(Texts.of(f.toString() + ": " + FGHelper.readableTristate(defaultPermissions.get(f)) + "\n"));
+            builder.append(Texts.of("  " + f.toString() + ": " + FGHelper.readableTristate(defaultPermissions.get(f)) + "\n"));
         }
         builder.append(Texts.of(TextColors.AQUA, "Passive setting: "));
         builder.append(Texts.of(TextColors.RESET, this.passiveOption.toString()));
