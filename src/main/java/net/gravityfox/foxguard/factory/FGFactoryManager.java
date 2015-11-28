@@ -26,7 +26,7 @@
 package net.gravityfox.foxguard.factory;
 
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.handlers.IHandler;
 import net.gravityfox.foxguard.regions.IRegion;
 import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandSource;
@@ -47,13 +47,13 @@ public class FGFactoryManager {
 
     private static FGFactoryManager ourInstance = new FGFactoryManager();
     private final List<IRegionFactory> regionFactories;
-    private final List<IFlagSetFactory> flagSetFactories;
+    private final List<IHandlerFactory> handlerFactories;
 
     private FGFactoryManager() {
         regionFactories = new ArrayList<>();
         regionFactories.add(new FGRegionFactory());
-        flagSetFactories = new ArrayList<>();
-        flagSetFactories.add(new FGFlagSetFactory());
+        handlerFactories = new ArrayList<>();
+        handlerFactories.add(new FGHandlerFactory());
     }
 
     public static FGFactoryManager getInstance() {
@@ -81,21 +81,21 @@ public class FGFactoryManager {
     }
 
 
-    public IFlagSet createFlagSet(String name, String type, int priority, String args, InternalCommandState state, CommandSource source) {
-        for (IFlagSetFactory fsf : flagSetFactories) {
+    public IHandler createHandler(String name, String type, int priority, String args, InternalCommandState state, CommandSource source) {
+        for (IHandlerFactory fsf : handlerFactories) {
             if (isAlias(fsf.getAliases(), type)) {
-                IFlagSet flagSet = fsf.createFlagSet(name, type, priority, args, state, source);
-                if (flagSet != null) return flagSet;
+                IHandler handler = fsf.createHandler(name, type, priority, args, state, source);
+                if (handler != null) return handler;
             }
         }
         return null;
     }
 
-    public IFlagSet createFlagSet(DataSource source, String name, String type, int priority) throws SQLException {
-        for (IFlagSetFactory fsf : flagSetFactories) {
+    public IHandler createHandler(DataSource source, String name, String type, int priority) throws SQLException {
+        for (IHandlerFactory fsf : handlerFactories) {
             if (isAlias(fsf.getTypes(), type)) {
-                IFlagSet flagSet = fsf.createFlagSet(source, name, type, priority);
-                if (flagSet != null) return flagSet;
+                IHandler handler = fsf.createHandler(source, name, type, priority);
+                if (handler != null) return handler;
             }
         }
         return null;
@@ -107,17 +107,17 @@ public class FGFactoryManager {
         return true;
     }
 
-    public boolean registerFlagSetFactory(IFlagSetFactory factory) {
-        if (flagSetFactories.contains(factory)) return false;
-        flagSetFactories.add(factory);
+    public boolean registerHandlerFactory(IHandlerFactory factory) {
+        if (handlerFactories.contains(factory)) return false;
+        handlerFactories.add(factory);
         return true;
     }
 
     public boolean unregister(Object factory) {
         if (factory instanceof IRegionFactory)
             return regionFactories.remove(factory);
-        else if (factory instanceof IFlagSetFactory)
-            return flagSetFactories.remove(factory);
+        else if (factory instanceof IHandlerFactory)
+            return handlerFactories.remove(factory);
         return false;
     }
 }

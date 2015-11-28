@@ -28,7 +28,7 @@ package net.gravityfox.foxguard.commands;
 import com.google.common.collect.ImmutableList;
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.FoxGuardMain;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.handlers.IHandler;
 import net.gravityfox.foxguard.regions.IRegion;
 import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
@@ -46,7 +46,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Optional;
 
-import static net.gravityfox.foxguard.util.Aliases.FLAG_SETS_ALIASES;
+import static net.gravityfox.foxguard.util.Aliases.HANDLERS_ALIASES;
 import static net.gravityfox.foxguard.util.Aliases.REGIONS_ALIASES;
 
 /**
@@ -104,21 +104,21 @@ public class CommandList implements CommandCallable {
                     if (regionListIterator.hasNext()) output.append(Texts.of("\n"));
                 }
                 source.sendMessage(output.build());
-            } else if (contains(FLAG_SETS_ALIASES, args[0])) {
-                List<IFlagSet> flagSetList = FGManager.getInstance().getFlagSetsListCopy();
+            } else if (contains(HANDLERS_ALIASES, args[0])) {
+                List<IHandler> handlerList = FGManager.getInstance().getHandlerListCopy();
 
                     /*try {
                         page = Integer.parseInt(args[1]);
                     } catch (NumberFormatException ignored) {
                     }*/
 
-                TextBuilder output = Texts.builder("---FlagSets---\n").color(TextColors.GREEN);
-                ListIterator<IFlagSet> flagSetListIterator = flagSetList.listIterator();
-                while (flagSetListIterator.hasNext()) {
-                    IFlagSet flagSet = flagSetListIterator.next();
-                    output.append(Texts.of(FGHelper.getColorForFlagSet(flagSet),
-                            flagSet.getShortTypeName() + " : " + flagSet.getName()));
-                    if (flagSetListIterator.hasNext()) output.append(Texts.of("\n"));
+                TextBuilder output = Texts.builder("---Handlers---\n").color(TextColors.GREEN);
+                ListIterator<IHandler> handlerListIterator = handlerList.listIterator();
+                while (handlerListIterator.hasNext()) {
+                    IHandler handler = handlerListIterator.next();
+                    output.append(Texts.of(FGHelper.getColorForHandler(handler),
+                            handler.getShortTypeName() + " : " + handler.getName()));
+                    if (handlerListIterator.hasNext()) output.append(Texts.of("\n"));
                 }
                 source.sendMessage(output.build());
             } else {
@@ -156,7 +156,7 @@ public class CommandList implements CommandCallable {
 
     @Override
     public Optional<? extends Text> getShortDescription(CommandSource source) {
-        return Optional.of(Texts.of("Lists the regions/flagsets on this server"));
+        return Optional.of(Texts.of("Lists the regions/handlers on this server"));
     }
 
     @Override
@@ -166,6 +166,6 @@ public class CommandList implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("list <regions [w:<world>] | flagsets>");
+        return Texts.of("list <regions [w:<world>] | handlers>");
     }
 }

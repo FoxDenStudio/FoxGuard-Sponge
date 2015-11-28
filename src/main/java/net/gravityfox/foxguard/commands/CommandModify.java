@@ -28,7 +28,7 @@ package net.gravityfox.foxguard.commands;
 import com.google.common.collect.ImmutableList;
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.FoxGuardMain;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.handlers.IHandler;
 import net.gravityfox.foxguard.regions.IRegion;
 import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
@@ -88,12 +88,12 @@ public class CommandModify implements CommandCallable {
                         FGCommandMainDispatcher.getInstance().getStateMap().get(player), player);
                 if (success) source.sendMessage(Texts.of(TextColors.GREEN, "Successfully modified!"));
                 else source.sendMessage(Texts.of(TextColors.RED, "Modification Failed!"));
-            } else if (isAlias(FLAG_SETS_ALIASES, args[0])) {
+            } else if (isAlias(HANDLERS_ALIASES, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-                IFlagSet flagSet = FGManager.getInstance().getFlagSet(args[1]);
-                if (flagSet == null)
-                    throw new CommandException(Texts.of("No FlagSet with name \"" + args[1] + "\"!"));
-                boolean success = flagSet.modify(args.length < 3 ? "" : args[2],
+                IHandler handler = FGManager.getInstance().gethandler(args[1]);
+                if (handler == null)
+                    throw new CommandException(Texts.of("No Handler with name \"" + args[1] + "\"!"));
+                boolean success = handler.modify(args.length < 3 ? "" : args[2],
                         FGCommandMainDispatcher.getInstance().getStateMap().get(player), player);
                 if (success) source.sendMessage(Texts.of(TextColors.GREEN, "Successfully modified!"));
                 else source.sendMessage(Texts.of(TextColors.RED, "Modification Failed!"));
@@ -130,8 +130,8 @@ public class CommandModify implements CommandCallable {
     @Override
     public Text getUsage(CommandSource source) {
         if (source instanceof Player)
-            return Texts.of("detail <region [w:<worldname>] | flagset> <name> [args...]");
-        else return Texts.of("detail <region <worldname> | flagset> <name> [args...]");
+            return Texts.of("detail <region [w:<worldname>] | handler> <name> [args...]");
+        else return Texts.of("detail <region <worldname> | handler> <name> [args...]");
 
     }
 }

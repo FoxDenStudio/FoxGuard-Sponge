@@ -25,8 +25,8 @@
 
 package net.gravityfox.foxguard;
 
-import net.gravityfox.foxguard.flagsets.GlobalFlagSet;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.handlers.GlobalHandler;
+import net.gravityfox.foxguard.handlers.IHandler;
 import net.gravityfox.foxguard.regions.GlobalRegion;
 import net.gravityfox.foxguard.regions.IRegion;
 import net.gravityfox.foxguard.util.CallbackHashMap;
@@ -47,8 +47,8 @@ public class FGManager {
 
     private static FGManager instance;
     private final Map<World, List<IRegion>> regions;
-    private final List<IFlagSet> flagSets;
-    private final GlobalFlagSet gfs;
+    private final List<IHandler> handlers;
+    private final GlobalHandler globalHandler;
     private FoxGuardMain plugin;
     private Server server;
 
@@ -58,17 +58,17 @@ public class FGManager {
         this.plugin = plugin;
         this.server = server;
         regions = new CallbackHashMap<>((key, map) -> new LinkedList<>());
-        flagSets = new LinkedList<>();
-        gfs = new GlobalFlagSet();
-        this.addFlagSet(gfs);
+        handlers = new LinkedList<>();
+        globalHandler = new GlobalHandler();
+        this.addHandler(globalHandler);
     }
 
     public static FGManager getInstance() {
         return instance;
     }
 
-    public boolean isRegistered(IFlagSet flagSet) {
-        return flagSets.contains(flagSet);
+    public boolean isRegistered(IHandler handler) {
+        return handlers.contains(handler);
     }
 
     public boolean addRegion(World world, IRegion region) {
@@ -109,42 +109,42 @@ public class FGManager {
         return list;
     }
 
-    public List<IFlagSet> getFlagSetsListCopy() {
-        List<IFlagSet> list = new LinkedList<>();
-        this.flagSets.forEach(list::add);
+    public List<IHandler> getHandlerListCopy() {
+        List<IHandler> list = new LinkedList<>();
+        this.handlers.forEach(list::add);
         return list;
     }
 
-    public boolean addFlagSet(IFlagSet flagSet) {
-        if (flagSet == null) return false;
-        if (getFlagSet(flagSet.getName()) != null) return false;
-        flagSets.add(flagSet);
-        FGStorageManager.getInstance().unmarkForDeletion(flagSet);
-        FGStorageManager.getInstance().updateFlagSet(flagSet);
+    public boolean addHandler(IHandler handler) {
+        if (handler == null) return false;
+        if (gethandler(handler.getName()) != null) return false;
+        handlers.add(handler);
+        FGStorageManager.getInstance().unmarkForDeletion(handler);
+        FGStorageManager.getInstance().updateHandler(handler);
         return true;
     }
 
-    public IFlagSet getFlagSet(String name) {
-        for (IFlagSet flagSet : flagSets) {
-            if (flagSet.getName().equalsIgnoreCase(name)) return flagSet;
+    public IHandler gethandler(String name) {
+        for (IHandler handler : handlers) {
+            if (handler.getName().equalsIgnoreCase(name)) return handler;
         }
         return null;
     }
 
-    public boolean removeFlagSet(String name) {
-        return this.removeFlagSet(getFlagSet(name));
+    public boolean removeHandler(String name) {
+        return this.removeHandler(gethandler(name));
     }
 
-    public boolean removeFlagSet(IFlagSet flagSet) {
-        if (flagSet == null || flagSet instanceof GlobalFlagSet) return false;
+    public boolean removeHandler(IHandler handler) {
+        if (handler == null || handler instanceof GlobalHandler) return false;
         this.regions.forEach((world, list) -> {
             list.stream()
-                    .filter(region -> region.getFlagSets().contains(flagSet))
-                    .forEach(region -> region.removeFlagSet(flagSet));
+                    .filter(region -> region.getHandlers().contains(handler))
+                    .forEach(region -> region.removeHandler(handler));
         });
-        if (!this.flagSets.contains(flagSet)) return false;
-        FGStorageManager.getInstance().markForDeletion(flagSet);
-        flagSets.remove(flagSet);
+        if (!this.handlers.contains(handler)) return false;
+        FGStorageManager.getInstance().markForDeletion(handler);
+        handlers.remove(handler);
         return true;
     }
 
@@ -164,38 +164,38 @@ public class FGManager {
         return true;
     }
 
-    public boolean link(Server server, String worldName, String regionName, String flagSetName) {
+    public boolean link(Server server, String worldName, String regionName, String handlerName) {
         Optional<World> world = server.getWorld(worldName);
-        return world.isPresent() && this.link(world.get(), regionName, flagSetName);
+        return world.isPresent() && this.link(world.get(), regionName, handlerName);
     }
 
-    public boolean link(World world, String regionName, String flagSetName) {
+    public boolean link(World world, String regionName, String handlerName) {
         IRegion region = getRegion(world, regionName);
-        IFlagSet flagSet = getFlagSet(flagSetName);
-        return this.link(region, flagSet);
+        IHandler handler = gethandler(handlerName);
+        return this.link(region, handler);
     }
 
-    public boolean link(IRegion region, IFlagSet flagSet) {
-        if (region == null || flagSet == null || region.getFlagSets().contains(flagSet)) return false;
-        if (flagSet instanceof GlobalFlagSet && !(region instanceof GlobalRegion)) return false;
-        return region.addFlagSet(flagSet);
+    public boolean link(IRegion region, IHandler handler) {
+        if (region == null || handler == null || region.getHandlers().contains(handler)) return false;
+        if (handler instanceof GlobalHandler && !(region instanceof GlobalRegion)) return false;
+        return region.addHandler(handler);
     }
 
-    public boolean unlink(Server server, String worldName, String regionName, String flagSetName) {
+    public boolean unlink(Server server, String worldName, String regionName, String handlerName) {
         Optional<World> world = server.getWorld(worldName);
-        return world.isPresent() && this.unlink(world.get(), regionName, flagSetName);
+        return world.isPresent() && this.unlink(world.get(), regionName, handlerName);
     }
 
-    public boolean unlink(World world, String regionName, String flagSetName) {
+    public boolean unlink(World world, String regionName, String handlerName) {
         IRegion region = getRegion(world, regionName);
-        IFlagSet flagSet = getFlagSet(flagSetName);
-        return this.unlink(region, flagSet);
+        IHandler handler = gethandler(handlerName);
+        return this.unlink(region, handler);
     }
 
-    public boolean unlink(IRegion region, IFlagSet flagSet) {
-        if (region == null || flagSet == null || !region.getFlagSets().contains(flagSet)) return false;
-        if (flagSet instanceof GlobalFlagSet && region instanceof GlobalRegion) return false;
-        return region.removeFlagSet(flagSet);
+    public boolean unlink(IRegion region, IHandler handler) {
+        if (region == null || handler == null || !region.getHandlers().contains(handler)) return false;
+        if (handler instanceof GlobalHandler && region instanceof GlobalRegion) return false;
+        return region.removeHandler(handler);
     }
 
     public boolean renameRegion(World world, String oldName, String newName) {
@@ -210,8 +210,8 @@ public class FGManager {
         if (object instanceof IRegion) {
             IRegion region = (IRegion) object;
             if (this.getRegion(region.getWorld(), newName) != null) return false;
-        } else if (object instanceof IFlagSet) {
-            if (this.getFlagSet(newName) != null) return false;
+        } else if (object instanceof IHandler) {
+            if (this.gethandler(newName) != null) return false;
         }
         FGStorageManager.getInstance().markForDeletion(object);
         object.setName(newName);
@@ -220,8 +220,8 @@ public class FGManager {
         return false;
     }
 
-    public boolean renameFlagSet(String oldName, String newName) {
-        return this.rename(this.getFlagSet(oldName), newName);
+    public boolean renameHandler(String oldName, String newName) {
+        return this.rename(this.gethandler(oldName), newName);
     }
 
     public void createLists(World world) {
@@ -231,12 +231,12 @@ public class FGManager {
     public void populateWorld(World world) {
         this.createLists(world);
         GlobalRegion gr = new GlobalRegion();
-        gr.addFlagSet(this.gfs);
+        gr.addHandler(this.globalHandler);
         addRegion(world, gr);
     }
 
-    public GlobalFlagSet getGlobalFlagSet() {
-        return gfs;
+    public GlobalHandler getGlobalHandler() {
+        return globalHandler;
     }
 
     public Server getServer() {

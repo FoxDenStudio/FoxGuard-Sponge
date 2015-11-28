@@ -28,7 +28,7 @@ package net.gravityfox.foxguard.regions;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import net.gravityfox.foxguard.IFGObject;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.handlers.IHandler;
 import org.spongepowered.api.world.World;
 
 import java.util.List;
@@ -47,11 +47,11 @@ public interface IRegion extends IFGObject {
 
     boolean isInRegion(Vector3d vec);
 
-    List<IFlagSet> getFlagSets();
+    List<IHandler> getHandlers();
 
-    boolean addFlagSet(IFlagSet flagSet);
+    boolean addHandler(IHandler handler);
 
-    boolean removeFlagSet(IFlagSet flagSet);
+    boolean removeHandler(IHandler handler);
 
     World getWorld();
 

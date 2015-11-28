@@ -26,7 +26,7 @@
 package net.gravityfox.foxguard;
 
 import net.gravityfox.foxguard.factory.FGFactoryManager;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.handlers.IHandler;
 import net.gravityfox.foxguard.regions.IRegion;
 import net.gravityfox.foxguard.util.DeferredObject;
 import org.spongepowered.api.Server;
@@ -59,13 +59,13 @@ public class FGStorageManager {
         return instance;
     }
 
-    public void initFlagSets() {
+    public void initHandlers() {
         Server server = FoxGuardMain.getInstance().getGame().getServer();
 
         try (Connection conn = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 statement.execute(
-                        "CREATE TABLE IF NOT EXISTS FLAGSETS (" +
+                        "CREATE TABLE IF NOT EXISTS HANDLERS (" +
                                 "NAME VARCHAR(256), " +
                                 "TYPE VARCHAR(256)," +
                                 "PRIORITY INTEGER);");
@@ -92,24 +92,24 @@ public class FGStorageManager {
                                 "TYPE VARCHAR(256));" +
                                 "CREATE TABLE IF NOT EXISTS LINKAGES (" +
                                 "REGION VARCHAR(256)," +
-                                "FLAGSET VARCHAR(256));");
+                                "HANDLER VARCHAR(256));");
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public void loadFlagSets() {
+    public void loadHandlers() {
         Server server = FoxGuardMain.getInstance().getGame().getServer();
 
         try (Connection conn = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
             try (Statement statement = conn.createStatement()) {
-                try (ResultSet flagSetDataSet = statement.executeQuery("SELECT * FROM FLAGSETS;")) {
-                    while (flagSetDataSet.next()) {
+                try (ResultSet handlerDataSet = statement.executeQuery("SELECT * FROM HANDLERS;")) {
+                    while (handlerDataSet.next()) {
                         try {
                             String databaseDir = "jdbc:h2:./" +
-                                    server.getDefaultWorld().get().getWorldName() + "/foxguard/flagsets/" +
-                                    flagSetDataSet.getString("NAME");
+                                    server.getDefaultWorld().get().getWorldName() + "/foxguard/handlers/" +
+                                    handlerDataSet.getString("NAME");
                             DataSource source = FoxGuardMain.getInstance().getDataSource(databaseDir);
                             try (Connection metaConn = source.getConnection()) {
                                 try (Statement metaStatement = metaConn.createStatement()) {
@@ -120,13 +120,13 @@ public class FGStorageManager {
                                         if (metaTables.getInt(1) != 0) {
                                             try (ResultSet metaSet = metaStatement.executeQuery("SELECT * FROM FOXGUARD_META.METADATA;")) {
                                                 metaSet.first();
-                                                if (metaSet.getString("CATEGORY").equalsIgnoreCase("flagset") &&
-                                                        metaSet.getString("NAME").equalsIgnoreCase(flagSetDataSet.getString("NAME")) &&
-                                                        metaSet.getString("TYPE").equalsIgnoreCase(flagSetDataSet.getString("TYPE")) &&
-                                                        metaSet.getInt("PRIORITY") == flagSetDataSet.getInt("PRIORITY")) {
-                                                    FGManager.getInstance().addFlagSet(
-                                                            FGFactoryManager.getInstance().createFlagSet(
-                                                                    source, flagSetDataSet.getString("NAME"), flagSetDataSet.getString("TYPE"), flagSetDataSet.getInt("PRIORITY")));
+                                                if (metaSet.getString("CATEGORY").equalsIgnoreCase("handler") &&
+                                                        metaSet.getString("NAME").equalsIgnoreCase(handlerDataSet.getString("NAME")) &&
+                                                        metaSet.getString("TYPE").equalsIgnoreCase(handlerDataSet.getString("TYPE")) &&
+                                                        metaSet.getInt("PRIORITY") == handlerDataSet.getInt("PRIORITY")) {
+                                                    FGManager.getInstance().addHandler(
+                                                            FGFactoryManager.getInstance().createHandler(
+                                                                    source, handlerDataSet.getString("NAME"), handlerDataSet.getString("TYPE"), handlerDataSet.getInt("PRIORITY")));
                                                 } else if (FGConfigManager.getInstance().forceLoad) {
                                                     FoxGuardMain.getInstance().getLogger().info("Mismatched database found. Attempting force load...");
                                                     if (metaSet.getString("CATEGORY").equalsIgnoreCase("region")) {
@@ -134,22 +134,22 @@ public class FGStorageManager {
                                                         deferredRegion.category = "region";
                                                         deferredRegion.dataSource = source;
                                                         deferredRegion.databaseDir = databaseDir;
-                                                        deferredRegion.listName = flagSetDataSet.getString("NAME");
+                                                        deferredRegion.listName = handlerDataSet.getString("NAME");
                                                         deferredRegion.metaName = metaSet.getString("NAME");
                                                         deferredRegion.type = metaSet.getString("TYPE");
                                                         deferredRegion.listWorld = null;
                                                         deferredRegion.metaWorld = metaSet.getString("WORLD");
                                                         this.deferedObjects.add(deferredRegion);
-                                                    } else if (metaSet.getString("CATEGORY").equalsIgnoreCase("flagset")) {
-                                                        DeferredObject deferredFlagSet = new DeferredObject();
-                                                        deferredFlagSet.category = "flagset";
-                                                        deferredFlagSet.dataSource = source;
-                                                        deferredFlagSet.databaseDir = databaseDir;
-                                                        deferredFlagSet.listName = flagSetDataSet.getString("NAME");
-                                                        deferredFlagSet.metaName = metaSet.getString("NAME");
-                                                        deferredFlagSet.type = metaSet.getString("TYPE");
-                                                        deferredFlagSet.priority = metaSet.getInt("PRIORITY");
-                                                        this.deferedObjects.add(deferredFlagSet);
+                                                    } else if (metaSet.getString("CATEGORY").equalsIgnoreCase("handler")) {
+                                                        DeferredObject deferredHandler = new DeferredObject();
+                                                        deferredHandler.category = "handler";
+                                                        deferredHandler.dataSource = source;
+                                                        deferredHandler.databaseDir = databaseDir;
+                                                        deferredHandler.listName = handlerDataSet.getString("NAME");
+                                                        deferredHandler.metaName = metaSet.getString("NAME");
+                                                        deferredHandler.type = metaSet.getString("TYPE");
+                                                        deferredHandler.priority = metaSet.getInt("PRIORITY");
+                                                        this.deferedObjects.add(deferredHandler);
                                                     } else {
                                                         FoxGuardMain.getInstance().getLogger().info("Found potentially corrupted database.");
                                                         markForDeletion(databaseDir);
@@ -225,16 +225,16 @@ public class FGStorageManager {
                                                         deferredRegion.listWorld = world;
                                                         deferredRegion.metaWorld = metaSet.getString("WORLD");
                                                         this.deferedObjects.add(deferredRegion);
-                                                    } else if (metaSet.getString("CATEGORY").equalsIgnoreCase("flagset")) {
-                                                        DeferredObject deferredFlagSet = new DeferredObject();
-                                                        deferredFlagSet.category = "flagset";
-                                                        deferredFlagSet.dataSource = source;
-                                                        deferredFlagSet.databaseDir = databaseDir;
-                                                        deferredFlagSet.listName = regionDataSet.getString("NAME");
-                                                        deferredFlagSet.metaName = metaSet.getString("NAME");
-                                                        deferredFlagSet.type = metaSet.getString("TYPE");
-                                                        deferredFlagSet.priority = metaSet.getInt("PRIORITY");
-                                                        this.deferedObjects.add(deferredFlagSet);
+                                                    } else if (metaSet.getString("CATEGORY").equalsIgnoreCase("handler")) {
+                                                        DeferredObject deferredHandler = new DeferredObject();
+                                                        deferredHandler.category = "handler";
+                                                        deferredHandler.dataSource = source;
+                                                        deferredHandler.databaseDir = databaseDir;
+                                                        deferredHandler.listName = regionDataSet.getString("NAME");
+                                                        deferredHandler.metaName = metaSet.getString("NAME");
+                                                        deferredHandler.type = metaSet.getString("TYPE");
+                                                        deferredHandler.priority = metaSet.getInt("PRIORITY");
+                                                        this.deferedObjects.add(deferredHandler);
                                                     } else {
                                                         FoxGuardMain.getInstance().getLogger().info("Found potentially corrupted database.");
                                                         markForDeletion(databaseDir);
@@ -276,7 +276,7 @@ public class FGStorageManager {
             try (Statement statement = conn.createStatement()) {
                 try (ResultSet linkSet = statement.executeQuery("SELECT  * FROM LINKAGES;")) {
                     while (linkSet.next()) {
-                        FGManager.getInstance().link(world, linkSet.getString("REGION"), linkSet.getString("FLAGSET"));
+                        FGManager.getInstance().link(world, linkSet.getString("REGION"), linkSet.getString("HANDLER"));
                     }
                 }
             }
@@ -289,16 +289,16 @@ public class FGStorageManager {
         FoxGuardMain.getInstance().getGame().getServer().getWorlds().forEach(this::loadWorldLinks);
     }
 
-    public void writeFlagSets() {
+    public void writeHandlers() {
         Server server = FoxGuardMain.getInstance().getGame().getServer();
         try (Connection conn = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
             try (Statement statement = conn.createStatement()) {
-                statement.addBatch("DELETE FROM FLAGSETS;");
-                for (IFlagSet flagSet : FGManager.getInstance().getFlagSetsListCopy()) {
-                    statement.addBatch("INSERT INTO FLAGSETS(NAME, TYPE, PRIORITY) VALUES ('" +
-                            flagSet.getName() + "', '" +
-                            flagSet.getUniqueTypeString() + "', " +
-                            flagSet.getPriority() + ");");
+                statement.addBatch("DELETE FROM HANDLERS;");
+                for (IHandler handler : FGManager.getInstance().getHandlerListCopy()) {
+                    statement.addBatch("INSERT INTO HANDLERS(NAME, TYPE, PRIORITY) VALUES ('" +
+                            handler.getName() + "', '" +
+                            handler.getUniqueTypeString() + "', " +
+                            handler.getPriority() + ");");
                 }
                 statement.executeBatch();
             }
@@ -306,12 +306,12 @@ public class FGStorageManager {
             e.printStackTrace();
         }
 
-        for (IFlagSet flagSet : FGManager.getInstance().getFlagSetsListCopy()) {
+        for (IHandler handler : FGManager.getInstance().getHandlerListCopy()) {
             try {
                 DataSource source = FoxGuardMain.getInstance().getDataSource(
                         "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() +
-                                "/foxguard/flagsets/" + flagSet.getName());
-                flagSet.writeToDatabase(source);
+                                "/foxguard/handlers/" + handler.getName());
+                handler.writeToDatabase(source);
                 try (Connection conn = source.getConnection()) {
                     try (Statement statement = conn.createStatement()) {
                         statement.addBatch("CREATE SCHEMA IF NOT EXISTS FOXGUARD_META;");
@@ -322,10 +322,10 @@ public class FGStorageManager {
                                 "PRIORITY INTEGER);");
                         statement.addBatch("DELETE FROM FOXGUARD_META.METADATA");
                         statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, PRIORITY) VALUES (" +
-                                "'flagset', '" +
-                                flagSet.getName() + "', '" +
-                                flagSet.getUniqueTypeString() + "', " +
-                                flagSet.getPriority() + ");");
+                                "'handler', '" +
+                                handler.getName() + "', '" +
+                                handler.getUniqueTypeString() + "', " +
+                                handler.getPriority() + ");");
                         statement.executeBatch();
                     }
                 }
@@ -350,10 +350,10 @@ public class FGStorageManager {
                     statement.addBatch("INSERT INTO REGIONS(NAME, TYPE) VALUES ('" +
                             region.getName() + "', '" +
                             region.getUniqueTypeString() + "');");
-                    for (IFlagSet flagSet : region.getFlagSets()) {
-                        statement.addBatch("INSERT INTO LINKAGES(REGION, FLAGSET) VALUES ('" +
+                    for (IHandler handler : region.getHandlers()) {
+                        statement.addBatch("INSERT INTO LINKAGES(REGION, HANDLER) VALUES ('" +
                                 region.getName() + "', '" +
-                                flagSet.getName() + "');");
+                                handler.getName() + "');");
                     }
                 }
                 statement.executeBatch();
@@ -391,8 +391,8 @@ public class FGStorageManager {
     public void update(IFGObject object) {
         if (object instanceof IRegion)
             updateRegion((IRegion) object);
-        else if (object instanceof IFlagSet)
-            updateFlagSet((IFlagSet) object);
+        else if (object instanceof IHandler)
+            updateHandler((IHandler) object);
     }
 
     public void updateRegion(IRegion region) {
@@ -430,14 +430,14 @@ public class FGStorageManager {
         updateLists();
     }
 
-    public void updateFlagSet(IFlagSet flagSet) {
+    public void updateHandler(IHandler handler) {
         if (!FoxGuardMain.getInstance().isLoaded()) return;
         Server server = FoxGuardMain.getInstance().getGame().getServer();
         try {
             DataSource source = FoxGuardMain.getInstance().getDataSource(
                     "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() +
-                            "/foxguard/flagsets/" + flagSet.getName());
-            flagSet.writeToDatabase(source);
+                            "/foxguard/handlers/" + handler.getName());
+            handler.writeToDatabase(source);
             try (Connection conn = source.getConnection()) {
                 try (Statement statement = conn.createStatement()) {
                     statement.addBatch("CREATE SCHEMA IF NOT EXISTS FOXGUARD_META;");
@@ -448,10 +448,10 @@ public class FGStorageManager {
                             "PRIORITY INTEGER);");
                     statement.addBatch("DELETE FROM FOXGUARD_META.METADATA");
                     statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, PRIORITY) VALUES (" +
-                            "'flagset', '" +
-                            flagSet.getName() + "', '" +
-                            flagSet.getUniqueTypeString() + "', " +
-                            flagSet.getPriority() + ");");
+                            "'handler', '" +
+                            handler.getName() + "', '" +
+                            handler.getUniqueTypeString() + "', " +
+                            handler.getPriority() + ");");
                     statement.executeBatch();
                 }
             }
@@ -478,10 +478,10 @@ public class FGStorageManager {
                         statement.addBatch("INSERT INTO REGIONS(NAME, TYPE) VALUES ('" +
                                 region.getName() + "', '" +
                                 region.getUniqueTypeString() + "');");
-                        for (IFlagSet flagSet : region.getFlagSets()) {
-                            statement.addBatch("INSERT INTO LINKAGES(REGION, FLAGSET) VALUES ('" +
+                        for (IHandler handler : region.getHandlers()) {
+                            statement.addBatch("INSERT INTO LINKAGES(REGION, HANDLER) VALUES ('" +
                                     region.getName() + "', '" +
-                                    flagSet.getName() + "');");
+                                    handler.getName() + "');");
                         }
                     }
                     statement.executeBatch();
@@ -492,12 +492,12 @@ public class FGStorageManager {
         }
         try (Connection conn = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
             try (Statement statement = conn.createStatement()) {
-                statement.addBatch("DELETE FROM FLAGSETS;");
-                for (IFlagSet flagSet : FGManager.getInstance().getFlagSetsListCopy()) {
-                    statement.addBatch("INSERT INTO FLAGSETS(NAME, TYPE, PRIORITY) VALUES ('" +
-                            flagSet.getName() + "', '" +
-                            flagSet.getUniqueTypeString() + "', " +
-                            flagSet.getPriority() + ");");
+                statement.addBatch("DELETE FROM HANDLERS;");
+                for (IHandler handler : FGManager.getInstance().getHandlerListCopy()) {
+                    statement.addBatch("INSERT INTO HANDLERS(NAME, TYPE, PRIORITY) VALUES ('" +
+                            handler.getName() + "', '" +
+                            handler.getUniqueTypeString() + "', " +
+                            handler.getPriority() + ");");
                 }
                 statement.executeBatch();
             }
@@ -532,8 +532,8 @@ public class FGStorageManager {
             }
             databaseDir += region.getName();
             markForDeletion(databaseDir);
-        } else if (object instanceof IFlagSet) {
-            String databaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/flagsets/" + object.getName();
+        } else if (object instanceof IHandler) {
+            String databaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/handlers/" + object.getName();
             markForDeletion(databaseDir);
         }
     }
@@ -561,9 +561,9 @@ public class FGStorageManager {
             }
             databaseDir += region.getName();
             unmarkForDeletion(databaseDir);
-        } else if (object instanceof IFlagSet) {
+        } else if (object instanceof IHandler) {
             if (server.getDefaultWorld().isPresent()) {
-                unmarkForDeletion("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/flagsets/" + object.getName());
+                unmarkForDeletion("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/handlers/" + object.getName());
             }
         }
     }

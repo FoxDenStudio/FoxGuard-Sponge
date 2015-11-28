@@ -29,7 +29,7 @@ package net.gravityfox.foxguard.commands;
 import com.google.common.collect.ImmutableList;
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.FoxGuardMain;
-import net.gravityfox.foxguard.flagsets.GlobalFlagSet;
+import net.gravityfox.foxguard.handlers.GlobalHandler;
 import net.gravityfox.foxguard.regions.GlobalRegion;
 import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
@@ -88,14 +88,14 @@ public class CommandDelete implements CommandCallable {
                     throw new ArgumentParseException(Texts.of("No Region exists with that name!"), args[1 + flag], 1 + flag);
 
                 player.sendMessage(Texts.of(TextColors.GREEN, "Region deleted successfully!"));
-            } else if (isAlias(FLAG_SETS_ALIASES, args[0])) {
+            } else if (isAlias(HANDLERS_ALIASES, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-                if (args[1].equalsIgnoreCase(GlobalFlagSet.NAME))
-                    throw new CommandException(Texts.of("You may not delete the global FlagSet!"));
-                boolean success = FGManager.getInstance().removeFlagSet(args[1]);
+                if (args[1].equalsIgnoreCase(GlobalHandler.NAME))
+                    throw new CommandException(Texts.of("You may not delete the global Handler!"));
+                boolean success = FGManager.getInstance().removeHandler(args[1]);
                 if (!success)
-                    throw new ArgumentParseException(Texts.of("No FlagSet exists with that name!"), args[1], 1);
-                player.sendMessage(Texts.of(TextColors.GREEN, "FlagSet deleted successfully!"));
+                    throw new ArgumentParseException(Texts.of("No Handler exists with that name!"), args[1], 1);
+                player.sendMessage(Texts.of(TextColors.GREEN, "Handler deleted successfully!"));
 
             } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
         } else {
@@ -126,6 +126,6 @@ public class CommandDelete implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("delete <region [w:<world>] | flagset> <name>");
+        return Texts.of("delete <region [w:<world>] | handler> <name>");
     }
 }

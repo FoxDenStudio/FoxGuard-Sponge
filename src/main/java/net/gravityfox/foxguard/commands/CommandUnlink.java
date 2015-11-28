@@ -28,8 +28,8 @@ package net.gravityfox.foxguard.commands;
 import com.google.common.collect.ImmutableList;
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
-import net.gravityfox.foxguard.flagsets.GlobalFlagSet;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.handlers.GlobalHandler;
+import net.gravityfox.foxguard.handlers.IHandler;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
@@ -61,49 +61,49 @@ public class CommandUnlink implements CommandCallable {
             Player player = (Player) source;
             if (args.length == 0) {
                 if (FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.size() == 0 &&
-                        FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.size() == 0)
-                    throw new CommandException(Texts.of("You don't have any Regions or FlagSets in your state buffer!"));
+                        FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedHandlers.size() == 0)
+                    throw new CommandException(Texts.of("You don't have any Regions or Handlers in your state buffer!"));
                 if (FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.size() == 0)
                     throw new CommandException(Texts.of("You don't have any Regions in your state buffer!"));
-                if (FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.size() == 0)
-                    throw new CommandException(Texts.of("You don't have any FlagSets in your state buffer!"));
+                if (FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedHandlers.size() == 0)
+                    throw new CommandException(Texts.of("You don't have any Handlers in your state buffer!"));
                 int[] count = {0};
                 FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.stream().forEach(
-                        region -> FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.stream()
-                                .filter(flagSet -> !(flagSet instanceof GlobalFlagSet))
-                                .forEach(flagSet -> count[0] += FGManager.getInstance().unlink(region, flagSet) ? 1 : 0));
+                        region -> FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedHandlers.stream()
+                                .filter(handler -> !(handler instanceof GlobalHandler))
+                                .forEach(handler -> count[0] += FGManager.getInstance().unlink(region, handler) ? 1 : 0));
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully unlinked " + count[0] + "!"));
-                FGCommandMainDispatcher.getInstance().getStateMap().get(player).flush(InternalCommandState.StateField.REGIONS, InternalCommandState.StateField.FLAGSETS);
+                FGCommandMainDispatcher.getInstance().getStateMap().get(player).flush(InternalCommandState.StateField.REGIONS, InternalCommandState.StateField.HANDLERS);
                 return CommandResult.builder().successCount(count[0]).build();
             } else if (args[0].equals("FULL")) {
                 if (FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.size() == 0 &&
-                        FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.size() == 0)
-                    throw new CommandException(Texts.of("You don't have any Regions or FlagSets in your state buffer!"));
+                        FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedHandlers.size() == 0)
+                    throw new CommandException(Texts.of("You don't have any Regions or Handlers in your state buffer!"));
                 int[] count = {0};
                 FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.stream().forEach(
                         region -> {
-                            List<IFlagSet> flagSets = new ArrayList<>();
-                            region.getFlagSets().stream()
-                                    .filter(flagSet -> !(flagSet instanceof GlobalFlagSet))
-                                    .forEach(flagSets::add);
-                            flagSets.stream().forEach(flagSet -> count[0] += FGManager.getInstance().unlink(region, flagSet) ? 1 : 0);
+                            List<IHandler> handlers = new ArrayList<>();
+                            region.getHandlers().stream()
+                                    .filter(handler -> !(handler instanceof GlobalHandler))
+                                    .forEach(handlers::add);
+                            handlers.stream().forEach(handler -> count[0] += FGManager.getInstance().unlink(region, handler) ? 1 : 0);
                         });
-                FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.stream()
-                        .filter(flagSet -> !(flagSet instanceof GlobalFlagSet)).forEach(
-                        flagSet -> FGManager.getInstance().getRegionsListCopy().stream().forEach(
-                                region -> count[0] += FGManager.getInstance().unlink(region, flagSet) ? 1 : 0));
+                FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedHandlers.stream()
+                        .filter(handler -> !(handler instanceof GlobalHandler)).forEach(
+                        handler -> FGManager.getInstance().getRegionsListCopy().stream().forEach(
+                                region -> count[0] += FGManager.getInstance().unlink(region, handler) ? 1 : 0));
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully unlinked " + count[0] + "!"));
-                FGCommandMainDispatcher.getInstance().getStateMap().get(player).flush(InternalCommandState.StateField.REGIONS, InternalCommandState.StateField.FLAGSETS);
+                FGCommandMainDispatcher.getInstance().getStateMap().get(player).flush(InternalCommandState.StateField.REGIONS, InternalCommandState.StateField.HANDLERS);
                 return CommandResult.builder().successCount(count[0]).build();
             } else if (args[0].equals("ALL")) {
                 int[] count = {0};
                 FGManager.getInstance().getRegionsListCopy().forEach(
                         region -> {
-                            List<IFlagSet> flagSets = new ArrayList<>();
-                            region.getFlagSets().stream()
-                                    .filter(flagSet -> !(flagSet instanceof GlobalFlagSet))
-                                    .forEach(flagSets::add);
-                            flagSets.stream().forEach(flagSet -> count[0] += FGManager.getInstance().unlink(region, flagSet) ? 1 : 0);
+                            List<IHandler> handlers = new ArrayList<>();
+                            region.getHandlers().stream()
+                                    .filter(handler -> !(handler instanceof GlobalHandler))
+                                    .forEach(handlers::add);
+                            handlers.stream().forEach(handler -> count[0] += FGManager.getInstance().unlink(region, handler) ? 1 : 0);
                         });
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully unlinked " + count[0] + "!"));
                 return CommandResult.builder().successCount(count[0]).build();

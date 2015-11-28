@@ -23,83 +23,74 @@
  * THE SOFTWARE.
  */
 
-package net.gravityfox.foxguard.flagsets;
+package net.gravityfox.foxguard.handlers;
 
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
-import net.gravityfox.foxguard.flagsets.util.Flags;
+import net.gravityfox.foxguard.handlers.util.Flags;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
-import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.util.command.CommandSource;
 
-import javax.annotation.Nullable;
 import javax.sql.DataSource;
-import java.sql.SQLException;
 
 /**
- * Created by Fox on 11/28/2015.
- * Project: SpongeForge
+ * Created by Fox on 8/17/2015.
+ * Project: foxguard
  */
-public class PermissionFlagSet extends FlagSetBase {
+public class GlobalHandler extends HandlerBase {
 
-    public PermissionFlagSet(String name, int priority) {
-        super(name, priority);
+    public static final String NAME = "_global";
+
+    public GlobalHandler() {
+        super(NAME, Integer.MIN_VALUE);
     }
 
     @Override
-    public Tristate isAllowed(@Nullable User user, Flags flag, Event event) {
-        if (user == null) return Tristate.UNDEFINED;
-        if (user.hasPermission("foxguard.flags." + this.name + "." + flag.flagName() + ".allow"))
-            return Tristate.TRUE;
-        else if (user.hasPermission("foxguard.flags." + this.name + "." + flag.flagName() + ".deny"))
-            return Tristate.FALSE;
-        else return Tristate.UNDEFINED;
+    public void setPriority(int priority) {
+        this.priority = Integer.MIN_VALUE;
+    }
+
+    @Override
+    public void setName(String name) {
+        this.name = NAME;
     }
 
     @Override
     public String getShortTypeName() {
-        return "Perm";
+        return "Global";
     }
 
     @Override
     public String getLongTypeName() {
-        return "Permission";
+        return "Global";
     }
 
     @Override
     public String getUniqueTypeString() {
-        return "permission";
+        return "global";
     }
 
     @Override
     public Text getDetails(String arguments) {
-        return Texts.builder()
-                .append(Texts.of(TextColors.GOLD, "Permission: "))
-                .append(Texts.of(TextColors.RESET, "foxguard.flags."))
-                .append(Texts.of(TextColors.YELLOW, this.name))
-                .append(Texts.of(TextColors.RESET, "."))
-                .append(Texts.of(TextColors.AQUA, "<flagname>"))
-                .append(Texts.of(TextColors.RESET, "."))
-                .append(Texts.of(TextColors.AQUA, "<"))
-                .append(Texts.of(TextColors.GREEN, "allow"))
-                .append(Texts.of(TextColors.AQUA, "/"))
-                .append(Texts.of(TextColors.RED, "deny"))
-                .append(Texts.of(TextColors.AQUA, ">")).build();
-
+        return Texts.of("It's global. Nothing to see here. Now move along.");
     }
 
     @Override
-    public void writeToDatabase(DataSource dataSource) throws SQLException {
+    public void writeToDatabase(DataSource dataSource) {
 
     }
 
     @Override
     public boolean modify(String arguments, InternalCommandState state, CommandSource source) {
-        source.sendMessage(Texts.of("Permission FlagSets have no configurable parameters!"));
         return false;
+    }
+
+    @Override
+    public Tristate isAllowed(User user, Flags flag, Event event) {
+        return Tristate.TRUE;
     }
 
 }

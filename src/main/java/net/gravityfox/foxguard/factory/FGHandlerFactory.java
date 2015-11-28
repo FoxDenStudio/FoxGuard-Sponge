@@ -27,11 +27,11 @@ package net.gravityfox.foxguard.factory;
 
 import net.gravityfox.foxguard.FoxGuardMain;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
-import net.gravityfox.foxguard.flagsets.PassiveFlagSet;
-import net.gravityfox.foxguard.flagsets.PermissionFlagSet;
-import net.gravityfox.foxguard.flagsets.SimpleFlagSet;
-import net.gravityfox.foxguard.flagsets.util.Flags;
+import net.gravityfox.foxguard.handlers.IHandler;
+import net.gravityfox.foxguard.handlers.PassiveHandler;
+import net.gravityfox.foxguard.handlers.PermissionHandler;
+import net.gravityfox.foxguard.handlers.SimpleHandler;
+import net.gravityfox.foxguard.handlers.util.Flags;
 import net.gravityfox.foxguard.util.Aliases;
 import net.gravityfox.foxguard.util.CallbackHashMap;
 import net.gravityfox.foxguard.util.FGHelper;
@@ -54,7 +54,7 @@ import java.util.UUID;
  * Created by Fox on 10/25/2015.
  * Project: foxguard
  */
-public class FGFlagSetFactory implements IFlagSetFactory {
+public class FGHandlerFactory implements IHandlerFactory {
 
     String[] simpleAliases = {"simple", "simp"};
     String[] passiveAliases = {"passive", "pass"};
@@ -72,26 +72,26 @@ public class FGFlagSetFactory implements IFlagSetFactory {
     }
 
     @Override
-    public IFlagSet createFlagSet(String name, String type, int priority, String arguments, InternalCommandState state, CommandSource source) {
+    public IHandler createHandler(String name, String type, int priority, String arguments, InternalCommandState state, CommandSource source) {
         if (Aliases.isAlias(simpleAliases, type)) {
-            SimpleFlagSet flagSet = new SimpleFlagSet(name, priority);
-            if (source instanceof Player) flagSet.addOwner((Player) source);
-            return flagSet;
+            SimpleHandler handler = new SimpleHandler(name, priority);
+            if (source instanceof Player) handler.addOwner((Player) source);
+            return handler;
         } else if (Aliases.isAlias(passiveAliases, type)) {
-            PassiveFlagSet flagSet = new PassiveFlagSet(name, priority);
-            if (source instanceof Player) flagSet.addOwner((Player) source);
-            return flagSet;
+            PassiveHandler handler = new PassiveHandler(name, priority);
+            if (source instanceof Player) handler.addOwner((Player) source);
+            return handler;
         } else if (Aliases.isAlias(permissionAliases, type)) {
-            return new PermissionFlagSet(name, priority);
+            return new PermissionHandler(name, priority);
         }else return null;
     }
 
     @Override
-    public IFlagSet createFlagSet(DataSource source, String name, String type, int priority) throws SQLException {
+    public IHandler createHandler(DataSource source, String name, String type, int priority) throws SQLException {
         if (type.equalsIgnoreCase("simple")) {
             List<User> ownerList = new LinkedList<>();
             List<User> memberList = new LinkedList<>();
-            SimpleFlagSet.PassiveOptions po = SimpleFlagSet.PassiveOptions.DEFAULT;
+            SimpleHandler.PassiveOptions po = SimpleHandler.PassiveOptions.DEFAULT;
             CallbackHashMap<Flags, Tristate> ownerFlagMap = new CallbackHashMap<>((key, map) -> Tristate.TRUE);
             CallbackHashMap<Flags, Tristate> memberFlagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
             CallbackHashMap<Flags, Tristate> defaultFlagMap = new CallbackHashMap<>((key, map) -> Tristate.FALSE);
@@ -117,9 +117,9 @@ public class FGFlagSetFactory implements IFlagSetFactory {
                             switch (key) {
                                 case "passive":
                                     try {
-                                        po = SimpleFlagSet.PassiveOptions.valueOf(mapSet.getString("VALUE"));
+                                        po = SimpleHandler.PassiveOptions.valueOf(mapSet.getString("VALUE"));
                                     } catch (IllegalArgumentException ignored) {
-                                        po = SimpleFlagSet.PassiveOptions.PASSTHROUGH;
+                                        po = SimpleHandler.PassiveOptions.PASSTHROUGH;
                                     }
                                     break;
                             }
@@ -154,11 +154,11 @@ public class FGFlagSetFactory implements IFlagSetFactory {
                     }
                 }
             }
-            SimpleFlagSet flagSet = new SimpleFlagSet(name, priority, ownerFlagMap, memberFlagMap, defaultFlagMap);
-            flagSet.setOwners(ownerList);
-            flagSet.setMembers(memberList);
-            flagSet.setPassiveOption(po);
-            return flagSet;
+            SimpleHandler handler = new SimpleHandler(name, priority, ownerFlagMap, memberFlagMap, defaultFlagMap);
+            handler.setOwners(ownerList);
+            handler.setMembers(memberList);
+            handler.setPassiveOption(po);
+            return handler;
         } else if (type.equalsIgnoreCase("passive")) {
             List<User> ownerList = new LinkedList<>();
             CallbackHashMap<Flags, Tristate> flagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
@@ -182,11 +182,11 @@ public class FGFlagSetFactory implements IFlagSetFactory {
                     }
                 }
             }
-            PassiveFlagSet flagSet = new PassiveFlagSet(name, priority, flagMap);
-            flagSet.setOwners(ownerList);
-            return flagSet;
+            PassiveHandler handler = new PassiveHandler(name, priority, flagMap);
+            handler.setOwners(ownerList);
+            return handler;
         } else if (type.equalsIgnoreCase("permission")) {
-            return new PermissionFlagSet(name, priority);
+            return new PermissionHandler(name, priority);
         } else return null;
     }
 }

@@ -72,7 +72,7 @@ public class CommandFlush implements CommandCallable {
 
     public InternalCommandState.StateField getType(String input) {
         if (contains(REGIONS_ALIASES, input)) return InternalCommandState.StateField.REGIONS;
-        else if (contains(FLAG_SETS_ALIASES, input)) return InternalCommandState.StateField.FLAGSETS;
+        else if (contains(HANDLERS_ALIASES, input)) return InternalCommandState.StateField.HANDLERS;
         else if (contains(POSITIONS_ALIASES, input)) return InternalCommandState.StateField.POSITIONS;
         else return null;
     }
@@ -106,6 +106,6 @@ public class CommandFlush implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("flush [regions] [flagsets] [positions]");
+        return Texts.of("flush [regions] [handlers] [positions]");
     }
 }

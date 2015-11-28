@@ -23,46 +23,24 @@
  * THE SOFTWARE.
  */
 
-package net.gravityfox.foxguard.flagsets.util;
+package net.gravityfox.foxguard.factory;
+
+
+import net.gravityfox.foxguard.commands.util.InternalCommandState;
+import net.gravityfox.foxguard.handlers.IHandler;
+import org.spongepowered.api.util.command.CommandSource;
+
+import javax.sql.DataSource;
+import java.sql.SQLException;
 
 /**
- * Created by Fox on 8/17/2015.
+ * Created by Fox on 10/22/2015.
  * Project: foxguard
  */
-public enum Flags {
-    BLOCK_PLACE("blockplace","Place-Blocks"),
-    BLOCK_BREAK("blockbreak","Break-Blocks"),
-    BLOCK_MODIFY("blockmodify","Modify-Blocks"),
-    BLOCK_INTERACT_PRIMARY("blockattack","Attack-Blocks"),
-    BLOCK_INTERACT_SECONDARY("blockinteract","Interact-Blocks"),
-    ENTITY_INTERACT_PRIMARY("entityattack","Attack-Entities"),
-    ENTITY_INTERACT_SECONDARY("entityinteract","Interact-Entities"),
-    FLUID("fluids","Fluids"),
-    SPAWN_MOB_HOSTILE("spawnmobpassive","Spawn-Hostile-Mobs"),
-    SPAWN_MOB_PASSIVE("spawnmobhostile","Spawn-Passive-Mobs");
+public interface IHandlerFactory extends IFGFactory {
 
-    String humanName;
-    String flagName;
+    IHandler createHandler(String name, String type, int priority, String arguments, InternalCommandState state, CommandSource source);
 
-    Flags(String flagName, String humanName) {
-        this.humanName = humanName;
-        this.flagName = flagName;
-    }
-
-    public static Flags flagFrom(String name) {
-        for(Flags flag : Flags.values()){
-            if(flag.flagName.equalsIgnoreCase(name)) return flag;
-        }
-        return null;
-    }
-
-    @Override
-    public String toString() {
-        return humanName;
-    }
-
-    public String flagName(){
-        return flagName;
-    }
+    IHandler createHandler(DataSource source, String name, String type, int priority) throws SQLException;
 
 }

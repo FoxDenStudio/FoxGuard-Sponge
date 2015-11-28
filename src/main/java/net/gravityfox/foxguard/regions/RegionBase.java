@@ -28,7 +28,7 @@ package net.gravityfox.foxguard.regions;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import net.gravityfox.foxguard.FGManager;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.handlers.IHandler;
 import org.spongepowered.api.world.World;
 
 import java.util.LinkedList;
@@ -40,13 +40,13 @@ import java.util.List;
  */
 public abstract class RegionBase implements IRegion {
 
-    protected final List<IFlagSet> flagSets;
+    protected final List<IHandler> handlers;
     protected String name;
     protected World world;
 
     public RegionBase(String name) {
         this.name = name;
-        this.flagSets = new LinkedList<>();
+        this.handlers = new LinkedList<>();
     }
 
     @Override
@@ -60,21 +60,21 @@ public abstract class RegionBase implements IRegion {
     }
 
     @Override
-    public List<IFlagSet> getFlagSets() {
-        return this.flagSets;
+    public List<IHandler> getHandlers() {
+        return this.handlers;
     }
 
     @Override
-    public boolean addFlagSet(IFlagSet flagSet) {
-        if (flagSets.contains(flagSet) || !FGManager.getInstance().isRegistered(flagSet)) return false;
-        this.flagSets.add(flagSet);
+    public boolean addHandler(IHandler handler) {
+        if (handlers.contains(handler) || !FGManager.getInstance().isRegistered(handler)) return false;
+        this.handlers.add(handler);
         return true;
     }
 
     @Override
-    public boolean removeFlagSet(IFlagSet flagSet) {
-        if (!flagSets.contains(flagSet)) return false;
-        this.flagSets.remove(flagSet);
+    public boolean removeHandler(IHandler handler) {
+        if (!handlers.contains(handler)) return false;
+        this.handlers.remove(handler);
         return true;
     }
 

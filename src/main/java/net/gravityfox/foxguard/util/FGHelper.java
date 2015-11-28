@@ -25,8 +25,8 @@
 
 package net.gravityfox.foxguard.util;
 
-import net.gravityfox.foxguard.flagsets.GlobalFlagSet;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.handlers.GlobalHandler;
+import net.gravityfox.foxguard.handlers.IHandler;
 import net.gravityfox.foxguard.regions.GlobalRegion;
 import net.gravityfox.foxguard.regions.IRegion;
 import org.spongepowered.api.Server;
@@ -65,8 +65,8 @@ public class FGHelper {
         return region.getName().equals(GlobalRegion.NAME) ? TextColors.YELLOW : TextColors.RESET;
     }
 
-    public static TextColor getColorForFlagSet(IFlagSet flagSet) {
-        return flagSet.getName().equals(GlobalFlagSet.NAME) ? TextColors.YELLOW : TextColors.RESET;
+    public static TextColor getColorForHandler(IHandler handler) {
+        return handler.getName().equals(GlobalHandler.NAME) ? TextColors.YELLOW : TextColors.RESET;
     }
 
     public static <T> boolean contains(T[] array, T value) {

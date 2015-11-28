@@ -23,55 +23,46 @@
  * THE SOFTWARE.
  */
 
-package net.gravityfox.foxguard.flagsets;
+package net.gravityfox.foxguard.handlers.util;
 
 /**
  * Created by Fox on 8/17/2015.
  * Project: foxguard
  */
-public abstract class FlagSetBase implements IFlagSet {
+public enum Flags {
+    BLOCK_PLACE("blockplace","Place-Blocks"),
+    BLOCK_BREAK("blockbreak","Break-Blocks"),
+    BLOCK_MODIFY("blockmodify","Modify-Blocks"),
+    BLOCK_INTERACT_PRIMARY("blockattack","Attack-Blocks"),
+    BLOCK_INTERACT_SECONDARY("blockinteract","Interact-Blocks"),
+    ENTITY_INTERACT_PRIMARY("entityattack","Attack-Entities"),
+    ENTITY_INTERACT_SECONDARY("entityinteract","Interact-Entities"),
+    FLUID("fluids","Fluids"),
+    SPAWN_MOB_HOSTILE("spawnmobpassive","Spawn-Hostile-Mobs"),
+    SPAWN_MOB_PASSIVE("spawnmobhostile","Spawn-Passive-Mobs");
 
-    protected String name;
-    protected int priority;
-    protected boolean isEnabled = true;
+    String humanName;
+    String flagName;
 
-    public FlagSetBase(String name, int priority) {
-        setName(name);
-        setPriority(priority);
+    Flags(String flagName, String humanName) {
+        this.humanName = humanName;
+        this.flagName = flagName;
+    }
+
+    public static Flags flagFrom(String name) {
+        for(Flags flag : Flags.values()){
+            if(flag.flagName.equalsIgnoreCase(name)) return flag;
+        }
+        return null;
     }
 
     @Override
-    public boolean isEnabled() {
-        return isEnabled;
+    public String toString() {
+        return humanName;
     }
 
-    @Override
-    public void setIsEnabled(boolean state) {
-        this.isEnabled = state;
+    public String flagName(){
+        return flagName;
     }
 
-    @Override
-    public int getPriority() {
-        return this.priority;
-    }
-
-    @Override
-    public void setPriority(int priority) {
-        this.priority = priority > Integer.MIN_VALUE ? priority : Integer.MIN_VALUE + 1;
-    }
-
-    @Override
-    public String getName() {
-        return this.name;
-    }
-
-    @Override
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public int compareTo(IFlagSet o) {
-        return o.getPriority() - this.priority;
-    }
 }

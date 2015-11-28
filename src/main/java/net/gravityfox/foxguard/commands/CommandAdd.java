@@ -29,7 +29,7 @@ import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.FoxGuardMain;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.handlers.IHandler;
 import net.gravityfox.foxguard.regions.IRegion;
 import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
@@ -90,16 +90,16 @@ public class CommandAdd implements CommandCallable {
 
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully added Region to your state buffer!"));
                 return CommandResult.success();
-            } else if (isAlias(FLAG_SETS_ALIASES, args[0])) {
+            } else if (isAlias(HANDLERS_ALIASES, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-                IFlagSet flagSet = FGManager.getInstance().getFlagSet(args[1]);
-                if (flagSet == null)
-                    throw new ArgumentParseException(Texts.of("No FlagSets with this name!"), args[1], 1);
-                if (FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.contains(flagSet))
-                    throw new ArgumentParseException(Texts.of("FlagSet is already in your state buffer!"), args[1], 1);
-                FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.add(flagSet);
+                IHandler handler = FGManager.getInstance().gethandler(args[1]);
+                if (handler == null)
+                    throw new ArgumentParseException(Texts.of("No Handlers with this name!"), args[1], 1);
+                if (FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedHandlers.contains(handler))
+                    throw new ArgumentParseException(Texts.of("Handler is already in your state buffer!"), args[1], 1);
+                FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedHandlers.add(handler);
 
-                source.sendMessage(Texts.of(TextColors.GREEN, "Successfully added FlagSet to your state buffer!"));
+                source.sendMessage(Texts.of(TextColors.GREEN, "Successfully added Handler to your state buffer!"));
                 return CommandResult.success();
             } else if (isAlias(POSITIONS_ALIASES, args[0])) {
                 int x, y, z;
@@ -162,7 +162,7 @@ public class CommandAdd implements CommandCallable {
     @Override
     public Text getUsage(CommandSource source) {
         if (source instanceof Player)
-            return Texts.of("add <region [w:<worldname>] | flagset> <name>");
-        else return Texts.of("add <region <worldname> | flagset> <name>");
+            return Texts.of("add <region [w:<worldname>] | handler> <name>");
+        else return Texts.of("add <region <worldname> | handler> <name>");
     }
 }

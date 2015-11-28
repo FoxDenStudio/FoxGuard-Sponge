@@ -26,7 +26,7 @@
 package net.gravityfox.foxguard.commands.util;
 
 import com.flowpowered.math.vector.Vector3i;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.handlers.IHandler;
 import net.gravityfox.foxguard.regions.IRegion;
 
 import java.util.ArrayList;
@@ -40,12 +40,12 @@ import java.util.List;
 public class InternalCommandState {
 
     public List<IRegion> selectedRegions = new LinkedList<>();
-    public List<IFlagSet> selectedFlagSets = new LinkedList<>();
+    public List<IHandler> selectedHandlers = new LinkedList<>();
     public List<Vector3i> positions = new ArrayList<>();
 
     public void flush() {
         selectedRegions.clear();
-        selectedFlagSets.clear();
+        selectedHandlers.clear();
         positions.clear();
     }
 
@@ -54,8 +54,8 @@ public class InternalCommandState {
             case REGIONS:
                 selectedRegions.clear();
                 return;
-            case FLAGSETS:
-                selectedFlagSets.clear();
+            case HANDLERS:
+                selectedHandlers.clear();
                 return;
             case POSITIONS:
                 positions.clear();
@@ -72,7 +72,7 @@ public class InternalCommandState {
 
     public enum StateField {
         REGIONS,
-        FLAGSETS,
+        HANDLERS,
         POSITIONS
     }
 }

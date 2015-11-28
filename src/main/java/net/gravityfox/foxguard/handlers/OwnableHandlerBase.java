@@ -23,7 +23,7 @@
  * THE SOFTWARE.
  */
 
-package net.gravityfox.foxguard.flagsets;
+package net.gravityfox.foxguard.handlers;
 
 import net.gravityfox.foxguard.objects.IOwnable;
 import org.spongepowered.api.entity.living.player.User;
@@ -44,11 +44,11 @@ import java.util.List;
  * Created by Fox on 10/26/2015.
  * Project: foxguard
  */
-abstract public class OwnableFlagSetBase extends FlagSetBase implements IOwnable {
+abstract public class OwnableHandlerBase extends HandlerBase implements IOwnable {
 
     protected List<User> ownerList = new LinkedList<>();
 
-    public OwnableFlagSetBase(String name, int priority) {
+    public OwnableHandlerBase(String name, int priority) {
         super(name, priority);
     }
 

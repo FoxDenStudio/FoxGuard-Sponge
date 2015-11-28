@@ -26,16 +26,12 @@
 package net.gravityfox.foxguard;
 
 import com.google.inject.Inject;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.pool.HikariPool;
-import com.zaxxer.hikari.pool.PoolElf;
 import net.gravityfox.foxguard.commands.*;
-import net.gravityfox.foxguard.commands.flagsets.CommandPriority;
+import net.gravityfox.foxguard.commands.handlers.CommandPriority;
 import net.gravityfox.foxguard.listener.BlockEventListener;
 import net.gravityfox.foxguard.listener.InteractListener;
 import net.gravityfox.foxguard.listener.PlayerEventListener;
 import net.gravityfox.foxguard.listener.SpawnEntityEventListener;
-import org.apache.logging.log4j.LogManager;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.event.Listener;
@@ -59,9 +55,8 @@ import org.spongepowered.api.world.World;
 import javax.sql.DataSource;
 import java.io.File;
 import java.sql.SQLException;
-import java.util.logging.Level;
 
-import static net.gravityfox.foxguard.util.Aliases.FLAG_SETS_ALIASES;
+import static net.gravityfox.foxguard.util.Aliases.HANDLERS_ALIASES;
 
 /**
  * Created by Fox on 8/16/2015.
@@ -70,7 +65,7 @@ import static net.gravityfox.foxguard.util.Aliases.FLAG_SETS_ALIASES;
 @Plugin(id = "foxguard", name = "FoxGuard", version = FoxGuardMain.PLUGIN_VERSION)
 public class FoxGuardMain {
 
-    public static final String PLUGIN_VERSION = "0.8.8";
+    public static final String PLUGIN_VERSION = "0.9";
 
     private static FoxGuardMain instance;
 
@@ -115,13 +110,13 @@ public class FoxGuardMain {
 
     @Listener
     public void serverStarted(GameStartedServerEvent event) {
-        FGStorageManager.getInstance().initFlagSets();
-        FGStorageManager.getInstance().loadFlagSets();
+        FGStorageManager.getInstance().initHandlers();
+        FGStorageManager.getInstance().loadHandlers();
         loaded = true;
         FGStorageManager.getInstance().loadLinks();
         if (FGConfigManager.getInstance().forceLoad)
             FGStorageManager.getInstance().resolveDeferredObjects();
-        FGStorageManager.getInstance().writeFlagSets();
+        FGStorageManager.getInstance().writeHandlers();
         for (World world : game.getServer().getWorlds()) {
             FGStorageManager.getInstance().writeWorld(world);
         }
@@ -129,7 +124,7 @@ public class FoxGuardMain {
 
     @Listener
     public void serverStopping(GameStoppingServerEvent event) {
-        FGStorageManager.getInstance().writeFlagSets();
+        FGStorageManager.getInstance().writeHandlers();
     }
 
     @Listener
@@ -165,8 +160,8 @@ public class FoxGuardMain {
     private void registerCommands() {
         FGCommandMainDispatcher fgDispatcher = new FGCommandMainDispatcher("/foxguard");
         FGCommandDispatcher fgRegionDispatcher = new FGCommandDispatcher("/foxguard regions");
-        FGCommandDispatcher fgFlagSetDispatcher = new FGCommandDispatcher("/foxguard flagsets",
-                "Commands spcifically meant for managing FlagSets.");
+        FGCommandDispatcher fgHandlerDispatcher = new FGCommandDispatcher("/foxguard handlers",
+                "Commands spcifically meant for managing Handlers.");
 
         fgDispatcher.register(new CommandCreate(), "create", "construct", "new", "make", "define", "mk");
         fgDispatcher.register(new CommandDelete(), "delete", "del", "remove", "rem", "rm", "destroy");
@@ -184,9 +179,9 @@ public class FoxGuardMain {
         fgDispatcher.register(new CommandTest(), "test");
         fgDispatcher.register(new CommandSave(), "save", "saveall", "save-all");
 
-        fgFlagSetDispatcher.register(new CommandPriority(), "priority", "prio", "level", "rank");
+        fgHandlerDispatcher.register(new CommandPriority(), "priority", "prio", "level", "rank");
 
-        fgDispatcher.register(fgFlagSetDispatcher, FLAG_SETS_ALIASES);
+        fgDispatcher.register(fgHandlerDispatcher, HANDLERS_ALIASES);
 
         game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
     }

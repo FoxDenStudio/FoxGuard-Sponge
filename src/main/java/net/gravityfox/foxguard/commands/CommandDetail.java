@@ -27,7 +27,7 @@ package net.gravityfox.foxguard.commands;
 
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.FoxGuardMain;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.handlers.IHandler;
 import net.gravityfox.foxguard.regions.IRegion;
 import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
@@ -93,27 +93,27 @@ public class CommandDetail implements CommandCallable {
                 builder.append(Texts.of(TextColors.GOLD, "World: "), Texts.of(TextColors.RESET, region.getWorld().getName() + "\n"));
                 builder.append(Texts.of(TextColors.GREEN, "---Details---\n"));
                 builder.append(region.getDetails(args.length < 3 + flag ? "" : args[2 + flag]));
-                builder.append(Texts.of(TextColors.GREEN, "\n---Linked FlagSets---"));
-                if (region.getFlagSets().size() == 0)
-                    builder.append(Texts.of(TextStyles.ITALIC, "\nNo linked FlagSets!"));
-                region.getFlagSets().stream().forEach(flagSet -> builder.append(Texts.of(FGHelper.getColorForFlagSet(flagSet),
-                        "\n" + flagSet.getShortTypeName() + " : " + flagSet.getName())));
+                builder.append(Texts.of(TextColors.GREEN, "\n---Linked Handlers---"));
+                if (region.getHandlers().size() == 0)
+                    builder.append(Texts.of(TextStyles.ITALIC, "\nNo linked Handlers!"));
+                region.getHandlers().stream().forEach(handler -> builder.append(Texts.of(FGHelper.getColorForHandler(handler),
+                        "\n" + handler.getShortTypeName() + " : " + handler.getName())));
                 player.sendMessage(builder.build());
 
-            } else if (isAlias(FLAG_SETS_ALIASES, args[0])) {
+            } else if (isAlias(HANDLERS_ALIASES, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
 
-                IFlagSet flagSet = FGManager.getInstance().getFlagSet(args[1]);
-                if (flagSet == null)
-                    throw new CommandException(Texts.of("No FlagSet with name \"" + args[1] + "\"!"));
+                IHandler handler = FGManager.getInstance().gethandler(args[1]);
+                if (handler == null)
+                    throw new CommandException(Texts.of("No Handler with name \"" + args[1] + "\"!"));
                 TextBuilder builder = Texts.builder();
                 builder.append(Texts.of(TextColors.GOLD, "-----------------------------------------------------\n"));
                 builder.append(Texts.of(TextColors.GREEN, "---General---\n"));
-                builder.append(Texts.of(TextColors.GOLD, "Name: "), Texts.of(TextColors.RESET, flagSet.getName() + "\n"));
-                builder.append(Texts.of(TextColors.GOLD, "Type: "), Texts.of(TextColors.RESET, flagSet.getLongTypeName() + "\n"));
-                builder.append(Texts.of(TextColors.GOLD, "Priority: "), Texts.of(TextColors.RESET, flagSet.getPriority() + "\n"));
+                builder.append(Texts.of(TextColors.GOLD, "Name: "), Texts.of(TextColors.RESET, handler.getName() + "\n"));
+                builder.append(Texts.of(TextColors.GOLD, "Type: "), Texts.of(TextColors.RESET, handler.getLongTypeName() + "\n"));
+                builder.append(Texts.of(TextColors.GOLD, "Priority: "), Texts.of(TextColors.RESET, handler.getPriority() + "\n"));
                 builder.append(Texts.of(TextColors.GREEN, "---Details---\n"));
-                builder.append(flagSet.getDetails(args.length < 3 ? "" : args[2]));
+                builder.append(handler.getDetails(args.length < 3 ? "" : args[2]));
                 player.sendMessage(builder.build());
             } else {
                 throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
@@ -149,8 +149,8 @@ public class CommandDetail implements CommandCallable {
     @Override
     public Text getUsage(CommandSource source) {
         if (source instanceof Player)
-            return Texts.of("detail <region [w:<worldname>] | flagset> <name> [args...]");
-        else return Texts.of("detail <region <worldname> | flagset> <name> [args...]");
+            return Texts.of("detail <region [w:<worldname>] | handler> <name> [args...]");
+        else return Texts.of("detail <region <worldname> | handler> <name> [args...]");
 
     }
 }

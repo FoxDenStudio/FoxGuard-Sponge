@@ -23,12 +23,12 @@
  * THE SOFTWARE.
  */
 
-package net.gravityfox.foxguard.commands.flagsets;
+package net.gravityfox.foxguard.commands.handlers;
 
 import com.google.common.collect.ImmutableList;
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.commands.FGCommandMainDispatcher;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.handlers.IHandler;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
@@ -66,17 +66,17 @@ public class CommandPriority implements CommandCallable {
         } else {
             int successes = 0;
             int failures = 0;
-            List<IFlagSet> flagSets = new LinkedList<>();
-            FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedFlagSets.stream().forEach(flagSets::add);
-            for (String flagSetName : Arrays.copyOfRange(args, 1, args.length)) {
-                IFlagSet flagSet = FGManager.getInstance().getFlagSet(flagSetName);
-                if (flagSet != null && !flagSets.contains(flagSet)) {
-                    flagSets.add(flagSet);
+            List<IHandler> handlers = new LinkedList<>();
+            FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedHandlers.stream().forEach(handlers::add);
+            for (String handlerName : Arrays.copyOfRange(args, 1, args.length)) {
+                IHandler handler = FGManager.getInstance().gethandler(handlerName);
+                if (handler != null && !handlers.contains(handler)) {
+                    handlers.add(handler);
                 } else {
                     failures++;
                 }
             }
-            if (flagSets.size() < 1) throw new CommandException(Texts.of("You must specify at least one FlagSet!"));
+            if (handlers.size() < 1) throw new CommandException(Texts.of("You must specify at least one Handler!"));
             if (args[0].startsWith("~")) {
                 int deltaPriority;
                 try {
@@ -84,8 +84,8 @@ public class CommandPriority implements CommandCallable {
                 } catch (NumberFormatException e) {
                     throw new ArgumentParseException(Texts.of("Not a valid priority!"), e, args[0], 1);
                 }
-                for (IFlagSet flagSet : flagSets) {
-                    flagSet.setPriority(flagSet.getPriority() + deltaPriority);
+                for (IHandler handler : handlers) {
+                    handler.setPriority(handler.getPriority() + deltaPriority);
                     successes++;
                 }
             } else {
@@ -95,8 +95,8 @@ public class CommandPriority implements CommandCallable {
                 } catch (NumberFormatException e) {
                     throw new ArgumentParseException(Texts.of("Not a valid priority!"), e, args[0], 0);
                 }
-                for (IFlagSet flagSet : flagSets) {
-                    flagSet.setPriority(priority);
+                for (IHandler handler : handlers) {
+                    handler.setPriority(priority);
                     successes++;
                 }
             }
@@ -113,25 +113,25 @@ public class CommandPriority implements CommandCallable {
 
     @Override
     public boolean testPermission(CommandSource source) {
-        return source.hasPermission("foxguard.command.modify.objects.flagsets.priority");
+        return source.hasPermission("foxguard.command.modify.objects.handlers.priority");
     }
 
     @Override
     public Optional<? extends Text> getShortDescription(CommandSource source) {
-        return Optional.of(Texts.of("Sets or changes the priority of one or more FlagSets."));
+        return Optional.of(Texts.of("Sets or changes the priority of one or more Handlers."));
     }
 
     @Override
     public Optional<? extends Text> getHelp(CommandSource source) {
-        return Optional.of(Texts.of("This command will modify the priorities of all FlagSets currently in your state buffer.\n" +
-                "This command takes a minimum of one parameter, which is the priority that all FlagSets will be set to.\n" +
-                "Prefixing this value with a tilde (\" ~ \") instead increments or decrements the priority of each FlagSet by that value.\n" +
-                "Any arguments after the priority are understood to be additional FlagSet names not already in your state buffer."));
+        return Optional.of(Texts.of("This command will modify the priorities of all Handlers currently in your state buffer.\n" +
+                "This command takes a minimum of one parameter, which is the priority that all Handlers will be set to.\n" +
+                "Prefixing this value with a tilde (\" ~ \") instead increments or decrements the priority of each Handler by that value.\n" +
+                "Any arguments after the priority are understood to be additional Handler names not already in your state buffer."));
     }
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("priority <priority> [flagsets...]");
+        return Texts.of("priority <priority> [handlers...]");
     }
 
 }

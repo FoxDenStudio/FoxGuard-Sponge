@@ -30,7 +30,7 @@ import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.FoxGuardMain;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import net.gravityfox.foxguard.factory.FGFactoryManager;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.handlers.IHandler;
 import net.gravityfox.foxguard.regions.IRegion;
 import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
@@ -103,7 +103,7 @@ public class CommandCreate implements CommandCallable {
                 player.sendMessage(Texts.of(TextColors.GREEN, "Region created successfully"));
                 return CommandResult.success();
                 //----------------------------------------------------------------------------------------------------------------------
-            } else if (isAlias(FLAG_SETS_ALIASES, args[0])) {
+            } else if (isAlias(HANDLERS_ALIASES, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 if (args[1].matches("^.*[^0-9a-zA-Z_$].*$"))
                     throw new ArgumentParseException(Texts.of("Name must be alphanumeric!"), args[1], 1);
@@ -121,16 +121,16 @@ public class CommandCreate implements CommandCallable {
                 }
 
                 if (args.length < 3 + flag) throw new CommandException(Texts.of("Must specify a type!"));
-                IFlagSet newFlagSet = FGFactoryManager.getInstance().createFlagSet(
+                IHandler newHandler = FGFactoryManager.getInstance().createHandler(
                         args[1].toLowerCase(), args[2 + flag], priority,
                         args.length < 4 + flag ? "" : args[3 + flag],
                         FGCommandMainDispatcher.getInstance().getStateMap().get(player), player);
-                if (newFlagSet == null)
-                    throw new CommandException(Texts.of("Failed to create FlagSet! Perhaps the type is invalid?"));
-                boolean success = FGManager.getInstance().addFlagSet(newFlagSet);
+                if (newHandler == null)
+                    throw new CommandException(Texts.of("Failed to create Handler! Perhaps the type is invalid?"));
+                boolean success = FGManager.getInstance().addHandler(newHandler);
                 if (!success)
                     throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1], 1);
-                player.sendMessage(Texts.of(TextColors.GREEN, "FlagSet created successfully!"));
+                player.sendMessage(Texts.of(TextColors.GREEN, "Handler created successfully!"));
                 return CommandResult.success();
                 //----------------------------------------------------------------------------------------------------------------------
             } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
@@ -163,7 +163,7 @@ public class CommandCreate implements CommandCallable {
     @Override
     public Text getUsage(CommandSource source) {
         if (source instanceof Player)
-            return Texts.of("create <region [w:<world>] | flagset> <name> [priority] <type> [args...]");
-        else return Texts.of("create <region <world> | flagset> <name> [priority] <type> [args...]");
+            return Texts.of("create <region [w:<world>] | handler> <name> [priority] <type> [args...]");
+        else return Texts.of("create <region <world> | handler> <name> [priority] <type> [args...]");
     }
 }

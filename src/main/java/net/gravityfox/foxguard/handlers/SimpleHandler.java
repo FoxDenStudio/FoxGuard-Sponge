@@ -23,11 +23,11 @@
  * THE SOFTWARE.
  */
 
-package net.gravityfox.foxguard.flagsets;
+package net.gravityfox.foxguard.handlers;
 
 import net.gravityfox.foxguard.FoxGuardMain;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
-import net.gravityfox.foxguard.flagsets.util.Flags;
+import net.gravityfox.foxguard.handlers.util.Flags;
 import net.gravityfox.foxguard.objects.IMembership;
 import net.gravityfox.foxguard.util.CallbackHashMap;
 import net.gravityfox.foxguard.util.FGHelper;
@@ -55,7 +55,7 @@ import static net.gravityfox.foxguard.util.Aliases.*;
  * Created by Fox on 8/17/2015.
  * Project: foxguard
  */
-public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
+public class SimpleHandler extends OwnableHandlerBase implements IMembership {
 
     private PassiveOptions passiveOption = PassiveOptions.PASSTHROUGH;
 
@@ -64,14 +64,14 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
     private Map<Flags, Tristate> memberPermissions;
     private Map<Flags, Tristate> defaultPermissions;
 
-    public SimpleFlagSet(String name, int priority) {
+    public SimpleHandler(String name, int priority) {
         this(name, priority,
                 new CallbackHashMap<>((o, m) -> Tristate.TRUE),
                 new CallbackHashMap<>((o, m) -> Tristate.UNDEFINED),
                 new CallbackHashMap<>((o, m) -> Tristate.FALSE));
     }
 
-    public SimpleFlagSet(String name, int priority,
+    public SimpleHandler(String name, int priority,
                          Map<Flags, Tristate> ownerPermissions,
                          Map<Flags, Tristate> memberPermissions,
                          Map<Flags, Tristate> defaultPermissions) {
@@ -83,7 +83,7 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
 
     @Override
     public boolean modify(String arguments, InternalCommandState state, CommandSource source) {
-        if (!source.hasPermission("foxguard.command.modify.objects.modify.flagsets")) {
+        if (!source.hasPermission("foxguard.command.modify.objects.modify.handlers")) {
             if (source instanceof ProxySource) source = ((ProxySource) source).getOriginalSource();
             if (source instanceof Player && !this.ownerList.contains(source)) return false;
         }
@@ -233,7 +233,7 @@ public class SimpleFlagSet extends OwnableFlagSetBase implements IMembership {
                     return false;
                 }
             } else {
-                source.sendMessage(Texts.of(TextColors.RED, "Not a valid SimpleFlagset command!"));
+                source.sendMessage(Texts.of(TextColors.RED, "Not a valid SimpleHandler command!"));
                 return false;
             }
         } else {

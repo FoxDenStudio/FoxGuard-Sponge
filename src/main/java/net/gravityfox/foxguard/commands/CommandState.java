@@ -27,7 +27,7 @@ package net.gravityfox.foxguard.commands;
 
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.handlers.IHandler;
 import net.gravityfox.foxguard.regions.IRegion;
 import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.text.Text;
@@ -70,16 +70,16 @@ public class CommandState implements CommandCallable {
             output.append(Texts.of("\n"));
             flag++;
         }
-        if (!FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedFlagSets.isEmpty()) {
+        if (!FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedHandlers.isEmpty()) {
             if (flag != 0) output.append(Texts.of("\n"));
-            output.append(Texts.of(TextColors.GREEN, "FlagSets: "));
-            Iterator<IFlagSet> flagSetIterator = FGCommandMainDispatcher.getInstance().getStateMap()
-                    .get(source).selectedFlagSets.iterator();
+            output.append(Texts.of(TextColors.GREEN, "Handlers: "));
+            Iterator<IHandler> handlerIterator = FGCommandMainDispatcher.getInstance().getStateMap()
+                    .get(source).selectedHandlers.iterator();
             int index = 1;
-            while (flagSetIterator.hasNext()) {
-                IFlagSet flagSet = flagSetIterator.next();
-                output.append(Texts.of(FGHelper.getColorForFlagSet(flagSet),
-                        "\n  " + (index++) + ": " + flagSet.getShortTypeName() + " : " + flagSet.getName()));
+            while (handlerIterator.hasNext()) {
+                IHandler handler = handlerIterator.next();
+                output.append(Texts.of(FGHelper.getColorForHandler(handler),
+                        "\n  " + (index++) + ": " + handler.getShortTypeName() + " : " + handler.getName()));
             }
             output.append(Texts.of("\n"));
             flag++;

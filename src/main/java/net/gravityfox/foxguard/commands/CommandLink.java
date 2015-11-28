@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableList;
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.FoxGuardMain;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
-import net.gravityfox.foxguard.flagsets.GlobalFlagSet;
+import net.gravityfox.foxguard.handlers.GlobalHandler;
 import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
@@ -60,19 +60,19 @@ public class CommandLink implements CommandCallable {
         if (!arguments.isEmpty()) args = arguments.split(" +", 2);
         if (args.length == 0) {
             if (FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedRegions.size() == 0 &&
-                    FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedFlagSets.size() == 0)
-                throw new CommandException(Texts.of("You don't have any Regions or FlagSets in your state buffer!"));
+                    FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedHandlers.size() == 0)
+                throw new CommandException(Texts.of("You don't have any Regions or Handlers in your state buffer!"));
             if (FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedRegions.size() == 0)
                 throw new CommandException(Texts.of("You don't have any Regions in your state buffer!"));
-            if (FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedFlagSets.size() == 0)
-                throw new CommandException(Texts.of("You don't have any FlagSets in your state buffer!"));
+            if (FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedHandlers.size() == 0)
+                throw new CommandException(Texts.of("You don't have any Handlers in your state buffer!"));
             int[] successes = {0};
             FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedRegions.stream().forEach(
-                    region -> FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedFlagSets.stream()
-                            .filter(flagSet -> !(flagSet instanceof GlobalFlagSet))
-                            .forEach(flagSet -> successes[0] += FGManager.getInstance().link(region, flagSet) ? 1 : 0));
+                    region -> FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedHandlers.stream()
+                            .filter(handler -> !(handler instanceof GlobalHandler))
+                            .forEach(handler -> successes[0] += FGManager.getInstance().link(region, handler) ? 1 : 0));
             source.sendMessage(Texts.of(TextColors.GREEN, "Successfully linked " + successes[0] + "!"));
-            FGCommandMainDispatcher.getInstance().getStateMap().get(source).flush(InternalCommandState.StateField.REGIONS, InternalCommandState.StateField.FLAGSETS);
+            FGCommandMainDispatcher.getInstance().getStateMap().get(source).flush(InternalCommandState.StateField.REGIONS, InternalCommandState.StateField.HANDLERS);
             return CommandResult.builder().successCount(successes[0]).build();
         } else {
             if (source instanceof Player) {
@@ -86,13 +86,13 @@ public class CommandLink implements CommandCallable {
                     args = arguments.split(" +", 3);
                 } else world = player.getWorld();
                 if (args.length < 1 + flag) throw new CommandException(Texts.of("Must specify items to link!"));
-                if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a flagset!"));
+                if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a Handler!"));
                 boolean success = FGManager.getInstance().link(world, args[flag], args[1 + flag]);
                 if (success) {
                     source.sendMessage(Texts.of(TextColors.GREEN, "Successfully linked!"));
                     return CommandResult.success();
                 } else {
-                    source.sendMessage(Texts.of(TextColors.RED, "There was an error linking. Check their names and alsoke sure they haven't already been linked."));
+                    source.sendMessage(Texts.of(TextColors.RED, "There was an error linking. Check their names and also make sure they haven't already been linked."));
                 }
             } else {
 
@@ -125,9 +125,9 @@ public class CommandLink implements CommandCallable {
     @Override
     public Text getUsage(CommandSource source) {
         if (source instanceof Player)
-            return Texts.of("link [ [w:<worldname>] <region name> <flagset name> ]");
+            return Texts.of("link [ [w:<worldname>] <region name> <handler name> ]");
         else {
-            return Texts.of("link [ <worldname> <region name> <flagset name> ]");
+            return Texts.of("link [ <worldname> <region name> <handler name> ]");
         }
     }
 }

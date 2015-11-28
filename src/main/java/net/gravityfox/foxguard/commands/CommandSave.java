@@ -52,7 +52,7 @@ public class CommandSave implements CommandCallable {
             source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        FGStorageManager.getInstance().writeFlagSets();
+        FGStorageManager.getInstance().writeHandlers();
         for (World world : FoxGuardMain.getInstance().getGame().getServer().getWorlds()) {
             FGStorageManager.getInstance().writeWorld(world);
         }

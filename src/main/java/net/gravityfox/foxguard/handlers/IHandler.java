@@ -23,24 +23,30 @@
  * THE SOFTWARE.
  */
 
-package net.gravityfox.foxguard.factory;
+package net.gravityfox.foxguard.handlers;
 
+import net.gravityfox.foxguard.IFGObject;
+import net.gravityfox.foxguard.handlers.util.Flags;
+import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.event.Event;
+import org.spongepowered.api.util.Tristate;
 
-import net.gravityfox.foxguard.commands.util.InternalCommandState;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
-import org.spongepowered.api.util.command.CommandSource;
-
-import javax.sql.DataSource;
-import java.sql.SQLException;
+import javax.annotation.Nullable;
 
 /**
- * Created by Fox on 10/22/2015.
+ * Created by Fox on 8/17/2015.
  * Project: foxguard
  */
-public interface IFlagSetFactory extends IFGFactory {
+public interface IHandler extends IFGObject, Comparable<IHandler> {
 
-    IFlagSet createFlagSet(String name, String type, int priority, String arguments, InternalCommandState state, CommandSource source);
+    Tristate isAllowed(@Nullable User user, Flags flag, Event event);
 
-    IFlagSet createFlagSet(DataSource source, String name, String type, int priority) throws SQLException;
+    boolean isEnabled();
+
+    void setIsEnabled(boolean state);
+
+    int getPriority();
+
+    void setPriority(int priority);
 
 }

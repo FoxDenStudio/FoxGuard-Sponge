@@ -23,30 +23,55 @@
  * THE SOFTWARE.
  */
 
-package net.gravityfox.foxguard.flagsets;
-
-import net.gravityfox.foxguard.IFGObject;
-import net.gravityfox.foxguard.flagsets.util.Flags;
-import org.spongepowered.api.entity.living.player.User;
-import org.spongepowered.api.event.Event;
-import org.spongepowered.api.util.Tristate;
-
-import javax.annotation.Nullable;
+package net.gravityfox.foxguard.handlers;
 
 /**
  * Created by Fox on 8/17/2015.
  * Project: foxguard
  */
-public interface IFlagSet extends IFGObject, Comparable<IFlagSet> {
+public abstract class HandlerBase implements IHandler {
 
-    Tristate isAllowed(@Nullable User user, Flags flag, Event event);
+    protected String name;
+    protected int priority;
+    protected boolean isEnabled = true;
 
-    boolean isEnabled();
+    public HandlerBase(String name, int priority) {
+        setName(name);
+        setPriority(priority);
+    }
 
-    void setIsEnabled(boolean state);
+    @Override
+    public boolean isEnabled() {
+        return isEnabled;
+    }
 
-    int getPriority();
+    @Override
+    public void setIsEnabled(boolean state) {
+        this.isEnabled = state;
+    }
 
-    void setPriority(int priority);
+    @Override
+    public int getPriority() {
+        return this.priority;
+    }
 
+    @Override
+    public void setPriority(int priority) {
+        this.priority = priority > Integer.MIN_VALUE ? priority : Integer.MIN_VALUE + 1;
+    }
+
+    @Override
+    public String getName() {
+        return this.name;
+    }
+
+    @Override
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public int compareTo(IHandler o) {
+        return o.getPriority() - this.priority;
+    }
 }

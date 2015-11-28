@@ -28,7 +28,7 @@ package net.gravityfox.foxguard.commands;
 import com.google.common.collect.ImmutableList;
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.FoxGuardMain;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.handlers.IHandler;
 import net.gravityfox.foxguard.regions.IRegion;
 import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
@@ -97,24 +97,24 @@ public class CommandSubtract implements CommandCallable {
                 FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.remove(region);
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully removed Region from your state buffer!"));
                 return CommandResult.success();
-            } else if (isAlias(FLAG_SETS_ALIASES, args[0])) {
+            } else if (isAlias(HANDLERS_ALIASES, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name or a number!"));
-                IFlagSet flagSet;
+                IHandler handler;
                 try {
                     int index = Integer.parseInt(args[1]);
-                    flagSet = FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.get(index - 1);
+                    handler = FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedHandlers.get(index - 1);
                 } catch (NumberFormatException e) {
-                    flagSet = FGManager.getInstance().getFlagSet(args[1]);
+                    handler = FGManager.getInstance().gethandler(args[1]);
                 } catch (IndexOutOfBoundsException e) {
                     throw new ArgumentParseException(Texts.of("Index out of bounds! (1 - "
-                            + FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.size()), args[1], 1);
+                            + FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedHandlers.size()), args[1], 1);
                 }
-                if (flagSet == null)
-                    throw new ArgumentParseException(Texts.of("No FlagSets with this name!"), args[1], 1);
-                if (!FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.contains(flagSet))
-                    throw new ArgumentParseException(Texts.of("FlagSet is not in your state buffer!"), args[1], 1);
-                FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedFlagSets.remove(flagSet);
-                source.sendMessage(Texts.of(TextColors.GREEN, "Successfully removed FlagSet from your state buffer!"));
+                if (handler == null)
+                    throw new ArgumentParseException(Texts.of("No Handlers with this name!"), args[1], 1);
+                if (!FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedHandlers.contains(handler))
+                    throw new ArgumentParseException(Texts.of("Handler is not in your state buffer!"), args[1], 1);
+                FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedHandlers.remove(handler);
+                source.sendMessage(Texts.of(TextColors.GREEN, "Successfully removed Handler from your state buffer!"));
                 return CommandResult.success();
             } else if (isAlias(POSITIONS_ALIASES, args[0])) {
                 int index = FGCommandMainDispatcher.getInstance().getStateMap().get(player).positions.size();
@@ -162,6 +162,6 @@ public class CommandSubtract implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("subtract <region [w:<world>] | flagset | position> < <name> | <index> >");
+        return Texts.of("subtract <region [w:<world>] | handler | position> < <name> | <index> >");
     }
 }

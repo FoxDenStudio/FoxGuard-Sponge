@@ -30,7 +30,7 @@ import net.gravityfox.foxguard.FGStorageManager;
 import net.gravityfox.foxguard.FoxGuardMain;
 import net.gravityfox.foxguard.IFGObject;
 import net.gravityfox.foxguard.factory.FGFactoryManager;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
+import net.gravityfox.foxguard.handlers.IHandler;
 import net.gravityfox.foxguard.regions.IRegion;
 import org.spongepowered.api.world.World;
 
@@ -55,28 +55,28 @@ public class DeferredObject {
     public int priority = 0;
 
     public IFGObject resolve() throws SQLException {
-        if (category.equalsIgnoreCase("flagset")) {
+        if (category.equalsIgnoreCase("handler")) {
             String name;
-            if (FGManager.getInstance().getFlagSet(metaName) == null)
+            if (FGManager.getInstance().gethandler(metaName) == null)
                 name = metaName;
-            else if (FGManager.getInstance().getFlagSet(listName) == null)
+            else if (FGManager.getInstance().gethandler(listName) == null)
                 name = listName;
             else {
                 int x = 1;
-                while (FGManager.getInstance().getFlagSet(metaName + x) != null) {
+                while (FGManager.getInstance().gethandler(metaName + x) != null) {
                     x++;
                 }
                 name = metaName + x;
             }
-            IFlagSet flagSet = FGFactoryManager.getInstance().createFlagSet(dataSource, name, type, priority);
+            IHandler handler = FGFactoryManager.getInstance().createHandler(dataSource, name, type, priority);
             FGStorageManager.getInstance().markForDeletion(databaseDir);
-            FGManager.getInstance().addFlagSet(flagSet);
-            FoxGuardMain.getInstance().getLogger().info("Successfully force loaded FlagSet: " +
+            FGManager.getInstance().addHandler(handler);
+            FoxGuardMain.getInstance().getLogger().info("Successfully force loaded Handler: " +
                     "(Name: " + name +
                     " Type: " + type +
                     " Priority: " + priority +
                     ")");
-            return flagSet;
+            return handler;
         } else if (category.equalsIgnoreCase("region")) {
             World world = listWorld;
             Optional<World> optWorld = FoxGuardMain.getInstance().getGame().getServer().getWorld(metaWorld);

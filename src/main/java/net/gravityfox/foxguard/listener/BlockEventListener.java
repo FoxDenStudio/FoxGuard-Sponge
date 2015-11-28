@@ -27,8 +27,8 @@ package net.gravityfox.foxguard.listener;
 
 import com.flowpowered.math.vector.Vector3i;
 import net.gravityfox.foxguard.FGManager;
-import net.gravityfox.foxguard.flagsets.IFlagSet;
-import net.gravityfox.foxguard.flagsets.util.Flags;
+import net.gravityfox.foxguard.handlers.IHandler;
+import net.gravityfox.foxguard.handlers.util.Flags;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.living.player.Player;
@@ -71,32 +71,32 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
 
         //FoxGuardMain.getInstance().getLogger().info(player.getName());
 
-        List<IFlagSet> flagSetList = new ArrayList<>();
+        List<IHandler> handlerList = new ArrayList<>();
         World world = event.getTargetWorld();
 
         for (Transaction<BlockSnapshot> trans : event.getTransactions()) {
             Vector3i loc = trans.getOriginal().getLocation().get().getBlockPosition();
             FGManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
-                    .forEach(region -> region.getFlagSets().stream()
-                            .filter(flagSet -> !flagSetList.contains(flagSet))
-                            .forEach(flagSetList::add));
+                    .forEach(region -> region.getHandlers().stream()
+                            .filter(handler -> !handlerList.contains(handler))
+                            .forEach(handlerList::add));
         }
-        Collections.sort(flagSetList);
-        int currPriority = flagSetList.get(0).getPriority();
+        Collections.sort(handlerList);
+        int currPriority = handlerList.get(0).getPriority();
         Tristate flagState = Tristate.UNDEFINED;
-        for (IFlagSet flagSet : flagSetList) {
-            if (flagSet.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
+        for (IHandler handler : handlerList) {
+            if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
                 break;
             }
-            flagState = flagState.and(flagSet.isAllowed(user, typeFlag, event));
-            currPriority = flagSet.getPriority();
+            flagState = flagState.and(handler.isAllowed(user, typeFlag, event));
+            currPriority = handler.getPriority();
         }
         if (flagState == Tristate.FALSE) {
             if (user instanceof Player)
                 ((Player) user).sendMessage(Texts.of("You don't have permission!"));
             event.setCancelled(true);
         } else {
-            //makes sure that flagsets are unable to cancel the event directly.
+            //makes sure that handlers are unable to cancel the event directly.
             event.setCancelled(false);
         }
     }

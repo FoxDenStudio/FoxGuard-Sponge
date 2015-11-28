@@ -23,11 +23,11 @@
  * THE SOFTWARE.
  */
 
-package net.gravityfox.foxguard.flagsets;
+package net.gravityfox.foxguard.handlers;
 
 import net.gravityfox.foxguard.FoxGuardMain;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
-import net.gravityfox.foxguard.flagsets.util.Flags;
+import net.gravityfox.foxguard.handlers.util.Flags;
 import net.gravityfox.foxguard.util.CallbackHashMap;
 import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
@@ -55,17 +55,17 @@ import static net.gravityfox.foxguard.util.Aliases.*;
  * Created by Fox on 11/26/2015.
  * Project: SpongeForge
  */
-public class PassiveFlagSet extends OwnableFlagSetBase {
+public class PassiveHandler extends OwnableHandlerBase {
 
     Flags[] availableFlags = {Flags.SPAWN_MOB_PASSIVE, Flags.SPAWN_MOB_HOSTILE};
 
     private Map<Flags, Tristate> passiveMap;
 
-    public PassiveFlagSet(String name, int priority) {
+    public PassiveHandler(String name, int priority) {
         this(name, priority, new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED));
     }
 
-    public PassiveFlagSet(String name, int priority, CallbackHashMap<Flags, Tristate> map) {
+    public PassiveHandler(String name, int priority, CallbackHashMap<Flags, Tristate> map) {
         super(name, priority);
         this.passiveMap = map;
     }
@@ -82,7 +82,7 @@ public class PassiveFlagSet extends OwnableFlagSetBase {
 
     @Override
     public boolean modify(String arguments, InternalCommandState state, CommandSource source) {
-        if (!source.hasPermission("foxguard.command.modify.objects.modify.flagsets")) {
+        if (!source.hasPermission("foxguard.command.modify.objects.modify.handlers")) {
             if (source instanceof ProxySource) source = ((ProxySource) source).getOriginalSource();
             if (source instanceof Player && !this.ownerList.contains(source)) return false;
         }
@@ -175,7 +175,7 @@ public class PassiveFlagSet extends OwnableFlagSetBase {
                     return false;
                 }
             } else {
-                source.sendMessage(Texts.of(TextColors.RED, "Not a valid PassiveFlagset command!"));
+                source.sendMessage(Texts.of(TextColors.RED, "Not a valid PassiveHandler command!"));
                 return false;
             }
         } else {
