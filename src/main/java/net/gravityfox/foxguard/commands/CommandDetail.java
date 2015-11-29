@@ -1,5 +1,4 @@
 /*
- *
  * This file is part of FoxGuard, licensed under the MIT License (MIT).
  *
  * Copyright (c) 2015 - 2015. gravityfox - https://gravityfox.net/ and contributors.
@@ -34,6 +33,7 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.format.TextStyles;
 import org.spongepowered.api.util.command.CommandCallable;
@@ -97,7 +97,9 @@ public class CommandDetail implements CommandCallable {
                 if (region.getHandlers().size() == 0)
                     builder.append(Texts.of(TextStyles.ITALIC, "\nNo linked Handlers!"));
                 region.getHandlers().stream().forEach(handler -> builder.append(Texts.of(FGHelper.getColorForHandler(handler),
-                        "\n" + handler.getShortTypeName() + " : " + handler.getName())));
+                        TextActions.runCommand("/foxguard detail handler " + handler.getName()),
+                        "\n" + handler.getShortTypeName() + " : " + handler.getName()
+                )));
                 player.sendMessage(builder.build());
 
             } else if (isAlias(HANDLERS_ALIASES, args[0])) {

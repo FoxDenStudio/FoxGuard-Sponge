@@ -1,5 +1,4 @@
 /*
- *
  * This file is part of FoxGuard, licensed under the MIT License (MIT).
  *
  * Copyright (c) 2015 - 2015. gravityfox - https://gravityfox.net/ and contributors.
@@ -22,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
 package net.gravityfox.foxguard.commands;
 
 import net.gravityfox.foxguard.FoxGuardMain;
