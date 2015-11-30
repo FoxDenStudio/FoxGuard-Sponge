@@ -69,10 +69,10 @@ public class FGFactoryManager {
         return null;
     }
 
-    public IRegion createRegion(DataSource source, String name, String type) throws SQLException {
+    public IRegion createRegion(DataSource source, String name, String type, boolean isEnabled) throws SQLException {
         for (IRegionFactory rf : regionFactories) {
             if (isAlias(rf.getTypes(), type)) {
-                IRegion region = rf.createRegion(source, name, type);
+                IRegion region = rf.createRegion(source, name, type, isEnabled);
                 if (region != null) return region;
             }
         }
@@ -90,10 +90,10 @@ public class FGFactoryManager {
         return null;
     }
 
-    public IHandler createHandler(DataSource source, String name, String type, int priority) throws SQLException {
+    public IHandler createHandler(DataSource source, String name, String type, int priority, boolean isEnabled) throws SQLException {
         for (IHandlerFactory fsf : handlerFactories) {
             if (isAlias(fsf.getTypes(), type)) {
-                IHandler handler = fsf.createHandler(source, name, type, priority);
+                IHandler handler = fsf.createHandler(source, name, type, priority, isEnabled);
                 if (handler != null) return handler;
             }
         }

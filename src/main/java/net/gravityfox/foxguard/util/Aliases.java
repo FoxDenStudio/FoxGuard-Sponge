@@ -35,12 +35,12 @@ public class Aliases {
     public static final String[] REGIONS_ALIASES = {"regions", "region", "reg", "r"};
     public static final String[] HANDLERS_ALIASES = {"handlers", "handler", "handles", "handle", "hands", "hand", "h", "flagsets", "flagset", "flags", "flag", "f"};
     public static final String[] POSITIONS_ALIASES = {"positions", "position", "points", "point", "locations", "location", "pos", "loc", "locs", "p"};
-    public static final String[] OWNER_GROUP_ALIASES = {"owners", "owner", "master", "masters", "creator", "creators",
-            "admin", "admins", "administrator", "administrators", "mod", "mods"};
+    public static final String[] OWNER_GROUP_ALIASES = {"owners", "owner", "masters", "master", "creators", "creator",
+            "admins", "admin", "administrators", "administrator", "mods", "mod"};
+    public static final String[] MEMBER_GROUP_ALIASES = {"members", "member", "users", "user", "players", "player"};
+    public static final String[] DEFAULT_GROUP_ALIASES = {"default", "nonmember", "nonmembers", "everyone", "other"};
     public static final String[] SET_ALIASES = {"set", "perm", "flag", "rule", "perms", "flags", "rules", "permission", "permissions"};
     public static final String[] PASSIVE_ALIASES = {"passive", "causeless", "userless", "environment"};
-    public static final String[] MEMBER_GROUP_ALIASES = {"member", "members", "user", "users", "player", "players"};
-    public static final String[] DEFAULT_GROUP_ALIASES = {"default", "nonmember", "nonmembers", "everyone", "other"};
     public static final String[] GROUPS_ALIASES = {"group", "groups"};
     public static final String[] TRUE_ALIASES = {"true", "t", "allow", "a"};
     public static final String[] FALSE_ALIASES = {"false", "f", "deny", "d"};

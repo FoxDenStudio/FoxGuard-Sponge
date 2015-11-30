@@ -40,10 +40,6 @@ public interface IHandler extends IFGObject, Comparable<IHandler> {
 
     Tristate handle(@Nullable User user, Flags flag, Event event);
 
-    boolean isEnabled();
-
-    void setIsEnabled(boolean state);
-
     int getPriority();
 
     void setPriority(int priority);

@@ -61,11 +61,11 @@ public class FGHelper {
     }
 
     public static TextColor getColorForRegion(IRegion region) {
-        return region.getName().equals(GlobalRegion.NAME) ? TextColors.YELLOW : TextColors.RESET;
+        return region instanceof GlobalRegion ? TextColors.YELLOW : (region.isEnabled() ? TextColors.RESET : TextColors.GRAY);
     }
 
     public static TextColor getColorForHandler(IHandler handler) {
-        return handler.getName().equals(GlobalHandler.NAME) ? TextColors.YELLOW : TextColors.RESET;
+        return handler instanceof GlobalHandler ? TextColors.YELLOW : (handler.isEnabled() ? TextColors.RESET : TextColors.GRAY);
     }
 
     public static <T> boolean contains(T[] array, T value) {

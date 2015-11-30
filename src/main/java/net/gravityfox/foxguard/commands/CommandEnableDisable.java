@@ -26,16 +26,15 @@ package net.gravityfox.foxguard.commands;
 
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.FoxGuardMain;
+import net.gravityfox.foxguard.handlers.GlobalHandler;
 import net.gravityfox.foxguard.handlers.IHandler;
+import net.gravityfox.foxguard.regions.GlobalRegion;
 import net.gravityfox.foxguard.regions.IRegion;
 import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
-import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.text.format.TextStyles;
 import org.spongepowered.api.util.command.CommandCallable;
 import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandResult;
@@ -43,17 +42,23 @@ import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.world.World;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static net.gravityfox.foxguard.util.Aliases.*;
 
 /**
- * Created by Fox on 8/22/2015.
- * Project: foxguard
+ * Created by Fox on 11/29/2015.
+ * Project: SpongeForge
  */
-public class CommandDetail implements CommandCallable {
+public class CommandEnableDisable implements CommandCallable {
+
+    private final boolean enableState;
+
+    public CommandEnableDisable(boolean enableState) {
+        this.enableState = enableState;
+    }
 
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
@@ -62,7 +67,7 @@ public class CommandDetail implements CommandCallable {
             return CommandResult.empty();
         }
         String[] args = {};
-        if (!arguments.isEmpty()) args = arguments.split(" +", 3);
+        if (!arguments.isEmpty()) args = arguments.split(" +");
         if (source instanceof Player) {
             Player player = (Player) source;
             if (args.length == 0) {
@@ -79,65 +84,67 @@ public class CommandDetail implements CommandCallable {
                 if (optWorld != null && optWorld.isPresent()) {
                     world = optWorld.get();
                     flag = 1;
-                    args = arguments.split(" +", 4);
                 } else world = player.getWorld();
                 if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a name!"));
-                IRegion region = FGManager.getInstance().getRegion(world, args[1 + flag]);
-                if (region == null)
-                    throw new CommandException(Texts.of("No Region with name \"" + args[1 + flag] + "\"!"));
-                TextBuilder builder = Texts.builder();
-                builder.append(Texts.of(TextColors.GOLD, "-----------------------------------------------------\n"));
-                builder.append(Texts.of(TextColors.GREEN, "---General---\n"));
-                builder.append(Texts.of(TextColors.GOLD, "Name: "), Texts.of(TextColors.RESET, region.getName() + "\n"));
-                builder.append(Texts.of(TextColors.GOLD, "Type: "), Texts.of(TextColors.RESET, region.getLongTypeName() + "\n"));
-                builder.append(Texts.of(TextColors.GOLD, "Enabled: "), Texts.of(TextColors.RESET, (region.isEnabled() ? "True" : "False") + "\n"));
-                builder.append(Texts.of(TextColors.GOLD, "World: "), Texts.of(TextColors.RESET, region.getWorld().getName() + "\n"));
-                builder.append(Texts.of(TextColors.GREEN, "---Details---\n"));
-                builder.append(region.getDetails(args.length < 3 + flag ? "" : args[2 + flag]));
-                builder.append(Texts.of(TextColors.GREEN, "\n---Linked Handlers---"));
-                if (region.getHandlers().size() == 0)
-                    builder.append(Texts.of(TextStyles.ITALIC, "\nNo linked Handlers!"));
-                region.getHandlers().stream().forEach(handler -> builder.append(Texts.of(FGHelper.getColorForHandler(handler),
-                        TextActions.runCommand("/foxguard detail handler " + handler.getName()),
-                        "\n" + handler.getShortTypeName() + " : " + handler.getName()
-                )));
-                player.sendMessage(builder.build());
+                int successes = 0;
+                int failures = 0;
+                for (String name : Arrays.copyOfRange(args, 1 + flag, args.length)) {
+                    IRegion region = FGManager.getInstance().getRegion(world, name);
+                    if (region == null) failures++;
+                    else if (region instanceof GlobalRegion || region.isEnabled() == this.enableState) failures++;
+                    else {
+                        region.setIsEnabled(this.enableState);
+                        successes++;
+                    }
+                }
+                if (successes > 0) {
+                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " regions with "
+                            + successes + " successes and " + failures + " failures!"));
+                    return CommandResult.builder().successCount(successes).build();
+                } else {
+                    throw new CommandException(Texts.of(failures + " failures while trying to " + (this.enableState ? "enable" : "disable") +
+                            " regions. Check to make sure you spelled their names correctly and that they are not already "
+                            + (this.enableState ? "enabled." : "disabled.")));
+                }
 
             } else if (isAlias(HANDLERS_ALIASES, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-
-                IHandler handler = FGManager.getInstance().gethandler(args[1]);
-                if (handler == null)
-                    throw new CommandException(Texts.of("No Handler with name \"" + args[1] + "\"!"));
-                TextBuilder builder = Texts.builder();
-                builder.append(Texts.of(TextColors.GOLD, "-----------------------------------------------------\n"));
-                builder.append(Texts.of(TextColors.GREEN, "---General---\n"));
-                builder.append(Texts.of(TextColors.GOLD, "Name: "), Texts.of(TextColors.RESET, handler.getName() + "\n"));
-                builder.append(Texts.of(TextColors.GOLD, "Type: "), Texts.of(TextColors.RESET, handler.getLongTypeName() + "\n"));
-                builder.append(Texts.of(TextColors.GOLD, "Enabled: "), Texts.of(TextColors.RESET, (handler.isEnabled() ? "True" : "False") + "\n"));
-                builder.append(Texts.of(TextColors.GOLD, "Priority: "), Texts.of(TextColors.RESET, handler.getPriority() + "\n"));
-                builder.append(Texts.of(TextColors.GREEN, "---Details---\n"));
-                builder.append(handler.getDetails(args.length < 3 ? "" : args[2]));
-                player.sendMessage(builder.build());
-            } else {
-                throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
-            }
+                int successes = 0;
+                int failures = 0;
+                for (String name : Arrays.copyOfRange(args, 1, args.length)) {
+                    IHandler handler = FGManager.getInstance().gethandler(name);
+                    if (handler == null) failures++;
+                    else if (handler instanceof GlobalHandler || handler.isEnabled() == this.enableState) {
+                        failures++;
+                    } else {
+                        handler.setIsEnabled(this.enableState);
+                        successes++;
+                    }
+                }
+                if (successes > 0) {
+                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handlers with "
+                            + successes + " successes and " + failures + " failures!"));
+                    return CommandResult.builder().successCount(successes).build();
+                } else {
+                    throw new CommandException(Texts.of(failures + " failures while trying to " + (this.enableState ? "enable" : "disable") +
+                            " handlers. Check to make sure you spelled their names correctly and that they are not already "
+                            + (this.enableState ? "enabled." : "disabled.")));
+                }
+            } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
         } else {
 
         }
-
         return CommandResult.empty();
     }
 
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
-        return new ArrayList<>();
+        return null;
     }
 
     @Override
     public boolean testPermission(CommandSource source) {
-
-        return source.hasPermission("foxguard.command.info.objects.detail");
+        return source.hasPermission("foxguard.command.modify.objects.enabledisable");
     }
 
     @Override
@@ -153,8 +160,7 @@ public class CommandDetail implements CommandCallable {
     @Override
     public Text getUsage(CommandSource source) {
         if (source instanceof Player)
-            return Texts.of("detail <region [w:<worldname>] | handler> <name> [args...]");
-        else return Texts.of("detail <region <worldname> | handler> <name> [args...]");
-
+            return Texts.of((this.enableState ? "enable" : "disable") + " <region [w:<worldname>] | handler> [names]...");
+        else return Texts.of((this.enableState ? "enable" : "disable") + " <region <worldname> | handler> [names]...");
     }
 }

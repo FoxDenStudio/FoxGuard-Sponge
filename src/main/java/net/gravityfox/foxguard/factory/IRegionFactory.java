@@ -42,6 +42,6 @@ public interface IRegionFactory extends IFGFactory {
 
     IRegion createRegion(String name, String type, String arguments, InternalCommandState state, World world, CommandSource source) throws CommandException;
 
-    IRegion createRegion(DataSource source, String name, String type) throws SQLException;
+    IRegion createRegion(DataSource source, String name, String type, boolean isEnabled) throws SQLException;
 
 }

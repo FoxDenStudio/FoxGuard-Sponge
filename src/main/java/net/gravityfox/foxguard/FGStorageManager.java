@@ -67,7 +67,8 @@ public class FGStorageManager {
                         "CREATE TABLE IF NOT EXISTS HANDLERS (" +
                                 "NAME VARCHAR(256), " +
                                 "TYPE VARCHAR(256)," +
-                                "PRIORITY INTEGER);");
+                                "PRIORITY INTEGER," +
+                                "ENABLED BOOLEAN);");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -88,7 +89,8 @@ public class FGStorageManager {
                 statement.execute(
                         "CREATE TABLE IF NOT EXISTS REGIONS (" +
                                 "NAME VARCHAR(256), " +
-                                "TYPE VARCHAR(256));" +
+                                "TYPE VARCHAR(256)," +
+                                "ENABLED BOOLEAN);" +
                                 "CREATE TABLE IF NOT EXISTS LINKAGES (" +
                                 "REGION VARCHAR(256)," +
                                 "HANDLER VARCHAR(256));");
@@ -122,10 +124,12 @@ public class FGStorageManager {
                                                 if (metaSet.getString("CATEGORY").equalsIgnoreCase("handler") &&
                                                         metaSet.getString("NAME").equalsIgnoreCase(handlerDataSet.getString("NAME")) &&
                                                         metaSet.getString("TYPE").equalsIgnoreCase(handlerDataSet.getString("TYPE")) &&
-                                                        metaSet.getInt("PRIORITY") == handlerDataSet.getInt("PRIORITY")) {
+                                                        metaSet.getInt("PRIORITY") == handlerDataSet.getInt("PRIORITY") &&
+                                                        metaSet.getBoolean("ENABLED") == handlerDataSet.getBoolean("ENABLED")) {
                                                     FGManager.getInstance().addHandler(
                                                             FGFactoryManager.getInstance().createHandler(
-                                                                    source, handlerDataSet.getString("NAME"), handlerDataSet.getString("TYPE"), handlerDataSet.getInt("PRIORITY")));
+                                                                    source, handlerDataSet.getString("NAME"), handlerDataSet.getString("TYPE"),
+                                                                    handlerDataSet.getInt("PRIORITY"), handlerDataSet.getBoolean("ENABLED")));
                                                 } else if (FGConfigManager.getInstance().forceLoad) {
                                                     FoxGuardMain.getInstance().getLogger().info("Mismatched database found. Attempting force load...");
                                                     if (metaSet.getString("CATEGORY").equalsIgnoreCase("region")) {
@@ -138,6 +142,8 @@ public class FGStorageManager {
                                                         deferredRegion.type = metaSet.getString("TYPE");
                                                         deferredRegion.listWorld = null;
                                                         deferredRegion.metaWorld = metaSet.getString("WORLD");
+                                                        deferredRegion.listEnabled = handlerDataSet.getBoolean("ENABLED");
+                                                        deferredRegion.metaEnabled = metaSet.getBoolean("ENABLED");
                                                         this.deferedObjects.add(deferredRegion);
                                                     } else if (metaSet.getString("CATEGORY").equalsIgnoreCase("handler")) {
                                                         DeferredObject deferredHandler = new DeferredObject();
@@ -148,6 +154,8 @@ public class FGStorageManager {
                                                         deferredHandler.metaName = metaSet.getString("NAME");
                                                         deferredHandler.type = metaSet.getString("TYPE");
                                                         deferredHandler.priority = metaSet.getInt("PRIORITY");
+                                                        deferredHandler.listEnabled = handlerDataSet.getBoolean("ENABLED");
+                                                        deferredHandler.metaEnabled = metaSet.getBoolean("ENABLED");
                                                         this.deferedObjects.add(deferredHandler);
                                                     } else {
                                                         FoxGuardMain.getInstance().getLogger().info("Found potentially corrupted database.");
@@ -204,11 +212,13 @@ public class FGStorageManager {
                                                 if (metaSet.getString("CATEGORY").equalsIgnoreCase("region") &&
                                                         metaSet.getString("NAME").equalsIgnoreCase(regionDataSet.getString("NAME")) &&
                                                         metaSet.getString("TYPE").equalsIgnoreCase(regionDataSet.getString("TYPE")) &&
-                                                        metaSet.getString("WORLD").equals(world.getName())) {
+                                                        metaSet.getString("WORLD").equals(world.getName()) &&
+                                                        metaSet.getBoolean("ENABLED") == regionDataSet.getBoolean("ENABLED")) {
                                                     FGManager.getInstance().addRegion(world,
                                                             FGFactoryManager.getInstance().createRegion(
                                                                     source,
-                                                                    regionDataSet.getString("NAME"), regionDataSet.getString("TYPE")
+                                                                    regionDataSet.getString("NAME"), regionDataSet.getString("TYPE"),
+                                                                    regionDataSet.getBoolean("ENABLED")
                                                             )
                                                     );
                                                 } else if (FGConfigManager.getInstance().forceLoad) {
@@ -223,6 +233,8 @@ public class FGStorageManager {
                                                         deferredRegion.type = metaSet.getString("TYPE");
                                                         deferredRegion.listWorld = world;
                                                         deferredRegion.metaWorld = metaSet.getString("WORLD");
+                                                        deferredRegion.listEnabled = regionDataSet.getBoolean("ENABLED");
+                                                        deferredRegion.metaEnabled = metaSet.getBoolean("ENABLED");
                                                         this.deferedObjects.add(deferredRegion);
                                                     } else if (metaSet.getString("CATEGORY").equalsIgnoreCase("handler")) {
                                                         DeferredObject deferredHandler = new DeferredObject();
@@ -233,6 +245,8 @@ public class FGStorageManager {
                                                         deferredHandler.metaName = metaSet.getString("NAME");
                                                         deferredHandler.type = metaSet.getString("TYPE");
                                                         deferredHandler.priority = metaSet.getInt("PRIORITY");
+                                                        deferredHandler.listEnabled = regionDataSet.getBoolean("ENABLED");
+                                                        deferredHandler.metaEnabled = metaSet.getBoolean("ENABLED");
                                                         this.deferedObjects.add(deferredHandler);
                                                     } else {
                                                         FoxGuardMain.getInstance().getLogger().info("Found potentially corrupted database.");
@@ -294,10 +308,11 @@ public class FGStorageManager {
             try (Statement statement = conn.createStatement()) {
                 statement.addBatch("DELETE FROM HANDLERS;");
                 for (IHandler handler : FGManager.getInstance().getHandlerListCopy()) {
-                    statement.addBatch("INSERT INTO HANDLERS(NAME, TYPE, PRIORITY) VALUES ('" +
+                    statement.addBatch("INSERT INTO HANDLERS(NAME, TYPE, PRIORITY, ENABLED) VALUES ('" +
                             handler.getName() + "', '" +
                             handler.getUniqueTypeString() + "', " +
-                            handler.getPriority() + ");");
+                            handler.getPriority() + ", " +
+                            (handler.isEnabled() ? "TRUE" : "FALSE") + ");");
                 }
                 statement.executeBatch();
             }
@@ -318,13 +333,15 @@ public class FGStorageManager {
                                 "CATEGORY VARCHAR(16), " +
                                 "NAME VARCHAR(256), " +
                                 "TYPE VARCHAR(256), " +
-                                "PRIORITY INTEGER);");
+                                "PRIORITY INTEGER," +
+                                "ENABLED BOOLEAN);");
                         statement.addBatch("DELETE FROM FOXGUARD_META.METADATA");
-                        statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, PRIORITY) VALUES (" +
+                        statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, PRIORITY, ENABLED) VALUES (" +
                                 "'handler', '" +
                                 handler.getName() + "', '" +
                                 handler.getUniqueTypeString() + "', " +
-                                handler.getPriority() + ");");
+                                handler.getPriority() + ", " +
+                                (handler.isEnabled() ? "TRUE" : "FALSE") + ");");
                         statement.executeBatch();
                     }
                 }
@@ -346,9 +363,10 @@ public class FGStorageManager {
             try (Statement statement = conn.createStatement()) {
                 statement.addBatch("DELETE FROM REGIONS; DELETE FROM LINKAGES;");
                 for (IRegion region : FGManager.getInstance().getRegionsListCopy(world)) {
-                    statement.addBatch("INSERT INTO REGIONS(NAME, TYPE) VALUES ('" +
+                    statement.addBatch("INSERT INTO REGIONS(NAME, TYPE, ENABLED) VALUES ('" +
                             region.getName() + "', '" +
-                            region.getUniqueTypeString() + "');");
+                            region.getUniqueTypeString() + "', " +
+                            (region.isEnabled() ? "TRUE" : "FALSE") + ");");
                     for (IHandler handler : region.getHandlers()) {
                         statement.addBatch("INSERT INTO LINKAGES(REGION, HANDLER) VALUES ('" +
                                 region.getName() + "', '" +
@@ -371,13 +389,15 @@ public class FGStorageManager {
                                 "CATEGORY VARCHAR(16), " +
                                 "NAME VARCHAR(256), " +
                                 "TYPE VARCHAR(256), " +
-                                "WORLD VARCHAR(256));");
+                                "WORLD VARCHAR(256)," +
+                                "ENABLED BOOLEAN);");
                         statement.addBatch("DELETE FROM FOXGUARD_META.METADATA");
-                        statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, WORLD) VALUES (" +
+                        statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, WORLD, ENABLED) VALUES (" +
                                 "'region', '" +
                                 region.getName() + "', '" +
                                 region.getUniqueTypeString() + "', '" +
-                                region.getWorld().getName() + "');");
+                                region.getWorld().getName() + "', " +
+                                (region.isEnabled() ? "TRUE" : "FALSE") + ");");
                         statement.executeBatch();
                     }
                 }
@@ -413,13 +433,15 @@ public class FGStorageManager {
                             "CATEGORY VARCHAR(16), " +
                             "NAME VARCHAR(256), " +
                             "TYPE VARCHAR(256), " +
-                            "WORLD VARCHAR(256));");
+                            "WORLD VARCHAR(256)," +
+                            "ENABLED BOOLEAN);");
                     statement.addBatch("DELETE FROM FOXGUARD_META.METADATA");
-                    statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, WORLD) VALUES (" +
+                    statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, WORLD, ENABLED) VALUES (" +
                             "'region', '" +
                             region.getName() + "', '" +
                             region.getUniqueTypeString() + "', '" +
-                            region.getWorld().getName() + "');");
+                            region.getWorld().getName() + "', " +
+                            (region.isEnabled() ? "TRUE" : "FALSE") + ");");
                     statement.executeBatch();
                 }
             }
@@ -444,13 +466,15 @@ public class FGStorageManager {
                             "CATEGORY VARCHAR(16), " +
                             "NAME VARCHAR(256), " +
                             "TYPE VARCHAR(256), " +
-                            "PRIORITY INTEGER);");
+                            "PRIORITY INTEGER," +
+                            "ENABLED BOOLEAN);");
                     statement.addBatch("DELETE FROM FOXGUARD_META.METADATA");
-                    statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, PRIORITY) VALUES (" +
+                    statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, PRIORITY, ENABLED) VALUES (" +
                             "'handler', '" +
                             handler.getName() + "', '" +
                             handler.getUniqueTypeString() + "', " +
-                            handler.getPriority() + ");");
+                            handler.getPriority() + ", " +
+                            (handler.isEnabled() ? "TRUE" : "FALSE") + ");");
                     statement.executeBatch();
                 }
             }
@@ -474,9 +498,10 @@ public class FGStorageManager {
                 try (Statement statement = conn.createStatement()) {
                     statement.addBatch("DELETE FROM REGIONS; DELETE FROM LINKAGES;");
                     for (IRegion region : FGManager.getInstance().getRegionsListCopy(world)) {
-                        statement.addBatch("INSERT INTO REGIONS(NAME, TYPE) VALUES ('" +
+                        statement.addBatch("INSERT INTO REGIONS(NAME, TYPE, ENABLED) VALUES ('" +
                                 region.getName() + "', '" +
-                                region.getUniqueTypeString() + "');");
+                                region.getUniqueTypeString() + "', " +
+                                (region.isEnabled() ? "TRUE" : "FALSE") + ");");
                         for (IHandler handler : region.getHandlers()) {
                             statement.addBatch("INSERT INTO LINKAGES(REGION, HANDLER) VALUES ('" +
                                     region.getName() + "', '" +
@@ -493,10 +518,11 @@ public class FGStorageManager {
             try (Statement statement = conn.createStatement()) {
                 statement.addBatch("DELETE FROM HANDLERS;");
                 for (IHandler handler : FGManager.getInstance().getHandlerListCopy()) {
-                    statement.addBatch("INSERT INTO HANDLERS(NAME, TYPE, PRIORITY) VALUES ('" +
+                    statement.addBatch("INSERT INTO HANDLERS(NAME, TYPE, PRIORITY, ENABLED) VALUES ('" +
                             handler.getName() + "', '" +
                             handler.getUniqueTypeString() + "', " +
-                            handler.getPriority() + ");");
+                            handler.getPriority() + ", " +
+                            (handler.isEnabled() ? "TRUE" : "FALSE") + ");");
                 }
                 statement.executeBatch();
             }

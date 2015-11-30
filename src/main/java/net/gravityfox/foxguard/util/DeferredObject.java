@@ -49,6 +49,8 @@ public class DeferredObject {
     public String type;
     public String listName;
     public String metaName;
+    public boolean listEnabled = true;
+    public boolean metaEnabled = true;
     public World listWorld = null;
     public String metaWorld = null;
     public int priority = 0;
@@ -67,7 +69,8 @@ public class DeferredObject {
                 }
                 name = metaName + x;
             }
-            IHandler handler = FGFactoryManager.getInstance().createHandler(dataSource, name, type, priority);
+            IHandler handler = FGFactoryManager.getInstance().createHandler(dataSource, name, type, priority, metaEnabled);
+            handler.setIsEnabled(metaEnabled);
             FGStorageManager.getInstance().markForDeletion(databaseDir);
             FGManager.getInstance().addHandler(handler);
             FoxGuardMain.getInstance().getLogger().info("Successfully force loaded Handler: " +
@@ -94,7 +97,8 @@ public class DeferredObject {
                 }
                 name = metaName + x;
             }
-            IRegion region = FGFactoryManager.getInstance().createRegion(dataSource, name, type);
+            IRegion region = FGFactoryManager.getInstance().createRegion(dataSource, name, type, metaEnabled);
+            region.setIsEnabled(metaEnabled);
             FGStorageManager.getInstance().markForDeletion(databaseDir);
             FGManager.getInstance().addRegion(world, region);
             FoxGuardMain.getInstance().getLogger().info("Successfully force loaded Region: " +
@@ -114,6 +118,8 @@ public class DeferredObject {
         builder.append("Type: ").append(type).append("\n");
         builder.append("Listed name: ").append(listName).append("\n");
         builder.append("Metadata name: ").append(metaName).append("\n");
+        builder.append("Listed Enabled: ").append(listEnabled).append("\n");
+        builder.append("Metadata Enabled: ").append(metaEnabled).append("\n");
         if (listWorld != null) builder.append("Listed world: ").append(listWorld.getName()).append("\n");
         if (metaWorld != null) builder.append("Metadata world: ").append(metaWorld).append("\n");
         if (!category.equalsIgnoreCase("region")) builder.append("Priority: ").append(priority).append("\n");

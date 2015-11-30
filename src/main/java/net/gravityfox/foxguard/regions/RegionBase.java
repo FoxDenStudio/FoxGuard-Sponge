@@ -42,6 +42,7 @@ public abstract class RegionBase implements IRegion {
     protected final List<IHandler> handlers;
     protected String name;
     protected World world;
+    protected boolean isEnabled = true;
 
     public RegionBase(String name) {
         this.name = name;
@@ -95,6 +96,16 @@ public abstract class RegionBase implements IRegion {
     @Override
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return isEnabled;
+    }
+
+    @Override
+    public void setIsEnabled(boolean state) {
+        this.isEnabled = state;
     }
 
 }

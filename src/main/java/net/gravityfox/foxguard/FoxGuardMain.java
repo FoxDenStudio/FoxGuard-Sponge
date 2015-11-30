@@ -64,7 +64,7 @@ import static net.gravityfox.foxguard.util.Aliases.HANDLERS_ALIASES;
 @Plugin(id = "foxguard", name = "FoxGuard", version = FoxGuardMain.PLUGIN_VERSION)
 public class FoxGuardMain {
 
-    public static final String PLUGIN_VERSION = "0.9.1";
+    public static final String PLUGIN_VERSION = "0.10";
 
     private static FoxGuardMain instance;
 
@@ -167,6 +167,8 @@ public class FoxGuardMain {
         fgDispatcher.register(new CommandModify(), "modify", "mod", "change", "edit", "update");
         fgDispatcher.register(new CommandLink(), "link", "connect", "attach");
         fgDispatcher.register(new CommandUnlink(), "unlink", "disconnect", "detach");
+        fgDispatcher.register(new CommandEnableDisable(true), "enable", "activate","engage", "on");
+        fgDispatcher.register(new CommandEnableDisable(false), "disable", "deactivate", "disengage", "off");
         fgDispatcher.register(new CommandList(), "list", "ls");
         fgDispatcher.register(new CommandDetail(), "detail", "det", "show");
         fgDispatcher.register(new CommandState(), "state", "current", "cur");

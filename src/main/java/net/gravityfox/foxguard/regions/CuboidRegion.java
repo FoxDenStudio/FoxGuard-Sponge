@@ -116,7 +116,7 @@ public class CuboidRegion extends OwnableRegionBase {
 
     @Override
     public boolean isInRegion(int x, int y, int z) {
-        return boundingBox.contains(x, y, z);
+        return isEnabled && boundingBox.contains(x, y, z);
     }
 
 

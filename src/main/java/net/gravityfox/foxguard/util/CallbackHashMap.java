@@ -41,7 +41,7 @@ public class CallbackHashMap<K, V> extends HashMap<K, V> {
 
     @Override
     public V get(Object key) {
-        if(containsKey(key)){
+        if (containsKey(key)) {
             return super.get(key);
         } else {
             return callback.apply(key, this);

@@ -47,6 +47,10 @@ public interface IFGObject {
 
     String getUniqueTypeString();
 
+    boolean isEnabled();
+
+    void setIsEnabled(boolean state);
+
     Text getDetails(String arguments);
 
     void writeToDatabase(DataSource dataSource) throws SQLException;

@@ -29,16 +29,16 @@ package net.gravityfox.foxguard.handlers.util;
  * Project: foxguard
  */
 public enum Flags {
-    BLOCK_PLACE("blockplace","Place-Blocks"),
-    BLOCK_BREAK("blockbreak","Break-Blocks"),
-    BLOCK_MODIFY("blockmodify","Modify-Blocks"),
-    BLOCK_INTERACT_PRIMARY("blockattack","Attack-Blocks"),
-    BLOCK_INTERACT_SECONDARY("blockinteract","Interact-Blocks"),
-    ENTITY_INTERACT_PRIMARY("entityattack","Attack-Entities"),
-    ENTITY_INTERACT_SECONDARY("entityinteract","Interact-Entities"),
-    FLUID("fluids","Fluids"),
-    SPAWN_MOB_HOSTILE("spawnmobhostile","Spawn-Hostile-Mobs"),
-    SPAWN_MOB_PASSIVE("spawnmobpassive","Spawn-Passive-Mobs");
+    BLOCK_PLACE("blockplace", "Place-Blocks"),
+    BLOCK_BREAK("blockbreak", "Break-Blocks"),
+    BLOCK_MODIFY("blockmodify", "Modify-Blocks"),
+    BLOCK_INTERACT_PRIMARY("blockattack", "Attack-Blocks"),
+    BLOCK_INTERACT_SECONDARY("blockinteract", "Interact-Blocks"),
+    ENTITY_INTERACT_PRIMARY("entityattack", "Attack-Entities"),
+    ENTITY_INTERACT_SECONDARY("entityinteract", "Interact-Entities"),
+    FLUID("fluids", "Fluids"),
+    SPAWN_MOB_HOSTILE("spawnmobhostile", "Spawn-Hostile-Mobs"),
+    SPAWN_MOB_PASSIVE("spawnmobpassive", "Spawn-Passive-Mobs");
 
     String humanName;
     String flagName;
@@ -49,8 +49,8 @@ public enum Flags {
     }
 
     public static Flags flagFrom(String name) {
-        for(Flags flag : Flags.values()){
-            if(flag.flagName.equalsIgnoreCase(name)) return flag;
+        for (Flags flag : Flags.values()) {
+            if (flag.flagName.equalsIgnoreCase(name)) return flag;
         }
         return null;
     }
@@ -60,7 +60,7 @@ public enum Flags {
         return humanName;
     }
 
-    public String flagName(){
+    public String flagName() {
         return flagName;
     }
 

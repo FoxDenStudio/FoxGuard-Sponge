@@ -33,6 +33,10 @@ foxguard {
                     handlers.own
                     regions.own
                 }
+                enabledisable{
+                    handlers.own
+                    regions.own
+                }
                 modify{
                     handlers.own
                     regions.own

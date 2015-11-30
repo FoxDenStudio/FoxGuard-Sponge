@@ -72,7 +72,16 @@ public class GlobalRegion extends RegionBase {
 
     @Override
     public void writeToDatabase(DataSource dataSource) {
+    }
 
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
+
+    @Override
+    public void setIsEnabled(boolean state) {
+        this.isEnabled = true;
     }
 
     @Override

@@ -79,7 +79,16 @@ public class GlobalHandler extends HandlerBase {
 
     @Override
     public void writeToDatabase(DataSource dataSource) {
+    }
 
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
+
+    @Override
+    public void setIsEnabled(boolean state) {
+        this.isEnabled = true;
     }
 
     @Override

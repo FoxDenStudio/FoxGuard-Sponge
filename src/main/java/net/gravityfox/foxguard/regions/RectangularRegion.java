@@ -115,7 +115,7 @@ public class RectangularRegion extends OwnableRegionBase {
 
     @Override
     public boolean isInRegion(double x, double y, double z) {
-        return boundingBox.contains(x, z);
+        return isEnabled && boundingBox.contains(x, z);
     }
 
     @Override

@@ -40,6 +40,6 @@ public interface IHandlerFactory extends IFGFactory {
 
     IHandler createHandler(String name, String type, int priority, String arguments, InternalCommandState state, CommandSource source);
 
-    IHandler createHandler(DataSource source, String name, String type, int priority) throws SQLException;
+    IHandler createHandler(DataSource source, String name, String type, int priority, boolean isEnabled) throws SQLException;
 
 }

@@ -50,7 +50,7 @@ public class PermissionHandler extends HandlerBase {
 
     @Override
     public Tristate handle(@Nullable User user, Flags flag, Event event) {
-        if (user == null) return Tristate.UNDEFINED;
+        if (!isEnabled || user == null) return Tristate.UNDEFINED;
         if (user.hasPermission("foxguard.flags." + this.name + "." + flag.flagName() + ".allow"))
             return Tristate.TRUE;
         else if (user.hasPermission("foxguard.flags." + this.name + "." + flag.flagName() + ".deny"))

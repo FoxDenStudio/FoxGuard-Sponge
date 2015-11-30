@@ -36,6 +36,7 @@ import net.gravityfox.foxguard.util.CallbackHashMap;
 import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.service.permission.PermissionService;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.util.command.CommandSource;
 
@@ -82,11 +83,11 @@ public class FGHandlerFactory implements IHandlerFactory {
             return handler;
         } else if (Aliases.isAlias(permissionAliases, type)) {
             return new PermissionHandler(name, priority);
-        }else return null;
+        } else return null;
     }
 
     @Override
-    public IHandler createHandler(DataSource source, String name, String type, int priority) throws SQLException {
+    public IHandler createHandler(DataSource source, String name, String type, int priority, boolean isEnabled) throws SQLException {
         if (type.equalsIgnoreCase("simple")) {
             List<User> ownerList = new LinkedList<>();
             List<User> memberList = new LinkedList<>();
@@ -157,6 +158,7 @@ public class FGHandlerFactory implements IHandlerFactory {
             handler.setOwners(ownerList);
             handler.setMembers(memberList);
             handler.setPassiveOption(po);
+            handler.setIsEnabled(isEnabled);
             return handler;
         } else if (type.equalsIgnoreCase("passive")) {
             List<User> ownerList = new LinkedList<>();
@@ -183,9 +185,12 @@ public class FGHandlerFactory implements IHandlerFactory {
             }
             PassiveHandler handler = new PassiveHandler(name, priority, flagMap);
             handler.setOwners(ownerList);
+            handler.setIsEnabled(isEnabled);
             return handler;
         } else if (type.equalsIgnoreCase("permission")) {
-            return new PermissionHandler(name, priority);
+            PermissionHandler handler = new PermissionHandler(name, priority);
+            handler.setIsEnabled(isEnabled);
+            return handler;
         } else return null;
     }
 }
