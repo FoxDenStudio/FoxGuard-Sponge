@@ -71,9 +71,18 @@ public class PassiveHandler extends OwnableHandlerBase {
 
     @Override
     public Tristate handle(@Nullable User user, Flags flag, Event event) {
-        if (!isEnabled || user != null) return Tristate.UNDEFINED;
-        if (FGHelper.contains(availableFlags, flag)) {
-            return passiveMap.get(flag);
+        try {
+            this.lock.readLock().lock();
+            if (!isEnabled || user != null) {
+                this.lock.readLock().unlock();
+                return Tristate.UNDEFINED;
+            }
+            if (FGHelper.contains(availableFlags, flag)) {
+                this.lock.readLock().unlock();
+                return passiveMap.get(flag);
+            }
+        } finally {
+            this.lock.readLock().unlock();
         }
         return Tristate.UNDEFINED;
     }
@@ -86,99 +95,104 @@ public class PassiveHandler extends OwnableHandlerBase {
         }
         String[] args = {};
         if (!arguments.isEmpty()) args = arguments.split(" +");
-        if (args.length > 0) {
-            if (isAlias(OWNER_GROUP_ALIASES, args[1])) {
-                if (args.length > 1) {
-                    UserOperations op;
-                    if (args[2].equalsIgnoreCase("add")) {
-                        op = UserOperations.ADD;
-                    } else if (args[2].equalsIgnoreCase("remove")) {
-                        op = UserOperations.REMOVE;
-                    } else if (args[2].equalsIgnoreCase("set")) {
-                        op = UserOperations.SET;
-                    } else {
-                        source.sendMessage(Texts.of(TextColors.RED, "Not a valid operation!"));
-                        return false;
-                    }
-                    if (args.length > 2) {
-                        int successes = 0;
-                        int failures = 0;
-                        List<String> names = new ArrayList<>();
-                        for (String name : Arrays.copyOfRange(args, 3, args.length)) {
-                            names.add(name);
-                        }
-                        List<User> users = new ArrayList<>();
-                        for (String name : names) {
-                            Optional<User> optUser = FoxGuardMain.getInstance().getUserStorage().get(name);
-                            if (optUser.isPresent() && !FGHelper.isUserOnList(users, optUser.get()))
-                                users.add(optUser.get());
-                            else failures++;
-                        }
-                        switch (op) {
-                            case ADD:
-                                for (User user : users) {
-                                    if (!FGHelper.isUserOnList(ownerList, user) && ownerList.add(user))
-                                        successes++;
-                                    else failures++;
-                                }
-                                break;
-                            case REMOVE:
-                                for (User cUser : ownerList) {
-                                    if (FGHelper.isUserOnList(users, cUser)) {
-                                        ownerList.remove(cUser);
-                                        successes++;
-                                    } else failures++;
-                                }
-                                break;
-                            case SET:
-                                ownerList.clear();
-                                for (User user : users) {
-                                    ownerList.add(user);
-                                    successes++;
-                                }
-                        }
-                        source.sendMessage(Texts.of(TextColors.GREEN, "Modified list with " + successes + " successes and " + failures + " failures."));
-                        return true;
-                    } else {
-                        source.sendMessage(Texts.of(TextColors.RED, "Must specify one or more users!"));
-                        return false;
-                    }
-                } else {
-                    source.sendMessage(Texts.of(TextColors.RED, "Must specify an operation!"));
-                    return false;
-                }
-
-            } else if (isAlias(SET_ALIASES, args[0])) {
-                if (args.length > 1) {
-                    Flags flag = Flags.flagFrom(args[1]);
-                    if (flag == null) {
-                        source.sendMessage(Texts.of(TextColors.RED, "Not a valid flag!"));
-                        return false;
-                    }
-                    if (args.length > 2) {
-                        Tristate tristate = tristateFrom(args[2]);
-                        if (tristate == null) {
-                            source.sendMessage(Texts.of(TextColors.RED, "Not a valid value!"));
+        try {
+            this.lock.writeLock().lock();
+            if (args.length > 0) {
+                if (isAlias(OWNER_GROUP_ALIASES, args[1])) {
+                    if (args.length > 1) {
+                        UserOperations op;
+                        if (args[2].equalsIgnoreCase("add")) {
+                            op = UserOperations.ADD;
+                        } else if (args[2].equalsIgnoreCase("remove")) {
+                            op = UserOperations.REMOVE;
+                        } else if (args[2].equalsIgnoreCase("set")) {
+                            op = UserOperations.SET;
+                        } else {
+                            source.sendMessage(Texts.of(TextColors.RED, "Not a valid operation!"));
                             return false;
                         }
-                        passiveMap.put(flag, tristate);
-                        source.sendMessage(Texts.of(TextColors.GREEN, "Successfully set flag!"));
-                        return true;
+                        if (args.length > 2) {
+                            int successes = 0;
+                            int failures = 0;
+                            List<String> names = new ArrayList<>();
+                            for (String name : Arrays.copyOfRange(args, 3, args.length)) {
+                                names.add(name);
+                            }
+                            List<User> users = new ArrayList<>();
+                            for (String name : names) {
+                                Optional<User> optUser = FoxGuardMain.getInstance().getUserStorage().get(name);
+                                if (optUser.isPresent() && !FGHelper.isUserOnList(users, optUser.get()))
+                                    users.add(optUser.get());
+                                else failures++;
+                            }
+                            switch (op) {
+                                case ADD:
+                                    for (User user : users) {
+                                        if (!FGHelper.isUserOnList(ownerList, user) && ownerList.add(user))
+                                            successes++;
+                                        else failures++;
+                                    }
+                                    break;
+                                case REMOVE:
+                                    for (User cUser : ownerList) {
+                                        if (FGHelper.isUserOnList(users, cUser)) {
+                                            ownerList.remove(cUser);
+                                            successes++;
+                                        } else failures++;
+                                    }
+                                    break;
+                                case SET:
+                                    ownerList.clear();
+                                    for (User user : users) {
+                                        ownerList.add(user);
+                                        successes++;
+                                    }
+                            }
+                            source.sendMessage(Texts.of(TextColors.GREEN, "Modified list with " + successes + " successes and " + failures + " failures."));
+                            return true;
+                        } else {
+                            source.sendMessage(Texts.of(TextColors.RED, "Must specify one or more users!"));
+                            return false;
+                        }
                     } else {
-                        source.sendMessage(Texts.of(TextColors.RED, "Must specify a value!"));
+                        source.sendMessage(Texts.of(TextColors.RED, "Must specify an operation!"));
+                        return false;
+                    }
+
+                } else if (isAlias(SET_ALIASES, args[0])) {
+                    if (args.length > 1) {
+                        Flags flag = Flags.flagFrom(args[1]);
+                        if (flag == null) {
+                            source.sendMessage(Texts.of(TextColors.RED, "Not a valid flag!"));
+                            return false;
+                        }
+                        if (args.length > 2) {
+                            Tristate tristate = tristateFrom(args[2]);
+                            if (tristate == null) {
+                                source.sendMessage(Texts.of(TextColors.RED, "Not a valid value!"));
+                                return false;
+                            }
+                            passiveMap.put(flag, tristate);
+                            source.sendMessage(Texts.of(TextColors.GREEN, "Successfully set flag!"));
+                            return true;
+                        } else {
+                            source.sendMessage(Texts.of(TextColors.RED, "Must specify a value!"));
+                            return false;
+                        }
+                    } else {
+                        source.sendMessage(Texts.of(TextColors.RED, "Must specify a flag!"));
                         return false;
                     }
                 } else {
-                    source.sendMessage(Texts.of(TextColors.RED, "Must specify a flag!"));
+                    source.sendMessage(Texts.of(TextColors.RED, "Not a valid PassiveHandler command!"));
                     return false;
                 }
             } else {
-                source.sendMessage(Texts.of(TextColors.RED, "Not a valid PassiveHandler command!"));
+                source.sendMessage(Texts.of(TextColors.RED, "Must specify a command!"));
                 return false;
             }
-        } else {
-            source.sendMessage(Texts.of(TextColors.RED, "Must specify a command!"));
-            return false;
+        } finally {
+            this.lock.writeLock().unlock();
         }
 
     }
@@ -188,8 +202,13 @@ public class PassiveHandler extends OwnableHandlerBase {
         TextBuilder builder = super.getDetails(arguments).builder();
         builder.append(Texts.of("\n"));
         builder.append(Texts.of(TextColors.GOLD, "Passive Flags:"));
-        for (Flags f : this.passiveMap.keySet()) {
-            builder.append(Texts.of("\n  " + f.toString() + ": " + FGHelper.readableTristate(this.passiveMap.get(f))));
+        try {
+            this.lock.readLock().lock();
+            for (Flags f : this.passiveMap.keySet()) {
+                builder.append(Texts.of("\n  " + f.toString() + ": " + FGHelper.readableTristate(this.passiveMap.get(f))));
+            }
+        } finally {
+            this.lock.readLock().unlock();
         }
         return builder.build();
     }
@@ -197,6 +216,7 @@ public class PassiveHandler extends OwnableHandlerBase {
     @Override
     public void writeToDatabase(DataSource dataSource) throws SQLException {
         super.writeToDatabase(dataSource);
+        this.lock.readLock().lock();
         try (Connection conn = dataSource.getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 statement.execute("CREATE TABLE IF NOT EXISTS FLAGMAP(KEY VARCHAR (256), VALUE VARCHAR (256));" +
@@ -210,6 +230,8 @@ public class PassiveHandler extends OwnableHandlerBase {
                 }
                 statement.executeBatch();
             }
+        } finally {
+            this.lock.readLock().unlock();
         }
     }
 

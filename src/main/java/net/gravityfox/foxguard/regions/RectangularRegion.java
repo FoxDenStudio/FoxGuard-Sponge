@@ -109,13 +109,27 @@ public class RectangularRegion extends OwnableRegionBase {
 
     @Override
     public boolean isInRegion(int x, int y, int z) {
-        return boundingBox.contains(x, z);
+        boolean success;
+        try {
+            this.lock.readLock().lock();
+            success = isEnabled && boundingBox.contains(x, z);
+        } finally {
+            this.lock.readLock().unlock();
+        }
+        return success;
     }
 
 
     @Override
     public boolean isInRegion(double x, double y, double z) {
-        return isEnabled && boundingBox.contains(x, z);
+        boolean success;
+        try {
+            this.lock.readLock().lock();
+            success = isEnabled && boundingBox.contains(x, z);
+        } finally {
+            this.lock.readLock().unlock();
+        }
+        return success;
     }
 
     @Override

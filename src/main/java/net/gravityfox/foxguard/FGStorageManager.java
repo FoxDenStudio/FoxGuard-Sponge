@@ -49,16 +49,14 @@ public class FGStorageManager {
     private List<String> markedForDeletion = new ArrayList<>();
     private List<DeferredObject> deferedObjects = new LinkedList<>();
 
-    private FGStorageManager() {
-        if (instance == null) instance = this;
-    }
-
     public static FGStorageManager getInstance() {
-        new FGStorageManager();
+        if (instance == null) {
+            instance = new FGStorageManager();
+        }
         return instance;
     }
 
-    public void initHandlers() {
+    public synchronized void initHandlers() {
         Server server = FoxGuardMain.getInstance().getGame().getServer();
 
         try (Connection conn = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
@@ -76,7 +74,7 @@ public class FGStorageManager {
 
     }
 
-    public void initWorld(World world) {
+    public synchronized void initWorld(World world) {
         String dataBaseDir;
         Server server = FoxGuardMain.getInstance().getGame().getServer();
         if (world.getProperties().equals(server.getDefaultWorld().get())) {
@@ -100,7 +98,7 @@ public class FGStorageManager {
         }
     }
 
-    public void loadHandlers() {
+    public synchronized void loadHandlers() {
         Server server = FoxGuardMain.getInstance().getGame().getServer();
 
         try (Connection conn = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
@@ -130,7 +128,7 @@ public class FGStorageManager {
                                                             FGFactoryManager.getInstance().createHandler(
                                                                     source, handlerDataSet.getString("NAME"), handlerDataSet.getString("TYPE"),
                                                                     handlerDataSet.getInt("PRIORITY"), handlerDataSet.getBoolean("ENABLED")));
-                                                } else if (FGConfigManager.getInstance().forceLoad) {
+                                                } else if (FGConfigManager.getInstance().forceLoad()) {
                                                     FoxGuardMain.getInstance().getLogger().info("Mismatched database found. Attempting force load...");
                                                     if (metaSet.getString("CATEGORY").equalsIgnoreCase("region")) {
                                                         DeferredObject deferredRegion = new DeferredObject();
@@ -184,7 +182,7 @@ public class FGStorageManager {
         }
     }
 
-    public void loadWorldRegions(World world) {
+    public synchronized void loadWorldRegions(World world) {
         Server server = FoxGuardMain.getInstance().getGame().getServer();
         String worldDatabaseDir;
         if (world.getProperties().equals(server.getDefaultWorld().get())) {
@@ -221,7 +219,7 @@ public class FGStorageManager {
                                                                     regionDataSet.getBoolean("ENABLED")
                                                             )
                                                     );
-                                                } else if (FGConfigManager.getInstance().forceLoad) {
+                                                } else if (FGConfigManager.getInstance().forceLoad()) {
                                                     FoxGuardMain.getInstance().getLogger().info("Mismatched database found. Attempting force load...");
                                                     if (metaSet.getString("CATEGORY").equalsIgnoreCase("region")) {
                                                         DeferredObject deferredRegion = new DeferredObject();
@@ -276,7 +274,7 @@ public class FGStorageManager {
         }
     }
 
-    public void loadWorldLinks(World world) {
+    public synchronized void loadWorldLinks(World world) {
         Server server = FoxGuardMain.getInstance().getGame().getServer();
         String dataBaseDir;
         if (world.getProperties().equals(server.getDefaultWorld().get())) {
@@ -298,11 +296,11 @@ public class FGStorageManager {
         }
     }
 
-    public void loadLinks() {
+    public synchronized void loadLinks() {
         FoxGuardMain.getInstance().getGame().getServer().getWorlds().forEach(this::loadWorldLinks);
     }
 
-    public void writeHandlers() {
+    public synchronized void writeHandlers() {
         Server server = FoxGuardMain.getInstance().getGame().getServer();
         try (Connection conn = FoxGuardMain.getInstance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
             try (Statement statement = conn.createStatement()) {
@@ -351,7 +349,7 @@ public class FGStorageManager {
         }
     }
 
-    public void writeWorld(World world) {
+    public synchronized void writeWorld(World world) {
         Server server = FoxGuardMain.getInstance().getGame().getServer();
         String dataBaseDir;
         if (world.getProperties().equals(server.getDefaultWorld().get())) {
@@ -367,7 +365,7 @@ public class FGStorageManager {
                             region.getName() + "', '" +
                             region.getUniqueTypeString() + "', " +
                             (region.isEnabled() ? "TRUE" : "FALSE") + ");");
-                    for (IHandler handler : region.getHandlers()) {
+                    for (IHandler handler : region.getHandlersCopy()) {
                         statement.addBatch("INSERT INTO LINKAGES(REGION, HANDLER) VALUES ('" +
                                 region.getName() + "', '" +
                                 handler.getName() + "');");
@@ -407,14 +405,14 @@ public class FGStorageManager {
         }
     }
 
-    public void update(IFGObject object) {
+    public synchronized void update(IFGObject object) {
         if (object instanceof IRegion)
             updateRegion((IRegion) object);
         else if (object instanceof IHandler)
             updateHandler((IHandler) object);
     }
 
-    public void updateRegion(IRegion region) {
+    public synchronized void updateRegion(IRegion region) {
         Server server = FoxGuardMain.getInstance().getGame().getServer();
         World world = region.getWorld();
         String dataBaseDir;
@@ -451,7 +449,7 @@ public class FGStorageManager {
         updateLists();
     }
 
-    public void updateHandler(IHandler handler) {
+    public synchronized void updateHandler(IHandler handler) {
         if (!FoxGuardMain.getInstance().isLoaded()) return;
         Server server = FoxGuardMain.getInstance().getGame().getServer();
         try {
@@ -484,7 +482,7 @@ public class FGStorageManager {
         updateLists();
     }
 
-    public void updateLists() {
+    public synchronized void updateLists() {
         if (!FoxGuardMain.getInstance().isLoaded()) return;
         Server server = FoxGuardMain.getInstance().getGame().getServer();
         for (World world : FoxGuardMain.getInstance().getGame().getServer().getWorlds()) {
@@ -502,7 +500,7 @@ public class FGStorageManager {
                                 region.getName() + "', '" +
                                 region.getUniqueTypeString() + "', " +
                                 (region.isEnabled() ? "TRUE" : "FALSE") + ");");
-                        for (IHandler handler : region.getHandlers()) {
+                        for (IHandler handler : region.getHandlersCopy()) {
                             statement.addBatch("INSERT INTO LINKAGES(REGION, HANDLER) VALUES ('" +
                                     region.getName() + "', '" +
                                     handler.getName() + "');");
@@ -531,8 +529,8 @@ public class FGStorageManager {
         }
     }
 
-    public void markForDeletion(String databaseDir) {
-        if (FGConfigManager.getInstance().purgeDatabases) {
+    public synchronized void markForDeletion(String databaseDir) {
+        if (FGConfigManager.getInstance().purgeDatabases()) {
             FoxGuardMain.getInstance().getLogger().info("Clearing database " + databaseDir + "...");
             try (Connection conn = FoxGuardMain.getInstance().getDataSource(databaseDir).getConnection()) {
                 try (Statement statement = conn.createStatement()) {
@@ -545,7 +543,7 @@ public class FGStorageManager {
         if (!markedForDeletion.contains(databaseDir)) markedForDeletion.add(databaseDir);
     }
 
-    public void markForDeletion(IFGObject object) {
+    public synchronized void markForDeletion(IFGObject object) {
         Server server = FoxGuardMain.getInstance().getGame().getServer();
         if (object instanceof IRegion) {
             IRegion region = (IRegion) object;
@@ -563,7 +561,7 @@ public class FGStorageManager {
         }
     }
 
-    public void unmarkForDeletion(String databaseDir) {
+    public synchronized void unmarkForDeletion(String databaseDir) {
         try (Connection conn = FoxGuardMain.getInstance().getDataSource(databaseDir).getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 statement.execute("DROP ALL OBJECTS;");
@@ -574,7 +572,7 @@ public class FGStorageManager {
         markedForDeletion.remove(databaseDir);
     }
 
-    public void unmarkForDeletion(IFGObject object) {
+    public synchronized void unmarkForDeletion(IFGObject object) {
         Server server = FoxGuardMain.getInstance().getGame().getServer();
         if (object instanceof IRegion) {
             IRegion region = (IRegion) object;
@@ -593,8 +591,8 @@ public class FGStorageManager {
         }
     }
 
-    public void purgeDatabases() {
-        if (FGConfigManager.getInstance().purgeDatabases) {
+    public synchronized void purgeDatabases() {
+        if (FGConfigManager.getInstance().purgeDatabases()) {
             FoxGuardMain.getInstance().getLogger().info("Purging databases...");
             for (String databaseDir : markedForDeletion) {
                 FoxGuardMain.getInstance().getLogger().info("Deleting database " + databaseDir + "...");
@@ -609,7 +607,7 @@ public class FGStorageManager {
         }
     }
 
-    public void resolveDeferredObjects() {
+    public synchronized void resolveDeferredObjects() {
         for (DeferredObject o : deferedObjects) {
             try {
                 IFGObject result = o.resolve();

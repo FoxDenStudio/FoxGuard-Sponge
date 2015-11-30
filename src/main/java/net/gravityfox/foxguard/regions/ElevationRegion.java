@@ -102,27 +102,45 @@ public class ElevationRegion extends OwnableRegionBase {
 
     @Override
     public boolean isInRegion(int x, int y, int z) {
-        return isEnabled && y >= lowerBound && y <= upperBound;
+        boolean success;
+        try{this.lock.readLock().lock();
+        success = isEnabled && y >= lowerBound && y <= upperBound;}finally {
+            this.lock.readLock().unlock();
+        }
+        return success;
     }
 
     @Override
     public boolean isInRegion(double x, double y, double z) {
-        return y > lowerBound && y < upperBound + 1;
+        boolean success;
+        try {
+            this.lock.readLock().lock();
+            success = isEnabled && y >= lowerBound && y <= upperBound;
+        } finally {
+            this.lock.readLock().unlock();
+        }
+        return success;
     }
 
     @Override
     public Text getDetails(String arguments) {
         TextBuilder builder = super.getDetails(arguments).builder();
         builder.append(Texts.of(TextColors.GREEN, "\nBounds: "));
-        builder.append(Texts.of(TextColors.RESET, lowerBound));
-        builder.append(Texts.of(", "));
-        builder.append(Texts.of(upperBound));
+        try {
+            this.lock.readLock().lock();
+            builder.append(Texts.of(TextColors.RESET, lowerBound));
+            builder.append(Texts.of(", "));
+            builder.append(Texts.of(upperBound));
+        } finally {
+            this.lock.readLock().unlock();
+        }
         return builder.build();
     }
 
     @Override
     public void writeToDatabase(DataSource dataSource) throws SQLException {
         super.writeToDatabase(dataSource);
+        this.lock.readLock().lock();
         try (Connection conn = dataSource.getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 statement.execute("CREATE TABLE IF NOT EXISTS BOUNDS(Y INTEGER);" +
@@ -130,6 +148,8 @@ public class ElevationRegion extends OwnableRegionBase {
                         "INSERT INTO BOUNDS(Y) VALUES (" + lowerBound + ");" +
                         "INSERT INTO BOUNDS(Y) VALUES (" + upperBound + ");");
             }
+        } finally {
+            this.lock.readLock().unlock();
         }
     }
 

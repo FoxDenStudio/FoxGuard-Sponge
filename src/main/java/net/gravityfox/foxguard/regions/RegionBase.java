@@ -26,7 +26,9 @@ package net.gravityfox.foxguard.regions;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
+import com.google.common.collect.ImmutableList;
 import net.gravityfox.foxguard.FGManager;
+import net.gravityfox.foxguard.FGObjectBase;
 import net.gravityfox.foxguard.handlers.IHandler;
 import org.spongepowered.api.world.World;
 
@@ -37,15 +39,13 @@ import java.util.List;
  * Created by Fox on 8/17/2015.
  * Project: foxguard
  */
-public abstract class RegionBase implements IRegion {
+public abstract class RegionBase extends FGObjectBase implements IRegion {
 
     protected final List<IHandler> handlers;
-    protected String name;
     protected World world;
-    protected boolean isEnabled = true;
 
     public RegionBase(String name) {
-        this.name = name;
+        super(name);
         this.handlers = new LinkedList<>();
     }
 
@@ -60,52 +60,61 @@ public abstract class RegionBase implements IRegion {
     }
 
     @Override
-    public List<IHandler> getHandlers() {
-        return this.handlers;
+    public List<IHandler> getHandlersCopy() {
+        try {
+            this.lock.readLock().lock();
+            return ImmutableList.copyOf(this.handlers);
+        } finally {
+            this.lock.readLock().unlock();
+        }
     }
 
     @Override
     public boolean addHandler(IHandler handler) {
-        if (handlers.contains(handler) || !FGManager.getInstance().isRegistered(handler)) return false;
-        this.handlers.add(handler);
-        return true;
+        if (!FGManager.getInstance().isRegistered(handler)) {
+            return false;
+        }
+        try {
+            this.lock.writeLock().lock();
+            return this.handlers.add(handler);
+        } finally {
+            this.lock.writeLock().unlock();
+        }
     }
 
     @Override
     public boolean removeHandler(IHandler handler) {
-        if (!handlers.contains(handler)) return false;
-        this.handlers.remove(handler);
-        return true;
+        try {
+            this.lock.writeLock().lock();
+            return this.handlers.remove(handler);
+        } finally {
+            this.lock.writeLock().unlock();
+        }
     }
 
     @Override
     public World getWorld() {
-        return this.world;
+        try {
+            this.lock.readLock().lock();
+            return this.world;
+        } finally {
+            this.lock.readLock().unlock();
+        }
     }
 
     @Override
     public void setWorld(World world) {
-        if (this.world == null) this.world = world;
-    }
-
-    @Override
-    public String getName() {
-        return this.name;
-    }
-
-    @Override
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return isEnabled;
-    }
-
-    @Override
-    public void setIsEnabled(boolean state) {
-        this.isEnabled = state;
+        try {
+            this.lock.readLock().lock();
+            if (this.world == null) {
+                this.lock.readLock().unlock();
+                this.lock.writeLock().lock();
+                this.world = world;
+            }
+        } finally {
+            this.lock.writeLock().unlock();
+            this.lock.readLock().unlock();
+        }
     }
 
 }

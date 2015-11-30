@@ -46,7 +46,7 @@ public interface IRegion extends IFGObject {
 
     boolean isInRegion(Vector3d vec);
 
-    List<IHandler> getHandlers();
+    List<IHandler> getHandlersCopy();
 
     boolean addHandler(IHandler handler);
 

@@ -95,9 +95,9 @@ public class CommandDetail implements CommandCallable {
                 builder.append(Texts.of(TextColors.GREEN, "---Details---\n"));
                 builder.append(region.getDetails(args.length < 3 + flag ? "" : args[2 + flag]));
                 builder.append(Texts.of(TextColors.GREEN, "\n---Linked Handlers---"));
-                if (region.getHandlers().size() == 0)
+                if (region.getHandlersCopy().size() == 0)
                     builder.append(Texts.of(TextStyles.ITALIC, "\nNo linked Handlers!"));
-                region.getHandlers().stream().forEach(handler -> builder.append(Texts.of(FGHelper.getColorForHandler(handler),
+                region.getHandlersCopy().stream().forEach(handler -> builder.append(Texts.of(FGHelper.getColorForHandler(handler),
                         TextActions.runCommand("/foxguard detail handler " + handler.getName()),
                         "\n" + handler.getShortTypeName() + " : " + handler.getName()
                 )));

@@ -78,7 +78,7 @@ public class PermissionHandler extends HandlerBase {
         return Texts.builder()
                 .append(Texts.of(TextColors.GOLD, "Permission: "))
                 .append(Texts.of(TextColors.RESET, "foxguard.flags."))
-                .append(Texts.of(TextColors.YELLOW, this.name))
+                .append(Texts.of(TextColors.YELLOW, this.getName()))
                 .append(Texts.of(TextColors.RESET, "."))
                 .append(Texts.of(TextColors.AQUA, "<flagname>"))
                 .append(Texts.of(TextColors.RESET, "."))

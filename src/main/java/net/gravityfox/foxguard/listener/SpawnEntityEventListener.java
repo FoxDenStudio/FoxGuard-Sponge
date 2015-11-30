@@ -74,7 +74,7 @@ public class SpawnEntityEventListener implements EventListener<SpawnEntityEvent>
         for (Entity entity : event.getEntities()) {
             Vector3d loc = entity.getLocation().getPosition();
             FGManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
-                    .forEach(region -> region.getHandlers().stream()
+                    .forEach(region -> region.getHandlersCopy().stream()
                             .filter(handler -> !handlerList.contains(handler))
                             .forEach(handlerList::add));
         }

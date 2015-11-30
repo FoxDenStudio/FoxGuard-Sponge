@@ -76,7 +76,7 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
         for (Transaction<BlockSnapshot> trans : event.getTransactions()) {
             Vector3i loc = trans.getOriginal().getLocation().get().getBlockPosition();
             FGManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
-                    .forEach(region -> region.getHandlers().stream()
+                    .forEach(region -> region.getHandlersCopy().stream()
                             .filter(handler -> !handlerList.contains(handler))
                             .forEach(handlerList::add));
         }

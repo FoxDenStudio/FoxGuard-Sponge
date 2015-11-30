@@ -54,6 +54,11 @@ import org.spongepowered.api.world.World;
 import javax.sql.DataSource;
 import java.io.File;
 import java.sql.SQLException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static net.gravityfox.foxguard.util.Aliases.HANDLERS_ALIASES;
 
@@ -100,7 +105,7 @@ public class FoxGuardMain {
     @Listener
     public void gameInit(GameInitializationEvent event) {
         userStorage = game.getServiceManager().provide(UserStorage.class).get();
-        new FGManager(this, game.getServer());
+        FGManager.init();
 
         registerCommands();
         registerListeners();
@@ -113,7 +118,7 @@ public class FoxGuardMain {
         FGStorageManager.getInstance().loadHandlers();
         loaded = true;
         FGStorageManager.getInstance().loadLinks();
-        if (FGConfigManager.getInstance().forceLoad)
+        if (FGConfigManager.getInstance().forceLoad())
             FGStorageManager.getInstance().resolveDeferredObjects();
         FGStorageManager.getInstance().writeHandlers();
         for (World world : game.getServer().getWorlds()) {
@@ -143,7 +148,7 @@ public class FoxGuardMain {
         FGStorageManager.getInstance().initWorld(event.getTargetWorld());
         FGStorageManager.getInstance().loadWorldRegions(event.getTargetWorld());
         if (loaded) {
-            if (FGConfigManager.getInstance().forceLoad)
+            if (FGConfigManager.getInstance().forceLoad())
                 FGStorageManager.getInstance().resolveDeferredObjects();
             FGStorageManager.getInstance().loadWorldLinks(event.getTargetWorld());
         }
@@ -221,5 +226,56 @@ public class FoxGuardMain {
 
     public boolean isLoaded() {
         return loaded;
+    }
+
+    public static ReadWriteLock getNewLock(){
+        if(FGConfigManager.getInstance().threadSafe()){
+            return new ReentrantReadWriteLock();
+        } else{
+            return new ReadWriteLock() {
+
+                private final Lock lock = new Lock() {
+                    @Override
+                    public void lock() {
+
+                    }
+
+                    @Override
+                    public void lockInterruptibly() throws InterruptedException {
+
+                    }
+
+                    @Override
+                    public boolean tryLock() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
+                        return true;
+                    }
+
+                    @Override
+                    public void unlock() {
+
+                    }
+
+                    @Override
+                    public Condition newCondition() {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+
+                @Override
+                public Lock readLock() {
+                    return this.lock;
+                }
+
+                @Override
+                public Lock writeLock() {
+                    return this.lock;
+                }
+            };
+        }
     }
 }

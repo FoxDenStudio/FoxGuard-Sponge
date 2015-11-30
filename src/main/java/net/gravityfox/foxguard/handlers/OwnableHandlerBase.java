@@ -24,6 +24,7 @@
 
 package net.gravityfox.foxguard.handlers;
 
+import com.google.common.collect.ImmutableList;
 import net.gravityfox.foxguard.objects.IOwnable;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.text.Text;
@@ -53,36 +54,68 @@ abstract public class OwnableHandlerBase extends HandlerBase implements IOwnable
 
     @Override
     public boolean removeOwner(User user) {
-        return ownerList.remove(user);
+        boolean success;
+        try {
+            this.lock.writeLock().lock();
+            success = ownerList.remove(user);
+        } finally {
+            this.lock.writeLock().unlock();
+        }
+        return success;
     }
 
     @Override
     public boolean addOwner(User user) {
-        return ownerList.add(user);
+        boolean success;
+        try {
+            this.lock.writeLock().lock();
+            success = ownerList.add(user);
+        } finally {
+            this.lock.writeLock().unlock();
+        }
+        return success;
     }
 
     @Override
     public List<User> getOwners() {
-        return ownerList;
+        List<User> list;
+        try {
+            this.lock.readLock().lock();
+            list = ImmutableList.copyOf(ownerList);
+        } finally {
+            this.lock.readLock().unlock();
+        }
+        return list;
     }
 
     @Override
     public void setOwners(List<User> owners) {
-        this.ownerList = owners;
+        try {
+            this.lock.writeLock().lock();
+            this.ownerList = owners;
+        } finally {
+            this.lock.writeLock().unlock();
+        }
     }
 
     @Override
     public Text getDetails(String arguments) {
         TextBuilder builder = Texts.builder();
         builder.append(Texts.of(TextColors.GOLD, "Owners: "));
-        for (User p : ownerList) {
-            builder.append(Texts.of(TextColors.RESET, p.getName() + " "));
+        try {
+            this.lock.readLock().lock();
+            for (User p : ownerList) {
+                builder.append(Texts.of(TextColors.RESET, p.getName() + " "));
+            }
+        } finally {
+            this.lock.readLock().unlock();
         }
         return builder.build();
     }
 
     @Override
     public void writeToDatabase(DataSource dataSource) throws SQLException {
+        this.lock.readLock().lock();
         try (Connection conn = dataSource.getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 statement.execute("CREATE TABLE IF NOT EXISTS OWNERS(NAMES VARCHAR(256), USERUUID UUID);" +
@@ -96,6 +129,8 @@ abstract public class OwnableHandlerBase extends HandlerBase implements IOwnable
                 }
                 insert.executeBatch();
             }
+        } finally {
+            this.lock.readLock().unlock();
         }
     }
 

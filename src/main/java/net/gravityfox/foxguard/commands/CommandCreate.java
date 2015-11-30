@@ -90,7 +90,7 @@ public class CommandCreate implements CommandCallable {
                     throw new CommandException(Texts.of("You may not use \"" + args[1 + flag] + "\" as a name!"));
                 if (args.length < 3 + flag) throw new CommandException(Texts.of("Must specify a type!"));
                 IRegion newRegion = FGFactoryManager.getInstance().createRegion(
-                        args[1 + flag].toLowerCase(), args[2 + flag],
+                        args[1 + flag], args[2 + flag],
                         args.length < 4 + flag ? "" : args[3 + flag],
                         FGCommandMainDispatcher.getInstance().getStateMap().get(player), world, player);
                 if (newRegion == null)
@@ -121,7 +121,7 @@ public class CommandCreate implements CommandCallable {
 
                 if (args.length < 3 + flag) throw new CommandException(Texts.of("Must specify a type!"));
                 IHandler newHandler = FGFactoryManager.getInstance().createHandler(
-                        args[1].toLowerCase(), args[2 + flag], priority,
+                        args[1], args[2 + flag], priority,
                         args.length < 4 + flag ? "" : args[3 + flag],
                         FGCommandMainDispatcher.getInstance().getStateMap().get(player), player);
                 if (newHandler == null)

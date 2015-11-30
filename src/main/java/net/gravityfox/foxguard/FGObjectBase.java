@@ -22,57 +22,66 @@
  * THE SOFTWARE.
  */
 
-package net.gravityfox.foxguard.handlers;
-
-import net.gravityfox.foxguard.FGObjectBase;
+package net.gravityfox.foxguard;
 
 import java.util.concurrent.locks.ReadWriteLock;
 
 /**
- * Created by Fox on 8/17/2015.
- * Project: foxguard
+ * Created by Fox on 11/29/2015.
+ * Project: SpongeForge
  */
-public abstract class HandlerBase extends FGObjectBase implements IHandler {
+public abstract class FGObjectBase implements IFGObject {
 
     protected String name;
-    protected int priority;
     protected boolean isEnabled = true;
     protected ReadWriteLock lock;
 
-    public HandlerBase(String name, int priority) {
-        super(name);
-        setPriority(priority);
+    public FGObjectBase(String name) {
+        this.name = name;
+        lock = FoxGuardMain.getNewLock();
     }
 
     @Override
-    public int getPriority() {
-        int priority;
+    public String getName() {
+        String name;
         try {
             this.lock.readLock().lock();
-            priority = this.priority;
+            name = this.name;
         } finally {
             this.lock.readLock().unlock();
         }
-        return priority;
+        return name;
     }
 
     @Override
-    public void setPriority(int priority) {
+    public void setName(String name) {
         try {
             this.lock.writeLock().lock();
-            this.priority = priority > Integer.MIN_VALUE ? priority : Integer.MIN_VALUE + 1;
+            this.name = name;
         } finally {
             this.lock.writeLock().unlock();
         }
     }
 
     @Override
-    public int compareTo(IHandler o) {
+    public boolean isEnabled() {
+        boolean isEnabled;
         try {
             this.lock.readLock().lock();
-            return o.getPriority() - this.priority;
+            isEnabled = this.isEnabled;
         } finally {
             this.lock.readLock().unlock();
+        }
+        return isEnabled;
+    }
+
+    @Override
+    public void setIsEnabled(boolean state) {
+        try {
+            this.lock.writeLock().lock();
+            this.isEnabled = state;
+        } finally {
+            this.lock.writeLock().unlock();
         }
     }
 }
