@@ -54,38 +54,32 @@ abstract public class OwnableHandlerBase extends HandlerBase implements IOwnable
 
     @Override
     public boolean removeOwner(User user) {
-        boolean success;
         try {
             this.lock.writeLock().lock();
-            success = ownerList.remove(user);
+            return ownerList.remove(user);
         } finally {
             this.lock.writeLock().unlock();
         }
-        return success;
     }
 
     @Override
     public boolean addOwner(User user) {
-        boolean success;
         try {
             this.lock.writeLock().lock();
-            success = ownerList.add(user);
+            return ownerList.add(user);
         } finally {
             this.lock.writeLock().unlock();
         }
-        return success;
     }
 
     @Override
     public List<User> getOwners() {
-        List<User> list;
         try {
             this.lock.readLock().lock();
-            list = ImmutableList.copyOf(ownerList);
+            return ImmutableList.copyOf(ownerList);
         } finally {
             this.lock.readLock().unlock();
         }
-        return list;
     }
 
     @Override

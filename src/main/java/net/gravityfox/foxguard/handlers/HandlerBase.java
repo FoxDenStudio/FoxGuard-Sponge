@@ -46,14 +46,12 @@ public abstract class HandlerBase extends FGObjectBase implements IHandler {
 
     @Override
     public int getPriority() {
-        int priority;
         try {
             this.lock.readLock().lock();
-            priority = this.priority;
+            return this.priority;
         } finally {
             this.lock.readLock().unlock();
         }
-        return priority;
     }
 
     @Override

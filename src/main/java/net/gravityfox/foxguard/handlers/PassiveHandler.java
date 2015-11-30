@@ -74,17 +74,12 @@ public class PassiveHandler extends OwnableHandlerBase {
         try {
             this.lock.readLock().lock();
             if (!isEnabled || user != null) {
-                this.lock.readLock().unlock();
                 return Tristate.UNDEFINED;
             }
-            if (FGHelper.contains(availableFlags, flag)) {
-                this.lock.readLock().unlock();
-                return passiveMap.get(flag);
-            }
+            return passiveMap.get(flag);
         } finally {
             this.lock.readLock().unlock();
         }
-        return Tristate.UNDEFINED;
     }
 
     @Override

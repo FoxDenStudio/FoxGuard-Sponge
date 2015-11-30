@@ -205,21 +205,16 @@ public class FGManager {
             }
         });
         try {
-            this.handlerLock.readLock().lock();
+            this.handlerLock.writeLock().lock();
             if (!this.handlers.contains(handler)) {
                 return false;
             }
-        } finally {
-            this.handlerLock.readLock().unlock();
-        }
-        FGStorageManager.getInstance().markForDeletion(handler);
-        try {
-            this.handlerLock.writeLock().lock();
+            FGStorageManager.getInstance().markForDeletion(handler);
             handlers.remove(handler);
+            return true;
         } finally {
             this.handlerLock.writeLock().unlock();
         }
-        return true;
     }
 
     public boolean removeRegion(World world, String name) {
@@ -235,21 +230,16 @@ public class FGManager {
         if (region == null || region instanceof GlobalRegion) return false;
         ReadWriteLock lock = this.regionLocks.get(world);
         try {
-            lock.readLock().lock();
+            lock.writeLock().lock();
             if (!this.regions.get(world).contains(region)) {
                 return false;
             }
-        } finally {
-            lock.readLock().unlock();
-        }
-        FGStorageManager.getInstance().markForDeletion(region);
-        try {
-            lock.writeLock().lock();
+            FGStorageManager.getInstance().markForDeletion(region);
             this.regions.get(world).remove(region);
+            return true;
         } finally {
             lock.writeLock().unlock();
         }
-        return true;
     }
 
     public boolean link(Server server, String worldName, String regionName, String handlerName) {

@@ -116,27 +116,23 @@ public class CuboidRegion extends OwnableRegionBase {
 
     @Override
     public boolean isInRegion(int x, int y, int z) {
-        boolean success;
         try {
             this.lock.readLock().lock();
-            success = isEnabled && boundingBox.contains(x, y, z);
+            return isEnabled && boundingBox.contains(x, y, z);
         } finally {
             this.lock.readLock().unlock();
         }
-        return success;
     }
 
 
     @Override
     public boolean isInRegion(double x, double y, double z) {
-        boolean success;
         try {
             this.lock.readLock().lock();
-            success = isEnabled && boundingBox.contains(x, y, z);
+            return isEnabled && boundingBox.contains(x, y, z);
         } finally {
             this.lock.readLock().unlock();
         }
-        return success;
     }
 
     @Override
@@ -159,13 +155,19 @@ public class CuboidRegion extends OwnableRegionBase {
     public Text getDetails(String arguments) {
         TextBuilder builder = super.getDetails(arguments).builder();
         builder.append(Texts.of(TextColors.GREEN, "\nBounds: "));
-        builder.append(Texts.of(TextColors.RESET, boundingBox.toString()));
+        try {
+            this.lock.readLock().lock();
+            builder.append(Texts.of(TextColors.RESET, boundingBox.toString()));
+        } finally {
+            this.lock.readLock().unlock();
+        }
         return builder.build();
     }
 
     @Override
     public void writeToDatabase(DataSource dataSource) throws SQLException {
         super.writeToDatabase(dataSource);
+        this.lock.readLock().lock();
         try (Connection conn = dataSource.getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 statement.execute("CREATE TABLE IF NOT EXISTS BOUNDS(X INTEGER, Y INTEGER, Z INTEGER);" +
@@ -173,11 +175,18 @@ public class CuboidRegion extends OwnableRegionBase {
                         "INSERT INTO BOUNDS(X, Y, Z) VALUES (" + boundingBox.a.getX() + ", " + boundingBox.a.getY() + ", " + boundingBox.a.getZ() + ");" +
                         "INSERT INTO BOUNDS(X, Y, Z) VALUES (" + boundingBox.b.getX() + ", " + boundingBox.b.getY() + ", " + boundingBox.b.getZ() + ");");
             }
+        } finally {
+            this.lock.readLock().unlock();
         }
     }
 
     @Override
     public String toString() {
-        return this.boundingBox.toString();
+        try {
+            this.lock.readLock().lock();
+            return this.boundingBox.toString();
+        } finally {
+            this.lock.readLock().unlock();
+        }
     }
 }

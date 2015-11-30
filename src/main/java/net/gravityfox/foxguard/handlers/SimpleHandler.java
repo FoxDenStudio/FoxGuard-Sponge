@@ -427,7 +427,12 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
     }
 
     public void setPassiveOption(PassiveOptions passiveOption) {
-        this.passiveOption = passiveOption;
+        try {
+            this.lock.writeLock().lock();
+            this.passiveOption = passiveOption;
+        } finally {
+            this.lock.writeLock().unlock();
+        }
     }
 
     public enum PassiveOptions {

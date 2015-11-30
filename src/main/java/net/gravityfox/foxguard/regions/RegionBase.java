@@ -105,15 +105,12 @@ public abstract class RegionBase extends FGObjectBase implements IRegion {
     @Override
     public void setWorld(World world) {
         try {
-            this.lock.readLock().lock();
+            this.lock.writeLock().lock();
             if (this.world == null) {
-                this.lock.readLock().unlock();
-                this.lock.writeLock().lock();
                 this.world = world;
             }
         } finally {
             this.lock.writeLock().unlock();
-            this.lock.readLock().unlock();
         }
     }
 

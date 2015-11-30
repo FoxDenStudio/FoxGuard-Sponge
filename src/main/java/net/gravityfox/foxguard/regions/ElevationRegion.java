@@ -102,24 +102,22 @@ public class ElevationRegion extends OwnableRegionBase {
 
     @Override
     public boolean isInRegion(int x, int y, int z) {
-        boolean success;
-        try{this.lock.readLock().lock();
-        success = isEnabled && y >= lowerBound && y <= upperBound;}finally {
+        try {
+            this.lock.readLock().lock();
+            return isEnabled && y >= lowerBound && y <= upperBound;
+        } finally {
             this.lock.readLock().unlock();
         }
-        return success;
     }
 
     @Override
     public boolean isInRegion(double x, double y, double z) {
-        boolean success;
         try {
             this.lock.readLock().lock();
-            success = isEnabled && y >= lowerBound && y <= upperBound;
+            return isEnabled && y >= lowerBound && y <= upperBound;
         } finally {
             this.lock.readLock().unlock();
         }
-        return success;
     }
 
     @Override
@@ -154,19 +152,39 @@ public class ElevationRegion extends OwnableRegionBase {
     }
 
     public int getUpperBound() {
-        return upperBound;
+        try {
+            this.lock.readLock().lock();
+            return upperBound;
+        } finally {
+            this.lock.readLock().unlock();
+        }
     }
 
     public void setUpperBound(int upperBound) {
-        this.upperBound = upperBound;
+        try {
+            this.lock.writeLock().lock();
+            this.upperBound = upperBound;
+        } finally {
+            this.lock.writeLock().unlock();
+        }
     }
 
     public int getLowerBound() {
-        return lowerBound;
+        try {
+            this.lock.readLock().lock();
+            return lowerBound;
+        } finally {
+            this.lock.readLock().unlock();
+        }
     }
 
     public void setLowerBound(int lowerBound) {
-        this.lowerBound = lowerBound;
+        try {
+            this.lock.writeLock().lock();
+            this.lowerBound = lowerBound;
+        } finally {
+            this.lock.writeLock().unlock();
+        }
     }
 
     @Override
