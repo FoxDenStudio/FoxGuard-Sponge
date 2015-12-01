@@ -34,11 +34,11 @@ public abstract class FGObjectBase implements IFGObject {
 
     protected String name;
     protected boolean isEnabled = true;
-    protected ReadWriteLock lock;
+    protected final ReadWriteLock lock;
 
     public FGObjectBase(String name) {
-        this.name = name;
         lock = FoxGuardMain.getNewLock();
+        this.name = name;
     }
 
     @Override

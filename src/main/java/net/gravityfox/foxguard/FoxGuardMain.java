@@ -158,7 +158,22 @@ public class FoxGuardMain {
         if (sql == null) {
             sql = game.getServiceManager().provide(SqlService.class).get();
         }
-        return sql.getDataSource(jdbcUrl);
+        try {
+            return sql.getDataSource(jdbcUrl);
+        } catch (SQLException e){
+            e.printStackTrace();
+            File file = new File(jdbcUrl.split(":", 3)[2]);
+            if(file.exists()){
+                if(!file.delete()){
+                    file.deleteOnExit();
+                    throw e;
+                } else {
+                    return sql.getDataSource(jdbcUrl);
+                }
+            } else {
+                throw e;
+            }
+        }
     }
 
     private void registerCommands() {
@@ -172,7 +187,7 @@ public class FoxGuardMain {
         fgDispatcher.register(new CommandModify(), "modify", "mod", "change", "edit", "update");
         fgDispatcher.register(new CommandLink(), "link", "connect", "attach");
         fgDispatcher.register(new CommandUnlink(), "unlink", "disconnect", "detach");
-        fgDispatcher.register(new CommandEnableDisable(true), "enable", "activate","engage", "on");
+        fgDispatcher.register(new CommandEnableDisable(true), "enable", "activate", "engage", "on");
         fgDispatcher.register(new CommandEnableDisable(false), "disable", "deactivate", "disengage", "off");
         fgDispatcher.register(new CommandList(), "list", "ls");
         fgDispatcher.register(new CommandDetail(), "detail", "det", "show");
@@ -228,10 +243,10 @@ public class FoxGuardMain {
         return loaded;
     }
 
-    public static ReadWriteLock getNewLock(){
-        if(FGConfigManager.getInstance().threadSafe()){
+    public static ReadWriteLock getNewLock() {
+        if (FGConfigManager.getInstance().threadSafe()) {
             return new ReentrantReadWriteLock();
-        } else{
+        } else {
             return new ReadWriteLock() {
 
                 private final Lock lock = new Lock() {

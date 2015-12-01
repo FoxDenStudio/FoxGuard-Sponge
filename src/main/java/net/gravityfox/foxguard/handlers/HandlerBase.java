@@ -37,7 +37,6 @@ public abstract class HandlerBase extends FGObjectBase implements IHandler {
     protected String name;
     protected int priority;
     protected boolean isEnabled = true;
-    protected ReadWriteLock lock;
 
     public HandlerBase(String name, int priority) {
         super(name);
