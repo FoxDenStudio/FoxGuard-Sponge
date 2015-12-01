@@ -34,6 +34,7 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.*;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
@@ -99,7 +100,9 @@ public class CommandList implements CommandCallable {
                 ListIterator<IRegion> regionListIterator = regionList.listIterator();
                 while (regionListIterator.hasNext()) {
                     IRegion region = regionListIterator.next();
-                    output.append(Texts.of(FGHelper.getColorForRegion(region), getRegionName(region, allFlag)));
+                    output.append(Texts.of(FGHelper.getColorForRegion(region),
+                            TextActions.runCommand("/foxguard detail region w:" + region.getWorld().getName() + " " + region.getName()),
+                            getRegionName(region, allFlag)));
                     if (regionListIterator.hasNext()) output.append(Texts.of("\n"));
                 }
                 source.sendMessage(output.build());
@@ -116,6 +119,7 @@ public class CommandList implements CommandCallable {
                 while (handlerListIterator.hasNext()) {
                     IHandler handler = handlerListIterator.next();
                     output.append(Texts.of(FGHelper.getColorForHandler(handler),
+                            TextActions.runCommand("/foxguard detail handler " + handler.getName()),
                             handler.getShortTypeName() + " : " + handler.getName()));
                     if (handlerListIterator.hasNext()) output.append(Texts.of("\n"));
                 }

@@ -26,6 +26,7 @@ package net.gravityfox.foxguard.handlers;
 
 import net.gravityfox.foxguard.FoxGuardMain;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
+import net.gravityfox.foxguard.commands.util.ModifyResult;
 import net.gravityfox.foxguard.handlers.util.Flags;
 import net.gravityfox.foxguard.util.CallbackHashMap;
 import net.gravityfox.foxguard.util.FGHelper;
@@ -56,8 +57,6 @@ import static net.gravityfox.foxguard.util.Aliases.*;
  */
 public class PassiveHandler extends OwnableHandlerBase {
 
-    Flags[] availableFlags = {Flags.SPAWN_MOB_PASSIVE, Flags.SPAWN_MOB_HOSTILE};
-
     private Map<Flags, Tristate> passiveMap;
 
     public PassiveHandler(String name, int priority) {
@@ -83,34 +82,33 @@ public class PassiveHandler extends OwnableHandlerBase {
     }
 
     @Override
-    public boolean modify(String arguments, InternalCommandState state, CommandSource source) {
+    public ModifyResult modify(String arguments, InternalCommandState state, CommandSource source) {
         if (!source.hasPermission("foxguard.command.modify.objects.modify.handlers")) {
             if (source instanceof ProxySource) source = ((ProxySource) source).getOriginalSource();
-            if (source instanceof Player && !this.ownerList.contains(source)) return false;
+            if (source instanceof Player && !this.ownerList.contains(source)) return ModifyResult.failure();
         }
         String[] args = {};
         if (!arguments.isEmpty()) args = arguments.split(" +");
         try {
             this.lock.writeLock().lock();
             if (args.length > 0) {
-                if (isAlias(OWNER_GROUP_ALIASES, args[1])) {
+                if (isAlias(OWNER_GROUP_ALIASES, args[0])) {
                     if (args.length > 1) {
                         UserOperations op;
-                        if (args[2].equalsIgnoreCase("add")) {
+                        if (args[1].equalsIgnoreCase("add")) {
                             op = UserOperations.ADD;
-                        } else if (args[2].equalsIgnoreCase("remove")) {
+                        } else if (args[1].equalsIgnoreCase("remove")) {
                             op = UserOperations.REMOVE;
-                        } else if (args[2].equalsIgnoreCase("set")) {
+                        } else if (args[1].equalsIgnoreCase("set")) {
                             op = UserOperations.SET;
                         } else {
-                            source.sendMessage(Texts.of(TextColors.RED, "Not a valid operation!"));
-                            return false;
+                            return ModifyResult.of(false, Texts.of("Not a valid operation!"));
                         }
                         if (args.length > 2) {
                             int successes = 0;
                             int failures = 0;
                             List<String> names = new ArrayList<>();
-                            for (String name : Arrays.copyOfRange(args, 3, args.length)) {
+                            for (String name : Arrays.copyOfRange(args, 2, args.length)) {
                                 names.add(name);
                             }
                             List<User> users = new ArrayList<>();
@@ -143,48 +141,57 @@ public class PassiveHandler extends OwnableHandlerBase {
                                         successes++;
                                     }
                             }
-                            source.sendMessage(Texts.of(TextColors.GREEN, "Modified list with " + successes + " successes and " + failures + " failures."));
-                            return true;
+                            return ModifyResult.of(true, Texts.of("Modified list with " + successes + " successes and " + failures + " failures."));
                         } else {
-                            source.sendMessage(Texts.of(TextColors.RED, "Must specify one or more users!"));
-                            return false;
+                            return ModifyResult.of(false, Texts.of("Must specify one or more users!"));
                         }
                     } else {
-                        source.sendMessage(Texts.of(TextColors.RED, "Must specify an operation!"));
-                        return false;
+                        return ModifyResult.of(false, Texts.of("Must specify an operation!"));
                     }
 
                 } else if (isAlias(SET_ALIASES, args[0])) {
                     if (args.length > 1) {
-                        Flags flag = Flags.flagFrom(args[1]);
-                        if (flag == null) {
-                            source.sendMessage(Texts.of(TextColors.RED, "Not a valid flag!"));
-                            return false;
+                        Flags flag;
+                        if (args[1].equalsIgnoreCase("all")) {
+                            flag = null;
+                        } else {
+                            flag = Flags.flagFrom(args[1]);
+                            if (flag == null) {
+                                return ModifyResult.of(false, Texts.of("Not a valid flag!"));
+                            }
                         }
-                        if (args.length > 2) {
+                        if (isAlias(CLEAR_ALIASES, args[2])) {
+                            if (flag == null) {
+                                this.passiveMap.clear();
+                                return ModifyResult.of(true, Texts.of("Successfully cleared flags!"));
+                            } else {
+                                this.passiveMap.remove(flag);
+                                return ModifyResult.of(true, Texts.of("Successfully cleared flag!"));
+                            }
+                        } else {
                             Tristate tristate = tristateFrom(args[2]);
                             if (tristate == null) {
-                                source.sendMessage(Texts.of(TextColors.RED, "Not a valid value!"));
-                                return false;
+                                return ModifyResult.of(false, Texts.of("Not a valid value!"));
                             }
-                            passiveMap.put(flag, tristate);
-                            source.sendMessage(Texts.of(TextColors.GREEN, "Successfully set flag!"));
-                            return true;
-                        } else {
-                            source.sendMessage(Texts.of(TextColors.RED, "Must specify a value!"));
-                            return false;
+                            if (flag == null) {
+                                for (Flags thatExist : Flags.values()) {
+                                    this.passiveMap.put(thatExist, tristate);
+                                }
+                                return ModifyResult.of(true, Texts.of("Successfully set flags!"));
+                            } else {
+                                this.passiveMap.put(flag, tristate);
+                                return ModifyResult.of(true, Texts.of("Successfully set flag!"));
+                            }
+
                         }
                     } else {
-                        source.sendMessage(Texts.of(TextColors.RED, "Must specify a flag!"));
-                        return false;
+                        return ModifyResult.of(false, Texts.of("Must specify a flag!"));
                     }
                 } else {
-                    source.sendMessage(Texts.of(TextColors.RED, "Not a valid PassiveHandler command!"));
-                    return false;
+                    return ModifyResult.of(false, Texts.of("Not a valid PassiveHandler command!"));
                 }
             } else {
-                source.sendMessage(Texts.of(TextColors.RED, "Must specify a command!"));
-                return false;
+                return ModifyResult.of(false, Texts.of( "Must specify a command!"));
             }
         } finally {
             this.lock.writeLock().unlock();
@@ -200,7 +207,9 @@ public class PassiveHandler extends OwnableHandlerBase {
         try {
             this.lock.readLock().lock();
             for (Flags f : this.passiveMap.keySet()) {
-                builder.append(Texts.of("\n  " + f.toString() + ": " + FGHelper.readableTristate(this.passiveMap.get(f))));
+                builder.append(Texts.of("  " + f.toString() + ": "))
+                        .append(FGHelper.readableTristateText(this.passiveMap.get(f)))
+                        .append(Texts.of("\n"));
             }
         } finally {
             this.lock.readLock().unlock();

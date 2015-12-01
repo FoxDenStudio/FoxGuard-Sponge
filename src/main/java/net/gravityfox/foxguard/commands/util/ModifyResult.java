@@ -22,40 +22,50 @@
  * THE SOFTWARE.
  */
 
-package net.gravityfox.foxguard;
+package net.gravityfox.foxguard.commands.util;
 
-import net.gravityfox.foxguard.commands.util.InternalCommandState;
-import net.gravityfox.foxguard.commands.util.ModifyResult;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.util.command.CommandSource;
 
-import javax.sql.DataSource;
-import java.sql.SQLException;
+import java.util.Optional;
 
 /**
- * Created by Fox on 10/28/2015.
- * Project: foxguard
+ * Created by Fox on 11/30/2015.
+ * Project: SpongeForge
  */
-public interface IFGObject {
+public class ModifyResult {
 
-    String getName();
+    private static final ModifyResult SUCCESS = of(true);
+    private static final ModifyResult FAILURE = of(false);
 
-    void setName(String name);
+    private final boolean success;
+    private final Optional<Text> message;
 
-    String getShortTypeName();
+    private ModifyResult(boolean success, Optional<Text> message){
+        this.success = success;
+        this.message = message;
+    }
 
-    String getLongTypeName();
+    public static ModifyResult of(boolean success){
+        return new ModifyResult(success, Optional.empty());
+    }
 
-    String getUniqueTypeString();
+    public static ModifyResult of(boolean success, Text message) {
+        return new ModifyResult(success, Optional.of(message));
+    }
 
-    boolean isEnabled();
+    public static ModifyResult success(){
+        return SUCCESS;
+    }
 
-    void setIsEnabled(boolean state);
+    public static ModifyResult failure() {
+        return FAILURE;
+    }
 
-    Text getDetails(String arguments);
+    public boolean isSuccess() {
+        return success;
+    }
 
-    void writeToDatabase(DataSource dataSource) throws SQLException;
-
-    ModifyResult modify(String arguments, InternalCommandState state, CommandSource source);
-
+    public Optional<Text> getMessage() {
+        return message;
+    }
 }

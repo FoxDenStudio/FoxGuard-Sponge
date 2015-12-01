@@ -25,6 +25,7 @@
 package net.gravityfox.foxguard.handlers;
 
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
+import net.gravityfox.foxguard.commands.util.ModifyResult;
 import net.gravityfox.foxguard.handlers.util.Flags;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
@@ -102,9 +103,8 @@ public class PermissionHandler extends HandlerBase {
     }
 
     @Override
-    public boolean modify(String arguments, InternalCommandState state, CommandSource source) {
-        source.sendMessage(Texts.of("Permission Handlers have no configurable parameters!"));
-        return false;
+    public ModifyResult modify(String arguments, InternalCommandState state, CommandSource source) {
+        return ModifyResult.of(false, Texts.of(TextColors.WHITE, "Permission Handlers have no configurable parameters!"));
     }
 
 }

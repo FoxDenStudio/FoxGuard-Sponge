@@ -30,6 +30,8 @@ import net.gravityfox.foxguard.regions.GlobalRegion;
 import net.gravityfox.foxguard.regions.IRegion;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
@@ -103,11 +105,34 @@ public class FGHelper {
         }
     }
 
+    public static Text readableTristateText(Tristate state) {
+        switch (state) {
+            case UNDEFINED:
+                return Texts.of(TextColors.YELLOW, "Passthrough");
+            case TRUE:
+                return Texts.of(TextColors.GREEN, "True");
+            case FALSE:
+                return Texts.of(TextColors.RED, "False");
+            default:
+                return Texts.of(TextColors.LIGHT_PURPLE, "Wait wat?");
+        }
+    }
+
     public static boolean isUserOnList(List<User> list, User user) {
         //System.out.println(user.getUniqueId());
         for (User u : list) {
             //System.out.println(u.getUniqueId());
             if (u.getUniqueId().equals(user.getUniqueId())) return true;
+        }
+        return false;
+    }
+
+    public static boolean hasColor(Text text) {
+        if (text.getColor() != TextColors.NONE && text.getColor() != TextColors.RESET) return true;
+        for (Text child : text.getChildren()) {
+            if (hasColor(child)) {
+                return true;
+            }
         }
         return false;
     }

@@ -26,6 +26,7 @@ package net.gravityfox.foxguard.handlers;
 
 import net.gravityfox.foxguard.FoxGuardMain;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
+import net.gravityfox.foxguard.commands.util.ModifyResult;
 import net.gravityfox.foxguard.handlers.util.Flags;
 import net.gravityfox.foxguard.objects.IMembership;
 import net.gravityfox.foxguard.util.CallbackHashMap;
@@ -81,10 +82,10 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
     }
 
     @Override
-    public boolean modify(String arguments, InternalCommandState state, CommandSource source) {
+    public ModifyResult modify(String arguments, InternalCommandState state, CommandSource source) {
         if (!source.hasPermission("foxguard.command.modify.objects.modify.handlers")) {
             if (source instanceof ProxySource) source = ((ProxySource) source).getOriginalSource();
-            if (source instanceof Player && !this.ownerList.contains(source)) return false;
+            if (source instanceof Player && !this.ownerList.contains(source)) return ModifyResult.failure();
         }
         String[] args = {};
         if (!arguments.isEmpty()) args = arguments.split(" +");
@@ -99,8 +100,7 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                         } else if (isAlias(MEMBER_GROUP_ALIASES, args[1])) {
                             list = this.memberList;
                         } else {
-                            source.sendMessage(Texts.of(TextColors.RED, "Not a valid group!"));
-                            return false;
+                            return ModifyResult.of(false, Texts.of(TextColors.RED, "Not a valid group!"));
                         }
                         if (args.length > 2) {
                             UserOperations op;
@@ -111,8 +111,7 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                             } else if (args[2].equalsIgnoreCase("set")) {
                                 op = UserOperations.SET;
                             } else {
-                                source.sendMessage(Texts.of(TextColors.RED, "Not a valid operation!"));
-                                return false;
+                                return ModifyResult.of(false, Texts.of("Not a valid operation!"));
                             }
                             if (args.length > 3) {
                                 int successes = 0;
@@ -151,19 +150,15 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                                             successes++;
                                         }
                                 }
-                                source.sendMessage(Texts.of(TextColors.GREEN, "Modified list with " + successes + " successes and " + failures + " failures."));
-                                return true;
+                                return ModifyResult.of(true, Texts.of("Modified list with " + successes + " successes and " + failures + " failures."));
                             } else {
-                                source.sendMessage(Texts.of(TextColors.RED, "Must specify one or more users!"));
-                                return false;
+                                return ModifyResult.of(false, Texts.of("Must specify one or more users!"));
                             }
                         } else {
-                            source.sendMessage(Texts.of(TextColors.RED, "Must specify an operation!"));
-                            return false;
+                            return ModifyResult.of(false, Texts.of("Must specify an operation!"));
                         }
                     } else {
-                        source.sendMessage(Texts.of(TextColors.RED, "Must specify a group!"));
-                        return false;
+                        return ModifyResult.of(false, Texts.of("Must specify a group!"));
                     }
                 } else if (isAlias(SET_ALIASES, args[0])) {
                     Map<Flags, Tristate> map;
@@ -175,71 +170,83 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                         } else if (isAlias(DEFAULT_GROUP_ALIASES, args[1])) {
                             map = defaultPermissions;
                         } else {
-                            source.sendMessage(Texts.of(TextColors.RED, "Not a valid group!"));
-                            return false;
+
+                            return ModifyResult.of(false, Texts.of("Not a valid group!"));
                         }
                     } else {
-                        source.sendMessage(Texts.of(TextColors.RED, "Must specify a group!"));
-                        return false;
+                        return ModifyResult.of(false, Texts.of("Must specify a group!"));
                     }
                     if (args.length > 2) {
-                        Flags flag = Flags.flagFrom(args[2]);
-                        if (flag == null) {
-                            source.sendMessage(Texts.of(TextColors.RED, "Not a valid flag!"));
-                            return false;
+                        Flags flag;
+                        if (args[2].equalsIgnoreCase("all")) {
+                            flag = null;
+                        } else {
+                            flag = Flags.flagFrom(args[2]);
+                            if (flag == null) {
+                                return ModifyResult.of(false, Texts.of("Not a valid flag!"));
+                            }
                         }
                         if (args.length > 3) {
-                            Tristate tristate = tristateFrom(args[3]);
-                            if (tristate == null) {
-                                source.sendMessage(Texts.of(TextColors.RED, "Not a valid value!"));
-                                return false;
+                            if (isAlias(CLEAR_ALIASES, args[3])) {
+                                if (flag == null) {
+                                    map.clear();
+                                    return ModifyResult.of(true, Texts.of("Successfully cleared flags!"));
+                                } else {
+                                    map.remove(flag);
+                                    return ModifyResult.of(true, Texts.of("Successfully cleared flag!"));
+                                }
+                            } else {
+                                Tristate tristate = tristateFrom(args[3]);
+                                if (tristate == null) {
+                                    return ModifyResult.of(false, Texts.of("Not a valid value!"));
+                                }
+                                if (flag == null) {
+                                    for (Flags thatExist : Flags.values()) {
+                                        map.put(thatExist, tristate);
+                                    }
+                                    return ModifyResult.of(true, Texts.of("Successfully set flags!"));
+                                } else {
+                                    map.put(flag, tristate);
+                                    return ModifyResult.of(true, Texts.of("Successfully set flag!"));
+                                }
                             }
-                            map.put(flag, tristate);
-                            source.sendMessage(Texts.of(TextColors.GREEN, "Successfully set flag!"));
-                            return true;
                         } else {
-                            source.sendMessage(Texts.of(TextColors.RED, "Must specify a value!"));
-                            return false;
+                            return ModifyResult.of(false, Texts.of("Must specify a value!"));
                         }
                     } else {
-                        source.sendMessage(Texts.of(TextColors.RED, "Must specify a flag!"));
-                        return false;
+                        return ModifyResult.of(false, Texts.of("Must specify a flag!"));
                     }
                 } else if (isAlias(PASSIVE_ALIASES, args[0])) {
                     if (args.length > 1) {
                         if (isAlias(TRUE_ALIASES, args[1])) {
                             this.passiveOption = PassiveOptions.ALLOW;
-                            return true;
+                            return ModifyResult.of(true, Texts.of("Successfully set passive option!"));
                         } else if (isAlias(FALSE_ALIASES, args[1])) {
                             this.passiveOption = PassiveOptions.DENY;
-                            return true;
+                            return ModifyResult.of(true, Texts.of("Successfully set passive option!"));
                         } else if (isAlias(PASSTHROUGH_ALIASES, args[1])) {
                             this.passiveOption = PassiveOptions.PASSTHROUGH;
-                            return true;
+                            return ModifyResult.of(true, Texts.of("Successfully set passive option!"));
                         } else if (isAlias(OWNER_GROUP_ALIASES, args[1])) {
                             this.passiveOption = PassiveOptions.OWNER;
-                            return true;
+                            return ModifyResult.of(true, Texts.of("Successfully set passive option!"));
                         } else if (isAlias(MEMBER_GROUP_ALIASES, args[1])) {
                             this.passiveOption = PassiveOptions.MEMBER;
-                            return true;
+                            return ModifyResult.of(true, Texts.of("Successfully set passive option!"));
                         } else if (isAlias(DEFAULT_GROUP_ALIASES, args[1])) {
                             this.passiveOption = PassiveOptions.DEFAULT;
-                            return true;
+                            return ModifyResult.of(true, Texts.of("Successfully set passive option!"));
                         } else {
-                            source.sendMessage(Texts.of(TextColors.RED, "Not a valid option!"));
-                            return false;
+                            return ModifyResult.of(false, Texts.of("Not a valid option!"));
                         }
                     } else {
-                        source.sendMessage(Texts.of(TextColors.RED, "Must specify an option!"));
-                        return false;
+                        return ModifyResult.of(false, Texts.of("Must specify an option!"));
                     }
                 } else {
-                    source.sendMessage(Texts.of(TextColors.RED, "Not a valid SimpleHandler command!"));
-                    return false;
+                    return ModifyResult.of(false, Texts.of("Not a valid SimpleHandler command!"));
                 }
             } else {
-                source.sendMessage(Texts.of(TextColors.RED, "Must specify a command!"));
-                return false;
+                return ModifyResult.of(false, Texts.of("Must specify a command!"));
             }
         } finally {
             this.lock.writeLock().unlock();
@@ -303,15 +310,21 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
             builder.append(Texts.of("\n"));
             builder.append(Texts.of(TextColors.GOLD, "Owner permissions:\n"));
             for (Flags f : this.ownerPermissions.keySet()) {
-                builder.append(Texts.of("  " + f.toString() + ": " + FGHelper.readableTristate(ownerPermissions.get(f)) + "\n"));
+                builder.append(Texts.of("  " + f.toString() + ": "))
+                        .append(FGHelper.readableTristateText(ownerPermissions.get(f)))
+                        .append(Texts.of("\n"));
             }
             builder.append(Texts.of(TextColors.GREEN, "Member permissions:\n"));
             for (Flags f : this.memberPermissions.keySet()) {
-                builder.append(Texts.of("  " + f.toString() + ": " + FGHelper.readableTristate(memberPermissions.get(f)) + "\n"));
+                builder.append(Texts.of("  " + f.toString() + ": "))
+                        .append(FGHelper.readableTristateText(memberPermissions.get(f)))
+                        .append(Texts.of("\n"));
             }
             builder.append(Texts.of(TextColors.RED, "Default permissions:\n"));
             for (Flags f : this.defaultPermissions.keySet()) {
-                builder.append(Texts.of("  " + f.toString() + ": " + FGHelper.readableTristate(defaultPermissions.get(f)) + "\n"));
+                builder.append(Texts.of("  " + f.toString() + ": "))
+                        .append(FGHelper.readableTristateText(defaultPermissions.get(f)))
+                        .append(Texts.of("\n"));
             }
             builder.append(Texts.of(TextColors.AQUA, "Passive setting: "));
             builder.append(Texts.of(TextColors.RESET, this.passiveOption.toString()));

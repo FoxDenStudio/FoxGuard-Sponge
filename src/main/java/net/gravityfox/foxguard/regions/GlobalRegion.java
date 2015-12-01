@@ -27,6 +27,7 @@ package net.gravityfox.foxguard.regions;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
+import net.gravityfox.foxguard.commands.util.ModifyResult;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.command.CommandSource;
@@ -85,8 +86,8 @@ public class GlobalRegion extends RegionBase {
     }
 
     @Override
-    public boolean modify(String arguments, InternalCommandState state, CommandSource source) {
-        return false;
+    public ModifyResult modify(String arguments, InternalCommandState state, CommandSource source) {
+        return ModifyResult.failure();
     }
 
     public boolean isInRegion(int x, int y, int z) {

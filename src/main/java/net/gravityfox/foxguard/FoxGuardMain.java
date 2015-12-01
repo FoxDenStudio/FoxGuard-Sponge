@@ -34,6 +34,7 @@ import net.gravityfox.foxguard.listener.SpawnEntityEventListener;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.action.InteractEvent;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.entity.SpawnEntityEvent;
@@ -160,11 +161,11 @@ public class FoxGuardMain {
         }
         try {
             return sql.getDataSource(jdbcUrl);
-        } catch (SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
             File file = new File(jdbcUrl.split(":", 3)[2]);
-            if(file.exists()){
-                if(!file.delete()){
+            if (file.exists()) {
+                if (!file.delete()) {
                     file.deleteOnExit();
                     throw e;
                 } else {
@@ -210,7 +211,7 @@ public class FoxGuardMain {
     private void registerListeners() {
         eventManager.registerListener(this, TargetPlayerEvent.class, new PlayerEventListener());
         eventManager.registerListener(this, ChangeBlockEvent.class, new BlockEventListener());
-        eventManager.registerListener(this, InteractBlockEvent.class, new InteractListener());
+        eventManager.registerListener(this, InteractEvent.class, new InteractListener());
         eventManager.registerListener(this, SpawnEntityEvent.class, new SpawnEntityEventListener());
     }
 

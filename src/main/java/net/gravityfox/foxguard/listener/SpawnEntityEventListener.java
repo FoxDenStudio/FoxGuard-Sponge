@@ -53,6 +53,9 @@ public class SpawnEntityEventListener implements EventListener<SpawnEntityEvent>
     @Override
     public void handle(SpawnEntityEvent event) throws Exception {
         if (event.isCancelled()) return;
+        for (Entity entity : event.getEntities()) {
+            if (entity instanceof Player) return;
+        }
         User user;
         if (event.getCause().any(Player.class)) {
             user = event.getCause().first(Player.class).get();

@@ -26,6 +26,7 @@ package net.gravityfox.foxguard.regions;
 
 import com.flowpowered.math.vector.Vector3i;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
+import net.gravityfox.foxguard.commands.util.ModifyResult;
 import net.gravityfox.foxguard.regions.util.BoundingBox3;
 import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
@@ -110,8 +111,8 @@ public class CuboidRegion extends OwnableRegionBase {
     }
 
     @Override
-    public boolean modify(String arguments, InternalCommandState state, CommandSource source) {
-        return false;
+    public ModifyResult modify(String arguments, InternalCommandState state, CommandSource source) {
+        return ModifyResult.failure();
     }
 
     @Override
