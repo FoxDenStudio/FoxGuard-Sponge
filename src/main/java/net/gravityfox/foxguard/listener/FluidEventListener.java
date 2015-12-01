@@ -1,7 +1,8 @@
 /*
  * This file is part of FoxGuard, licensed under the MIT License (MIT).
  *
- * Copyright (c) 2015 - 2015. gravityfox - https://gravityfox.net/ and contributors.
+ * Copyright (c) gravityfox - https://gravityfox.net/
+ * Copyright (c) contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,10 +28,6 @@ package net.gravityfox.foxguard.listener;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 
-/**
- * Created by Fox on 10/22/2015.
- * Project: foxguard
- */
 public class FluidEventListener implements EventListener<ChangeBlockEvent.Fluid> {
     @Override
     public void handle(ChangeBlockEvent.Fluid event) throws Exception {
