@@ -124,7 +124,12 @@ public class CommandDetail implements CommandCallable {
                         .onClick(TextActions.runCommand("/foxguard " + (handler.isEnabled() ? "disable" : "enable") + " handler " + handler.getName()))
                         .onHover(TextActions.showText(Texts.of("Click to " + (handler.isEnabled() ? "Disable" : "Enable"))))
                         .build());
-                builder.append(Texts.of(TextColors.GOLD, "Priority: "), Texts.of(TextColors.RESET, handler.getPriority() + "\n"));
+                builder.append(Texts.builder()
+                        .append(Texts.of(TextColors.GOLD, "Priority: "))
+                        .append(Texts.of(TextColors.RESET, handler.getPriority() + "\n"))
+                        .onClick(TextActions.suggestCommand("/foxguard handlers priority " + handler.getName() + " "))
+                        .onHover(TextActions.showText(Texts.of("Click to Change Priority")))
+                        .build());
                 builder.append(Texts.of(TextColors.GREEN, "---Details---\n"));
                 builder.append(handler.getDetails(args.length < 3 ? "" : args[2]));
                 player.sendMessage(builder.build());

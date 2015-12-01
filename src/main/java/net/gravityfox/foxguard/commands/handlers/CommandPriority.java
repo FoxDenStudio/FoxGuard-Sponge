@@ -36,9 +36,7 @@ import org.spongepowered.api.util.command.CommandCallable;
 import org.spongepowered.api.util.command.CommandException;
 import org.spongepowered.api.util.command.CommandResult;
 import org.spongepowered.api.util.command.CommandSource;
-import org.spongepowered.api.util.command.args.ArgumentParseException;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -64,38 +62,28 @@ public class CommandPriority implements CommandCallable {
             int failures = 0;
             List<IHandler> handlers = new LinkedList<>();
             FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedHandlers.stream().forEach(handlers::add);
-            for (String handlerName : Arrays.copyOfRange(args, 1, args.length)) {
-                IHandler handler = FGManager.getInstance().gethandler(handlerName);
-                if (handler != null && !handlers.contains(handler)) {
-                    handlers.add(handler);
-                } else {
-                    failures++;
+            PriorityMachine machine = null;
+            for (String arg : args) {
+                try {
+                    PriorityMachine temp = new PriorityMachine(arg);
+                    if(machine == null) machine = temp;
+                } catch (NumberFormatException ignored) {
+                    IHandler handler = FGManager.getInstance().gethandler(arg);
+                    if (handler != null && !handlers.contains(handler)) {
+                        handlers.add(handler);
+                    } else {
+                        failures++;
+                    }
                 }
+            }
+            if(machine == null){
+                throw new CommandException(Texts.of("You must specify a priority!"));
+            }
+            for(IHandler handler : handlers){
+                handler.setPriority(machine.process(handler.getPriority()));
+                successes++;
             }
             if (handlers.size() < 1) throw new CommandException(Texts.of("You must specify at least one Handler!"));
-            if (args[0].startsWith("~")) {
-                int deltaPriority;
-                try {
-                    deltaPriority = Integer.parseInt(args[0].substring(1));
-                } catch (NumberFormatException e) {
-                    throw new ArgumentParseException(Texts.of("Not a valid priority!"), e, args[0], 1);
-                }
-                for (IHandler handler : handlers) {
-                    handler.setPriority(handler.getPriority() + deltaPriority);
-                    successes++;
-                }
-            } else {
-                int priority;
-                try {
-                    priority = Integer.parseInt(args[0]);
-                } catch (NumberFormatException e) {
-                    throw new ArgumentParseException(Texts.of("Not a valid priority!"), e, args[0], 0);
-                }
-                for (IHandler handler : handlers) {
-                    handler.setPriority(priority);
-                    successes++;
-                }
-            }
             source.sendMessage(Texts.of(TextColors.GREEN, "Successfully changed priorities with "
                     + successes + " successes and " + failures + " failures!"));
             return CommandResult.builder().successCount(successes).build();
@@ -128,6 +116,27 @@ public class CommandPriority implements CommandCallable {
     @Override
     public Text getUsage(CommandSource source) {
         return Texts.of("priority <priority> [handlers...]");
+    }
+
+    private static class PriorityMachine {
+
+        int value;
+        boolean delta;
+
+        public PriorityMachine(String arg) throws NumberFormatException {
+            if (arg.startsWith("~")) {
+                delta = true;
+                value = Integer.parseInt(arg.substring(1));
+            } else {
+                delta = false;
+                value = Integer.parseInt(arg);
+            }
+        }
+
+        public int process(int input) {
+            if (delta) return input + value;
+            else return value;
+        }
     }
 
 }
