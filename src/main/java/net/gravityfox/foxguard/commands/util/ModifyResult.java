@@ -37,12 +37,12 @@ public class ModifyResult {
     private final boolean success;
     private final Optional<Text> message;
 
-    private ModifyResult(boolean success, Optional<Text> message){
+    private ModifyResult(boolean success, Optional<Text> message) {
         this.success = success;
         this.message = message;
     }
 
-    public static ModifyResult of(boolean success){
+    public static ModifyResult of(boolean success) {
         return new ModifyResult(success, Optional.empty());
     }
 
@@ -50,7 +50,7 @@ public class ModifyResult {
         return new ModifyResult(success, Optional.of(message));
     }
 
-    public static ModifyResult success(){
+    public static ModifyResult success() {
         return SUCCESS;
     }
 

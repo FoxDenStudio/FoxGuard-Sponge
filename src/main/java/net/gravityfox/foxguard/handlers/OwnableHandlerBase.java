@@ -31,6 +31,7 @@ import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
 
 import javax.sql.DataSource;
@@ -92,11 +93,17 @@ abstract public class OwnableHandlerBase extends HandlerBase implements IOwnable
     @Override
     public Text getDetails(String arguments) {
         TextBuilder builder = Texts.builder();
-        builder.append(Texts.of(TextColors.GOLD, "Owners: "));
+        builder.append(Texts.of(TextColors.GOLD,
+                TextActions.suggestCommand(getAddOwnerSuggestion()),
+                TextActions.showText(Texts.of("Click to Add a Player(s) to Owners")),
+                "Owners: "));
         try {
             this.lock.readLock().lock();
-            for (User p : ownerList) {
-                builder.append(Texts.of(TextColors.RESET, p.getName() + " "));
+            for (User u : ownerList) {
+                builder.append(Texts.of(TextColors.RESET,
+                        TextActions.suggestCommand(getRemoveOwnerSuggestion(u)),
+                        TextActions.showText(Texts.of("Click to Remove Player \"" + u.getName() + "\" from Owners")),
+                        u.getName())).append(Texts.of("  "));
             }
         } finally {
             this.lock.readLock().unlock();
@@ -125,9 +132,14 @@ abstract public class OwnableHandlerBase extends HandlerBase implements IOwnable
         }
     }
 
+    protected abstract String getAddOwnerSuggestion();
+
+    abstract protected String getRemoveOwnerSuggestion(User user);
+
     public enum UserOperations {
         ADD,
         REMOVE,
         SET
     }
+
 }

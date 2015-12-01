@@ -37,7 +37,6 @@ import org.spongepowered.api.Game;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.action.InteractEvent;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
-import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.event.entity.living.player.TargetPlayerEvent;
 import org.spongepowered.api.event.game.state.*;
@@ -92,6 +91,57 @@ public class FoxGuardMain {
     }
 
     //my uuid - f275f223-1643-4fac-9fb8-44aaf5b4b371
+
+    public static ReadWriteLock getNewLock() {
+        if (FGConfigManager.getInstance().threadSafe()) {
+            return new ReentrantReadWriteLock();
+        } else {
+            return new ReadWriteLock() {
+
+                private final Lock lock = new Lock() {
+                    @Override
+                    public void lock() {
+
+                    }
+
+                    @Override
+                    public void lockInterruptibly() throws InterruptedException {
+
+                    }
+
+                    @Override
+                    public boolean tryLock() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
+                        return true;
+                    }
+
+                    @Override
+                    public void unlock() {
+
+                    }
+
+                    @Override
+                    public Condition newCondition() {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+
+                @Override
+                public Lock readLock() {
+                    return this.lock;
+                }
+
+                @Override
+                public Lock writeLock() {
+                    return this.lock;
+                }
+            };
+        }
+    }
 
     @Listener
     public void gamePreInit(GamePreInitializationEvent event) {
@@ -239,56 +289,5 @@ public class FoxGuardMain {
 
     public boolean isLoaded() {
         return loaded;
-    }
-
-    public static ReadWriteLock getNewLock() {
-        if (FGConfigManager.getInstance().threadSafe()) {
-            return new ReentrantReadWriteLock();
-        } else {
-            return new ReadWriteLock() {
-
-                private final Lock lock = new Lock() {
-                    @Override
-                    public void lock() {
-
-                    }
-
-                    @Override
-                    public void lockInterruptibly() throws InterruptedException {
-
-                    }
-
-                    @Override
-                    public boolean tryLock() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
-                        return true;
-                    }
-
-                    @Override
-                    public void unlock() {
-
-                    }
-
-                    @Override
-                    public Condition newCondition() {
-                        throw new UnsupportedOperationException();
-                    }
-                };
-
-                @Override
-                public Lock readLock() {
-                    return this.lock;
-                }
-
-                @Override
-                public Lock writeLock() {
-                    return this.lock;
-                }
-            };
-        }
     }
 }

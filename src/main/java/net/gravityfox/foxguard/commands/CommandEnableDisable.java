@@ -94,7 +94,10 @@ public class CommandEnableDisable implements CommandCallable {
                         successes++;
                     }
                 }
-                if (successes > 0) {
+                if (successes == 1 && failures == 0) {
+                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " region!"));
+                    return CommandResult.success();
+                } else if (successes > 0) {
                     source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " regions with "
                             + successes + " successes and " + failures + " failures!"));
                     return CommandResult.builder().successCount(successes).build();
@@ -118,7 +121,10 @@ public class CommandEnableDisable implements CommandCallable {
                         successes++;
                     }
                 }
-                if (successes > 0) {
+                if (successes == 1 && failures == 0) {
+                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handler!"));
+                    return CommandResult.success();
+                } else if (successes > 0) {
                     source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handlers with "
                             + successes + " successes and " + failures + " failures!"));
                     return CommandResult.builder().successCount(successes).build();

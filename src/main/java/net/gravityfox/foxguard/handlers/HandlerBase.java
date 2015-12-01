@@ -27,11 +27,8 @@ package net.gravityfox.foxguard.handlers;
 
 import net.gravityfox.foxguard.FGObjectBase;
 
-import java.util.concurrent.locks.ReadWriteLock;
-
 public abstract class HandlerBase extends FGObjectBase implements IHandler {
 
-    protected String name;
     protected int priority;
     protected boolean isEnabled = true;
 

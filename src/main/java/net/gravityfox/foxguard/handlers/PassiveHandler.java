@@ -37,6 +37,7 @@ import org.spongepowered.api.event.Event;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.util.command.CommandSource;
@@ -188,7 +189,7 @@ public class PassiveHandler extends OwnableHandlerBase {
                     return ModifyResult.of(false, Texts.of("Not a valid PassiveHandler command!"));
                 }
             } else {
-                return ModifyResult.of(false, Texts.of( "Must specify a command!"));
+                return ModifyResult.of(false, Texts.of("Must specify a command!"));
             }
         } finally {
             this.lock.writeLock().unlock();
@@ -200,13 +201,21 @@ public class PassiveHandler extends OwnableHandlerBase {
     public Text getDetails(String arguments) {
         TextBuilder builder = super.getDetails(arguments).builder();
         builder.append(Texts.of("\n"));
-        builder.append(Texts.of(TextColors.GOLD, "Passive Flags:"));
+        builder.append(Texts.of(TextColors.GOLD,
+                TextActions.suggestCommand("/foxguard modify handler " + this.name + " set "),
+                TextActions.showText(Texts.of("Click to Set a Flag")),
+                "Passive Flags:"));
         try {
             this.lock.readLock().lock();
             for (Flags f : this.passiveMap.keySet()) {
-                builder.append(Texts.of("  " + f.toString() + ": "))
-                        .append(FGHelper.readableTristateText(this.passiveMap.get(f)))
-                        .append(Texts.of("\n"));
+                builder.append(
+                        Texts.builder().append(Texts.of("  " + f.toString() + ": "))
+                                .append(FGHelper.readableTristateText(passiveMap.get(f)))
+                                .append(Texts.of("\n"))
+                                .onClick(TextActions.suggestCommand("/foxguard modify handler " + this.name + " set " + f.flagName() + " "))
+                                .onHover(TextActions.showText(Texts.of("Click to Change This Flag")))
+                                .build()
+                );
             }
         } finally {
             this.lock.readLock().unlock();
@@ -234,6 +243,16 @@ public class PassiveHandler extends OwnableHandlerBase {
         } finally {
             this.lock.readLock().unlock();
         }
+    }
+
+    @Override
+    protected String getAddOwnerSuggestion() {
+        return "/foxguard modify handler " + this.getName() + " owners add ";
+    }
+
+    @Override
+    protected String getRemoveOwnerSuggestion(User user) {
+        return "/foxguard modify handler " + this.getName() + " owners remove " + user.getName();
     }
 
     @Override

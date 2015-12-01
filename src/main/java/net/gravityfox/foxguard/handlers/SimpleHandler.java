@@ -38,6 +38,7 @@ import org.spongepowered.api.event.Event;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.util.command.CommandSource;
@@ -298,33 +299,67 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
     public Text getDetails(String arguments) {
         TextBuilder builder = super.getDetails(arguments).builder();
         builder.append(Texts.of("\n"));
-        builder.append(Texts.of(TextColors.GREEN, "Members: "));
+        builder.append(Texts.of(TextColors.GREEN,
+                TextActions.suggestCommand("/foxguard modify handler " + this.name + " group members add "),
+                TextActions.showText(Texts.of("Click to Add a Player(s) to Members")),
+                "Members: "));
         try {
             this.lock.readLock().lock();
-            for (User p : this.memberList) {
-                builder.append(Texts.of(TextColors.RESET, p.getName() + " "));
+            for (User u : this.memberList) {
+                builder.append(Texts.of(TextColors.RESET,
+                        TextActions.suggestCommand("/foxguard modify handler " + this.name + " group members remove " + u.getName()),
+                        TextActions.showText(Texts.of("Click to Remove Player \"" + u.getName() + "\" from Members")),
+                        u.getName())).append(Texts.of("  "));
             }
             builder.append(Texts.of("\n"));
-            builder.append(Texts.of(TextColors.GOLD, "Owner permissions:\n"));
+            builder.append(Texts.of(TextColors.GOLD,
+                    TextActions.suggestCommand("/foxguard modify handler " + this.name + " set owners "),
+                    TextActions.showText(Texts.of("Click to Set a Flag")),
+                    "Owner permissions:\n"));
             for (Flags f : this.ownerPermissions.keySet()) {
-                builder.append(Texts.of("  " + f.toString() + ": "))
-                        .append(FGHelper.readableTristateText(ownerPermissions.get(f)))
-                        .append(Texts.of("\n"));
+                builder.append(
+                        Texts.builder().append(Texts.of("  " + f.toString() + ": "))
+                                .append(FGHelper.readableTristateText(ownerPermissions.get(f)))
+                                .append(Texts.of("\n"))
+                                .onClick(TextActions.suggestCommand("/foxguard modify handler " + this.name + " set owners " + f.flagName() + " "))
+                                .onHover(TextActions.showText(Texts.of("Click to Change This Flag")))
+                                .build()
+                );
             }
-            builder.append(Texts.of(TextColors.GREEN, "Member permissions:\n"));
+            builder.append(Texts.of(TextColors.GREEN,
+                    TextActions.suggestCommand("/foxguard modify handler " + this.name + " set members "),
+                    TextActions.showText(Texts.of("Click to Set a Flag")),
+                    "Member permissions:\n"));
             for (Flags f : this.memberPermissions.keySet()) {
-                builder.append(Texts.of("  " + f.toString() + ": "))
-                        .append(FGHelper.readableTristateText(memberPermissions.get(f)))
-                        .append(Texts.of("\n"));
+                builder.append(
+                        Texts.builder().append(Texts.of("  " + f.toString() + ": "))
+                                .append(FGHelper.readableTristateText(memberPermissions.get(f)))
+                                .append(Texts.of("\n"))
+                                .onClick(TextActions.suggestCommand("/foxguard modify handler " + this.name + " set members " + f.flagName() + " "))
+                                .onHover(TextActions.showText(Texts.of("Click to Change This Flag")))
+                                .build()
+                );
             }
-            builder.append(Texts.of(TextColors.RED, "Default permissions:\n"));
+            builder.append(Texts.of(TextColors.RED,
+                    TextActions.suggestCommand("/foxguard modify handler " + this.name + " set default "),
+                    TextActions.showText(Texts.of("Click to Set a Flag")),
+                    "Default permissions:\n"));
             for (Flags f : this.defaultPermissions.keySet()) {
-                builder.append(Texts.of("  " + f.toString() + ": "))
-                        .append(FGHelper.readableTristateText(defaultPermissions.get(f)))
-                        .append(Texts.of("\n"));
+                builder.append(
+                        Texts.builder().append(Texts.of("  " + f.toString() + ": "))
+                                .append(FGHelper.readableTristateText(defaultPermissions.get(f)))
+                                .append(Texts.of("\n"))
+                                .onClick(TextActions.suggestCommand("/foxguard modify handler " + this.name + " set default " + f.flagName() + " "))
+                                .onHover(TextActions.showText(Texts.of("Click to Change This Flag")))
+                                .build()
+                );
             }
-            builder.append(Texts.of(TextColors.AQUA, "Passive setting: "));
-            builder.append(Texts.of(TextColors.RESET, this.passiveOption.toString()));
+            builder.append(Texts.builder()
+                            .append(Texts.of(TextColors.AQUA, "Passive setting: "))
+                            .append(Texts.of(TextColors.RESET, this.passiveOption.toString()))
+                            .onClick(TextActions.suggestCommand("/foxguard modify handler " + this.name + " passive "))
+                            .onHover(TextActions.showText(Texts.of("Click to Change Passive Setting"))).build()
+            );
         } finally {
             this.lock.readLock().unlock();
         }
@@ -385,6 +420,16 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
         } finally {
             this.lock.readLock().unlock();
         }
+    }
+
+    @Override
+    protected String getAddOwnerSuggestion() {
+        return "/foxguard modify handler " + this.getName() + " group owners add ";
+    }
+
+    @Override
+    protected String getRemoveOwnerSuggestion(User user) {
+        return "/foxguard modify handler " + this.getName() + " group owners remove " + user.getName();
     }
 
     @Override

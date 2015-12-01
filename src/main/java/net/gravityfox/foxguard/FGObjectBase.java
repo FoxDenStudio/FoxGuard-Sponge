@@ -29,9 +29,9 @@ import java.util.concurrent.locks.ReadWriteLock;
 
 public abstract class FGObjectBase implements IFGObject {
 
+    protected final ReadWriteLock lock;
     protected String name;
     protected boolean isEnabled = true;
-    protected final ReadWriteLock lock;
 
     public FGObjectBase(String name) {
         lock = FoxGuardMain.getNewLock();

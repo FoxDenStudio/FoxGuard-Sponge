@@ -99,6 +99,7 @@ public class CommandList implements CommandCallable {
                     IRegion region = regionListIterator.next();
                     output.append(Texts.of(FGHelper.getColorForRegion(region),
                             TextActions.runCommand("/foxguard detail region w:" + region.getWorld().getName() + " " + region.getName()),
+                            TextActions.showText(Texts.of("View Details")),
                             getRegionName(region, allFlag)));
                     if (regionListIterator.hasNext()) output.append(Texts.of("\n"));
                 }
@@ -117,6 +118,7 @@ public class CommandList implements CommandCallable {
                     IHandler handler = handlerListIterator.next();
                     output.append(Texts.of(FGHelper.getColorForHandler(handler),
                             TextActions.runCommand("/foxguard detail handler " + handler.getName()),
+                            TextActions.showText(Texts.of("View Details")),
                             handler.getShortTypeName() + " : " + handler.getName()));
                     if (handlerListIterator.hasNext()) output.append(Texts.of("\n"));
                 }

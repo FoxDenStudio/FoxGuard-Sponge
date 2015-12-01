@@ -87,7 +87,13 @@ public class CommandDetail implements CommandCallable {
                 builder.append(Texts.of(TextColors.GREEN, "---General---\n"));
                 builder.append(Texts.of(TextColors.GOLD, "Name: "), Texts.of(TextColors.RESET, region.getName() + "\n"));
                 builder.append(Texts.of(TextColors.GOLD, "Type: "), Texts.of(TextColors.RESET, region.getLongTypeName() + "\n"));
-                builder.append(Texts.of(TextColors.GOLD, "Enabled: "), Texts.of(TextColors.RESET, (region.isEnabled() ? "True" : "False") + "\n"));
+                builder.append(Texts.builder()
+                        .append(Texts.of(TextColors.GOLD, "Enabled: "))
+                        .append(Texts.of(TextColors.RESET, (region.isEnabled() ? "True" : "False") + "\n"))
+                        .onClick(TextActions.runCommand("/foxguard " + (region.isEnabled() ? "disable" : "enable") +
+                                " region w:" + region.getWorld().getName() + " " + region.getName()))
+                        .onHover(TextActions.showText(Texts.of("Click to " + (region.isEnabled() ? "Disable" : "Enable"))))
+                        .build());
                 builder.append(Texts.of(TextColors.GOLD, "World: "), Texts.of(TextColors.RESET, region.getWorld().getName() + "\n"));
                 builder.append(Texts.of(TextColors.GREEN, "---Details---\n"));
                 builder.append(region.getDetails(args.length < 3 + flag ? "" : args[2 + flag]));
@@ -96,6 +102,7 @@ public class CommandDetail implements CommandCallable {
                     builder.append(Texts.of(TextStyles.ITALIC, "\nNo linked Handlers!"));
                 region.getHandlersCopy().stream().forEach(handler -> builder.append(Texts.of(FGHelper.getColorForHandler(handler),
                         TextActions.runCommand("/foxguard detail handler " + handler.getName()),
+                        TextActions.showText(Texts.of("View Details")),
                         "\n" + handler.getShortTypeName() + " : " + handler.getName()
                 )));
                 player.sendMessage(builder.build());
@@ -111,7 +118,12 @@ public class CommandDetail implements CommandCallable {
                 builder.append(Texts.of(TextColors.GREEN, "---General---\n"));
                 builder.append(Texts.of(TextColors.GOLD, "Name: "), Texts.of(TextColors.RESET, handler.getName() + "\n"));
                 builder.append(Texts.of(TextColors.GOLD, "Type: "), Texts.of(TextColors.RESET, handler.getLongTypeName() + "\n"));
-                builder.append(Texts.of(TextColors.GOLD, "Enabled: "), Texts.of(TextColors.RESET, (handler.isEnabled() ? "True" : "False") + "\n"));
+                builder.append(Texts.builder()
+                        .append(Texts.of(TextColors.GOLD, "Enabled: "))
+                        .append(Texts.of(TextColors.RESET, (handler.isEnabled() ? "True" : "False") + "\n"))
+                        .onClick(TextActions.runCommand("/foxguard " + (handler.isEnabled() ? "disable" : "enable") + " handler " + handler.getName()))
+                        .onHover(TextActions.showText(Texts.of("Click to " + (handler.isEnabled() ? "Disable" : "Enable"))))
+                        .build());
                 builder.append(Texts.of(TextColors.GOLD, "Priority: "), Texts.of(TextColors.RESET, handler.getPriority() + "\n"));
                 builder.append(Texts.of(TextColors.GREEN, "---Details---\n"));
                 builder.append(handler.getDetails(args.length < 3 ? "" : args[2]));
