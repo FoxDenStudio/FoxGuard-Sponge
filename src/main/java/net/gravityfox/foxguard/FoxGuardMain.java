@@ -66,8 +66,14 @@ import static net.gravityfox.foxguard.util.Aliases.HANDLERS_ALIASES;
 @Plugin(id = "foxguard", name = "FoxGuard", version = FoxGuardMain.PLUGIN_VERSION)
 public class FoxGuardMain {
 
+    /**
+     * String object containing the current version of the plugin.
+     */
     public static final String PLUGIN_VERSION = "0.10.2";
 
+    /**
+     * FoxGuardMain instance object.
+     */
     private static FoxGuardMain instance;
 
 
@@ -86,12 +92,20 @@ public class FoxGuardMain {
 
     private boolean loaded = false;
 
+    /**
+     *
+     * @return The current instance of the FoxGuardMain object.
+     */
     public static FoxGuardMain getInstance() {
         return instance;
     }
 
     //my uuid - f275f223-1643-4fac-9fb8-44aaf5b4b371
 
+    /**
+     * Used to create a new ReadWriteLock. Depending on config option, will either load a real one, or a "spoof" one.
+     * @return A ReadWriteLock Object that can be used.
+     */
     public static ReadWriteLock getNewLock() {
         if (FGConfigManager.getInstance().threadSafe()) {
             return new ReentrantReadWriteLock();
@@ -202,6 +216,12 @@ public class FoxGuardMain {
         }
     }
 
+    /**
+     *
+     * @param jdbcUrl A String representation of the connection url for the database.
+     * @return DataSource Object that is retrived based off of the url from the SqlService.
+     * @throws SQLException
+     */
     public DataSource getDataSource(String jdbcUrl) throws SQLException {
         if (sql == null) {
             sql = game.getServiceManager().provide(SqlService.class).get();
@@ -224,6 +244,9 @@ public class FoxGuardMain {
         }
     }
 
+    /**
+     * A private method that registers the list of commands, their aliases, and the command class.
+     */
     private void registerCommands() {
         FGCommandMainDispatcher fgDispatcher = new FGCommandMainDispatcher("/foxguard");
         FGCommandDispatcher fgRegionDispatcher = new FGCommandDispatcher("/foxguard regions");
@@ -255,6 +278,9 @@ public class FoxGuardMain {
         game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
     }
 
+    /**
+     * A private method that registers the Listener class and the corresponding event class.
+     */
     private void registerListeners() {
         eventManager.registerListener(this, TargetPlayerEvent.class, new PlayerEventListener());
         eventManager.registerListener(this, ChangeBlockEvent.class, new BlockEventListener());
@@ -262,11 +288,17 @@ public class FoxGuardMain {
         eventManager.registerListener(this, SpawnEntityEvent.class, new SpawnEntityEventListener());
     }
 
+    /**
+     * A private method that sets up the permissions.
+     */
     private void configurePermissions() {
         getPermissionService().getDefaultData().setPermission(SubjectData.GLOBAL_CONTEXT, "foxguard.command.info", Tristate.TRUE);
         getPermissionService().getDefaultData().setPermission(SubjectData.GLOBAL_CONTEXT, "foxguard.override", Tristate.FALSE);
     }
 
+    /**
+     * @return A Logger instance for this plugin.
+     */
     public Logger getLogger() {
         return logger;
     }
@@ -275,18 +307,33 @@ public class FoxGuardMain {
         return game;
     }
 
+    /**
+     * Method that when called will return a UserStorage object that can be used to store or retrieve data corresponding to a specific player.
+     * @return
+     */
     public UserStorage getUserStorage() {
         return userStorage;
     }
 
+    /**
+     * @return A File object corresponding to the config of the plugin.
+     */
     public File getConfigDirectory() {
         return configDirectory;
     }
 
+    /**
+     * A method that when called will return a PermissionService object, which can be used for permission creation/checking
+     * @return A PermissionService Object Instance
+     */
     public PermissionService getPermissionService() {
         return game.getServiceManager().provide(PermissionService.class).get();
     }
 
+    /**
+     * Will return true or false depending on if the plugin has loaded properly or not.
+     * @return Depending on the loaded variable
+     */
     public boolean isLoaded() {
         return loaded;
     }

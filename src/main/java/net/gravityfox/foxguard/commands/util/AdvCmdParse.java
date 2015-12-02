@@ -29,4 +29,12 @@ package net.gravityfox.foxguard.commands.util;
  * Project: SpongeForge
  */
 public class AdvCmdParse {
+
+    private AdvCmdParse(){
+
+    }
+
+    public static AdvCmdParse of(){
+        return new AdvCmdParse();
+    }
 }
