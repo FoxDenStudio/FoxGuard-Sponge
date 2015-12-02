@@ -28,6 +28,7 @@ package net.gravityfox.foxguard.commands.handlers;
 import com.google.common.collect.ImmutableList;
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.commands.FGCommandMainDispatcher;
+import net.gravityfox.foxguard.handlers.GlobalHandler;
 import net.gravityfox.foxguard.handlers.IHandler;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
@@ -66,7 +67,7 @@ public class CommandPriority implements CommandCallable {
             for (String arg : args) {
                 try {
                     PriorityMachine temp = new PriorityMachine(arg);
-                    if(machine == null) machine = temp;
+                    if (machine == null) machine = temp;
                 } catch (NumberFormatException ignored) {
                     IHandler handler = FGManager.getInstance().gethandler(arg);
                     if (handler != null && !handlers.contains(handler)) {
@@ -76,12 +77,15 @@ public class CommandPriority implements CommandCallable {
                     }
                 }
             }
-            if(machine == null){
+            if (machine == null) {
                 throw new CommandException(Texts.of("You must specify a priority!"));
             }
-            for(IHandler handler : handlers){
-                handler.setPriority(machine.process(handler.getPriority()));
-                successes++;
+            for (IHandler handler : handlers) {
+                if (handler instanceof GlobalHandler) failures++;
+                else {
+                    handler.setPriority(machine.process(handler.getPriority()));
+                    successes++;
+                }
             }
             if (handlers.size() < 1) throw new CommandException(Texts.of("You must specify at least one Handler!"));
             source.sendMessage(Texts.of(TextColors.GREEN, "Successfully changed priorities with "

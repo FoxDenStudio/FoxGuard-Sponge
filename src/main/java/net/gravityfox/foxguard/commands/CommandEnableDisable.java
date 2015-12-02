@@ -27,6 +27,8 @@ package net.gravityfox.foxguard.commands;
 
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.FoxGuardMain;
+import net.gravityfox.foxguard.IFGObject;
+import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import net.gravityfox.foxguard.handlers.GlobalHandler;
 import net.gravityfox.foxguard.handlers.IHandler;
 import net.gravityfox.foxguard.regions.GlobalRegion;
@@ -44,6 +46,7 @@ import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.world.World;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -68,42 +71,80 @@ public class CommandEnableDisable implements CommandCallable {
         if (source instanceof Player) {
             Player player = (Player) source;
             if (args.length == 0) {
-                source.sendMessage(Texts.builder()
-                        .append(Texts.of(TextColors.GREEN, "Usage: "))
-                        .append(getUsage(source))
-                        .build());
-                return CommandResult.empty();
+                InternalCommandState state = FGCommandMainDispatcher.getInstance().getStateMap().get(source);
+                if (state.selectedHandlers.isEmpty() && state.selectedRegions.isEmpty()) {
+                    source.sendMessage(Texts.builder()
+                            .append(Texts.of(TextColors.GREEN, "Usage: "))
+                            .append(getUsage(source))
+                            .build());
+                    return CommandResult.empty();
+                } else {
+                    List<IFGObject> objects = new LinkedList<>();
+                    state.selectedRegions.stream().forEach(objects::add);
+                    state.selectedHandlers.stream().forEach(objects::add);
+                    int successes = 0;
+                    int failures = 0;
+                    for (IFGObject object : objects) {
+                        if (object instanceof GlobalRegion || object instanceof GlobalHandler || object.isEnabled() == this.enableState)
+                            failures++;
+                        else {
+                            object.setIsEnabled(this.enableState);
+                            successes++;
+                        }
+                    }
+                    if (successes == 1 && failures == 0) {
+                        source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " object!"));
+                        return CommandResult.success();
+                    } else if (successes > 0) {
+                        source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " objects with "
+                                + successes + " successes" + (failures > 0 ? " and " + failures + " failures!" : "!")));
+                        return CommandResult.builder().successCount(successes).build();
+                    } else {
+                        throw new CommandException(Texts.of(failures + " failures while trying to " + (this.enableState ? "enable" : "disable") +
+                                " " + failures + (failures > 1 ? " objects" : " object") + ". Check to make sure you spelled their names correctly and that they are not already "
+                                + (this.enableState ? "enabled." : "disabled.")));
+                    }
+                }
             } else if (isAlias(REGIONS_ALIASES, args[0])) {
-                if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 int flag = 0;
                 Optional<World> optWorld = FGHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
                 World world;
-                if (optWorld != null && optWorld.isPresent()) {
-                    world = optWorld.get();
-                    flag = 1;
-                } else world = player.getWorld();
-                if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a name!"));
                 int successes = 0;
                 int failures = 0;
-                for (String name : Arrays.copyOfRange(args, 1 + flag, args.length)) {
-                    IRegion region = FGManager.getInstance().getRegion(world, name);
-                    if (region == null) failures++;
-                    else if (region instanceof GlobalRegion || region.isEnabled() == this.enableState) failures++;
+                List<IRegion> regions = new LinkedList<>();
+                FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedRegions.stream().forEach(regions::add);
+                if (args.length > 1) {
+                    if (optWorld != null && optWorld.isPresent()) {
+                        world = optWorld.get();
+                        flag = 1;
+                    } else world = player.getWorld();
+                    if (args.length > 1 + flag) {
+                        for (String name : Arrays.copyOfRange(args, 1 + flag, args.length)) {
+                            IRegion region = FGManager.getInstance().getRegion(world, name);
+                            if (region == null) failures++;
+                            else {
+                                regions.add(region);
+                            }
+                        }
+                    }
+                }
+                for (IRegion region : regions) {
+                    if (region instanceof GlobalRegion || region.isEnabled() == this.enableState) failures++;
                     else {
                         region.setIsEnabled(this.enableState);
                         successes++;
                     }
                 }
                 if (successes == 1 && failures == 0) {
-                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " region!"));
+                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handler!"));
                     return CommandResult.success();
                 } else if (successes > 0) {
-                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " regions with "
-                            + successes + " successes and " + failures + " failures!"));
+                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " hanslers with "
+                            + successes + " successes" + (failures > 0 ? " and " + failures + " failures!" : "!")));
                     return CommandResult.builder().successCount(successes).build();
                 } else {
                     throw new CommandException(Texts.of(failures + " failures while trying to " + (this.enableState ? "enable" : "disable") +
-                            " regions. Check to make sure you spelled their names correctly and that they are not already "
+                            " " + failures + (failures > 1 ? " handlers" : " handler") + ". Check to make sure you spelled their names correctly and that they are not already "
                             + (this.enableState ? "enabled." : "disabled.")));
                 }
 
@@ -111,12 +152,18 @@ public class CommandEnableDisable implements CommandCallable {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
                 int successes = 0;
                 int failures = 0;
+                List<IHandler> handlers = new LinkedList<>();
+                FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedHandlers.stream().forEach(handlers::add);
                 for (String name : Arrays.copyOfRange(args, 1, args.length)) {
                     IHandler handler = FGManager.getInstance().gethandler(name);
                     if (handler == null) failures++;
-                    else if (handler instanceof GlobalHandler || handler.isEnabled() == this.enableState) {
-                        failures++;
-                    } else {
+                    else {
+                        handlers.add(handler);
+                    }
+                }
+                for (IHandler handler : handlers) {
+                    if (handler instanceof GlobalRegion || handler.isEnabled() == this.enableState) failures++;
+                    else {
                         handler.setIsEnabled(this.enableState);
                         successes++;
                     }
@@ -125,8 +172,8 @@ public class CommandEnableDisable implements CommandCallable {
                     source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handler!"));
                     return CommandResult.success();
                 } else if (successes > 0) {
-                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handlers with "
-                            + successes + " successes and " + failures + " failures!"));
+                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " regions with "
+                            + successes + " successes" + (failures > 0 ? " and " + failures + " failures!" : "!")));
                     return CommandResult.builder().successCount(successes).build();
                 } else {
                     throw new CommandException(Texts.of(failures + " failures while trying to " + (this.enableState ? "enable" : "disable") +
