@@ -48,6 +48,7 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
     @Override
     public void handle(ChangeBlockEvent event) throws Exception {
         if (event.isCancelled()) return;
+        if(event.getTransactions().isEmpty()) return;
         User user;
         if (event.getCause().any(Player.class)) {
             user = event.getCause().first(Player.class).get();
@@ -68,6 +69,7 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
         //FoxGuardMain.getInstance().getLogger().info(player.getName());
 
         List<IHandler> handlerList = new ArrayList<>();
+        handlerList.add(FGManager.getInstance().getGlobalHandler());
         World world = event.getTargetWorld();
 
         for (Transaction<BlockSnapshot> trans : event.getTransactions()) {

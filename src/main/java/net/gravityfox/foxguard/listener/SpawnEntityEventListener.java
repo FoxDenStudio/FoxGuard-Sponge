@@ -52,6 +52,7 @@ public class SpawnEntityEventListener implements EventListener<SpawnEntityEvent>
         for (Entity entity : event.getEntities()) {
             if (entity instanceof Player) return;
         }
+        if(event.getEntities().isEmpty()) return;
         User user;
         if (event.getCause().any(Player.class)) {
             user = event.getCause().first(Player.class).get();
