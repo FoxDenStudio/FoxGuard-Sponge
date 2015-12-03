@@ -30,11 +30,13 @@ package net.gravityfox.foxguard.commands.util;
  */
 public class AdvCmdParse {
 
-    private AdvCmdParse(){
+
+
+    private AdvCmdParse(String arguments){
 
     }
 
-    public static AdvCmdParse of(){
-        return new AdvCmdParse();
+    public static AdvCmdParse of(String arguments){
+        return new AdvCmdParse(arguments);
     }
 }

@@ -219,7 +219,7 @@ public class FoxGuardMain {
     /**
      *
      * @param jdbcUrl A String representation of the connection url for the database.
-     * @return DataSource Object that is retrived based off of the url from the SqlService.
+     * @return DataSource Object that is retrieved based off of the url from the SqlService.
      * @throws SQLException
      */
     public DataSource getDataSource(String jdbcUrl) throws SQLException {
