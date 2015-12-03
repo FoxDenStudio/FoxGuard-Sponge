@@ -36,7 +36,6 @@ public class PlayerEventListener implements EventListener<TargetPlayerEvent> {
     public void handle(TargetPlayerEvent event) {
         if (event instanceof ClientConnectionEvent.Disconnect) {
             FGCommandMainDispatcher.getInstance().getStateMap().remove(event.getTargetEntity());
-
         }
     }
 }
