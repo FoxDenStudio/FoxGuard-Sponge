@@ -66,8 +66,8 @@ public class AdvCmdParse {
         String toParse = arguments.trim();
         // List of string arguments that were not parsed as flags
         List<String> argsList = new ArrayList<>();
-        // Pattern and matcher for identifying arguments and flags. It respects quotation marks
-        Pattern pattern = Pattern.compile("(\\S*[\"'].+?[\"'])|(\\S+)");
+        // Pattern and matcher for identifying arguments and flags. It respects quotation marks.
+        Pattern pattern = Pattern.compile("(\\S*[\"']{2})|(\\S*[\"'].*?[\"'])|(\\S+)");
         Matcher matcher = pattern.matcher(toParse);
         // Iterate through matches
         while (matcher.find()) {
