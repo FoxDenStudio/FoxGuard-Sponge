@@ -528,7 +528,7 @@ public class FGStorageManager {
 
     public synchronized void markForDeletion(String databaseDir) {
         if (FGConfigManager.getInstance().purgeDatabases()) {
-            FoxGuardMain.getInstance().getLogger().info("Clearing database " + databaseDir + "...");
+            FoxGuardMain.getInstance().getLogger().info("Clearing database " + databaseDir);
             try (Connection conn = FoxGuardMain.getInstance().getDataSource(databaseDir).getConnection()) {
                 try (Statement statement = conn.createStatement()) {
                     statement.execute("DROP ALL OBJECTS;");

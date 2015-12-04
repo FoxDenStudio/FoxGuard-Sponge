@@ -1,8 +1,7 @@
 /*
  * This file is part of FoxGuard, licensed under the MIT License (MIT).
  *
- * Copyright (c) gravityfox - https://gravityfox.net/
- * Copyright (c) contributors
+ * Copyright (c) 2015 - 2015. gravityfox - https://gravityfox.net/
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,14 +24,11 @@
 
 package net.gravityfox.foxguard.commands;
 
-import com.google.common.collect.ImmutableList;
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.FoxGuardMain;
 import net.gravityfox.foxguard.commands.util.AdvCmdParse;
-import net.gravityfox.foxguard.commands.util.ModifyResult;
-import net.gravityfox.foxguard.handlers.IHandler;
-import net.gravityfox.foxguard.regions.IRegion;
-import net.gravityfox.foxguard.util.FGHelper;
+import net.gravityfox.foxguard.handlers.GlobalHandler;
+import net.gravityfox.foxguard.regions.GlobalRegion;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
@@ -52,7 +48,11 @@ import java.util.function.Function;
 
 import static net.gravityfox.foxguard.util.Aliases.*;
 
-public class CommandModify implements CommandCallable {
+/**
+ * Created by Fox on 12/4/2015.
+ * Project: SpongeForge
+ */
+public class CommandRename implements CommandCallable {
 
     private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
         if (isAlias(WORLD_ALIASES, key) && !map.containsKey("world")) {
@@ -66,7 +66,7 @@ public class CommandModify implements CommandCallable {
             source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).limit(2).subFlags(true).flagMapper(MAPPER).build();
+        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).build();
         String[] args = parse.getArgs();
         if (args.length == 0) {
             source.sendMessage(Texts.builder()
@@ -87,75 +87,34 @@ public class CommandModify implements CommandCallable {
             }
             if (world == null) throw new CommandException(Texts.of("Must specify a world!"));
             if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-            IRegion region = FGManager.getInstance().getRegion(world, args[1]);
-            if (region == null)
-                throw new CommandException(Texts.of("No Region with name \"" + args[1] + "\"!"));
-            ModifyResult result = region.modify(args.length < 3 ? "" : args[2],
-                    FGCommandMainDispatcher.getInstance().getStateMap().get(source), source);
+            if (args[1].equalsIgnoreCase(GlobalRegion.NAME))
+                throw new CommandException(Texts.of("You may not rename the global Region!"));
+            boolean success = FGManager.getInstance().removeRegion(world, args[1]);
+            if (!success)
+                throw new ArgumentParseException(Texts.of("No Region exists with that name!"), args[1], 1);
 
-            if (result.isSuccess()) {
-                if (result.getMessage().isPresent()) {
-                    if (!FGHelper.hasColor(result.getMessage().get())) {
-                        source.sendMessage(result.getMessage().get().builder().color(TextColors.GREEN).build());
-                    } else {
-                        source.sendMessage(result.getMessage().get());
-                    }
-                } else {
-                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully modified Region!"));
-                }
-            } else {
-                if (result.getMessage().isPresent()) {
-                    if (!FGHelper.hasColor(result.getMessage().get())) {
-                        source.sendMessage(result.getMessage().get().builder().color(TextColors.RED).build());
-                    } else {
-                        source.sendMessage(result.getMessage().get());
-                    }
-                } else {
-                    source.sendMessage(Texts.of(TextColors.RED, "Modification Failed for Region!"));
-                }
-            }
+            source.sendMessage(Texts.of(TextColors.GREEN, "Region deleted successfully!"));
         } else if (isAlias(HANDLERS_ALIASES, args[0])) {
             if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-            IHandler handler = FGManager.getInstance().gethandler(args[1]);
-            if (handler == null)
-                throw new CommandException(Texts.of("No Handler with name \"" + args[1] + "\"!"));
-            ModifyResult result = handler.modify(args.length < 3 ? "" : args[2],
-                    FGCommandMainDispatcher.getInstance().getStateMap().get(source), source);
-            if (result.isSuccess()) {
-                if (result.getMessage().isPresent()) {
-                    if (!FGHelper.hasColor(result.getMessage().get())) {
-                        source.sendMessage(result.getMessage().get().builder().color(TextColors.GREEN).build());
-                    } else {
-                        source.sendMessage(result.getMessage().get());
-                    }
-                } else {
-                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully modified Handler!"));
-                }
-            } else {
-                if (result.getMessage().isPresent()) {
-                    if (!FGHelper.hasColor(result.getMessage().get())) {
-                        source.sendMessage(result.getMessage().get().builder().color(TextColors.RED).build());
-                    } else {
-                        source.sendMessage(result.getMessage().get());
-                    }
-                } else {
-                    source.sendMessage(Texts.of(TextColors.RED, "Modification Failed for Handler!"));
-                }
-            }
-        } else {
-            throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
-        }
+            if (args[1].equalsIgnoreCase(GlobalHandler.NAME))
+                throw new CommandException(Texts.of("You may not delete the global Handler!"));
+            boolean success = FGManager.getInstance().removeHandler(args[1]);
+            if (!success)
+                throw new ArgumentParseException(Texts.of("No Handler exists with that name!"), args[1], 1);
+            source.sendMessage(Texts.of(TextColors.GREEN, "Handler deleted successfully!"));
+
+        } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
         return CommandResult.empty();
     }
 
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
-        return ImmutableList.of();
+        return null;
     }
 
     @Override
     public boolean testPermission(CommandSource source) {
-        return source.hasPermission("foxguard.command.modify.objects.modify");
+        return source.hasPermission("foxguard.command.modify.objects.rename");
     }
 
     @Override
@@ -170,6 +129,6 @@ public class CommandModify implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("detail <region [--w:<worldname>] | handler> <name> [args...]");
+        return Texts.of("rename <region [--w:<world>] | handler> <oldname> <newname>");
     }
 }

@@ -32,15 +32,16 @@ import net.gravityfox.foxguard.commands.util.AdvCmdParse;
 import net.gravityfox.foxguard.handlers.IHandler;
 import net.gravityfox.foxguard.regions.IRegion;
 import net.gravityfox.foxguard.util.FGHelper;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.util.command.*;
+import org.spongepowered.api.util.command.CommandCallable;
+import org.spongepowered.api.util.command.CommandException;
+import org.spongepowered.api.util.command.CommandResult;
+import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
-import org.spongepowered.api.util.command.source.ConsoleSource;
 import org.spongepowered.api.world.World;
 
 import java.util.*;
@@ -63,73 +64,68 @@ public class CommandList implements CommandCallable {
             source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        if (source instanceof Player || (source instanceof ConsoleSource)) {
+        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).build();
+        String[] args = parse.getArgs();
 
-            AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).build();
-            String[] args = parse.getArgs();
+        if (args.length == 0) {
+            source.sendMessage(Texts.builder()
+                    .append(Texts.of(TextColors.GREEN, "Usage: "))
+                    .append(getUsage(source))
+                    .build());
+            return CommandResult.empty();
+        } else if (contains(REGIONS_ALIASES, args[0])) {
+            List<IRegion> regionList = new LinkedList<>();
+            boolean allFlag = true;
+            String worldName = parse.getFlagmap().get("world");
+            if (!worldName.isEmpty()) {
+                Optional<World> optWorld = FoxGuardMain.getInstance().getGame().getServer().getWorld(worldName);
+                if (optWorld.isPresent()) {
+                    FGManager.getInstance().getRegionsListCopy(optWorld.get()).forEach(regionList::add);
+                    allFlag = false;
+                }
+            }
+            if (allFlag) {
+                FGManager.getInstance().getRegionsListCopy().forEach(regionList::add);
+            }
 
-            if (args.length == 0) {
-                source.sendMessage(Texts.builder()
-                        .append(Texts.of(TextColors.GREEN, "Usage: "))
-                        .append(getUsage(source))
-                        .build());
-                return CommandResult.empty();
-            } else if (contains(REGIONS_ALIASES, args[0])) {
-                List<IRegion> regionList = new LinkedList<>();
-                boolean allFlag = true;
-                String worldName = parse.getFlagmap().get("world");
-                if (!worldName.isEmpty()) {
-                    Optional<World> optWorld = FoxGuardMain.getInstance().getGame().getServer().getWorld(worldName);
-                    if (optWorld.isPresent()) {
-                        FGManager.getInstance().getRegionsListCopy(optWorld.get()).forEach(regionList::add);
-                        allFlag = false;
-                    }
-                }
-                if (allFlag) {
-                    FGManager.getInstance().getRegionsListCopy().forEach(regionList::add);
-                }
-
-                TextBuilder output = Texts.builder()
-                        .append(Texts.of(TextColors.GOLD, "-----------------------------------------------------\n"))
-                        .append(Texts.of(TextColors.GREEN, "---Regions" + (allFlag ? "" : (" for world: \"" + worldName + "\"")) + "---\n"));
-                ListIterator<IRegion> regionListIterator = regionList.listIterator();
-                while (regionListIterator.hasNext()) {
-                    IRegion region = regionListIterator.next();
-                    output.append(Texts.of(FGHelper.getColorForRegion(region),
-                            TextActions.runCommand("/foxguard detail region w:" + region.getWorld().getName() + " " + region.getName()),
-                            TextActions.showText(Texts.of("View Details")),
-                            getRegionName(region, allFlag)));
-                    if (regionListIterator.hasNext()) output.append(Texts.of("\n"));
-                }
-                source.sendMessage(output.build());
-            } else if (contains(HANDLERS_ALIASES, args[0])) {
-                List<IHandler> handlerList = FGManager.getInstance().getHandlerListCopy();
+            TextBuilder output = Texts.builder()
+                    .append(Texts.of(TextColors.GOLD, "-----------------------------------------------------\n"))
+                    .append(Texts.of(TextColors.GREEN, "---Regions" + (allFlag ? "" : (" for world: \"" + worldName + "\"")) + "---\n"));
+            ListIterator<IRegion> regionListIterator = regionList.listIterator();
+            while (regionListIterator.hasNext()) {
+                IRegion region = regionListIterator.next();
+                output.append(Texts.of(FGHelper.getColorForRegion(region),
+                        TextActions.runCommand("/foxguard detail region w:" + region.getWorld().getName() + " " + region.getName()),
+                        TextActions.showText(Texts.of("View Details")),
+                        getRegionName(region, allFlag)));
+                if (regionListIterator.hasNext()) output.append(Texts.of("\n"));
+            }
+            source.sendMessage(output.build());
+        } else if (contains(HANDLERS_ALIASES, args[0])) {
+            List<IHandler> handlerList = FGManager.getInstance().getHandlerListCopy();
 
                     /*try {
                         page = Integer.parseInt(args[1]);
                     } catch (NumberFormatException ignored) {
                     }*/
 
-                TextBuilder output = Texts.builder("---Handlers---\n").color(TextColors.GREEN);
-                ListIterator<IHandler> handlerListIterator = handlerList.listIterator();
-                while (handlerListIterator.hasNext()) {
-                    IHandler handler = handlerListIterator.next();
-                    output.append(Texts.of(FGHelper.getColorForHandler(handler),
-                            TextActions.runCommand("/foxguard detail handler " + handler.getName()),
-                            TextActions.showText(Texts.of("View Details")),
-                            handler.getShortTypeName() + " : " + handler.getName()));
-                    if (handlerListIterator.hasNext()) output.append(Texts.of("\n"));
-                }
-                source.sendMessage(output.build());
-            } else {
-                throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
+            TextBuilder output = Texts.builder()
+                    .append(Texts.of(TextColors.GOLD, "-----------------------------------------------------\n"))
+                    .append(Texts.of(TextColors.GREEN, "---Handlers---\n"));
+            ListIterator<IHandler> handlerListIterator = handlerList.listIterator();
+            while (handlerListIterator.hasNext()) {
+                IHandler handler = handlerListIterator.next();
+                output.append(Texts.of(FGHelper.getColorForHandler(handler),
+                        TextActions.runCommand("/foxguard detail handler " + handler.getName()),
+                        TextActions.showText(Texts.of("View Details")),
+                        handler.getShortTypeName() + " : " + handler.getName()));
+                if (handlerListIterator.hasNext()) output.append(Texts.of("\n"));
             }
-
-
-            return CommandResult.empty();
+            source.sendMessage(output.build());
         } else {
-            throw new CommandPermissionException(Texts.of("You must be a player or console to use this command!"));
+            throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
         }
+        return CommandResult.empty();
     }
 
 

@@ -31,7 +31,6 @@ import net.gravityfox.foxguard.FoxGuardMain;
 import net.gravityfox.foxguard.commands.util.AdvCmdParse;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import net.gravityfox.foxguard.handlers.GlobalHandler;
-import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
@@ -84,32 +83,28 @@ public class CommandLink implements CommandCallable {
             FGCommandMainDispatcher.getInstance().getStateMap().get(source).flush(InternalCommandState.StateField.REGIONS, InternalCommandState.StateField.HANDLERS);
             return CommandResult.builder().successCount(successes[0]).build();
         } else {
-            if (source instanceof Player) {
-                Player player = (Player) source;
-                int flag = 0;
-                String worldName = parse.getFlagmap().get("world");
-                World world = player.getWorld();
-                if (!worldName.isEmpty()) {
-                    Optional<World> optWorld = FoxGuardMain.getInstance().getGame().getServer().getWorld(worldName);
-                    if (optWorld.isPresent()) {
-                        world = optWorld.get();
-                    } else world = player.getWorld();
+            int flag = 0;
+            String worldName = parse.getFlagmap().get("world");
+            World world = null;
+            if (source instanceof Player) world = ((Player) source).getWorld();
+            if (!worldName.isEmpty()) {
+                Optional<World> optWorld = FoxGuardMain.getInstance().getGame().getServer().getWorld(worldName);
+                if (optWorld.isPresent()) {
+                    world = optWorld.get();
                 }
-                if (args.length < 1 + flag) throw new CommandException(Texts.of("Must specify items to link!"));
-                if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a Handler!"));
-                boolean success = FGManager.getInstance().link(world, args[flag], args[1 + flag]);
-                if (success) {
-                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully linked!"));
-                    return CommandResult.success();
-                } else {
-                    source.sendMessage(Texts.of(TextColors.RED, "There was an error linking. Check their names and also make sure they haven't already been linked."));
-                }
+            }
+            if (world == null) throw new CommandException(Texts.of("Must specify a world!"));
+            if (args.length < 1 + flag) throw new CommandException(Texts.of("Must specify items to link!"));
+            if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a Handler!"));
+            boolean success = FGManager.getInstance().link(world, args[flag], args[1 + flag]);
+            if (success) {
+                source.sendMessage(Texts.of(TextColors.GREEN, "Successfully linked!"));
+                return CommandResult.success();
             } else {
-
+                source.sendMessage(Texts.of(TextColors.RED, "There was an error linking. Check their names and also make sure they haven't already been linked."));
+                return CommandResult.empty();
             }
         }
-
-        return CommandResult.empty();
     }
 
     @Override
@@ -134,10 +129,6 @@ public class CommandLink implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        if (source instanceof Player)
-            return Texts.of("link [ [--w:<worldname>] <region name> <handler name> ]");
-        else {
-            return Texts.of("link [ <worldname> <region name> <handler name> ]");
-        }
+        return Texts.of("link [ [--w:<worldname>] <region name> <handler name> ]");
     }
 }

@@ -59,7 +59,7 @@ public class CommandCreate implements CommandCallable {
     private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
         if (isAlias(WORLD_ALIASES, key) && !map.containsKey("world")) {
             map.put("world", value);
-        } else if(isAlias(PRIORITY_ALIASES, key) && !map.containsKey("priority")){
+        } else if (isAlias(PRIORITY_ALIASES, key) && !map.containsKey("priority")) {
             map.put("priority", value);
         }
     };
@@ -72,78 +72,74 @@ public class CommandCreate implements CommandCallable {
         }
         AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).limit(3).subFlags(true).flagMapper(MAPPER).build();
         String[] args = parse.getArgs();
-        if (source instanceof Player) {
-            Player player = (Player) source;
-            if (args.length == 0) {
-                source.sendMessage(Texts.builder()
-                        .append(Texts.of(TextColors.GREEN, "Usage: "))
-                        .append(getUsage(source))
-                        .build());
-                return CommandResult.empty();
-                //----------------------------------------------------------------------------------------------------------------------
-            } else if (isAlias(REGIONS_ALIASES, args[0])) {
-                if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-                String worldName = parse.getFlagmap().get("world");
-                World world = player.getWorld();
-                if (!worldName.isEmpty()) {
-                    Optional<World> optWorld = FoxGuardMain.getInstance().getGame().getServer().getWorld(worldName);
-                    if (optWorld.isPresent()) {
-                        world = optWorld.get();
-                    } else world = player.getWorld();
+        if (args.length == 0) {
+            source.sendMessage(Texts.builder()
+                    .append(Texts.of(TextColors.GREEN, "Usage: "))
+                    .append(getUsage(source))
+                    .build());
+            return CommandResult.empty();
+            //----------------------------------------------------------------------------------------------------------------------
+        } else if (isAlias(REGIONS_ALIASES, args[0])) {
+            if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
+            String worldName = parse.getFlagmap().get("world");
+            World world = null;
+            if (source instanceof Player) world = ((Player) source).getWorld();
+            if (!worldName.isEmpty()) {
+                Optional<World> optWorld = FoxGuardMain.getInstance().getGame().getServer().getWorld(worldName);
+                if (optWorld.isPresent()) {
+                    world = optWorld.get();
                 }
-                if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-                if (args[1].matches("^.*[^0-9a-zA-Z_$].*$"))
-                    throw new ArgumentParseException(Texts.of("Name must be alphanumeric!"), args[1], 1);
-                if (args[1].matches("^[^a-zA-Z_$].*$"))
-                    throw new ArgumentParseException(Texts.of("Name can't start with a number!"), args[1], 1);
-                if (args[1].equalsIgnoreCase("all") || args[1].equalsIgnoreCase("state"))
-                    throw new CommandException(Texts.of("You may not use \"" + args[1] + "\" as a name!"));
-                if (args.length < 3) throw new CommandException(Texts.of("Must specify a type!"));
-                IRegion newRegion = FGFactoryManager.getInstance().createRegion(
-                        args[1], args[2],
-                        args.length < 4 ? "" : args[3],
-                        FGCommandMainDispatcher.getInstance().getStateMap().get(player), world, player);
-                if (newRegion == null)
-                    throw new CommandException(Texts.of("Failed to create Region! Perhaps the type is invalid?"));
-                boolean success = FGManager.getInstance().addRegion(world, newRegion);
-                if (!success)
-                    throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1], 1);
-                FGCommandMainDispatcher.getInstance().getStateMap().get(player).flush(InternalCommandState.StateField.POSITIONS);
-                player.sendMessage(Texts.of(TextColors.GREEN, "Region created successfully"));
-                return CommandResult.success();
-                //----------------------------------------------------------------------------------------------------------------------
-            } else if (isAlias(HANDLERS_ALIASES, args[0])) {
-                if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-                if (args[1].matches("^.*[^0-9a-zA-Z_$].*$"))
-                    throw new ArgumentParseException(Texts.of("Name must be alphanumeric!"), args[1], 1);
-                if (args[1].matches("^[^a-zA-Z_$].*$"))
-                    throw new ArgumentParseException(Texts.of("Name can't start with a number!"), args[1], 1);
-                if (args[1].equalsIgnoreCase("all") || args[1].equalsIgnoreCase("state") || args[1].equalsIgnoreCase("full"))
-                    throw new CommandException(Texts.of("You may not use \"" + args[1] + "\" as a name!"));
-                int priority = 0;
-                try {
-                    priority = Integer.parseInt(parse.getFlagmap().get("priority"));
-                } catch (NumberFormatException ignored) {
-                }
+            }
+            if (world == null) throw new CommandException(Texts.of("Must specify a world!"));
+            if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
+            if (args[1].matches("^.*[^0-9a-zA-Z_$].*$"))
+                throw new ArgumentParseException(Texts.of("Name must be alphanumeric!"), args[1], 1);
+            if (args[1].matches("^[^a-zA-Z_$].*$"))
+                throw new ArgumentParseException(Texts.of("Name can't start with a number!"), args[1], 1);
+            if (args[1].equalsIgnoreCase("all") || args[1].equalsIgnoreCase("state"))
+                throw new CommandException(Texts.of("You may not use \"" + args[1] + "\" as a name!"));
+            if (args.length < 3) throw new CommandException(Texts.of("Must specify a type!"));
+            IRegion newRegion = FGFactoryManager.getInstance().createRegion(
+                    args[1], args[2],
+                    args.length < 4 ? "" : args[3],
+                    FGCommandMainDispatcher.getInstance().getStateMap().get(source), world, source);
+            if (newRegion == null)
+                throw new CommandException(Texts.of("Failed to create Region! Perhaps the type is invalid?"));
+            boolean success = FGManager.getInstance().addRegion(world, newRegion);
+            if (!success)
+                throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1], 1);
+            FGCommandMainDispatcher.getInstance().getStateMap().get(source).flush(InternalCommandState.StateField.POSITIONS);
+            source.sendMessage(Texts.of(TextColors.GREEN, "Region created successfully"));
+            return CommandResult.success();
+            //----------------------------------------------------------------------------------------------------------------------
+        } else if (isAlias(HANDLERS_ALIASES, args[0])) {
+            if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
+            if (args[1].matches("^.*[^0-9a-zA-Z_$].*$"))
+                throw new ArgumentParseException(Texts.of("Name must be alphanumeric!"), args[1], 1);
+            if (args[1].matches("^[^a-zA-Z_$].*$"))
+                throw new ArgumentParseException(Texts.of("Name can't start with a number!"), args[1], 1);
+            if (args[1].equalsIgnoreCase("all") || args[1].equalsIgnoreCase("state") || args[1].equalsIgnoreCase("full"))
+                throw new CommandException(Texts.of("You may not use \"" + args[1] + "\" as a name!"));
+            int priority = 0;
+            try {
+                priority = Integer.parseInt(parse.getFlagmap().get("priority"));
+            } catch (NumberFormatException ignored) {
+            }
 
-                if (args.length < 3) throw new CommandException(Texts.of("Must specify a type!"));
-                IHandler newHandler = FGFactoryManager.getInstance().createHandler(
-                        args[1], args[2], priority,
-                        args.length < 4 ? "" : args[3],
-                        FGCommandMainDispatcher.getInstance().getStateMap().get(player), player);
-                if (newHandler == null)
-                    throw new CommandException(Texts.of("Failed to create Handler! Perhaps the type is invalid?"));
-                boolean success = FGManager.getInstance().addHandler(newHandler);
-                if (!success)
-                    throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1], 1);
-                player.sendMessage(Texts.of(TextColors.GREEN, "Handler created successfully!"));
-                return CommandResult.success();
-                //----------------------------------------------------------------------------------------------------------------------
-            } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
-        } else {
-
-        }
-        return CommandResult.empty();
+            if (args.length < 3) throw new CommandException(Texts.of("Must specify a type!"));
+            IHandler newHandler = FGFactoryManager.getInstance().createHandler(
+                    args[1], args[2], priority,
+                    args.length < 4 ? "" : args[3],
+                    FGCommandMainDispatcher.getInstance().getStateMap().get(source), source);
+            if (newHandler == null)
+                throw new CommandException(Texts.of("Failed to create Handler! Perhaps the type is invalid?"));
+            boolean success = FGManager.getInstance().addHandler(newHandler);
+            if (!success)
+                throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1], 1);
+            source.sendMessage(Texts.of(TextColors.GREEN, "Handler created successfully!"));
+            return CommandResult.success();
+            //----------------------------------------------------------------------------------------------------------------------
+        } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
     }
 
     @Override
@@ -168,8 +164,6 @@ public class CommandCreate implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        if (source instanceof Player)
-            return Texts.of("create <region [--w:<world>] | handler> <name> [--priority:<num>] <type> [args...]");
-        else return Texts.of("create <region <world> | handler> <name> [--priority:<num>] <type> [args...]");
+        return Texts.of("create <region [--w:<world>] | handler> <name> [--priority:<num>] <type> [args...]");
     }
 }

@@ -68,82 +68,84 @@ public class CommandAdd implements CommandCallable {
         }
         AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).build();
         String[] args = parse.getArgs();
-        if (source instanceof Player) {
-            Player player = (Player) source;
-            if (args.length == 0) {
-                source.sendMessage(Texts.builder()
-                        .append(Texts.of(TextColors.GREEN, "Usage: "))
-                        .append(getUsage(source))
-                        .build());
-                return CommandResult.empty();
-            } else if (isAlias(REGIONS_ALIASES, args[0])) {
-                if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-                String worldName = parse.getFlagmap().get("world");
-                World world = player.getWorld();
-                if (!worldName.isEmpty()) {
-                    Optional<World> optWorld = FoxGuardMain.getInstance().getGame().getServer().getWorld(worldName);
-                    if (optWorld.isPresent()) {
-                        world = optWorld.get();
-                    } else world = player.getWorld();
+        if (args.length == 0) {
+            source.sendMessage(Texts.builder()
+                    .append(Texts.of(TextColors.GREEN, "Usage: "))
+                    .append(getUsage(source))
+                    .build());
+            return CommandResult.empty();
+        } else if (isAlias(REGIONS_ALIASES, args[0])) {
+            if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
+            String worldName = parse.getFlagmap().get("world");
+            World world = null;
+            if (source instanceof Player) world = ((Player) source).getWorld();
+            if (!worldName.isEmpty()) {
+                Optional<World> optWorld = FoxGuardMain.getInstance().getGame().getServer().getWorld(worldName);
+                if (optWorld.isPresent()) {
+                    world = optWorld.get();
                 }
-                if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-                IRegion region = FGManager.getInstance().getRegion(world, args[1]);
-                if (region == null)
-                    throw new ArgumentParseException(Texts.of("No Regions with this name!"),
-                            arguments, arguments.indexOf(args[1]) + args[1].length() / 2);
-                if (FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.contains(region))
-                    throw new ArgumentParseException(Texts.of("Region is already in your state buffer!"), arguments, arguments.indexOf(args[1]) + args[1].length());
-                FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.add(region);
+            }
+            if (world == null) throw new CommandException(Texts.of("Must specify a world!"));
+            if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
+            IRegion region = FGManager.getInstance().getRegion(world, args[1]);
+            if (region == null)
+                throw new ArgumentParseException(Texts.of("No Regions with this name!"),
+                        arguments, arguments.indexOf(args[1]) + args[1].length() / 2);
+            if (FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedRegions.contains(region))
+                throw new ArgumentParseException(Texts.of("Region is already in your state buffer!"), arguments, arguments.indexOf(args[1]) + args[1].length());
+            FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedRegions.add(region);
 
-                source.sendMessage(Texts.of(TextColors.GREEN, "Successfully added Region to your state buffer!"));
-                return CommandResult.success();
-            } else if (isAlias(HANDLERS_ALIASES, args[0])) {
-                if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-                IHandler handler = FGManager.getInstance().gethandler(args[1]);
-                if (handler == null)
-                    throw new ArgumentParseException(Texts.of("No Handlers with this name!"), args[1], 1);
-                if (FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedHandlers.contains(handler))
-                    throw new ArgumentParseException(Texts.of("Handler is already in your state buffer!"), args[1], 1);
-                FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedHandlers.add(handler);
+            source.sendMessage(Texts.of(TextColors.GREEN, "Successfully added Region to your state buffer!"));
+            return CommandResult.success();
+        } else if (isAlias(HANDLERS_ALIASES, args[0])) {
+            if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
+            IHandler handler = FGManager.getInstance().gethandler(args[1]);
+            if (handler == null)
+                throw new ArgumentParseException(Texts.of("No Handlers with this name!"), args[1], 1);
+            if (FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedHandlers.contains(handler))
+                throw new ArgumentParseException(Texts.of("Handler is already in your state buffer!"), args[1], 1);
+            FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedHandlers.add(handler);
 
-                source.sendMessage(Texts.of(TextColors.GREEN, "Successfully added Handler to your state buffer!"));
-                return CommandResult.success();
-            } else if (isAlias(POSITIONS_ALIASES, args[0])) {
-                int x, y, z;
-                Vector3i pPos = player.getLocation().getBlockPosition();
-                if (args.length == 1) {
-                    x = pPos.getX();
-                    y = pPos.getY();
-                    z = pPos.getZ();
-                } else if (args.length > 1 && args.length < 4) {
-                    throw new CommandException(Texts.of("Not enough arguments!"));
-                } else if (args.length == 4) {
-                    try {
-                        x = FGHelper.parseCoordinate(pPos.getX(), args[1]);
-                    } catch (NumberFormatException e) {
-                        throw new ArgumentParseException(Texts.of("Unable to parse \"" + args[1] + "\"!"), e, args[1], 1);
-                    }
-                    try {
-                        y = FGHelper.parseCoordinate(pPos.getY(), args[2]);
-                    } catch (NumberFormatException e) {
-                        throw new ArgumentParseException(Texts.of("Unable to parse \"" + args[2] + "\"!"), e, args[2], 2);
-                    }
-                    try {
-                        z = FGHelper.parseCoordinate(pPos.getZ(), args[3]);
-                    } catch (NumberFormatException e) {
-                        throw new ArgumentParseException(Texts.of("Unable to parse \"" + args[3] + "\"!"), e, args[3], 3);
-                    }
-                } else {
-                    throw new CommandException(Texts.of("Too many arguments!"));
+            source.sendMessage(Texts.of(TextColors.GREEN, "Successfully added Handler to your state buffer!"));
+            return CommandResult.success();
+        } else if (isAlias(POSITIONS_ALIASES, args[0])) {
+            int x, y, z;
+            Vector3i pPos = null;
+            if (source instanceof Player)
+                pPos = ((Player) source).getLocation().getBlockPosition();
+            if (args.length == 1) {
+                if (pPos == null)
+                    throw new CommandException(Texts.of("Must specify coordinates!"));
+                x = pPos.getX();
+                y = pPos.getY();
+                z = pPos.getZ();
+            } else if (args.length > 1 && args.length < 4) {
+                throw new CommandException(Texts.of("Not enough arguments!"));
+            } else if (args.length == 4) {
+                if (pPos == null)
+                    pPos = Vector3i.ZERO;
+                try {
+                    x = FGHelper.parseCoordinate(pPos.getX(), args[1]);
+                } catch (NumberFormatException e) {
+                    throw new ArgumentParseException(Texts.of("Unable to parse \"" + args[1] + "\"!"), e, args[1], 1);
                 }
-                FGCommandMainDispatcher.getInstance().getStateMap().get(player).positions.add(new Vector3i(x, y, z));
-                player.sendMessage(Texts.of(TextColors.GREEN, "Successfully added position (" + x + ", " + y + ", " + z + ") to your state buffer!"));
-                return CommandResult.success();
-            } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
-        } else {
-
-        }
-        return CommandResult.empty();
+                try {
+                    y = FGHelper.parseCoordinate(pPos.getY(), args[2]);
+                } catch (NumberFormatException e) {
+                    throw new ArgumentParseException(Texts.of("Unable to parse \"" + args[2] + "\"!"), e, args[2], 2);
+                }
+                try {
+                    z = FGHelper.parseCoordinate(pPos.getZ(), args[3]);
+                } catch (NumberFormatException e) {
+                    throw new ArgumentParseException(Texts.of("Unable to parse \"" + args[3] + "\"!"), e, args[3], 3);
+                }
+            } else {
+                throw new CommandException(Texts.of("Too many arguments!"));
+            }
+            FGCommandMainDispatcher.getInstance().getStateMap().get(source).positions.add(new Vector3i(x, y, z));
+            source.sendMessage(Texts.of(TextColors.GREEN, "Successfully added position (" + x + ", " + y + ", " + z + ") to your state buffer!"));
+            return CommandResult.success();
+        } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
     }
 
     @Override
@@ -168,8 +170,6 @@ public class CommandAdd implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        if (source instanceof Player)
-            return Texts.of("add <region [--w:<worldname>] | handler> <name>");
-        else return Texts.of("add <region <worldname> | handler> <name>");
+        return Texts.of("add <region [--w:<worldname>] | handler> <name>");
     }
 }

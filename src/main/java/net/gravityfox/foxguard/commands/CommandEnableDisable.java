@@ -34,7 +34,6 @@ import net.gravityfox.foxguard.handlers.GlobalHandler;
 import net.gravityfox.foxguard.handlers.IHandler;
 import net.gravityfox.foxguard.regions.GlobalRegion;
 import net.gravityfox.foxguard.regions.IRegion;
-import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
@@ -75,7 +74,6 @@ public class CommandEnableDisable implements CommandCallable {
         AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).build();
         String[] args = parse.getArgs();
         if (source instanceof Player) {
-            Player player = (Player) source;
             if (args.length == 0) {
                 InternalCommandState state = FGCommandMainDispatcher.getInstance().getStateMap().get(source);
                 if (state.selectedHandlers.isEmpty() && state.selectedRegions.isEmpty()) {
@@ -114,26 +112,28 @@ public class CommandEnableDisable implements CommandCallable {
                 }
             } else if (isAlias(REGIONS_ALIASES, args[0])) {
                 String worldName = parse.getFlagmap().get("world");
-                World world = player.getWorld();
+                World world = null;
+                if (source instanceof Player) world = ((Player) source).getWorld();
                 if (!worldName.isEmpty()) {
                     Optional<World> optWorld = FoxGuardMain.getInstance().getGame().getServer().getWorld(worldName);
                     if (optWorld.isPresent()) {
                         world = optWorld.get();
-                    } else world = player.getWorld();
+                    }
                 }
+                if (world == null) throw new CommandException(Texts.of("Must specify a world!"));
                 int successes = 0;
                 int failures = 0;
                 List<IRegion> regions = new LinkedList<>();
                 FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedRegions.stream().forEach(regions::add);
-                    if (args.length > 1) {
-                        for (String name : Arrays.copyOfRange(args, 1, args.length)) {
-                            IRegion region = FGManager.getInstance().getRegion(world, name);
-                            if (region == null) failures++;
-                            else {
-                                regions.add(region);
-                            }
+                if (args.length > 1) {
+                    for (String name : Arrays.copyOfRange(args, 1, args.length)) {
+                        IRegion region = FGManager.getInstance().getRegion(world, name);
+                        if (region == null) failures++;
+                        else {
+                            regions.add(region);
                         }
                     }
+                }
 
                 for (IRegion region : regions) {
                     if (region instanceof GlobalRegion || region.isEnabled() == this.enableState) failures++;

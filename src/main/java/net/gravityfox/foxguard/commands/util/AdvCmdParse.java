@@ -29,7 +29,6 @@ import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.command.CommandException;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -53,7 +52,7 @@ public class AdvCmdParse {
                         Function<Map<String, String>, Function<String, Consumer<String>>> flagMapper) throws CommandException {
         // Check for unclosed quotes
         {
-            Pattern pattern = Pattern.compile("\"");
+            Pattern pattern = Pattern.compile("[\"']");
             Matcher matcher = pattern.matcher(arguments);
             int count = 0;
             while (matcher.find()) {
@@ -68,7 +67,7 @@ public class AdvCmdParse {
         // List of string arguments that were not parsed as flags
         List<String> argsList = new ArrayList<>();
         // Pattern and matcher for identifying arguments and flags. It respects quotation marks
-        Pattern pattern = Pattern.compile("(\\S*\".+?\")|(\\S+)");
+        Pattern pattern = Pattern.compile("(\\S*[\"'].+?[\"'])|(\\S+)");
         Matcher matcher = pattern.matcher(toParse);
         // Iterate through matches
         while (matcher.find()) {
@@ -95,7 +94,9 @@ public class AdvCmdParse {
                     if (parts.length > 1) value = trimQuotes(parts[1]);
                     // Applies the flagMapper function.
                     // This is a destructive function that takes 3 parameters and returns nothing. (Destructive consumer)
-                    flagMapper.apply(this.flagmap).apply(parts[0]).accept(value);
+                    flagMapper.apply(this.flagmap)
+                            .apply(parts[0])
+                            .accept(value);
 
                     // Parses result as a short flag. Limit behavior is the same as long flags
                     // multiple letters are treated as multiple flags. Repeating letters add a second flag with a repetition
@@ -161,8 +162,8 @@ public class AdvCmdParse {
     }
 
     private String trimQuotes(String str) {
-        if (str.startsWith("\"")) str = str.substring(1);
-        if (str.endsWith("\"")) str = str.substring(0, str.length() - 1);
+        if (str.startsWith("\"") || str.startsWith("'")) str = str.substring(1);
+        if (str.endsWith("\"") || str.endsWith("'")) str = str.substring(0, str.length() - 1);
         return str;
     }
 

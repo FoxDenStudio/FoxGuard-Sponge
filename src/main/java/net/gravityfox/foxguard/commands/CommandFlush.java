@@ -27,11 +27,13 @@ package net.gravityfox.foxguard.commands;
 
 import com.google.common.collect.ImmutableList;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.util.command.*;
+import org.spongepowered.api.util.command.CommandCallable;
+import org.spongepowered.api.util.command.CommandException;
+import org.spongepowered.api.util.command.CommandResult;
+import org.spongepowered.api.util.command.CommandSource;
 
 import java.util.List;
 import java.util.Optional;
@@ -46,23 +48,18 @@ public class CommandFlush implements CommandCallable {
             source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        if (source instanceof Player) {
-            Player player = (Player) source;
-            String[] args;
-            if (arguments.isEmpty()) {
-                FGCommandMainDispatcher.getInstance().getStateMap().get(player).flush();
-            } else {
-                args = arguments.split(" +");
-                for (String arg : args) {
-                    InternalCommandState.StateField type = getType(arg);
-                    if (type == null) throw new CommandException(Texts.of("\"" + arg + "\" is not a valid type!"));
-                    FGCommandMainDispatcher.getInstance().getStateMap().get(player).flush(type);
-                }
-            }
-            player.sendMessage(Texts.of(TextColors.GREEN, "Successfully flushed!"));
+        String[] args;
+        if (arguments.isEmpty()) {
+            FGCommandMainDispatcher.getInstance().getStateMap().get(source).flush();
         } else {
-            throw new CommandPermissionException(Texts.of("You must be a player or console to use this command!"));
+            args = arguments.split(" +");
+            for (String arg : args) {
+                InternalCommandState.StateField type = getType(arg);
+                if (type == null) throw new CommandException(Texts.of("\"" + arg + "\" is not a valid type!"));
+                FGCommandMainDispatcher.getInstance().getStateMap().get(source).flush(type);
+            }
         }
+        source.sendMessage(Texts.of(TextColors.GREEN, "Successfully flushed!"));
         return CommandResult.empty();
     }
 
