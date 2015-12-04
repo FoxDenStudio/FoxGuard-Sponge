@@ -29,6 +29,7 @@ import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.FoxGuardMain;
+import net.gravityfox.foxguard.commands.util.AdvCmdParse;
 import net.gravityfox.foxguard.handlers.IHandler;
 import net.gravityfox.foxguard.regions.IRegion;
 import net.gravityfox.foxguard.util.FGHelper;
@@ -44,11 +45,20 @@ import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.world.World;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static net.gravityfox.foxguard.util.Aliases.*;
 
 public class CommandAdd implements CommandCallable {
+
+    private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
+        if (isAlias(WORLD_ALIASES, key) && !map.containsKey("world")) {
+            map.put("world", value);
+        }
+    };
 
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
@@ -56,8 +66,8 @@ public class CommandAdd implements CommandCallable {
             source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        String[] args = {};
-        if (!arguments.isEmpty()) args = arguments.split(" +");
+        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).build();
+        String[] args = parse.getArgs();
         if (source instanceof Player) {
             Player player = (Player) source;
             if (args.length == 0) {
@@ -68,20 +78,21 @@ public class CommandAdd implements CommandCallable {
                 return CommandResult.empty();
             } else if (isAlias(REGIONS_ALIASES, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-                int flag = 0;
-                Optional<World> optWorld = FGHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
-                World world;
-                if (optWorld != null && optWorld.isPresent()) {
-                    world = optWorld.get();
-                    flag = 1;
-                } else world = player.getWorld();
-                if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a name!"));
-                IRegion region = FGManager.getInstance().getRegion(world, args[1 + flag]);
+                String worldName = parse.getFlagmap().get("world");
+                World world = player.getWorld();
+                if (!worldName.isEmpty()) {
+                    Optional<World> optWorld = FoxGuardMain.getInstance().getGame().getServer().getWorld(worldName);
+                    if (optWorld.isPresent()) {
+                        world = optWorld.get();
+                    } else world = player.getWorld();
+                }
+                if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
+                IRegion region = FGManager.getInstance().getRegion(world, args[1]);
                 if (region == null)
                     throw new ArgumentParseException(Texts.of("No Regions with this name!"),
-                            arguments, args[0].length() + (flag == 1 ? args[1].length() + 1 : 0) + args[1 + flag].length() / 2);
+                            arguments, arguments.indexOf(args[1]) + args[1].length() / 2);
                 if (FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.contains(region))
-                    throw new ArgumentParseException(Texts.of("Region is already in your state buffer!"), args[1 + flag], 1 + flag);
+                    throw new ArgumentParseException(Texts.of("Region is already in your state buffer!"), arguments, arguments.indexOf(args[1]) + args[1].length());
                 FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.add(region);
 
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully added Region to your state buffer!"));

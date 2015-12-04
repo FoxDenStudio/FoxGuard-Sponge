@@ -28,6 +28,7 @@ package net.gravityfox.foxguard.commands;
 import com.google.common.collect.ImmutableList;
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.FoxGuardMain;
+import net.gravityfox.foxguard.commands.util.AdvCmdParse;
 import net.gravityfox.foxguard.handlers.IHandler;
 import net.gravityfox.foxguard.regions.IRegion;
 import net.gravityfox.foxguard.util.FGHelper;
@@ -42,15 +43,19 @@ import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.util.command.source.ConsoleSource;
 import org.spongepowered.api.world.World;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
-import static net.gravityfox.foxguard.util.Aliases.HANDLERS_ALIASES;
-import static net.gravityfox.foxguard.util.Aliases.REGIONS_ALIASES;
+import static net.gravityfox.foxguard.util.Aliases.*;
 
 public class CommandList implements CommandCallable {
+
+    private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
+        if (isAlias(WORLD_ALIASES, key) && !map.containsKey("world")) {
+            map.put("world", value);
+        }
+    };
 
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
@@ -60,9 +65,8 @@ public class CommandList implements CommandCallable {
         }
         if (source instanceof Player || (source instanceof ConsoleSource)) {
 
-            String[] args = {};
-            if (!arguments.isEmpty()) args = arguments.split(" +");
-            int page = 1;
+            AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).build();
+            String[] args = parse.getArgs();
 
             if (args.length == 0) {
                 source.sendMessage(Texts.builder()
@@ -73,23 +77,17 @@ public class CommandList implements CommandCallable {
             } else if (contains(REGIONS_ALIASES, args[0])) {
                 List<IRegion> regionList = new LinkedList<>();
                 boolean allFlag = true;
-                int worldOffset = 0;
-                String worldName = "";
-                if (args.length > 1) {
-                    Optional<World> optWorld = FGHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
-                    if (optWorld != null) {
-                        if (!optWorld.isPresent())
-                            throw new ArgumentParseException(Texts.of("No world found with that name!"), args[1], 1);
+                String worldName = parse.getFlagmap().get("world");
+                if (!worldName.isEmpty()) {
+                    Optional<World> optWorld = FoxGuardMain.getInstance().getGame().getServer().getWorld(worldName);
+                    if (optWorld.isPresent()) {
                         FGManager.getInstance().getRegionsListCopy(optWorld.get()).forEach(regionList::add);
-                        worldOffset = 1;
                         allFlag = false;
-                        worldName = optWorld.get().getName();
                     }
                 }
                 if (allFlag) {
                     FGManager.getInstance().getRegionsListCopy().forEach(regionList::add);
                 }
-
 
                 TextBuilder output = Texts.builder()
                         .append(Texts.of(TextColors.GOLD, "-----------------------------------------------------\n"))

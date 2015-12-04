@@ -48,13 +48,13 @@ public class CommandTest implements CommandCallable {
             source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParse result = AdvCmdParse.builder().setArguments(arguments).setLimit(2).setSubFlags(true).build();
+        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).limit(2).subFlags(true).build();
         TextBuilder builder = Texts.builder();
         builder.append(Texts.of(TextColors.GOLD, "-----------------------------\n"));
-        for (String str : result.getArgs()) {
+        for (String str : parse.getArgs()) {
             builder.append(Texts.of(str + "\n"));
         }
-        for (Map.Entry<String, String> entry : result.getFlagmap().entrySet()) {
+        for (Map.Entry<String, String> entry : parse.getFlagmap().entrySet()) {
             builder.append(Texts.of(entry.getKey() + " : " + entry.getValue() + "\n"));
         }
         source.sendMessage(builder.build());

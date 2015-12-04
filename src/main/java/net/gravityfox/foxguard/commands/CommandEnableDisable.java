@@ -28,6 +28,7 @@ package net.gravityfox.foxguard.commands;
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.FoxGuardMain;
 import net.gravityfox.foxguard.IFGObject;
+import net.gravityfox.foxguard.commands.util.AdvCmdParse;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import net.gravityfox.foxguard.handlers.GlobalHandler;
 import net.gravityfox.foxguard.handlers.IHandler;
@@ -45,14 +46,19 @@ import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.world.World;
 
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static net.gravityfox.foxguard.util.Aliases.*;
 
 public class CommandEnableDisable implements CommandCallable {
+
+    private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
+        if (isAlias(WORLD_ALIASES, key) && !map.containsKey("world")) {
+            map.put("world", value);
+        }
+    };
 
     private final boolean enableState;
 
@@ -66,8 +72,8 @@ public class CommandEnableDisable implements CommandCallable {
             source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        String[] args = {};
-        if (!arguments.isEmpty()) args = arguments.split(" +");
+        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).build();
+        String[] args = parse.getArgs();
         if (source instanceof Player) {
             Player player = (Player) source;
             if (args.length == 0) {
@@ -106,20 +112,20 @@ public class CommandEnableDisable implements CommandCallable {
                     }
                 }
             } else if (isAlias(REGIONS_ALIASES, args[0])) {
-                int flag = 0;
-                Optional<World> optWorld = FGHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
-                World world;
+                String worldName = parse.getFlagmap().get("world");
+                World world = player.getWorld();
+                if (!worldName.isEmpty()) {
+                    Optional<World> optWorld = FoxGuardMain.getInstance().getGame().getServer().getWorld(worldName);
+                    if (optWorld.isPresent()) {
+                        world = optWorld.get();
+                    } else world = player.getWorld();
+                }
                 int successes = 0;
                 int failures = 0;
                 List<IRegion> regions = new LinkedList<>();
                 FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedRegions.stream().forEach(regions::add);
-                if (args.length > 1) {
-                    if (optWorld != null && optWorld.isPresent()) {
-                        world = optWorld.get();
-                        flag = 1;
-                    } else world = player.getWorld();
-                    if (args.length > 1 + flag) {
-                        for (String name : Arrays.copyOfRange(args, 1 + flag, args.length)) {
+                    if (args.length > 1) {
+                        for (String name : Arrays.copyOfRange(args, 1, args.length)) {
                             IRegion region = FGManager.getInstance().getRegion(world, name);
                             if (region == null) failures++;
                             else {
@@ -127,7 +133,7 @@ public class CommandEnableDisable implements CommandCallable {
                             }
                         }
                     }
-                }
+
                 for (IRegion region : regions) {
                     if (region instanceof GlobalRegion || region.isEnabled() == this.enableState) failures++;
                     else {

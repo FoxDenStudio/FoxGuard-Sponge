@@ -27,6 +27,7 @@ package net.gravityfox.foxguard.commands;
 
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.FoxGuardMain;
+import net.gravityfox.foxguard.commands.util.AdvCmdParse;
 import net.gravityfox.foxguard.handlers.IHandler;
 import net.gravityfox.foxguard.regions.IRegion;
 import net.gravityfox.foxguard.util.FGHelper;
@@ -46,11 +47,20 @@ import org.spongepowered.api.world.World;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static net.gravityfox.foxguard.util.Aliases.*;
 
 public class CommandDetail implements CommandCallable {
+
+    private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
+        if (isAlias(WORLD_ALIASES, key) && !map.containsKey("world")) {
+            map.put("world", value);
+        }
+    };
 
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
@@ -58,8 +68,8 @@ public class CommandDetail implements CommandCallable {
             source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        String[] args = {};
-        if (!arguments.isEmpty()) args = arguments.split(" +", 3);
+        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).limit(2).subFlags(true).flagMapper(MAPPER).build();
+        String[] args = parse.getArgs();
         if (source instanceof Player) {
             Player player = (Player) source;
             if (args.length == 0) {
@@ -70,18 +80,18 @@ public class CommandDetail implements CommandCallable {
                 return CommandResult.empty();
             } else if (isAlias(REGIONS_ALIASES, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-                int flag = 0;
-                Optional<World> optWorld = FGHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
-                World world;
-                if (optWorld != null && optWorld.isPresent()) {
-                    world = optWorld.get();
-                    flag = 1;
-                    args = arguments.split(" +", 4);
-                } else world = player.getWorld();
-                if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a name!"));
-                IRegion region = FGManager.getInstance().getRegion(world, args[1 + flag]);
+                String worldName = parse.getFlagmap().get("world");
+                World world = player.getWorld();
+                if (!worldName.isEmpty()) {
+                    Optional<World> optWorld = FoxGuardMain.getInstance().getGame().getServer().getWorld(worldName);
+                    if (optWorld.isPresent()) {
+                        world = optWorld.get();
+                    } else world = player.getWorld();
+                }
+                if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
+                IRegion region = FGManager.getInstance().getRegion(world, args[1]);
                 if (region == null)
-                    throw new CommandException(Texts.of("No Region with name \"" + args[1 + flag] + "\"!"));
+                    throw new CommandException(Texts.of("No Region with name \"" + args[1] + "\"!"));
                 TextBuilder builder = Texts.builder();
                 builder.append(Texts.of(TextColors.GOLD, "-----------------------------------------------------\n"));
                 builder.append(Texts.of(TextColors.GREEN, "---General---\n"));
@@ -96,7 +106,7 @@ public class CommandDetail implements CommandCallable {
                         .build());
                 builder.append(Texts.of(TextColors.GOLD, "World: "), Texts.of(TextColors.RESET, region.getWorld().getName() + "\n"));
                 builder.append(Texts.of(TextColors.GREEN, "---Details---\n"));
-                builder.append(region.getDetails(args.length < 3 + flag ? "" : args[2 + flag]));
+                builder.append(region.getDetails(args.length < 3 ? "" : args[2]));
                 builder.append(Texts.of(TextColors.GREEN, "\n---Linked Handlers---"));
                 if (region.getHandlersCopy().size() == 0)
                     builder.append(Texts.of(TextStyles.ITALIC, "\nNo linked Handlers!"));

@@ -28,9 +28,9 @@ package net.gravityfox.foxguard.commands;
 import com.google.common.collect.ImmutableList;
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.FoxGuardMain;
+import net.gravityfox.foxguard.commands.util.AdvCmdParse;
 import net.gravityfox.foxguard.handlers.IHandler;
 import net.gravityfox.foxguard.regions.IRegion;
-import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
@@ -43,11 +43,20 @@ import org.spongepowered.api.util.command.args.ArgumentParseException;
 import org.spongepowered.api.world.World;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static net.gravityfox.foxguard.util.Aliases.*;
 
 public class CommandSubtract implements CommandCallable {
+
+    private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
+        if (isAlias(WORLD_ALIASES, key) && !map.containsKey("world")) {
+            map.put("world", value);
+        }
+    };
 
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
@@ -55,6 +64,7 @@ public class CommandSubtract implements CommandCallable {
             source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
+        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).build();
         String[] args = {};
         if (!arguments.isEmpty()) args = arguments.split(" +");
         if (source instanceof Player) {
@@ -67,15 +77,15 @@ public class CommandSubtract implements CommandCallable {
                 return CommandResult.empty();
             } else if (isAlias(REGIONS_ALIASES, args[0])) {
                 if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-                int flag = 0;
-                Optional<World> optWorld = FGHelper.parseWorld(args[1], FoxGuardMain.getInstance().getGame().getServer());
-                World world;
-                if (optWorld != null && optWorld.isPresent()) {
-                    world = optWorld.get();
-                    flag = 1;
-                    args = arguments.split(" +", 5);
-                } else world = player.getWorld();
-                if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a name or a number!"));
+                String worldName = parse.getFlagmap().get("world");
+                World world = player.getWorld();
+                if (!worldName.isEmpty()) {
+                    Optional<World> optWorld = FoxGuardMain.getInstance().getGame().getServer().getWorld(worldName);
+                    if (optWorld.isPresent()) {
+                        world = optWorld.get();
+                    } else world = player.getWorld();
+                }
+                if (args.length < 2) throw new CommandException(Texts.of("Must specify a name or a number!"));
                 IRegion region;
                 try {
                     int index = Integer.parseInt(args[1]);
@@ -87,9 +97,9 @@ public class CommandSubtract implements CommandCallable {
                             + FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.size()), args[1], 1);
                 }
                 if (region == null)
-                    throw new ArgumentParseException(Texts.of("No Regions with this name!"), args[1 + flag], 1 + flag);
+                    throw new ArgumentParseException(Texts.of("No Regions with this name!"), args[1], 1);
                 if (!FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.contains(region))
-                    throw new ArgumentParseException(Texts.of("Region is not in your state buffer!"), args[1 + flag], 1 + flag);
+                    throw new ArgumentParseException(Texts.of("Region is not in your state buffer!"), args[1], 1);
                 FGCommandMainDispatcher.getInstance().getStateMap().get(player).selectedRegions.remove(region);
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully removed Region from your state buffer!"));
                 return CommandResult.success();

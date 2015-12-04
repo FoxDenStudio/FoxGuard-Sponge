@@ -54,11 +54,6 @@ public class FGHelper {
         }
     }
 
-    public static Optional<World> parseWorld(String arg, Server server) {
-        if (arg.startsWith("w:")) return server.getWorld(arg.substring(2));
-        return null;
-    }
-
     public static TextColor getColorForRegion(IRegion region) {
         return region instanceof GlobalRegion ? TextColors.YELLOW : (region.isEnabled() ? TextColors.RESET : TextColors.GRAY);
     }

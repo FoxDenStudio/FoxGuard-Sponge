@@ -28,6 +28,7 @@ package net.gravityfox.foxguard.commands;
 import com.google.common.collect.ImmutableList;
 import net.gravityfox.foxguard.FGManager;
 import net.gravityfox.foxguard.FoxGuardMain;
+import net.gravityfox.foxguard.commands.util.AdvCmdParse;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import net.gravityfox.foxguard.handlers.GlobalHandler;
 import net.gravityfox.foxguard.util.FGHelper;
@@ -42,9 +43,21 @@ import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.world.World;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
+import static net.gravityfox.foxguard.util.Aliases.WORLD_ALIASES;
+import static net.gravityfox.foxguard.util.Aliases.isAlias;
 
 public class CommandLink implements CommandCallable {
+
+    private static final Function<Map<String, String>, Function<String, Consumer<String>>> mapper = map -> key -> value -> {
+        if (isAlias(WORLD_ALIASES, key) && !map.containsKey("world")) {
+            map.put("world", value);
+        }
+    };
 
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
@@ -52,8 +65,8 @@ public class CommandLink implements CommandCallable {
             source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        String[] args = {};
-        if (!arguments.isEmpty()) args = arguments.split(" +", 2);
+        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).flagMapper(mapper).build();
+        String[] args = parse.getArgs();
         if (args.length == 0) {
             if (FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedRegions.size() == 0 &&
                     FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedHandlers.size() == 0)
@@ -74,13 +87,14 @@ public class CommandLink implements CommandCallable {
             if (source instanceof Player) {
                 Player player = (Player) source;
                 int flag = 0;
-                Optional<World> optWorld = FGHelper.parseWorld(args[0], FoxGuardMain.getInstance().getGame().getServer());
-                World world;
-                if (optWorld != null && optWorld.isPresent()) {
-                    world = optWorld.get();
-                    flag = 1;
-                    args = arguments.split(" +", 3);
-                } else world = player.getWorld();
+                String worldName = parse.getFlagmap().get("world");
+                World world = player.getWorld();
+                if (!worldName.isEmpty()) {
+                    Optional<World> optWorld = FoxGuardMain.getInstance().getGame().getServer().getWorld(worldName);
+                    if (optWorld.isPresent()) {
+                        world = optWorld.get();
+                    } else world = player.getWorld();
+                }
                 if (args.length < 1 + flag) throw new CommandException(Texts.of("Must specify items to link!"));
                 if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a Handler!"));
                 boolean success = FGManager.getInstance().link(world, args[flag], args[1 + flag]);

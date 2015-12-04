@@ -24,6 +24,7 @@
 
 package net.gravityfox.foxguard.commands.util;
 
+import net.gravityfox.foxguard.util.CallbackHashMap;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.command.CommandException;
 
@@ -46,7 +47,7 @@ public class AdvCmdParse {
             DEFAULT_MAPPER = map -> key -> value -> map.put(key, value);
 
     private String[] args = {};
-    private Map<String, String> flagmap = new HashMap<>();
+    private Map<String, String> flagmap = new CallbackHashMap<>((key, map) -> "");
 
     private AdvCmdParse(String arguments, int limit, boolean subFlags,
                         Function<Map<String, String>, Function<String, Consumer<String>>> flagMapper) throws CommandException {
@@ -175,22 +176,22 @@ public class AdvCmdParse {
         private AdvCmdParseBuilder() {
         }
 
-        public AdvCmdParseBuilder setArguments(String arguments) {
+        public AdvCmdParseBuilder arguments(String arguments) {
             this.arguments = arguments;
             return this;
         }
 
-        public AdvCmdParseBuilder setLimit(int limit) {
+        public AdvCmdParseBuilder limit(int limit) {
             this.limit = limit;
             return this;
         }
 
-        public AdvCmdParseBuilder setSubFlags(boolean subFlags) {
+        public AdvCmdParseBuilder subFlags(boolean subFlags) {
             this.subFlags = subFlags;
             return this;
         }
 
-        public AdvCmdParseBuilder setFlagMapper(Function<Map<String, String>, Function<String, Consumer<String>>> flagMapper) {
+        public AdvCmdParseBuilder flagMapper(Function<Map<String, String>, Function<String, Consumer<String>>> flagMapper) {
             this.flagMapper = flagMapper;
             return this;
         }
