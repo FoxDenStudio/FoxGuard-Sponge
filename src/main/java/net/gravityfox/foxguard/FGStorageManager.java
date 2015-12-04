@@ -589,19 +589,17 @@ public class FGStorageManager {
     }
 
     public synchronized void purgeDatabases() {
-        if (FGConfigManager.getInstance().purgeDatabases()) {
-            FoxGuardMain.getInstance().getLogger().info("Purging databases...");
-            for (String databaseDir : markedForDeletion) {
-                FoxGuardMain.getInstance().getLogger().info("Deleting database " + databaseDir + "...");
-                try (Connection conn = FoxGuardMain.getInstance().getDataSource(databaseDir).getConnection()) {
-                    try (Statement statement = conn.createStatement()) {
-                        statement.execute("DROP ALL OBJECTS DELETE FILES;");
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
+        for (String databaseDir : markedForDeletion) {
+            FoxGuardMain.getInstance().getLogger().info("Deleting database " + databaseDir);
+            try (Connection conn = FoxGuardMain.getInstance().getDataSource(databaseDir).getConnection()) {
+                try (Statement statement = conn.createStatement()) {
+                    statement.execute("DROP ALL OBJECTS DELETE FILES;");
                 }
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
         }
+
     }
 
     public synchronized void resolveDeferredObjects() {

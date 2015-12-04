@@ -27,7 +27,9 @@ package net.gravityfox.foxguard.commands;
 
 
 import com.google.common.collect.ImmutableList;
+import net.gravityfox.foxguard.commands.util.AdvCmdParse;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.CommandCallable;
@@ -36,6 +38,7 @@ import org.spongepowered.api.util.command.CommandResult;
 import org.spongepowered.api.util.command.CommandSource;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class CommandTest implements CommandCallable {
@@ -45,7 +48,16 @@ public class CommandTest implements CommandCallable {
             source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        source.sendMessage(Texts.of(Thread.getAllStackTraces().keySet().toString()));
+        AdvCmdParse result = AdvCmdParse.builder().setArguments(arguments).build();
+        TextBuilder builder = Texts.builder();
+        builder.append(Texts.of(TextColors.GOLD, "-----------------------------\n"));
+        for (String str : result.getArgs()) {
+            builder.append(Texts.of(str + "\n"));
+        }
+        for (Map.Entry<String, String> entry : result.getFlagmap().entrySet()) {
+            builder.append(Texts.of(entry.getKey() + " : " + entry.getValue() + "\n"));
+        }
+        source.sendMessage(builder.build());
         return CommandResult.empty();
     }
 
@@ -71,6 +83,6 @@ public class CommandTest implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("Testing");
+        return Texts.of("test [mystery args]...");
     }
 }

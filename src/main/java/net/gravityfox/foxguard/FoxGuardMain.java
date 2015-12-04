@@ -93,7 +93,6 @@ public class FoxGuardMain {
     private boolean loaded = false;
 
     /**
-     *
      * @return The current instance of the FoxGuardMain object.
      */
     public static FoxGuardMain getInstance() {
@@ -104,6 +103,7 @@ public class FoxGuardMain {
 
     /**
      * Used to create a new ReadWriteLock. Depending on config option, will either load a real one, or a "spoof" one.
+     *
      * @return A ReadWriteLock Object that can be used.
      */
     public static ReadWriteLock getNewLock() {
@@ -158,8 +158,13 @@ public class FoxGuardMain {
     }
 
     @Listener
-    public void gamePreInit(GamePreInitializationEvent event) {
+    public void gameConstruct(GameConstructionEvent event) {
         instance = this;
+    }
+
+    @Listener
+    public void gamePreInit(GamePreInitializationEvent event) {
+        logger.info("Loading configs");
         new FGConfigManager();
         FGConfigManager.getInstance().save();
     }
@@ -167,23 +172,35 @@ public class FoxGuardMain {
     @Listener
     public void gameInit(GameInitializationEvent event) {
         userStorage = game.getServiceManager().provide(UserStorage.class).get();
+        logger.info("Initializing FoxGuard Manager instance");
         FGManager.init();
 
+        logger.info("Registering commands");
         registerCommands();
+        logger.info("Registering event listeners");
         registerListeners();
+        logger.info("Setting default player permissions");
         configurePermissions();
     }
 
     @Listener
     public void serverStarted(GameStartedServerEvent event) {
+        logger.info("Initializing Handlers database");
         FGStorageManager.getInstance().initHandlers();
+        logger.info("Loading Handlers");
         FGStorageManager.getInstance().loadHandlers();
         loaded = true;
+        logger.info("Loading Links");
         FGStorageManager.getInstance().loadLinks();
-        if (FGConfigManager.getInstance().forceLoad())
+        if (FGConfigManager.getInstance().forceLoad()) {
+            logger.info("Resolving deferred objects");
             FGStorageManager.getInstance().resolveDeferredObjects();
+        }
+        logger.info("Saving Handlers");
         FGStorageManager.getInstance().writeHandlers();
+        logger.info("Saving World data");
         for (World world : game.getServer().getWorlds()) {
+            logger.info("Saving data for World: \"" + world.getName() + "\"");
             FGStorageManager.getInstance().writeWorld(world);
         }
     }
@@ -191,33 +208,44 @@ public class FoxGuardMain {
     @Listener
     public void serverStopping(GameStoppingServerEvent event) {
         FGStorageManager.getInstance().writeHandlers();
+        logger.info("Saving Handlers");
     }
 
     @Listener
     public void serverStopped(GameStoppedServerEvent event) {
-        FGStorageManager.getInstance().purgeDatabases();
+        if (FGConfigManager.getInstance().purgeDatabases()) {
+            FoxGuardMain.getInstance().getLogger().info("Purging databases");
+            FGStorageManager.getInstance().purgeDatabases();
+        }
+        logger.info("Saving configs");
         FGConfigManager.getInstance().save();
     }
 
     @Listener
     public void worldUnload(UnloadWorldEvent event) {
+        logger.info("Saving data for World: \"" + event.getTargetWorld().getName() + "\"");
         FGStorageManager.getInstance().writeWorld(event.getTargetWorld());
     }
 
     @Listener
     public void worldLoad(LoadWorldEvent event) {
+        logger.info("Constructing Regions for World: \"" + event.getTargetWorld().getName() + "\"");
         FGManager.getInstance().populateWorld(event.getTargetWorld());
+        logger.info("Initializing Regions database for World: \"" + event.getTargetWorld().getName() + "\"");
         FGStorageManager.getInstance().initWorld(event.getTargetWorld());
+        logger.info("Loading Regions for World: \"" + event.getTargetWorld().getName() + "\"");
         FGStorageManager.getInstance().loadWorldRegions(event.getTargetWorld());
         if (loaded) {
-            if (FGConfigManager.getInstance().forceLoad())
+            if (FGConfigManager.getInstance().forceLoad()) {
+                logger.info("Resolving deferred objects for World: " + event.getTargetWorld().getName()+ "\"");
                 FGStorageManager.getInstance().resolveDeferredObjects();
+            }
+            logger.info("Loading links for World: \"" + event.getTargetWorld().getName() + "\"");
             FGStorageManager.getInstance().loadWorldLinks(event.getTargetWorld());
         }
     }
 
     /**
-     *
      * @param jdbcUrl A String representation of the connection url for the database.
      * @return DataSource Object that is retrieved based off of the url from the SqlService.
      * @throws SQLException
@@ -309,6 +337,7 @@ public class FoxGuardMain {
 
     /**
      * Method that when called will return a UserStorage object that can be used to store or retrieve data corresponding to a specific player.
+     *
      * @return
      */
     public UserStorage getUserStorage() {
@@ -324,6 +353,7 @@ public class FoxGuardMain {
 
     /**
      * A method that when called will return a PermissionService object, which can be used for permission creation/checking
+     *
      * @return A PermissionService Object Instance
      */
     public PermissionService getPermissionService() {
@@ -332,6 +362,7 @@ public class FoxGuardMain {
 
     /**
      * Will return true or false depending on if the plugin has loaded properly or not.
+     *
      * @return Depending on the loaded variable
      */
     public boolean isLoaded() {

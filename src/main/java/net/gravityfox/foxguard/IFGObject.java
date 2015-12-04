@@ -53,6 +53,10 @@ public interface IFGObject {
 
     void writeToDatabase(DataSource dataSource) throws SQLException;
 
+    default boolean autoWrite() {
+        return true;
+    }
+
     ModifyResult modify(String arguments, InternalCommandState state, CommandSource source);
 
 }
