@@ -44,6 +44,7 @@ public class AdvCmdParse {
 
     public static final Function<Map<String, String>, Function<String, Consumer<String>>>
             DEFAULT_MAPPER = map -> key -> value -> map.put(key, value);
+    private static final String regex = "(([^\"'\\s]*[:=-])?([\"']).*?\\3)|(([\"']?)[^\"'\\s]+\\5)";
 
     private String[] args = {};
     private Map<String, String> flagmap = new CallbackHashMap<>((key, map) -> "");
@@ -51,14 +52,24 @@ public class AdvCmdParse {
     private AdvCmdParse(String arguments, int limit, boolean subFlags,
                         Function<Map<String, String>, Function<String, Consumer<String>>> flagMapper) throws CommandException {
         // Check for unclosed quotes
+
         {
-            Pattern pattern = Pattern.compile("[\"']");
-            Matcher matcher = pattern.matcher(arguments);
             int count = 0;
-            while (matcher.find()) {
+
+            Pattern pattern1 = Pattern.compile("[\"']");
+            Matcher matcher1 = pattern1.matcher(arguments);
+            Pattern pattern2 = Pattern.compile(regex);
+            Matcher matcher2 = pattern2.matcher(arguments);
+            while (matcher1.find()) {
                 count++;
             }
-            if (count % 2 == 1) {
+            while (matcher2.find()) {
+                Matcher matcher3 = pattern1.matcher(matcher2.group());
+                while (matcher3.find()) {
+                    count--;
+                }
+            }
+            if (count > 0) {
                 throw new CommandException(Texts.of("You must close all quotes!"));
             }
         }
@@ -67,7 +78,7 @@ public class AdvCmdParse {
         // List of string arguments that were not parsed as flags
         List<String> argsList = new ArrayList<>();
         // Pattern and matcher for identifying arguments and flags. It respects quotation marks.
-        Pattern pattern = Pattern.compile("([^\"'\\s]*[:=][\"']{2})|([^\"'\\s]*[:=][\"'].*?[\"'])|(([\"']?)[^\"'\\s]+\\4)|([\"']{2})|([\"'].*?[\"'])");
+        Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(toParse);
         // Iterate through matches
         while (matcher.find()) {
