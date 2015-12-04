@@ -98,6 +98,7 @@ public class CommandEnableDisable implements CommandCallable {
                             successes++;
                         }
                     }
+                    FGCommandMainDispatcher.getInstance().getStateMap().get(source).flush(InternalCommandState.StateField.REGIONS, InternalCommandState.StateField.HANDLERS);
                     if (successes == 1 && failures == 0) {
                         source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " object!"));
                         return CommandResult.success();
@@ -141,16 +142,17 @@ public class CommandEnableDisable implements CommandCallable {
                         successes++;
                     }
                 }
+                FGCommandMainDispatcher.getInstance().getStateMap().get(source).flush(InternalCommandState.StateField.REGIONS);
                 if (successes == 1 && failures == 0) {
-                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handler!"));
+                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " region!"));
                     return CommandResult.success();
                 } else if (successes > 0) {
-                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " hanslers with "
+                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " regions with "
                             + successes + " successes" + (failures > 0 ? " and " + failures + " failures!" : "!")));
                     return CommandResult.builder().successCount(successes).build();
                 } else {
                     throw new CommandException(Texts.of(failures + " failures while trying to " + (this.enableState ? "enable" : "disable") +
-                            " " + failures + (failures > 1 ? " handlers" : " handler") + ". Check to make sure you spelled their names correctly and that they are not already "
+                            " " + failures + (failures > 1 ? " regions" : " region") + ". Check to make sure you spelled their names correctly and that they are not already "
                             + (this.enableState ? "enabled." : "disabled.")));
                 }
 
@@ -174,16 +176,17 @@ public class CommandEnableDisable implements CommandCallable {
                         successes++;
                     }
                 }
+                FGCommandMainDispatcher.getInstance().getStateMap().get(source).flush(InternalCommandState.StateField.HANDLERS);
                 if (successes == 1 && failures == 0) {
                     source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handler!"));
                     return CommandResult.success();
                 } else if (successes > 0) {
-                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " regions with "
+                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handlers with "
                             + successes + " successes" + (failures > 0 ? " and " + failures + " failures!" : "!")));
                     return CommandResult.builder().successCount(successes).build();
                 } else {
                     throw new CommandException(Texts.of(failures + " failures while trying to " + (this.enableState ? "enable" : "disable") +
-                            " handlers. Check to make sure you spelled their names correctly and that they are not already "
+                            " " + failures + (failures > 1 ? " handlers" : " handler") + ". Check to make sure you spelled their names correctly and that they are not already "
                             + (this.enableState ? "enabled." : "disabled.")));
                 }
             } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
