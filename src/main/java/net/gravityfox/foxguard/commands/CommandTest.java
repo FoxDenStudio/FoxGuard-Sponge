@@ -48,7 +48,7 @@ public class CommandTest implements CommandCallable {
             source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParse result = AdvCmdParse.builder().setArguments(arguments).build();
+        AdvCmdParse result = AdvCmdParse.builder().setArguments(arguments).setLimit(2).setSubFlags(true).build();
         TextBuilder builder = Texts.builder();
         builder.append(Texts.of(TextColors.GOLD, "-----------------------------\n"));
         for (String str : result.getArgs()) {

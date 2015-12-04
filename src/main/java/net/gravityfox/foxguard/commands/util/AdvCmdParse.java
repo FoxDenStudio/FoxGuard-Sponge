@@ -67,7 +67,6 @@ public class AdvCmdParse {
         Matcher matcher = pattern.matcher(toParse);
         while (matcher.find()) {
             String result = matcher.group();
-            System.out.println(result);
             if (!result.startsWith("---")) {
                 if (result.startsWith("--") && !(subFlags && limit != 0 && argsList.size() > limit)) {
                     result = result.substring(2);
