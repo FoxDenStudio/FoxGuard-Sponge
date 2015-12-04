@@ -169,7 +169,7 @@ public class CommandCreate implements CommandCallable {
     @Override
     public Text getUsage(CommandSource source) {
         if (source instanceof Player)
-            return Texts.of("create <region [--w:<world>] | handler> <name> [priority] <type> [args...]");
-        else return Texts.of("create <region <world> | handler> <name> [priority] <type> [args...]");
+            return Texts.of("create <region [--w:<world>] | handler> <name> [--priority:<num>] <type> [args...]");
+        else return Texts.of("create <region <world> | handler> <name> [--priority:<num>] <type> [args...]");
     }
 }
