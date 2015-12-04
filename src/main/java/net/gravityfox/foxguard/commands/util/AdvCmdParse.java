@@ -50,6 +50,7 @@ public class AdvCmdParse {
 
     private AdvCmdParse(String arguments, int limit, boolean subFlags,
                         Function<Map<String, String>, Function<String, Consumer<String>>> flagMapper) throws CommandException {
+        // Check for unclosed quotes
         {
             Pattern pattern = Pattern.compile("\"");
             Matcher matcher = pattern.matcher(arguments);
@@ -61,39 +62,72 @@ public class AdvCmdParse {
                 throw new CommandException(Texts.of("You must close all quotes!"));
             }
         }
+        // String to parse
         String toParse = arguments.trim();
+        // List of string arguments that were not parsed as flags
         List<String> argsList = new ArrayList<>();
+        // Pattern and matcher for identifying arguments and flags. It respects quotation marks
         Pattern pattern = Pattern.compile("(\\S*\".+?\")|(\\S+)");
         Matcher matcher = pattern.matcher(toParse);
+        // Iterate through matches
         while (matcher.find()) {
             String result = matcher.group();
+            // Makes "---" mark the end of the command. Effectively allows command comments
+            // It also means that flag names cannot start with hyphens
             if (!result.startsWith("---")) {
+                // Parses result as long flag.
+                // Format is --<flagname>:<value> Where value can be a quoted string. "=" is also a valid separator
+                // If a limit is specified, the flags will be cut out of the final string
+                // Setting subFlags to true forces flags within the final string to be left as-is
+                // This is useful if the final string is it's own command and needs to be re-parsed
                 if (result.startsWith("--") && !(subFlags && limit != 0 && argsList.size() > limit)) {
+                    // Trims the prefix
                     result = result.substring(2);
+                    // Splits once by ":" or "="
                     String[] parts = result.split("[:=]", 2);
+                    // Throw an exception if the key contains a quote character, as that shouldn't be allowed
                     if (parts[0].contains("\""))
                         throw new CommandException(Texts.of("You may not have quotes in flag keys!"));
+                    // Default value in case a value isn't specified
                     String value = "";
-                    if(parts.length > 1) value = trimQuotes(parts[1]);
+                    // Retrieves value if it exists
+                    if (parts.length > 1) value = trimQuotes(parts[1]);
+                    // Applies the flagMapper function.
+                    // This is a destructive function that takes 3 parameters and returns nothing. (Destructive consumer)
                     flagMapper.apply(this.flagmap).apply(parts[0]).accept(value);
+
+                    // Parses result as a short flag. Limit behavior is the same as long flags
+                    // multiple letters are treated as multiple flags. Repeating letters add a second flag with a repetition
+                    // Example: "-aab" becomes flags "a", "aa", and "b"
                 } else if (result.startsWith("-") && !(subFlags && limit != 0 && argsList.size() > limit)) {
+                    // Trims prefix
                     result = result.substring(1);
+                    // Iterates through each letter
                     for (String str : result.split("")) {
+                        // Checks to make sure that the flag letter is alphanumeric. Throw exception if it doesn't
                         if (str.matches("[a-zA-Z0-9]")) {
+                            // Checks if the flag already exists, and repeat the letter until it doesn't
                             String temp = str;
                             while (this.flagmap.containsKey(temp)) {
                                 temp += str;
                             }
-                            this.flagmap.put(temp, "");
+                            // Applies destructive flagMapper function.
+                            flagMapper.apply(this.flagmap).apply(temp).accept("");
                         } else {
                             throw new CommandException(Texts.of("You may only have alphanumeric short keys!"));
                         }
                     }
+
+                    // Simply adds the result to the argument list. Quotes are trimmed.
+                    // Fallback if the result isn't a flag.
                 } else {
                     argsList.add(trimQuotes(result));
                 }
-            }
+            } else break;
         }
+        // This part converts the argument list to the final argument array.
+        // A number of arguments are copied to a new list less than or equal to the limit.
+        // The rest of the arguments, if any, are concatenated together.
         List<String> finalList = new ArrayList<>();
         String finalString = "";
         for (int i = 0; i < argsList.size(); i++) {
@@ -106,9 +140,10 @@ public class AdvCmdParse {
                 }
             }
         }
-        if(limit != 0) {
+        if (!finalString.isEmpty()) {
             finalList.add(finalString);
         }
+        // Converts final argument list to an array.
         args = finalList.toArray(new String[finalList.size()]);
     }
 
