@@ -132,6 +132,6 @@ public class CommandDelete implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("delete <region [w:<world>] | handler> <name>");
+        return Texts.of("delete <region [--w:<world>] | handler> <name>");
     }
 }

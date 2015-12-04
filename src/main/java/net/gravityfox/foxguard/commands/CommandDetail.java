@@ -177,7 +177,7 @@ public class CommandDetail implements CommandCallable {
     @Override
     public Text getUsage(CommandSource source) {
         if (source instanceof Player)
-            return Texts.of("detail <region [w:<worldname>] | handler> <name> [args...]");
+            return Texts.of("detail <region [--w:<worldname>] | handler> <name> [args...]");
         else return Texts.of("detail <region <worldname> | handler> <name> [args...]");
 
     }

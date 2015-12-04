@@ -166,6 +166,6 @@ public class CommandList implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("list <regions [w:<world>] | handlers>");
+        return Texts.of("list <regions [--w:<world>] | handlers>");
     }
 }

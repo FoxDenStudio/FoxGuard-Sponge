@@ -135,7 +135,7 @@ public class CommandLink implements CommandCallable {
     @Override
     public Text getUsage(CommandSource source) {
         if (source instanceof Player)
-            return Texts.of("link [ [w:<worldname>] <region name> <handler name> ]");
+            return Texts.of("link [ [--w:<worldname>] <region name> <handler name> ]");
         else {
             return Texts.of("link [ <worldname> <region name> <handler name> ]");
         }

@@ -169,7 +169,7 @@ public class CommandAdd implements CommandCallable {
     @Override
     public Text getUsage(CommandSource source) {
         if (source instanceof Player)
-            return Texts.of("add <region [w:<worldname>] | handler> <name>");
+            return Texts.of("add <region [--w:<worldname>] | handler> <name>");
         else return Texts.of("add <region <worldname> | handler> <name>");
     }
 }

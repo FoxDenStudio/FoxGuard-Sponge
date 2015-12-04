@@ -168,6 +168,6 @@ public class CommandSubtract implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("subtract <region [w:<world>] | handler | position> < <name> | <index> >");
+        return Texts.of("subtract <region [--w:<world>] | handler | position> < <name> | <index> >");
     }
 }

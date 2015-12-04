@@ -216,7 +216,7 @@ public class CommandEnableDisable implements CommandCallable {
     @Override
     public Text getUsage(CommandSource source) {
         if (source instanceof Player)
-            return Texts.of((this.enableState ? "enable" : "disable") + " <region [w:<worldname>] | handler> [names]...");
+            return Texts.of((this.enableState ? "enable" : "disable") + " <region [--w:<worldname>] | handler> [names]...");
         else return Texts.of((this.enableState ? "enable" : "disable") + " <region <worldname> | handler> [names]...");
     }
 }
