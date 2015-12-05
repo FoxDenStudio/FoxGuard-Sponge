@@ -44,7 +44,10 @@ public class AdvCmdParse {
 
     public static final Function<Map<String, String>, Function<String, Consumer<String>>>
             DEFAULT_MAPPER = map -> key -> value -> map.put(key, value);
-    private static final String regex = "\\\\[\"'](?:\\\\\\\\|\\\\ |\\\\[\"']|[^\"'\\s])+|(?:[^\"'\\s]*[:=-])?([\"'])(?:\\\\\\\\|\\\\ |\\\\[\"']|.)*?\\1|(?:\\\\\\\\|\\\\ |\\\\[\"']|[^\"'\\s])+";
+    private static final String regex =
+            "\\\\[\"'](?:\\\\\\\\|\\\\ |\\\\[\"']|[^\"'\\s])+" +
+                    "|(?:[^\"'\\s]*[:=-])?([\"'])(?:\\\\\\\\|\\\\ |\\\\[\"']|.)*?\\1" +
+                    "|(?:\\\\\\\\|\\\\ |\\\\[\"']|[^\"'\\s])+";
 
     private String[] args = {};
     private Map<String, String> flagmap = new CallbackHashMap<>((key, map) -> "");
@@ -184,8 +187,9 @@ public class AdvCmdParse {
             if (letter.equals("\\")) {
                 if (i + 2 <= str.length()) {
                     String escape = str.substring(i + 1, i + 2);
-                    switch (escape){
-                        case "n": escape = "\n";
+                    switch (escape) {
+                        case "n":
+                            escape = "\n";
                     }
                     newStr += escape;
                     i++;
