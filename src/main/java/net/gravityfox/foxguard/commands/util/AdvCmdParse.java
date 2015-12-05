@@ -86,6 +86,8 @@ public class AdvCmdParse {
             // Makes "---" mark the end of the command. Effectively allows command comments
             // It also means that flag names cannot start with hyphens
             if (!result.startsWith("---")) {
+                // Throws out any results that are empty
+                if(result.equals("--") || result.equals("-")) continue;
                 // Parses result as long flag.
                 // Format is --<flagname>:<value> Where value can be a quoted string. "=" is also a valid separator
                 // If a limit is specified, the flags will be cut out of the final string
@@ -97,8 +99,8 @@ public class AdvCmdParse {
                     // Splits once by ":" or "="
                     String[] parts = result.split("[:=]", 2);
                     // Throw an exception if the key contains a quote character, as that shouldn't be allowed
-                    if (parts[0].contains("\""))
-                        throw new CommandException(Texts.of("You may not have quotes in flag keys!"));
+                    if (parts[0].contains("\"") || parts[0].contains("'"))
+                        throw new CommandException(Texts.of("You may not have quotes in long flag keys!"));
                     // Default value in case a value isn't specified
                     String value = "";
                     // Retrieves value if it exists
@@ -112,13 +114,13 @@ public class AdvCmdParse {
                     // Parses result as a short flag. Limit behavior is the same as long flags
                     // multiple letters are treated as multiple flags. Repeating letters add a second flag with a repetition
                     // Example: "-aab" becomes flags "a", "aa", and "b"
-                } else if (result.startsWith("-") && !(subFlags && limit != 0 && argsList.size() > limit)) {
+                } else if (result.startsWith("-") && result.substring(1,2).matches("[\\D]") && !(subFlags && limit != 0 && argsList.size() > limit)) {
                     // Trims prefix
                     result = result.substring(1);
                     // Iterates through each letter
                     for (String str : result.split("")) {
-                        // Checks to make sure that the flag letter is alphanumeric. Throw exception if it doesn't
-                        if (str.matches("[a-zA-Z0-9]")) {
+                        // Checks to make sure that the flag letter is alphabetic. Throw exception if it doesn't
+                        if (str.matches("[a-zA-Z]")) {
                             // Checks if the flag already exists, and repeat the letter until it doesn't
                             String temp = str;
                             while (this.flagmap.containsKey(temp)) {
@@ -126,8 +128,10 @@ public class AdvCmdParse {
                             }
                             // Applies destructive flagMapper function.
                             flagMapper.apply(this.flagmap).apply(temp).accept("");
+                        } else if (str.matches("[:=-]")) {
+                            throw new CommandException(Texts.of("You may only have alphanumeric short flags! Did you mean to use a long flag (two dashes)?"));
                         } else {
-                            throw new CommandException(Texts.of("You may only have alphanumeric short keys!"));
+                            throw new CommandException(Texts.of("You may only have alphanumeric short flags!"));
                         }
                     }
 
