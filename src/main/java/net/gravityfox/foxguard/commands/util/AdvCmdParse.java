@@ -44,7 +44,7 @@ public class AdvCmdParse {
 
     public static final Function<Map<String, String>, Function<String, Consumer<String>>>
             DEFAULT_MAPPER = map -> key -> value -> map.put(key, value);
-    private static final String regex = "(([^\"'\\s]*[:=-])?([\"']).*?\\3)|(([\"']?)[^\"'\\s]+\\5)";
+    private static final String regex = "\\\\[\"'](?:\\\\\\\\|\\\\ |\\\\[\"']|[^\"'\\s])+|(?:[^\"'\\s]*[:=-])?([\"'])(?:\\\\\\\\|\\\\ |\\\\[\"']|.)*?\\1|(?:\\\\\\\\|\\\\ |\\\\[\"']|[^\"'\\s])+";
 
     private String[] args = {};
     private Map<String, String> flagmap = new CallbackHashMap<>((key, map) -> "");
@@ -87,7 +87,7 @@ public class AdvCmdParse {
             // It also means that flag names cannot start with hyphens
             if (!result.startsWith("---")) {
                 // Throws out any results that are empty
-                if(result.equals("--") || result.equals("-")) continue;
+                if (result.equals("--") || result.equals("-")) continue;
                 // Parses result as long flag.
                 // Format is --<flagname>:<value> Where value can be a quoted string. "=" is also a valid separator
                 // If a limit is specified, the flags will be cut out of the final string
@@ -104,7 +104,7 @@ public class AdvCmdParse {
                     // Default value in case a value isn't specified
                     String value = "";
                     // Retrieves value if it exists
-                    if (parts.length > 1) value = trimQuotes(parts[1]);
+                    if (parts.length > 1) value = unescapeString(parts[1]);
                     // Applies the flagMapper function.
                     // This is a destructive function that takes 3 parameters and returns nothing. (Destructive consumer)
                     flagMapper.apply(this.flagmap)
@@ -114,7 +114,7 @@ public class AdvCmdParse {
                     // Parses result as a short flag. Limit behavior is the same as long flags
                     // multiple letters are treated as multiple flags. Repeating letters add a second flag with a repetition
                     // Example: "-aab" becomes flags "a", "aa", and "b"
-                } else if (result.startsWith("-") && result.substring(1,2).matches("[\\D]") && !(subFlags && limit != 0 && argsList.size() > limit)) {
+                } else if (result.startsWith("-") && result.substring(1, 2).matches("[\\D]") && !(subFlags && limit != 0 && argsList.size() > limit)) {
                     // Trims prefix
                     result = result.substring(1);
                     // Iterates through each letter
@@ -138,7 +138,7 @@ public class AdvCmdParse {
                     // Simply adds the result to the argument list. Quotes are trimmed.
                     // Fallback if the result isn't a flag.
                 } else {
-                    argsList.add(trimQuotes(result));
+                    argsList.add(unescapeString(result));
                 }
             } else break;
         }
@@ -176,10 +176,25 @@ public class AdvCmdParse {
         return flagmap;
     }
 
-    private String trimQuotes(String str) {
-        if (str.startsWith("\"") || str.startsWith("'")) str = str.substring(1);
-        if (str.endsWith("\"") || str.endsWith("'")) str = str.substring(0, str.length() - 1);
-        return str;
+    private String unescapeString(String str) {
+        if (str.startsWith("\"") || str.startsWith("'")) str = str.substring(1, str.length() - 1);
+        String newStr = "";
+        for (int i = 0; i < str.length(); i++) {
+            String letter = str.substring(i, i + 1);
+            if (letter.equals("\\")) {
+                if (i + 2 <= str.length()) {
+                    String escape = str.substring(i + 1, i + 2);
+                    switch (escape){
+                        case "n": escape = "\n";
+                    }
+                    newStr += escape;
+                    i++;
+                }
+            } else {
+                newStr += letter;
+            }
+        }
+        return newStr;
     }
 
     public static class AdvCmdParseBuilder {

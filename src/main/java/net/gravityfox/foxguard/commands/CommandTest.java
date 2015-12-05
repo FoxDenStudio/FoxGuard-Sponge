@@ -51,8 +51,10 @@ public class CommandTest implements CommandCallable {
         AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).build();
         TextBuilder builder = Texts.builder();
         builder.append(Texts.of(TextColors.GOLD, "-----------------------------\n"));
+        int count = 0;
         for (String str : parse.getArgs()) {
-            builder.append(Texts.of(str + "\n"));
+            count++;
+            builder.append(Texts.of(count + ": "+ str + "\n"));
         }
         for (Map.Entry<String, String> entry : parse.getFlagmap().entrySet()) {
             builder.append(Texts.of(entry.getKey() + " : " + entry.getValue() + "\n"));
