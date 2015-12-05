@@ -44,15 +44,12 @@ public class AdvCmdParse {
 
     public static final Function<Map<String, String>, Function<String, Consumer<String>>>
             DEFAULT_MAPPER = map -> key -> value -> map.put(key, value);
-    private static final String regex =
-            "\\\\[\"'](?:\\\\\\\\|\\\\ |\\\\[\"']|[^\"'\\s])+" +
-                    "|(?:[^\"'\\s]*[:=-])?([\"'])(?:\\\\\\\\|\\\\ |\\\\[\"']|.)*?\\1" +
-                    "|(?:\\\\\\\\|\\\\ |\\\\[\"']|[^\"'\\s])+";
+    private static final String regex = "(?:(?:\\\\.|[^\"'\\s])*[:=-])?([\"'])(?:\\\\.|[^\\\\])*?\\1|(?:\\\\.|[^\"'\\s])+";
 
     private String[] args = {};
     private Map<String, String> flagmap = new CallbackHashMap<>((key, map) -> "");
 
-    private AdvCmdParse(String arguments, int limit, boolean subFlags,
+    private AdvCmdParse(String arguments, int limit, boolean extractSubFlags, boolean unescapeLast,
                         Function<Map<String, String>, Function<String, Consumer<String>>> flagMapper) throws CommandException {
         // Check for unclosed quotes
 
@@ -94,9 +91,9 @@ public class AdvCmdParse {
                 // Parses result as long flag.
                 // Format is --<flagname>:<value> Where value can be a quoted string. "=" is also a valid separator
                 // If a limit is specified, the flags will be cut out of the final string
-                // Setting subFlags to true forces flags within the final string to be left as-is
+                // Setting extractSubFlags to true forces flags within the final string to be left as-is
                 // This is useful if the final string is it's own command and needs to be re-parsed
-                if (result.startsWith("--") && !(subFlags && limit != 0 && argsList.size() > limit)) {
+                if (result.startsWith("--") && !(!extractSubFlags && limit != 0 && argsList.size() > limit)) {
                     // Trims the prefix
                     result = result.substring(2);
                     // Splits once by ":" or "="
@@ -117,7 +114,7 @@ public class AdvCmdParse {
                     // Parses result as a short flag. Limit behavior is the same as long flags
                     // multiple letters are treated as multiple flags. Repeating letters add a second flag with a repetition
                     // Example: "-aab" becomes flags "a", "aa", and "b"
-                } else if (result.startsWith("-") && result.substring(1, 2).matches("[\\D]") && !(subFlags && limit != 0 && argsList.size() > limit)) {
+                } else if (result.startsWith("-") && result.substring(1, 2).matches("[\\D]") && !(!extractSubFlags && limit != 0 && argsList.size() > limit)) {
                     // Trims prefix
                     result = result.substring(1);
                     // Iterates through each letter
@@ -141,7 +138,8 @@ public class AdvCmdParse {
                     // Simply adds the result to the argument list. Quotes are trimmed.
                     // Fallback if the result isn't a flag.
                 } else {
-                    argsList.add(unescapeString(result));
+                    if (argsList.size() >= limit && !unescapeLast) argsList.add(result);
+                    else argsList.add(unescapeString(result));
                 }
             } else break;
         }
@@ -205,8 +203,9 @@ public class AdvCmdParse {
 
         private String arguments = "";
         private int limit = 0;
-        private boolean subFlags = false;
+        private boolean extractSubFlags = false;
         private Function<Map<String, String>, Function<String, Consumer<String>>> flagMapper = DEFAULT_MAPPER;
+        private boolean unescapeLast = false;
 
         private AdvCmdParseBuilder() {
         }
@@ -221,9 +220,13 @@ public class AdvCmdParse {
             return this;
         }
 
-        public AdvCmdParseBuilder subFlags(boolean subFlags) {
-            this.subFlags = subFlags;
+        public AdvCmdParseBuilder extractSubFlags(boolean subFlags) {
+            this.extractSubFlags = subFlags;
             return this;
+        }
+
+        public void unescapeLast(boolean unescapeLast) {
+            this.unescapeLast = unescapeLast;
         }
 
         public AdvCmdParseBuilder flagMapper(Function<Map<String, String>, Function<String, Consumer<String>>> flagMapper) {
@@ -232,7 +235,7 @@ public class AdvCmdParse {
         }
 
         public AdvCmdParse build() throws CommandException {
-            return new AdvCmdParse(arguments, limit, subFlags, flagMapper);
+            return new AdvCmdParse(arguments, limit, extractSubFlags, unescapeLast, flagMapper);
         }
     }
 }

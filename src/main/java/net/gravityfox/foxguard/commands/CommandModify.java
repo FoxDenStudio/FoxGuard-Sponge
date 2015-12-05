@@ -66,7 +66,7 @@ public class CommandModify implements CommandCallable {
             source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).limit(2).subFlags(true).flagMapper(MAPPER).build();
+        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).limit(2).flagMapper(MAPPER).build();
         String[] args = parse.getArgs();
         if (args.length == 0) {
             source.sendMessage(Texts.builder()

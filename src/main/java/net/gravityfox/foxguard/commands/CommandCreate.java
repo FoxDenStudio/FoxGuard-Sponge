@@ -70,7 +70,7 @@ public class CommandCreate implements CommandCallable {
             source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).limit(3).subFlags(true).flagMapper(MAPPER).build();
+        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).limit(3).flagMapper(MAPPER).build();
         String[] args = parse.getArgs();
         if (args.length == 0) {
             source.sendMessage(Texts.builder()
