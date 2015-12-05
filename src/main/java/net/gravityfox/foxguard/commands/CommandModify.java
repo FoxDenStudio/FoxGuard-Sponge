@@ -86,7 +86,6 @@ public class CommandModify implements CommandCallable {
                 }
             }
             if (world == null) throw new CommandException(Texts.of("Must specify a world!"));
-            if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
             IRegion region = FGManager.getInstance().getRegion(world, args[1]);
             if (region == null)
                 throw new CommandException(Texts.of("No Region with name \"" + args[1] + "\"!"));

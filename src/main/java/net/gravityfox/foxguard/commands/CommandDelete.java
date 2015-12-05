@@ -85,7 +85,6 @@ public class CommandDelete implements CommandCallable {
                 }
             }
             if (world == null) throw new CommandException(Texts.of("Must specify a world!"));
-            if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
             if (args[1].equalsIgnoreCase(GlobalRegion.NAME))
                 throw new CommandException(Texts.of("You may not delete the global Region!"));
             boolean success = FGManager.getInstance().removeRegion(world, args[1]);

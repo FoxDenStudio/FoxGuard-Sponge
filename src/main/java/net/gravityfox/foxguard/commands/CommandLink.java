@@ -83,7 +83,6 @@ public class CommandLink implements CommandCallable {
             FGCommandMainDispatcher.getInstance().getStateMap().get(source).flush(InternalCommandState.StateField.REGIONS, InternalCommandState.StateField.HANDLERS);
             return CommandResult.builder().successCount(successes[0]).build();
         } else {
-            int flag = 0;
             String worldName = parse.getFlagmap().get("world");
             World world = null;
             if (source instanceof Player) world = ((Player) source).getWorld();
@@ -94,9 +93,9 @@ public class CommandLink implements CommandCallable {
                 }
             }
             if (world == null) throw new CommandException(Texts.of("Must specify a world!"));
-            if (args.length < 1 + flag) throw new CommandException(Texts.of("Must specify items to link!"));
-            if (args.length < 2 + flag) throw new CommandException(Texts.of("Must specify a Handler!"));
-            boolean success = FGManager.getInstance().link(world, args[flag], args[1 + flag]);
+            if (args.length < 1) throw new CommandException(Texts.of("Must specify items to link!"));
+            if (args.length < 2) throw new CommandException(Texts.of("Must specify a Handler!"));
+            boolean success = FGManager.getInstance().link(world, args[0], args[1]);
             if (success) {
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully linked!"));
                 return CommandResult.success();

@@ -281,9 +281,9 @@ public class FoxGuardMain {
         FGCommandDispatcher fgHandlerDispatcher = new FGCommandDispatcher("/foxguard handlers",
                 "Commands spcifically meant for managing Handlers.");
 
-        fgDispatcher.register(new CommandCreate(), "create", "construct", "new", "make", "define", "mk");
+        fgDispatcher.register(new CommandCreate(), "create", "construct", "new", "make", "define", "mk", "cr");
         fgDispatcher.register(new CommandDelete(), "delete", "del", "remove", "rem", "rm", "destroy");
-        fgDispatcher.register(new CommandModify(), "modify", "mod", "change", "edit", "update");
+        fgDispatcher.register(new CommandModify(), "modify", "mod", "change", "edit", "update", "md", "ch");
         fgDispatcher.register(new CommandLink(), "link", "connect", "attach");
         fgDispatcher.register(new CommandUnlink(), "unlink", "disconnect", "detach");
         fgDispatcher.register(new CommandEnableDisable(true), "enable", "activate", "engage", "on");
@@ -294,7 +294,7 @@ public class FoxGuardMain {
         fgDispatcher.register(new CommandPosition(), "position", "pos", "p");
         fgDispatcher.register(new CommandAdd(), "add", "push");
         fgDispatcher.register(new CommandSubtract(), "subtract", "sub", "pop");
-        fgDispatcher.register(new CommandFlush(), "flush", "clear");
+        fgDispatcher.register(new CommandFlush(), "flush", "clear", "wipe");
         fgDispatcher.register(new CommandAbout(), "about", "info");
         fgDispatcher.register(new CommandTest(), "test");
         fgDispatcher.register(new CommandSave(), "save", "saveall", "save-all");
@@ -340,7 +340,8 @@ public class FoxGuardMain {
      *
      * @return
      */
-    public UserStorageService getUserStorage() {
+    public UserStorageService
+    getUserStorage() {
         return userStorage;
     }
 

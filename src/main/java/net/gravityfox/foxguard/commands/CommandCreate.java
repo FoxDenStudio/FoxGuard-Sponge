@@ -91,7 +91,6 @@ public class CommandCreate implements CommandCallable {
                 }
             }
             if (world == null) throw new CommandException(Texts.of("Must specify a world!"));
-            if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
             if (args[1].matches("^.*[^0-9a-zA-Z_$].*$"))
                 throw new ArgumentParseException(Texts.of("Name must be alphanumeric!"), args[1], 1);
             if (args[1].matches("^[^a-zA-Z_$].*$"))

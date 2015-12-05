@@ -74,7 +74,7 @@ public class CommandSubtract implements CommandCallable {
                     .build());
             return CommandResult.empty();
         } else if (isAlias(REGIONS_ALIASES, args[0])) {
-            if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
+            if (args.length < 2) throw new CommandException(Texts.of("Must specify a name or a number!"));
             String worldName = parse.getFlagmap().get("world");
             World world = null;
             if (source instanceof Player) world = ((Player) source).getWorld();
@@ -84,13 +84,12 @@ public class CommandSubtract implements CommandCallable {
                     world = optWorld.get();
                 }
             }
-            if (world == null) throw new CommandException(Texts.of("Must specify a world!"));
-            if (args.length < 2) throw new CommandException(Texts.of("Must specify a name or a number!"));
             IRegion region;
             try {
                 int index = Integer.parseInt(args[1]);
                 region = FGCommandMainDispatcher.getInstance().getStateMap().get(source).selectedRegions.get(index - 1);
             } catch (NumberFormatException e) {
+                if (world == null) throw new CommandException(Texts.of("Must specify a world!"));
                 region = FGManager.getInstance().getRegion(world, args[1]);
             } catch (IndexOutOfBoundsException e) {
                 throw new ArgumentParseException(Texts.of("Index out of bounds! (1 - "
