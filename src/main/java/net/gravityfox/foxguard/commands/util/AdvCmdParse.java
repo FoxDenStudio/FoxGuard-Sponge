@@ -26,7 +26,7 @@ package net.gravityfox.foxguard.commands.util;
 
 import net.gravityfox.foxguard.util.CallbackHashMap;
 import org.spongepowered.api.text.Texts;
-import org.spongepowered.api.util.command.CommandException;
+import org.spongepowered.api.command.CommandException;
 
 import java.util.ArrayList;
 import java.util.List;

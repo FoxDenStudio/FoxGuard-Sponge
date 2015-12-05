@@ -27,8 +27,8 @@ package net.gravityfox.foxguard.factory;
 
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import net.gravityfox.foxguard.regions.IRegion;
-import org.spongepowered.api.util.command.CommandException;
-import org.spongepowered.api.util.command.CommandSource;
+import org.spongepowered.api.command.CommandException;
+import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.world.World;
 
 import javax.sql.DataSource;

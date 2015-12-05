@@ -28,13 +28,13 @@ package net.gravityfox.foxguard.handlers;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import net.gravityfox.foxguard.commands.util.ModifyResult;
 import net.gravityfox.foxguard.handlers.util.Flags;
+import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
-import org.spongepowered.api.util.command.CommandSource;
 
 import javax.annotation.Nullable;
 import javax.sql.DataSource;

@@ -28,7 +28,7 @@ package net.gravityfox.foxguard;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import net.gravityfox.foxguard.commands.util.ModifyResult;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.util.command.CommandSource;
+import org.spongepowered.api.command.CommandSource;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;

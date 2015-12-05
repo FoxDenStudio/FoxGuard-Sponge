@@ -34,6 +34,8 @@ import net.gravityfox.foxguard.listener.PlayerEventListener;
 import net.gravityfox.foxguard.listener.SpawnEntityEventListener;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
+import org.spongepowered.api.config.ConfigDir;
+import org.spongepowered.api.event.EventManager;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.action.InteractEvent;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
@@ -43,12 +45,10 @@ import org.spongepowered.api.event.game.state.*;
 import org.spongepowered.api.event.world.LoadWorldEvent;
 import org.spongepowered.api.event.world.UnloadWorldEvent;
 import org.spongepowered.api.plugin.Plugin;
-import org.spongepowered.api.service.config.ConfigDir;
-import org.spongepowered.api.service.event.EventManager;
 import org.spongepowered.api.service.permission.PermissionService;
 import org.spongepowered.api.service.permission.SubjectData;
 import org.spongepowered.api.service.sql.SqlService;
-import org.spongepowered.api.service.user.UserStorage;
+import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
@@ -88,7 +88,7 @@ public class FoxGuardMain {
     private File configDirectory;
 
     private SqlService sql;
-    private UserStorage userStorage;
+    private UserStorageService userStorage;
 
     private boolean loaded = false;
 
@@ -171,7 +171,7 @@ public class FoxGuardMain {
 
     @Listener
     public void gameInit(GameInitializationEvent event) {
-        userStorage = game.getServiceManager().provide(UserStorage.class).get();
+        userStorage = game.getServiceManager().provide(UserStorageService.class).get();
         logger.info("Initializing FoxGuard Manager instance");
         FGManager.init();
 
@@ -303,7 +303,7 @@ public class FoxGuardMain {
 
         fgDispatcher.register(fgHandlerDispatcher, HANDLERS_ALIASES);
 
-        game.getCommandDispatcher().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
+        game.getCommandManager().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
     }
 
     /**
@@ -340,7 +340,7 @@ public class FoxGuardMain {
      *
      * @return
      */
-    public UserStorage getUserStorage() {
+    public UserStorageService getUserStorage() {
         return userStorage;
     }
 

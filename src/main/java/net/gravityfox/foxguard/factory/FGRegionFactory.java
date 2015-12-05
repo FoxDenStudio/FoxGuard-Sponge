@@ -38,8 +38,8 @@ import net.gravityfox.foxguard.regions.util.BoundingBox3;
 import net.gravityfox.foxguard.util.FGHelper;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
-import org.spongepowered.api.util.command.CommandException;
-import org.spongepowered.api.util.command.CommandSource;
+import org.spongepowered.api.command.CommandException;
+import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.world.World;
 
 import javax.sql.DataSource;

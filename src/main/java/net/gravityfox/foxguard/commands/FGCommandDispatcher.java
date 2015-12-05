@@ -26,6 +26,10 @@
 package net.gravityfox.foxguard.commands;
 
 import com.google.common.collect.*;
+import org.spongepowered.api.command.*;
+import org.spongepowered.api.command.dispatcher.Disambiguator;
+import org.spongepowered.api.command.dispatcher.Dispatcher;
+import org.spongepowered.api.command.dispatcher.SimpleDispatcher;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextBuilder;
 import org.spongepowered.api.text.Texts;
@@ -33,17 +37,13 @@ import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
-import org.spongepowered.api.util.command.*;
-import org.spongepowered.api.util.command.dispatcher.Disambiguator;
-import org.spongepowered.api.util.command.dispatcher.Dispatcher;
-import org.spongepowered.api.util.command.dispatcher.SimpleDispatcher;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.spongepowered.api.util.command.CommandMessageFormatting.NEWLINE_TEXT;
-import static org.spongepowered.api.util.command.CommandMessageFormatting.SPACE_TEXT;
+import static org.spongepowered.api.command.CommandMessageFormatting.NEWLINE_TEXT;
+import static org.spongepowered.api.command.CommandMessageFormatting.SPACE_TEXT;
 
 public class FGCommandDispatcher implements Dispatcher {
 

@@ -40,8 +40,8 @@ import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
-import org.spongepowered.api.util.command.CommandSource;
-import org.spongepowered.api.util.command.source.ProxySource;
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.source.ProxySource;
 
 import javax.annotation.Nullable;
 import javax.sql.DataSource;

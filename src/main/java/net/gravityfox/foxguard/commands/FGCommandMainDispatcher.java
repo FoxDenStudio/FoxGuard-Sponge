@@ -28,12 +28,12 @@ package net.gravityfox.foxguard.commands;
 import net.gravityfox.foxguard.FoxGuardMain;
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import net.gravityfox.foxguard.util.CallbackHashMap;
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.dispatcher.Disambiguator;
+import org.spongepowered.api.command.dispatcher.SimpleDispatcher;
 import org.spongepowered.api.service.pagination.PaginationService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
-import org.spongepowered.api.util.command.CommandSource;
-import org.spongepowered.api.util.command.dispatcher.Disambiguator;
-import org.spongepowered.api.util.command.dispatcher.SimpleDispatcher;
 
 import java.util.Map;
 import java.util.Optional;
