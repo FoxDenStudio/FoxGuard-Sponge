@@ -49,39 +49,39 @@ public class AdvCmdParse {
     private String[] args = {};
     private Map<String, String> flagmap = new CallbackHashMap<>((key, map) -> "");
 
-    private AdvCmdParse(String arguments, int limit, boolean extractSubFlags, boolean unescapeLast,
+    private AdvCmdParse(String arguments, int limit, boolean extractSubFlags, boolean unescapeLast, boolean autoCloseQuotes,
                         Function<Map<String, String>, Function<String, Consumer<String>>> flagMapper) throws CommandException {
+        // Regex Pattern for identifying arguments and flags. It respects quotation marks and escape characters.
+        Pattern pattern = Pattern.compile(regex);
         // Check for unclosed quotes
-
         {
-            int count = 0;
-
-            Pattern pattern1 = Pattern.compile("[\"']");
-            Matcher matcher1 = pattern1.matcher(arguments);
-            Pattern pattern2 = Pattern.compile(regex);
-            Matcher matcher2 = pattern2.matcher(arguments);
-            while (matcher1.find()) {
-                count++;
+            String toStrip = arguments;
+            while (true) {
+                Matcher tempMatcher = pattern.matcher(toStrip);
+                if (!tempMatcher.find()) break;
+                toStrip = toStrip.substring(0, tempMatcher.start()) + toStrip.substring(tempMatcher.end());
             }
-            while (matcher2.find()) {
-                Matcher matcher3 = pattern1.matcher(matcher2.group());
-                while (matcher3.find()) {
-                    count--;
+            Pattern pattern2 = Pattern.compile("[\"']");
+            Matcher matcher = pattern2.matcher(toStrip);
+            if (matcher.find()) {
+                if (autoCloseQuotes) {
+                    if (matcher.group().equals("\"")) arguments += "\"";
+                    if (matcher.group().equals("'")) arguments += "'";
+                } else {
+                    throw new CommandException(Texts.of("You must close all quotes!"));
                 }
             }
-            if (count > 0) {
-                throw new CommandException(Texts.of("You must close all quotes!"));
-            }
         }
+
         // String to parse
-        String toParse = arguments.trim();
         // List of string arguments that were not parsed as flags
         List<String> argsList = new ArrayList<>();
-        // Pattern and matcher for identifying arguments and flags. It respects quotation marks.
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(toParse);
+        // Matcher for identifying arguments and flags.
+        Matcher matcher = pattern.matcher(arguments);
         // Iterate through matches
-        while (matcher.find()) {
+        while (matcher.find())
+
+        {
             String result = matcher.group();
             // Makes "---" mark the end of the command. Effectively allows command comments
             // It also means that flag names cannot start with hyphens
@@ -138,17 +138,22 @@ public class AdvCmdParse {
                     // Simply adds the result to the argument list. Quotes are trimmed.
                     // Fallback if the result isn't a flag.
                 } else {
-                    if (argsList.size() >= limit && !unescapeLast) argsList.add(result);
+                    if (limit != 0 && argsList.size() >= limit && !unescapeLast) argsList.add(result);
                     else argsList.add(unescapeString(result));
                 }
             } else break;
         }
+
         // This part converts the argument list to the final argument array.
         // A number of arguments are copied to a new list less than or equal to the limit.
         // The rest of the arguments, if any, are concatenated together.
         List<String> finalList = new ArrayList<>();
         String finalString = "";
-        for (int i = 0; i < argsList.size(); i++) {
+        for (
+                int i = 0;
+                i < argsList.size(); i++)
+
+        {
             if (limit == 0 || i < limit) {
                 finalList.add(argsList.get(i));
             } else {
@@ -158,7 +163,10 @@ public class AdvCmdParse {
                 }
             }
         }
-        if (!finalString.isEmpty()) {
+
+        if (!finalString.isEmpty())
+
+        {
             finalList.add(finalString);
         }
         // Converts final argument list to an array.
@@ -206,6 +214,7 @@ public class AdvCmdParse {
         private boolean extractSubFlags = false;
         private Function<Map<String, String>, Function<String, Consumer<String>>> flagMapper = DEFAULT_MAPPER;
         private boolean unescapeLast = false;
+        private boolean autoCloseQuotes = false;
 
         private AdvCmdParseBuilder() {
         }
@@ -225,8 +234,14 @@ public class AdvCmdParse {
             return this;
         }
 
-        public void unescapeLast(boolean unescapeLast) {
+        public AdvCmdParseBuilder unescapeLast(boolean unescapeLast) {
             this.unescapeLast = unescapeLast;
+            return this;
+        }
+
+        public AdvCmdParseBuilder autoCloseQuotes(boolean autoCloseQuotes) {
+            this.autoCloseQuotes = autoCloseQuotes;
+            return this;
         }
 
         public AdvCmdParseBuilder flagMapper(Function<Map<String, String>, Function<String, Consumer<String>>> flagMapper) {
@@ -235,7 +250,7 @@ public class AdvCmdParse {
         }
 
         public AdvCmdParse build() throws CommandException {
-            return new AdvCmdParse(arguments, limit, extractSubFlags, unescapeLast, flagMapper);
+            return new AdvCmdParse(arguments, limit, extractSubFlags, unescapeLast, autoCloseQuotes, flagMapper);
         }
     }
 }
