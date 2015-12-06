@@ -6,7 +6,7 @@ jdk:
 - oraclejdk8
 env: GRADLE_OPTS="-Xms1g -Xmx3g"
 before_script:
-  - sh ./setversion.sh
+  - bash ./setversion.sh
 script: gradle build
 notifications:
   email: false
