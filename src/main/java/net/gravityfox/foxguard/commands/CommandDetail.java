@@ -100,7 +100,7 @@ public class CommandDetail implements CommandCallable {
                     .append(Texts.of(TextColors.GOLD, "Enabled: "))
                     .append(Texts.of(TextColors.RESET, (region.isEnabled() ? "True" : "False") + "\n"))
                     .onClick(TextActions.runCommand("/foxguard " + (region.isEnabled() ? "disable" : "enable") +
-                            " region w:" + region.getWorld().getName() + " " + region.getName()))
+                            " region --w:" + region.getWorld().getName() + " " + region.getName()))
                     .onHover(TextActions.showText(Texts.of("Click to " + (region.isEnabled() ? "Disable" : "Enable"))))
                     .build());
             builder.append(Texts.of(TextColors.GOLD, "World: "), Texts.of(TextColors.RESET, region.getWorld().getName() + "\n"));

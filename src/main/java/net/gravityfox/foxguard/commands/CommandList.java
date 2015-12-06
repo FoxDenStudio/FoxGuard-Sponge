@@ -95,7 +95,7 @@ public class CommandList implements CommandCallable {
             while (regionListIterator.hasNext()) {
                 IRegion region = regionListIterator.next();
                 output.append(Texts.of(FGHelper.getColorForRegion(region),
-                        TextActions.runCommand("/foxguard detail region w:" + region.getWorld().getName() + " " + region.getName()),
+                        TextActions.runCommand("/foxguard detail region --w:" + region.getWorld().getName() + " " + region.getName()),
                         TextActions.showText(Texts.of("View Details")),
                         getRegionName(region, allFlag)));
                 if (regionListIterator.hasNext()) output.append(Texts.of("\n"));

@@ -88,9 +88,7 @@ public class CommandRename implements CommandCallable {
             if (world == null) throw new CommandException(Texts.of("Must specify a world!"));
             if (args[1].equalsIgnoreCase(GlobalRegion.NAME))
                 throw new CommandException(Texts.of("You may not rename the global Region!"));
-            boolean success = FGManager.getInstance().removeRegion(world, args[1]);
-            if (!success)
-                throw new ArgumentParseException(Texts.of("No Region exists with that name!"), args[1], 1);
+
 
             source.sendMessage(Texts.of(TextColors.GREEN, "Region deleted successfully!"));
         } else if (isAlias(HANDLERS_ALIASES, args[0])) {
