@@ -32,6 +32,8 @@ import net.gravityfox.foxguard.handlers.util.Flags;
 import net.gravityfox.foxguard.objects.IMembership;
 import net.gravityfox.foxguard.util.CallbackHashMap;
 import net.gravityfox.foxguard.util.FGHelper;
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.source.ProxySource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
@@ -41,8 +43,6 @@ import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
-import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.command.source.ProxySource;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -259,11 +259,11 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
             if (user == null) {
                 switch (this.passiveOption) {
                     case OWNER:
-                        return this.ownerPermissions.get(flag);
+                        return getResult(this.ownerPermissions, flag);
                     case MEMBER:
-                        return this.memberPermissions.get(flag);
+                        return getResult(this.memberPermissions, flag);
                     case DEFAULT:
-                        return this.defaultPermissions.get(flag);
+                        return getResult(this.defaultPermissions, flag);
                     case ALLOW:
                         return Tristate.TRUE;
                     case DENY:
@@ -272,12 +272,21 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                         return Tristate.UNDEFINED;
                 }
             }
-            if (FGHelper.isUserOnList(this.ownerList, user)) return this.ownerPermissions.get(flag);
-            if (FGHelper.isUserOnList(this.memberList, user)) return this.memberPermissions.get(flag);
-            return this.defaultPermissions.get(flag);
+            if (FGHelper.isUserOnList(this.ownerList, user)) return getResult(this.ownerPermissions, flag);
+            else if (FGHelper.isUserOnList(this.memberList, user)) return getResult(this.memberPermissions, flag);
+            else return getResult(this.defaultPermissions, flag);
         } finally {
             this.lock.readLock().unlock();
         }
+    }
+
+    private Tristate getResult(Map<Flags, Tristate> map, Flags flag) {
+        Flags temp = flag;
+        while (flag != null && !map.containsKey(flag)) {
+            temp = temp.getParent();
+        }
+        if (temp != null) return map.get(temp);
+        else return map.get(flag);
     }
 
     @Override

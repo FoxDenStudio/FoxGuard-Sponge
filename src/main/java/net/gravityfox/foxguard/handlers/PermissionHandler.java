@@ -52,11 +52,14 @@ public class PermissionHandler extends HandlerBase {
             this.lock.readLock().lock();
             if (!isEnabled || user == null) return Tristate.UNDEFINED;
             this.lock.readLock().unlock();
-            if (user.hasPermission("foxguard.flags." + this.name + "." + flag.flagName() + ".allow"))
-                return Tristate.TRUE;
-            else if (user.hasPermission("foxguard.flags." + this.name + "." + flag.flagName() + ".deny"))
-                return Tristate.FALSE;
-            else return Tristate.UNDEFINED;
+            while (flag != null) {
+                if (user.hasPermission("foxguard.flags." + this.name + "." + flag.flagName() + ".allow"))
+                    return Tristate.TRUE;
+                else if (user.hasPermission("foxguard.flags." + this.name + "." + flag.flagName() + ".deny"))
+                    return Tristate.FALSE;
+                flag = flag.getParent();
+            }
+            return Tristate.UNDEFINED;
         } finally {
             this.lock.readLock().unlock();
         }

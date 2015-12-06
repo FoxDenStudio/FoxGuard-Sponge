@@ -30,7 +30,6 @@ import net.gravityfox.foxguard.FGObjectBase;
 public abstract class HandlerBase extends FGObjectBase implements IHandler {
 
     protected int priority;
-    protected boolean isEnabled = true;
 
     public HandlerBase(String name, int priority) {
         super(name);

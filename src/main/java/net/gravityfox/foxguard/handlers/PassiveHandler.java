@@ -31,6 +31,8 @@ import net.gravityfox.foxguard.commands.util.ModifyResult;
 import net.gravityfox.foxguard.handlers.util.Flags;
 import net.gravityfox.foxguard.util.CallbackHashMap;
 import net.gravityfox.foxguard.util.FGHelper;
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.source.ProxySource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
@@ -40,8 +42,6 @@ import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
-import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.command.source.ProxySource;
 
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
@@ -73,7 +73,12 @@ public class PassiveHandler extends OwnableHandlerBase {
             if (!isEnabled || user != null) {
                 return Tristate.UNDEFINED;
             }
-            return passiveMap.get(flag);
+            Flags temp = flag;
+            while (flag != null && !passiveMap.containsKey(flag)) {
+                temp = temp.getParent();
+            }
+            if (temp != null) return passiveMap.get(temp);
+            else return passiveMap.get(flag);
         } finally {
             this.lock.readLock().unlock();
         }

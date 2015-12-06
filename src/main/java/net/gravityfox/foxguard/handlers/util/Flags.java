@@ -26,23 +26,36 @@
 package net.gravityfox.foxguard.handlers.util;
 
 public enum Flags {
-    BLOCK_PLACE("blockplace", "Place-Blocks"),
-    BLOCK_BREAK("blockbreak", "Break-Blocks"),
-    BLOCK_MODIFY("blockmodify", "Modify-Blocks"),
-    BLOCK_INTERACT_PRIMARY("blockattack", "Attack-Blocks"),
-    BLOCK_INTERACT_SECONDARY("blockinteract", "Interact-Blocks"),
-    ENTITY_INTERACT_PRIMARY("entityattack", "Attack-Entities"),
-    ENTITY_INTERACT_SECONDARY("entityinteract", "Interact-Entities"),
-    FLUID("fluids", "Fluids"),
-    SPAWN_MOB_HOSTILE("spawnmobhostile", "Spawn-Hostile-Mobs"),
-    SPAWN_MOB_PASSIVE("spawnmobpassive", "Spawn-Passive-Mobs");
+    BLOCK("block", "Blocks"),
+    BLOCK_PLACE("blockplace", "Place-Blocks", BLOCK),
+    BLOCK_BREAK("blockbreak", "Break-Blocks", BLOCK),
+    BLOCK_MODIFY("blockmodify", "Modify-Blocks", BLOCK),
+    BLOCK_INTERACT("blockclick", "Click-Blocks", BLOCK),
+    BLOCK_INTERACT_PRIMARY("blockattack", "Attack-Blocks", BLOCK_INTERACT),
+    BLOCK_INTERACT_SECONDARY("blockinteract", "Interact-Blocks", BLOCK_INTERACT),
+    ENTITY_INTERACT("entityclick", "Click-Entities"),
+    ENTITY_INTERACT_PRIMARY("entityattack", "Attack-Entities", ENTITY_INTERACT),
+    ENTITY_INTERACT_SECONDARY("entityinteract", "Interact-Entities", ENTITY_INTERACT),
+    BLOCK_FLUID("fluids", "Fluids", BLOCK),
+
+    SPAWN_MOB("spawnmob", "Spawn-Mobs"),
+    SPAWN_MOB_HOSTILE("spawnmobhostile", "Spawn-Hostile-Mobs", SPAWN_MOB),
+    SPAWN_MOB_PASSIVE("spawnmobpassive", "Spawn-Passive-Mobs", SPAWN_MOB);
 
     String humanName;
     String flagName;
 
+    Flags parent = null;
+
     Flags(String flagName, String humanName) {
         this.humanName = humanName;
         this.flagName = flagName;
+    }
+
+    Flags(String humanName, String flagName, Flags parent) {
+        this.humanName = humanName;
+        this.flagName = flagName;
+        this.parent = parent;
     }
 
     public static Flags flagFrom(String name) {
@@ -61,4 +74,11 @@ public enum Flags {
         return flagName;
     }
 
+    public boolean hasParent(){
+        return parent != null;
+    }
+
+    public Flags getParent() {
+        return parent;
+    }
 }
