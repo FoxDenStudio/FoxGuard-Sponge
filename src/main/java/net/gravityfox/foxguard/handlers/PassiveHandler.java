@@ -74,7 +74,7 @@ public class PassiveHandler extends OwnableHandlerBase {
                 return Tristate.UNDEFINED;
             }
             Flags temp = flag;
-            while (flag != null && !passiveMap.containsKey(flag)) {
+            while (temp != null && !passiveMap.containsKey(temp)) {
                 temp = temp.getParent();
             }
             if (temp != null) return passiveMap.get(temp);

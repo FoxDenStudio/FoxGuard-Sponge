@@ -282,7 +282,7 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
 
     private Tristate getResult(Map<Flags, Tristate> map, Flags flag) {
         Flags temp = flag;
-        while (flag != null && !map.containsKey(flag)) {
+        while (temp != null && !map.containsKey(temp)) {
             temp = temp.getParent();
         }
         if (temp != null) return map.get(temp);

@@ -52,7 +52,7 @@ public enum Flags {
         this.flagName = flagName;
     }
 
-    Flags(String humanName, String flagName, Flags parent) {
+    Flags(String flagName, String humanName, Flags parent) {
         this.humanName = humanName;
         this.flagName = flagName;
         this.parent = parent;
