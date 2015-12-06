@@ -60,7 +60,7 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
         //DebugHelper.printBlockEvent(event);
         Flags typeFlag;
         if (event instanceof ChangeBlockEvent.Modify) typeFlag = Flags.BLOCK_MODIFY;
-        else if (event instanceof ChangeBlockEvent.Fluid) typeFlag = Flags.FLUID;
+        else if (event instanceof ChangeBlockEvent.Fluid) typeFlag = Flags.BLOCK_FLUID;
         else if (event instanceof ChangeBlockEvent.Break) typeFlag = Flags.BLOCK_BREAK;
         else if (event instanceof ChangeBlockEvent.Place) typeFlag = Flags.BLOCK_PLACE;
         else return;
