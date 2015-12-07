@@ -303,11 +303,13 @@ public class FGStorageManager {
             try (Statement statement = conn.createStatement()) {
                 statement.addBatch("DELETE FROM HANDLERS;");
                 for (IHandler handler : FGManager.getInstance().getHandlerListCopy()) {
-                    statement.addBatch("INSERT INTO HANDLERS(NAME, TYPE, PRIORITY, ENABLED) VALUES ('" +
-                            handler.getName() + "', '" +
-                            handler.getUniqueTypeString() + "', " +
-                            handler.getPriority() + ", " +
-                            (handler.isEnabled() ? "TRUE" : "FALSE") + ");");
+                    if (handler.autoSave()) {
+                        statement.addBatch("INSERT INTO HANDLERS(NAME, TYPE, PRIORITY, ENABLED) VALUES ('" +
+                                handler.getName() + "', '" +
+                                handler.getUniqueTypeString() + "', " +
+                                handler.getPriority() + ", " +
+                                (handler.isEnabled() ? "TRUE" : "FALSE") + ");");
+                    }
                 }
                 statement.executeBatch();
             }
@@ -315,12 +317,11 @@ public class FGStorageManager {
             e.printStackTrace();
         }
 
-        for (IHandler handler : FGManager.getInstance().getHandlerListCopy()) {
+        FGManager.getInstance().getHandlerListCopy().stream().filter(IFGObject::autoSave).forEach(handler -> {
             try {
                 DataSource source = FoxGuardMain.getInstance().getDataSource(
                         "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() +
                                 "/foxguard/handlers/" + handler.getName());
-                handler.writeToDatabase(source);
                 try (Connection conn = source.getConnection()) {
                     try (Statement statement = conn.createStatement()) {
                         statement.addBatch("CREATE SCHEMA IF NOT EXISTS FOXGUARD_META;");
@@ -331,6 +332,7 @@ public class FGStorageManager {
                                 "PRIORITY INTEGER," +
                                 "ENABLED BOOLEAN);");
                         statement.addBatch("DELETE FROM FOXGUARD_META.METADATA");
+                        handler.writeToDatabase(source);
                         statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, PRIORITY, ENABLED) VALUES (" +
                                 "'handler', '" +
                                 handler.getName() + "', '" +
@@ -342,8 +344,9 @@ public class FGStorageManager {
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
+                FoxGuardMain.getInstance().getLogger().error("FAILED TO SAVE HANDLER \"" + handler.getName() + "\"!");
             }
-        }
+        });
     }
 
     public synchronized void writeWorld(World world) {
@@ -358,14 +361,16 @@ public class FGStorageManager {
             try (Statement statement = conn.createStatement()) {
                 statement.addBatch("DELETE FROM REGIONS; DELETE FROM LINKAGES;");
                 for (IRegion region : FGManager.getInstance().getRegionsListCopy(world)) {
-                    statement.addBatch("INSERT INTO REGIONS(NAME, TYPE, ENABLED) VALUES ('" +
-                            region.getName() + "', '" +
-                            region.getUniqueTypeString() + "', " +
-                            (region.isEnabled() ? "TRUE" : "FALSE") + ");");
-                    for (IHandler handler : region.getHandlersCopy()) {
-                        statement.addBatch("INSERT INTO LINKAGES(REGION, HANDLER) VALUES ('" +
+                    if (region.autoSave()) {
+                        statement.addBatch("INSERT INTO REGIONS(NAME, TYPE, ENABLED) VALUES ('" +
                                 region.getName() + "', '" +
-                                handler.getName() + "');");
+                                region.getUniqueTypeString() + "', " +
+                                (region.isEnabled() ? "TRUE" : "FALSE") + ");");
+                        for (IHandler handler : region.getHandlersCopy()) {
+                            statement.addBatch("INSERT INTO LINKAGES(REGION, HANDLER) VALUES ('" +
+                                    region.getName() + "', '" +
+                                    handler.getName() + "');");
+                        }
                     }
                 }
                 statement.executeBatch();
@@ -373,10 +378,9 @@ public class FGStorageManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        for (IRegion region : FGManager.getInstance().getRegionsListCopy(world)) {
+        FGManager.getInstance().getRegionsListCopy(world).stream().filter(IFGObject::autoSave).forEach(region -> {
             try {
                 DataSource source = FoxGuardMain.getInstance().getDataSource(dataBaseDir + "regions/" + region.getName());
-                region.writeToDatabase(source);
                 try (Connection conn = source.getConnection()) {
                     try (Statement statement = conn.createStatement()) {
                         statement.addBatch("CREATE SCHEMA IF NOT EXISTS FOXGUARD_META;");
@@ -387,6 +391,7 @@ public class FGStorageManager {
                                 "WORLD VARCHAR(256)," +
                                 "ENABLED BOOLEAN);");
                         statement.addBatch("DELETE FROM FOXGUARD_META.METADATA");
+                        region.writeToDatabase(source);
                         statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, WORLD, ENABLED) VALUES (" +
                                 "'region', '" +
                                 region.getName() + "', '" +
@@ -398,8 +403,9 @@ public class FGStorageManager {
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
+                FoxGuardMain.getInstance().getLogger().error("FAILED TO SAVE REGION \"" + region.getName() + "\"!");
             }
-        }
+        });
     }
 
     public synchronized void update(IFGObject object) {
@@ -410,6 +416,7 @@ public class FGStorageManager {
     }
 
     public synchronized void updateRegion(IRegion region) {
+        if (!region.autoSave()) return;
         Server server = FoxGuardMain.getInstance().getGame().getServer();
         World world = region.getWorld();
         String dataBaseDir;
@@ -420,7 +427,6 @@ public class FGStorageManager {
         }
         try {
             DataSource source = FoxGuardMain.getInstance().getDataSource(dataBaseDir + "regions/" + region.getName());
-            region.writeToDatabase(source);
             try (Connection conn = source.getConnection()) {
                 try (Statement statement = conn.createStatement()) {
                     statement.addBatch("CREATE SCHEMA IF NOT EXISTS FOXGUARD_META;");
@@ -431,6 +437,7 @@ public class FGStorageManager {
                             "WORLD VARCHAR(256)," +
                             "ENABLED BOOLEAN);");
                     statement.addBatch("DELETE FROM FOXGUARD_META.METADATA");
+                    region.writeToDatabase(source);
                     statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, WORLD, ENABLED) VALUES (" +
                             "'region', '" +
                             region.getName() + "', '" +
@@ -442,18 +449,19 @@ public class FGStorageManager {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            FoxGuardMain.getInstance().getLogger().error("FAILED TO UPDATE SAVE DATABASE FOR REGION \"" + region.getName() + "\"!");
         }
         updateLists();
     }
 
     public synchronized void updateHandler(IHandler handler) {
+        if (!handler.autoSave()) return;
         if (!FoxGuardMain.getInstance().isLoaded()) return;
         Server server = FoxGuardMain.getInstance().getGame().getServer();
         try {
             DataSource source = FoxGuardMain.getInstance().getDataSource(
                     "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() +
                             "/foxguard/handlers/" + handler.getName());
-            handler.writeToDatabase(source);
             try (Connection conn = source.getConnection()) {
                 try (Statement statement = conn.createStatement()) {
                     statement.addBatch("CREATE SCHEMA IF NOT EXISTS FOXGUARD_META;");
@@ -464,6 +472,7 @@ public class FGStorageManager {
                             "PRIORITY INTEGER," +
                             "ENABLED BOOLEAN);");
                     statement.addBatch("DELETE FROM FOXGUARD_META.METADATA");
+                    handler.writeToDatabase(source);
                     statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, PRIORITY, ENABLED) VALUES (" +
                             "'handler', '" +
                             handler.getName() + "', '" +
@@ -475,6 +484,7 @@ public class FGStorageManager {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            FoxGuardMain.getInstance().getLogger().error("FAILED TO UPDATE SAVE DATABASE FOR HANDLER \"" + handler.getName() + "\"!");
         }
         updateLists();
     }
@@ -493,14 +503,16 @@ public class FGStorageManager {
                 try (Statement statement = conn.createStatement()) {
                     statement.addBatch("DELETE FROM REGIONS; DELETE FROM LINKAGES;");
                     for (IRegion region : FGManager.getInstance().getRegionsListCopy(world)) {
-                        statement.addBatch("INSERT INTO REGIONS(NAME, TYPE, ENABLED) VALUES ('" +
-                                region.getName() + "', '" +
-                                region.getUniqueTypeString() + "', " +
-                                (region.isEnabled() ? "TRUE" : "FALSE") + ");");
-                        for (IHandler handler : region.getHandlersCopy()) {
-                            statement.addBatch("INSERT INTO LINKAGES(REGION, HANDLER) VALUES ('" +
+                        if (region.autoSave()) {
+                            statement.addBatch("INSERT INTO REGIONS(NAME, TYPE, ENABLED) VALUES ('" +
                                     region.getName() + "', '" +
-                                    handler.getName() + "');");
+                                    region.getUniqueTypeString() + "', " +
+                                    (region.isEnabled() ? "TRUE" : "FALSE") + ");");
+                            for (IHandler handler : region.getHandlersCopy()) {
+                                statement.addBatch("INSERT INTO LINKAGES(REGION, HANDLER) VALUES ('" +
+                                        region.getName() + "', '" +
+                                        handler.getName() + "');");
+                            }
                         }
                     }
                     statement.executeBatch();
@@ -513,11 +525,13 @@ public class FGStorageManager {
             try (Statement statement = conn.createStatement()) {
                 statement.addBatch("DELETE FROM HANDLERS;");
                 for (IHandler handler : FGManager.getInstance().getHandlerListCopy()) {
-                    statement.addBatch("INSERT INTO HANDLERS(NAME, TYPE, PRIORITY, ENABLED) VALUES ('" +
-                            handler.getName() + "', '" +
-                            handler.getUniqueTypeString() + "', " +
-                            handler.getPriority() + ", " +
-                            (handler.isEnabled() ? "TRUE" : "FALSE") + ");");
+                    if (handler.autoSave()) {
+                        statement.addBatch("INSERT INTO HANDLERS(NAME, TYPE, PRIORITY, ENABLED) VALUES ('" +
+                                handler.getName() + "', '" +
+                                handler.getUniqueTypeString() + "', " +
+                                handler.getPriority() + ", " +
+                                (handler.isEnabled() ? "TRUE" : "FALSE") + ");");
+                    }
                 }
                 statement.executeBatch();
             }

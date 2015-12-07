@@ -27,33 +27,103 @@ package net.gravityfox.foxguard;
 
 import net.gravityfox.foxguard.commands.util.InternalCommandState;
 import net.gravityfox.foxguard.commands.util.ModifyResult;
-import org.spongepowered.api.text.Text;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.text.Text;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
 
+/**
+ * Interface for all FoxGuard Objects. Inherited by {@link net.gravityfox.foxguard.regions.IRegion Regions}
+ * and {@link net.gravityfox.foxguard.handlers.IHandler Handlers}.
+ * Essentially the core of the code, this is the most used interface.
+ */
 public interface IFGObject {
 
+    /**
+     * Gets the name of the object. It should be alphanumeric with limited use of special characters.
+     *
+     * @return Name of object.
+     */
     String getName();
 
+    /**
+     * Sets the name of the object. It should be alphanumeric with limited use of special characters.
+     *
+     * @param name The new name of the object.
+     */
     void setName(String name);
 
+    /**
+     * Gets the short type name for this object. It should be around four letters. It should be human readable.
+     * It is used in object lists, such as when using the list or detail commands.
+     *
+     * @return The human readable short type name.
+     */
     String getShortTypeName();
 
+    /**
+     * Gets the long type name for this object. It should be human readable. Avoid abbreviating.
+     * It is used in the general information section of the detail command.
+     *
+     * @return The human readable long type name.
+     */
     String getLongTypeName();
 
+    /**
+     * Gets the unique ID for this object. It should be alphabetic only. This return must be static.
+     * This is used for SQL storage. It is the same identifier used in the object factories. This return should be static.
+     *
+     * @return The unique identifier for this type of object.
+     */
     String getUniqueTypeString();
 
+    /**
+     * Returns whether this object is enabled or disabled.
+     * @return Enable status.
+     */
     boolean isEnabled();
 
+    /**
+     * Sets the enable status of this object.
+     * It is up to the object to behave accordingly with its enable status.
+     * Disabled Regions should return false when queried and disabled Handlers should return {@link org.spongepowered.api.util.Tristate#UNDEFINED Tristate.UNDEFINED}
+     * @param state
+     */
     void setIsEnabled(boolean state);
 
+    /**
+     * Gets the details for the object as a SpongeAPI {@link Text} Object. Used in the {@link net.gravityfox.foxguard.commands.CommandDetail Detail} command.
+     * Should be dynamically generated with formatted text. Multiple lines are allowed.
+     * Any arguments leftover from the detail command are passed to the detail method.
+     * This allows specific queries in case there is more data stored than can reasonable displayed.
+     * It is recommended to have click action wherever possible to ease the configuration of objects.
+     *
+     * @param arguments The extra arguments from the {@link net.gravityfox.foxguard.commands.CommandDetail Detail} command. Object should still return something meaningful if this is empty.
+     * @return A {@link Text} object that provides meaningful information about the object.
+     */
     Text getDetails(String arguments);
 
+    /**
+     * Called when saving objects to a database. A datasource is given, which can be turned into a connection.
+     * This is an empty database if nothing has been saved previously, otherwise it is the database as it was the previous save.
+     * This method should fail gracefully from database inconsistencies. Throwing an {@link SQLException} will cause the metadata for the object to not be written.
+     * Subsequently the
+     * @param dataSource The datasource for the database specific to this object.
+     * @throws SQLException Thrown due to database errors.
+     */
     void writeToDatabase(DataSource dataSource) throws SQLException;
 
-    default boolean autoWrite() {
+    /**
+     * Specifies whether FoxGuard should attempt to save this object into SQL.
+     * Set to false if a separate storage mechanism will be used. Defaults to true.
+     * Objects that return false must be responsible for storing and loading ALL data.
+     * The only time this should be false is if another plugin is hooking into FoxGuard
+     * using a delegate object. In that case the object is just a transient API accessor and should not be saved.
+     *
+     * @return Whether FoxGuard should autosave this object.
+     */
+    default boolean autoSave() {
         return true;
     }
 

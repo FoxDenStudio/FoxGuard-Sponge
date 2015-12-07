@@ -4,5 +4,5 @@ build/
 server/
 libsarchive/
 printouts/
-/*.iml
+*.iml
 out/
