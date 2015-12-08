@@ -1,2 +1,3 @@
-rootProject.name = 'foxguard'
+rootProject.name = 'FoxGuard'
 
+include 'FoxCommon'
