@@ -27,6 +27,9 @@ package net.foxdenstudio.foxguard;
 
 import com.google.inject.Inject;
 import net.foxdenstudio.foxcore.FoxCoreMain;
+import net.foxdenstudio.foxcore.commands.CommandAbout;
+import net.foxdenstudio.foxcore.commands.FCCommandDispatcher;
+import net.foxdenstudio.foxcore.commands.FCCommandMainDispatcher;
 import net.foxdenstudio.foxcore.state.FCStateRegistry;
 import net.foxdenstudio.foxcore.util.Aliases;
 import net.foxdenstudio.foxguard.commands.*;
