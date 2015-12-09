@@ -20,16 +20,13 @@ notifications:
   email: false
 
 after_success:
-  - for f in "./build/libs/foxguard*.jar"; do mv ${f} "./build/libs/foxguard-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}-SNAPSHOT.jar"; done
-
-before_deploy:
-  - rvm 1.9.3 do gem install mime-types -v 2.6.2
+  - for f in "./build/libs/FoxGuard*.jar"; do mv ${f} "./build/libs/foxguard-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}-SNAPSHOT.jar"; done
 
 deploy:
   file_glob: true
   provider: releases
   api-key: ${KEY}
-  file: "./build/libs/foxguard*.jar"
+  file: "./build/libs/FoxGuard*.jar"
   skip_cleanup: true
   on:
     tags: true

@@ -63,8 +63,11 @@ public class InteractListener implements EventListener<InteractEvent> {
         if (event instanceof InteractEntityEvent) {
             world = ((InteractEntityEvent) event).getTargetEntity().getWorld();
             loc = ((InteractEntityEvent) event).getTargetEntity().getLocation().getPosition();
-            if (event instanceof InteractEntityEvent.Primary) typeFlag = Flags.ENTITY_INTERACT_PRIMARY;
-            else if (event instanceof InteractEntityEvent.Secondary) typeFlag = Flags.ENTITY_INTERACT_SECONDARY;
+            if (event instanceof InteractEntityEvent.Primary) {
+                typeFlag = Flags.ENTITY_INTERACT_PRIMARY;
+                if(((InteractEntityEvent.Primary) event).getTargetEntity() instanceof Player)
+                    typeFlag = Flags.PLAYER_INTERACT_PRIMARY;
+            } else if (event instanceof InteractEntityEvent.Secondary) typeFlag = Flags.ENTITY_INTERACT_SECONDARY;
         } else if (event instanceof InteractBlockEvent) {
             world = ((InteractBlockEvent) event).getTargetBlock().getLocation().get().getExtent();
             loc = ((InteractBlockEvent) event).getTargetBlock().getPosition().toDouble();

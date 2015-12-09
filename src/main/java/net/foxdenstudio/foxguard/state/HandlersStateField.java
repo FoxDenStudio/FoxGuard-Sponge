@@ -53,12 +53,11 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
     public Text state() {
         TextBuilder builder = Texts.builder();
         builder.append(Texts.of(TextColors.GREEN, "Handlers: "));
-        Iterator<IHandler> handlerIterator = this.list.iterator();
         int index = 1;
-        while (handlerIterator.hasNext()) {
-            IHandler handler = handlerIterator.next();
-            builder.append(Texts.of(FGHelper.getColorForHandler(handler),
-                    "\n  " + (index++) + ": " + handler.getShortTypeName() + " : " + handler.getName()));
+        for (Iterator<IHandler> it = this.list.iterator(); it.hasNext(); ) {
+            IHandler handler = it.next();
+            builder.append(Texts.of(FGHelper.getColorForHandler(handler), "  " + (index++) + ": " + handler.getShortTypeName() + " : " + handler.getName()));
+            if (it.hasNext()) builder.append(Texts.of("\n"));
         }
         return builder.build();
     }
@@ -68,12 +67,12 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
         AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).build();
         String[] args = parse.getArgs();
 
-        if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-        IHandler handler = FGManager.getInstance().gethandler(args[1]);
+        if (args.length < 1) throw new CommandException(Texts.of("Must specify a name!"));
+        IHandler handler = FGManager.getInstance().gethandler(args[0]);
         if (handler == null)
-            throw new ArgumentParseException(Texts.of("No Handlers with this name!"), args[1], 1);
+            throw new ArgumentParseException(Texts.of("No Handlers with this name!"), args[0], 1);
         if (this.list.contains(handler))
-            throw new ArgumentParseException(Texts.of("Handler is already in your state buffer!"), args[1], 1);
+            throw new ArgumentParseException(Texts.of("Handler is already in your state buffer!"), args[0], 1);
         this.list.add(handler);
 
         return ProcessResult.of(true, Texts.of("Successfully added Handler to your state buffer!"));
@@ -84,20 +83,20 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
         AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).build();
         String[] args = parse.getArgs();
 
-        if (args.length < 2) throw new CommandException(Texts.of("Must specify a name or a number!"));
+        if (args.length < 1) throw new CommandException(Texts.of("Must specify a name or a number!"));
         IHandler handler;
         try {
-            int index = Integer.parseInt(args[1]);
+            int index = Integer.parseInt(args[0]);
             handler = this.list.get(index - 1);
         } catch (NumberFormatException e) {
             handler = FGManager.getInstance().gethandler(args[1]);
         } catch (IndexOutOfBoundsException e) {
-            throw new ArgumentParseException(Texts.of("Index out of bounds! (1 - " + this.list.size()), args[1], 1);
+            throw new ArgumentParseException(Texts.of("Index out of bounds! (1 - " + this.list.size()), args[0], 1);
         }
         if (handler == null)
-            throw new ArgumentParseException(Texts.of("No Handlers with this name!"), args[1], 1);
+            throw new ArgumentParseException(Texts.of("No Handlers with this name!"), args[0], 1);
         if (!this.list.contains(handler))
-            throw new ArgumentParseException(Texts.of("Handler is not in your state buffer!"), args[1], 1);
+            throw new ArgumentParseException(Texts.of("Handler is not in your state buffer!"), args[0], 1);
         this.list.remove(handler);
 
         return ProcessResult.of(true, Texts.of("Successfully removed Handler from your state buffer!"));

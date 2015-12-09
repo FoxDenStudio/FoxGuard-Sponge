@@ -37,7 +37,7 @@ public enum Flags {
     ENTITY_INTERACT_PRIMARY("entityattack", "Attack-Entities", ENTITY_INTERACT),
     ENTITY_INTERACT_SECONDARY("entityinteract", "Interact-Entities", ENTITY_INTERACT),
     BLOCK_FLUID("fluids", "Fluids", BLOCK),
-
+    PLAYER_INTERACT_PRIMARY("playerattack", "Attack-Player", ENTITY_INTERACT_PRIMARY),
     SPAWN_MOB("spawnmob", "Spawn-Mobs"),
     SPAWN_MOB_HOSTILE("spawnmobhostile", "Spawn-Hostile-Mobs", SPAWN_MOB),
     SPAWN_MOB_PASSIVE("spawnmobpassive", "Spawn-Passive-Mobs", SPAWN_MOB);
