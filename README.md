@@ -1,5 +1,6 @@
 # FoxGuard [![Build Status](https://travis-ci.org/FoxDenStudio/FoxGuard.svg?branch=master)](https://travis-ci.org/FoxDenStudio/FoxGuard)
-A Minecraft world protection plugin for [SpongeAPI](https://github.com/SpongePowered/SpongeAPI)
+A Minecraft world protection plugin for [SpongeAPI](https://github.com/SpongePowered/SpongeAPI).
+Requires [FoxCore](https://github.com/FoxDenStudio/FoxCore).
 
 ## Why not WorldGuard?
 While I am aware that WorldGuard is being ported to Sponge, the way this plugin handles the protection is different.
