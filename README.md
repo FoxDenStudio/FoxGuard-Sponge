@@ -42,6 +42,10 @@ If you don't have gradle installed:
 
 `gradlew build`
 
+### Build Location
+The built jarfile can be found under `./build/libs`
+It should be named FoxGuard-SNAPSHOT.jar
+
 ## Note from the author about the plugin 
 When I started writing this plugin it was meant as a one-off compile and forget plugin to protect a spawn area for a friend.
 The dimension was supposed to be hard coded and it was only supposed to take a day or two. I named it as such because I couldn't actually think of a good name.

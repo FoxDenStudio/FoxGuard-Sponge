@@ -44,6 +44,7 @@ import net.foxdenstudio.foxguard.state.factory.HandlersStateFieldFactory;
 import net.foxdenstudio.foxguard.state.factory.RegionsStateFieldFactory;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
+import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandMapping;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.event.EventManager;
@@ -296,11 +297,6 @@ public class FoxGuardMain {
      * A private method that registers the list of commands, their aliases, and the command class.
      */
     private void registerCommands() {
-        TextBuilder builder = Texts.builder();
-        builder.append(Texts.of(TextColors.GOLD, "FoxGuard World Protection Plugin\n"));
-        builder.append(Texts.of("Version: " + FoxGuardMain.PLUGIN_VERSION + "\n"));
-        builder.append(Texts.of("Author: gravityfox"));
-
         FCCommandMainDispatcher fgDispatcher = new FCCommandMainDispatcher("/foxguard");
         FCCommandDispatcher fgRegionDispatcher = new FCCommandDispatcher("/foxguard regions");
         FCCommandDispatcher fgHandlerDispatcher = new FCCommandDispatcher("/foxguard handlers",
@@ -316,7 +312,6 @@ public class FoxGuardMain {
         fgDispatcher.register(new CommandList(), "list", "ls");
         fgDispatcher.register(new CommandDetail(), "detail", "det", "show");
         registerCommonCommands(fgDispatcher);
-        fgDispatcher.register(new CommandAbout(builder.build()), "about", "info");
         fgDispatcher.register(new CommandTest(), "test");
         fgDispatcher.register(new CommandSave(), "save", "saveall", "save-all");
 
@@ -328,10 +323,17 @@ public class FoxGuardMain {
     }
 
     private void registerCommonCommands(FCCommandDispatcher dispatcher) {
+        TextBuilder builder = Texts.builder();
+        builder.append(Texts.of(TextColors.GOLD, "FoxGuard World Protection Plugin\n"));
+        builder.append(Texts.of("Version: " + FoxGuardMain.PLUGIN_VERSION + "\n"));
+        builder.append(Texts.of("Author: gravityfox\n"));
+
         for (CommandMapping mapping : FoxCoreMain.instance().getFCDispatcher().getCommands()) {
             Set<String> secondary = new HashSet<>(mapping.getAllAliases());
             secondary.remove(mapping.getPrimaryAlias());
-            dispatcher.register(mapping.getCallable(), mapping.getPrimaryAlias(), new ArrayList<>(secondary));
+            CommandCallable callable = mapping.getCallable();
+            if (callable instanceof CommandAbout) ((CommandAbout) callable).addText(builder.build());
+            dispatcher.register(callable, mapping.getPrimaryAlias(), new ArrayList<>(secondary));
         }
     }
 
