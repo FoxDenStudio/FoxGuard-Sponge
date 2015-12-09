@@ -26,10 +26,9 @@
 package net.foxdenstudio.foxguard;
 
 import com.google.inject.Inject;
-import net.foxdenstudio.foxcommon.FoxCommonMain;
-import net.foxdenstudio.foxcommon.commands.*;
-import net.foxdenstudio.foxcommon.state.FCStateRegistry;
-import net.foxdenstudio.foxcommon.util.Aliases;
+import net.foxdenstudio.foxcore.FoxCoreMain;
+import net.foxdenstudio.foxcore.state.FCStateRegistry;
+import net.foxdenstudio.foxcore.util.Aliases;
 import net.foxdenstudio.foxguard.commands.*;
 import net.foxdenstudio.foxguard.commands.handlers.CommandPriority;
 import net.foxdenstudio.foxguard.listener.BlockEventListener;
@@ -58,6 +57,9 @@ import org.spongepowered.api.service.permission.PermissionService;
 import org.spongepowered.api.service.permission.SubjectData;
 import org.spongepowered.api.service.sql.SqlService;
 import org.spongepowered.api.service.user.UserStorageService;
+import org.spongepowered.api.text.TextBuilder;
+import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
@@ -65,6 +67,7 @@ import javax.sql.DataSource;
 import java.io.File;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -72,9 +75,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static net.foxdenstudio.foxcommon.util.Aliases.HANDLERS_ALIASES;
+import static net.foxdenstudio.foxcore.util.Aliases.HANDLERS_ALIASES;
 
-@Plugin(id = "foxguard", name = "FoxGuard", version = FoxGuardMain.PLUGIN_VERSION, dependencies = "required-after:foxcommon")
+@Plugin(id = "foxguard", name = "FoxGuard", version = FoxGuardMain.PLUGIN_VERSION, dependencies = "required-after:foxcore")
 public class FoxGuardMain {
 
     /**
@@ -290,6 +293,11 @@ public class FoxGuardMain {
      * A private method that registers the list of commands, their aliases, and the command class.
      */
     private void registerCommands() {
+        TextBuilder builder = Texts.builder();
+        builder.append(Texts.of(TextColors.GOLD, "FoxGuard World Protection Plugin\n"));
+        builder.append(Texts.of("Version: " + FoxGuardMain.PLUGIN_VERSION + "\n"));
+        builder.append(Texts.of("Author: gravityfox"));
+
         FCCommandMainDispatcher fgDispatcher = new FCCommandMainDispatcher("/foxguard");
         FCCommandDispatcher fgRegionDispatcher = new FCCommandDispatcher("/foxguard regions");
         FCCommandDispatcher fgHandlerDispatcher = new FCCommandDispatcher("/foxguard handlers",
@@ -305,7 +313,7 @@ public class FoxGuardMain {
         fgDispatcher.register(new CommandList(), "list", "ls");
         fgDispatcher.register(new CommandDetail(), "detail", "det", "show");
         registerCommonCommands(fgDispatcher);
-        fgDispatcher.register(new CommandAbout(), "about", "info");
+        fgDispatcher.register(new CommandAbout(builder.build()), "about", "info");
         fgDispatcher.register(new CommandTest(), "test");
         fgDispatcher.register(new CommandSave(), "save", "saveall", "save-all");
 
@@ -317,8 +325,8 @@ public class FoxGuardMain {
     }
 
     private void registerCommonCommands(FCCommandDispatcher dispatcher) {
-        for (CommandMapping mapping : FoxCommonMain.instance().getFCDispatcher().getCommands()) {
-            Set<String> secondary = mapping.getAllAliases();
+        for (CommandMapping mapping : FoxCoreMain.instance().getFCDispatcher().getCommands()) {
+            Set<String> secondary = new HashSet<>(mapping.getAllAliases());
             secondary.remove(mapping.getPrimaryAlias());
             dispatcher.register(mapping.getCallable(), mapping.getPrimaryAlias(), new ArrayList<>(secondary));
         }

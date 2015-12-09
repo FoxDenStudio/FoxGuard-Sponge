@@ -25,8 +25,8 @@
 
 package net.foxdenstudio.foxguard;
 
-import net.foxdenstudio.foxcommon.commands.util.ProcessResult;
-import net.foxdenstudio.foxcommon.commands.util.SourceState;
+import net.foxdenstudio.foxcore.commands.util.ProcessResult;
+import net.foxdenstudio.foxcore.commands.util.SourceState;
 import net.foxdenstudio.foxguard.commands.CommandDetail;
 import net.foxdenstudio.foxguard.handlers.IHandler;
 import net.foxdenstudio.foxguard.regions.IRegion;

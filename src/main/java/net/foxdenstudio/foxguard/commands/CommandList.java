@@ -26,8 +26,8 @@
 package net.foxdenstudio.foxguard.commands;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.foxcommon.commands.util.AdvCmdParse;
-import net.foxdenstudio.foxcommon.util.Aliases;
+import net.foxdenstudio.foxcore.commands.util.AdvCmdParse;
+import net.foxdenstudio.foxcore.util.Aliases;
 import net.foxdenstudio.foxguard.FGManager;
 import net.foxdenstudio.foxguard.FoxGuardMain;
 import net.foxdenstudio.foxguard.handlers.IHandler;

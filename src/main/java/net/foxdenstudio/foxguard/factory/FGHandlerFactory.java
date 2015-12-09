@@ -25,10 +25,10 @@
 
 package net.foxdenstudio.foxguard.factory;
 
-import net.foxdenstudio.foxcommon.commands.util.SourceState;
-import net.foxdenstudio.foxcommon.util.Aliases;
-import net.foxdenstudio.foxcommon.util.CallbackHashMap;
-import net.foxdenstudio.foxcommon.util.FCHelper;
+import net.foxdenstudio.foxcore.commands.util.SourceState;
+import net.foxdenstudio.foxcore.util.Aliases;
+import net.foxdenstudio.foxcore.util.CallbackHashMap;
+import net.foxdenstudio.foxcore.util.FCHelper;
 import net.foxdenstudio.foxguard.FoxGuardMain;
 import net.foxdenstudio.foxguard.handlers.IHandler;
 import net.foxdenstudio.foxguard.handlers.PassiveHandler;

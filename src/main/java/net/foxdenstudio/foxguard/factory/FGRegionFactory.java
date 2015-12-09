@@ -27,9 +27,9 @@ package net.foxdenstudio.foxguard.factory;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
-import net.foxdenstudio.foxcommon.commands.util.SourceState;
-import net.foxdenstudio.foxcommon.state.PositionsStateField;
-import net.foxdenstudio.foxcommon.util.FCHelper;
+import net.foxdenstudio.foxcore.commands.util.SourceState;
+import net.foxdenstudio.foxcore.state.PositionsStateField;
+import net.foxdenstudio.foxcore.util.FCHelper;
 import net.foxdenstudio.foxguard.FoxGuardMain;
 import net.foxdenstudio.foxguard.regions.CuboidRegion;
 import net.foxdenstudio.foxguard.regions.ElevationRegion;
@@ -53,7 +53,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static net.foxdenstudio.foxcommon.util.Aliases.isAlias;
+import static net.foxdenstudio.foxcore.util.Aliases.isAlias;
 
 public class FGRegionFactory implements IRegionFactory {
 

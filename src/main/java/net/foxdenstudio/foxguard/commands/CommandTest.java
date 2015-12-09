@@ -27,7 +27,7 @@ package net.foxdenstudio.foxguard.commands;
 
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.foxcommon.commands.util.AdvCmdParse;
+import net.foxdenstudio.foxcore.commands.util.AdvCmdParse;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;

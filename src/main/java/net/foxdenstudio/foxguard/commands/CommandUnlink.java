@@ -26,7 +26,7 @@
 package net.foxdenstudio.foxguard.commands;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.foxcommon.commands.FCCommandMainDispatcher;
+import net.foxdenstudio.foxcore.commands.FCCommandMainDispatcher;
 import net.foxdenstudio.foxguard.FGManager;
 import net.foxdenstudio.foxguard.handlers.GlobalHandler;
 import net.foxdenstudio.foxguard.handlers.IHandler;

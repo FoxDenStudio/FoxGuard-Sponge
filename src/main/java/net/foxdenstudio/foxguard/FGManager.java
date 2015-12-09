@@ -26,7 +26,7 @@
 package net.foxdenstudio.foxguard;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.foxcommon.util.CallbackHashMap;
+import net.foxdenstudio.foxcore.util.CallbackHashMap;
 import net.foxdenstudio.foxguard.handlers.GlobalHandler;
 import net.foxdenstudio.foxguard.handlers.IHandler;
 import net.foxdenstudio.foxguard.regions.GlobalRegion;

@@ -25,7 +25,7 @@
 
 package net.foxdenstudio.foxguard.listener;
 
-import net.foxdenstudio.foxcommon.commands.FCCommandMainDispatcher;
+import net.foxdenstudio.foxcore.commands.FCCommandMainDispatcher;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.entity.living.player.TargetPlayerEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;

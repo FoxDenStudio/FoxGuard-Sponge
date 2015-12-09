@@ -25,9 +25,9 @@
 
 package net.foxdenstudio.foxguard.state;
 
-import net.foxdenstudio.foxcommon.commands.util.AdvCmdParse;
-import net.foxdenstudio.foxcommon.commands.util.ProcessResult;
-import net.foxdenstudio.foxcommon.state.ListStateFieldBase;
+import net.foxdenstudio.foxcore.commands.util.AdvCmdParse;
+import net.foxdenstudio.foxcore.commands.util.ProcessResult;
+import net.foxdenstudio.foxcore.state.ListStateFieldBase;
 import net.foxdenstudio.foxguard.FGManager;
 import net.foxdenstudio.foxguard.handlers.IHandler;
 import net.foxdenstudio.foxguard.util.FGHelper;

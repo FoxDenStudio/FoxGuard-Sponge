@@ -26,9 +26,9 @@
 package net.foxdenstudio.foxguard.regions;
 
 import com.flowpowered.math.vector.Vector3i;
-import net.foxdenstudio.foxcommon.commands.util.ProcessResult;
-import net.foxdenstudio.foxcommon.commands.util.SourceState;
-import net.foxdenstudio.foxcommon.util.FCHelper;
+import net.foxdenstudio.foxcore.commands.util.ProcessResult;
+import net.foxdenstudio.foxcore.commands.util.SourceState;
+import net.foxdenstudio.foxcore.util.FCHelper;
 import net.foxdenstudio.foxguard.regions.util.BoundingBox2;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;

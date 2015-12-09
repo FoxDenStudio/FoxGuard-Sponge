@@ -25,10 +25,10 @@
 
 package net.foxdenstudio.foxguard.handlers;
 
-import net.foxdenstudio.foxcommon.commands.util.ProcessResult;
-import net.foxdenstudio.foxcommon.commands.util.SourceState;
-import net.foxdenstudio.foxcommon.util.CallbackHashMap;
-import net.foxdenstudio.foxcommon.util.FCHelper;
+import net.foxdenstudio.foxcore.commands.util.ProcessResult;
+import net.foxdenstudio.foxcore.commands.util.SourceState;
+import net.foxdenstudio.foxcore.util.CallbackHashMap;
+import net.foxdenstudio.foxcore.util.FCHelper;
 import net.foxdenstudio.foxguard.FoxGuardMain;
 import net.foxdenstudio.foxguard.handlers.util.Flags;
 import org.spongepowered.api.command.CommandSource;
@@ -51,7 +51,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 
-import static net.foxdenstudio.foxcommon.util.Aliases.*;
+import static net.foxdenstudio.foxcore.util.Aliases.*;
 
 public class PassiveHandler extends OwnableHandlerBase {
 

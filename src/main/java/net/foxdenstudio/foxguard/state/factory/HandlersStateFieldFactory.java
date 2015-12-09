@@ -25,8 +25,8 @@
 
 package net.foxdenstudio.foxguard.state.factory;
 
-import net.foxdenstudio.foxcommon.state.IStateField;
-import net.foxdenstudio.foxcommon.state.factory.IStateFieldFactory;
+import net.foxdenstudio.foxcore.state.IStateField;
+import net.foxdenstudio.foxcore.state.factory.IStateFieldFactory;
 import net.foxdenstudio.foxguard.state.HandlersStateField;
 
 public class HandlersStateFieldFactory implements IStateFieldFactory {

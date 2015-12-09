@@ -1,3 +1,3 @@
-[submodule "FoxCommon"]
-	path = FoxCommon
-	url = https://github.com/FoxDenStudio/FoxCommon.git
+[submodule "FoxCore"]
+	path = FoxCore
+	url = https://github.com/FoxDenStudio/FoxCore.git

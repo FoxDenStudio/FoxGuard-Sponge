@@ -25,7 +25,7 @@
 
 package net.foxdenstudio.foxguard.factory;
 
-import net.foxdenstudio.foxcommon.commands.util.SourceState;
+import net.foxdenstudio.foxcore.commands.util.SourceState;
 import net.foxdenstudio.foxguard.regions.IRegion;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;

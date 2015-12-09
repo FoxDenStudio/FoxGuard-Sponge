@@ -25,9 +25,9 @@
 
 package net.foxdenstudio.foxguard.state;
 
-import net.foxdenstudio.foxcommon.commands.util.AdvCmdParse;
-import net.foxdenstudio.foxcommon.commands.util.ProcessResult;
-import net.foxdenstudio.foxcommon.state.ListStateFieldBase;
+import net.foxdenstudio.foxcore.commands.util.AdvCmdParse;
+import net.foxdenstudio.foxcore.commands.util.ProcessResult;
+import net.foxdenstudio.foxcore.state.ListStateFieldBase;
 import net.foxdenstudio.foxguard.FGManager;
 import net.foxdenstudio.foxguard.FoxGuardMain;
 import net.foxdenstudio.foxguard.regions.IRegion;
@@ -47,8 +47,8 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static net.foxdenstudio.foxcommon.util.Aliases.WORLD_ALIASES;
-import static net.foxdenstudio.foxcommon.util.Aliases.isAlias;
+import static net.foxdenstudio.foxcore.util.Aliases.WORLD_ALIASES;
+import static net.foxdenstudio.foxcore.util.Aliases.isAlias;
 
 public class RegionsStateField extends ListStateFieldBase<IRegion> {
 

@@ -26,10 +26,10 @@
 package net.foxdenstudio.foxguard.commands;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.foxcommon.commands.FCCommandMainDispatcher;
-import net.foxdenstudio.foxcommon.commands.util.AdvCmdParse;
-import net.foxdenstudio.foxcommon.commands.util.ProcessResult;
-import net.foxdenstudio.foxcommon.util.FCHelper;
+import net.foxdenstudio.foxcore.commands.FCCommandMainDispatcher;
+import net.foxdenstudio.foxcore.commands.util.AdvCmdParse;
+import net.foxdenstudio.foxcore.commands.util.ProcessResult;
+import net.foxdenstudio.foxcore.util.FCHelper;
 import net.foxdenstudio.foxguard.FGManager;
 import net.foxdenstudio.foxguard.FoxGuardMain;
 import net.foxdenstudio.foxguard.handlers.IHandler;
@@ -51,7 +51,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static net.foxdenstudio.foxcommon.util.Aliases.*;
+import static net.foxdenstudio.foxcore.util.Aliases.*;
 
 public class CommandModify implements CommandCallable {
 

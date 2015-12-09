@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    compile project(":FoxCommon")
+    compile project(":FoxCore")
     compile "org.spongepowered:spongeapi:2.1-SNAPSHOT"
     testCompile group: 'junit', name: 'junit', version: '4.11'
 }
