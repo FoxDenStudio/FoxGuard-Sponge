@@ -26,6 +26,7 @@
 package net.foxdenstudio.foxguard;
 
 import com.google.inject.Inject;
+import net.foxdenstudio.foxcommon.FoxCommonMain;
 import net.foxdenstudio.foxcommon.commands.*;
 import net.foxdenstudio.foxcommon.state.FCStateRegistry;
 import net.foxdenstudio.foxcommon.util.Aliases;
@@ -41,6 +42,7 @@ import net.foxdenstudio.foxguard.state.factory.HandlersStateFieldFactory;
 import net.foxdenstudio.foxguard.state.factory.RegionsStateFieldFactory;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
+import org.spongepowered.api.command.CommandMapping;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.event.EventManager;
 import org.spongepowered.api.event.Listener;
@@ -62,6 +64,8 @@ import org.spongepowered.api.world.World;
 import javax.sql.DataSource;
 import java.io.File;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -300,11 +304,7 @@ public class FoxGuardMain {
         fgDispatcher.register(new CommandEnableDisable(false), "disable", "deactivate", "disengage", "off");
         fgDispatcher.register(new CommandList(), "list", "ls");
         fgDispatcher.register(new CommandDetail(), "detail", "det", "show");
-        fgDispatcher.register(new CommandState(), "state", "current", "cur");
-        fgDispatcher.register(new CommandPosition(), "position", "pos", "p");
-        fgDispatcher.register(new CommandAdd(), "add", "push");
-        fgDispatcher.register(new CommandSubtract(), "subtract", "sub", "pop");
-        fgDispatcher.register(new CommandFlush(), "flush", "clear", "wipe");
+        registerCommonCommands(fgDispatcher);
         fgDispatcher.register(new CommandAbout(), "about", "info");
         fgDispatcher.register(new CommandTest(), "test");
         fgDispatcher.register(new CommandSave(), "save", "saveall", "save-all");
@@ -314,6 +314,14 @@ public class FoxGuardMain {
         fgDispatcher.register(fgHandlerDispatcher, HANDLERS_ALIASES);
 
         game.getCommandManager().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
+    }
+
+    private void registerCommonCommands(FCCommandDispatcher dispatcher) {
+        for (CommandMapping mapping : FoxCommonMain.instance().getFCDispatcher().getCommands()) {
+            Set<String> secondary = mapping.getAllAliases();
+            secondary.remove(mapping.getPrimaryAlias());
+            dispatcher.register(mapping.getCallable(), mapping.getPrimaryAlias(), new ArrayList<>(secondary));
+        }
     }
 
     /**

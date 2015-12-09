@@ -66,7 +66,7 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
         else return;
 
 
-        //FoxGuardMain.getInstance().getLogger().info(player.getName());
+        //FoxGuardMain.instance().getLogger().info(player.getName());
 
         List<IHandler> handlerList = new ArrayList<>();
         handlerList.add(FGManager.getInstance().getGlobalHandler());

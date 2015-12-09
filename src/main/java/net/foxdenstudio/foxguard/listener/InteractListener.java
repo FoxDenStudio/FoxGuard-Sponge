@@ -80,7 +80,7 @@ public class InteractListener implements EventListener<InteractEvent> {
         if (event.getInteractionPoint().isPresent()) {
             loc = event.getInteractionPoint().get();
             System.out.println(loc);
-            FGManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
+            FGManager.instance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
                     .forEach(region -> region.getHandlersCopy().stream()
                             .filter(handler -> !handlerList.contains(handler))
                             .forEach(handlerList::add));
