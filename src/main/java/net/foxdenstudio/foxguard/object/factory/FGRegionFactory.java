@@ -27,7 +27,7 @@ package net.foxdenstudio.foxguard.object.factory;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
-import net.foxdenstudio.foxcore.commands.util.SourceState;
+import net.foxdenstudio.foxcore.command.util.SourceState;
 import net.foxdenstudio.foxcore.state.PositionsStateField;
 import net.foxdenstudio.foxcore.util.FCHelper;
 import net.foxdenstudio.foxguard.FoxGuardMain;

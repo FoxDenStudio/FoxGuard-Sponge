@@ -25,8 +25,8 @@
 
 package net.foxdenstudio.foxguard.handler;
 
-import net.foxdenstudio.foxcore.commands.util.ProcessResult;
-import net.foxdenstudio.foxcore.commands.util.SourceState;
+import net.foxdenstudio.foxcore.command.util.ProcessResult;
+import net.foxdenstudio.foxcore.command.util.SourceState;
 import net.foxdenstudio.foxguard.handler.util.Flags;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.User;

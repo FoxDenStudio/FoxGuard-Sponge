@@ -25,7 +25,7 @@
 
 package net.foxdenstudio.foxguard.command;
 
-import net.foxdenstudio.foxcore.commands.util.AdvCmdParse;
+import net.foxdenstudio.foxcore.command.util.AdvCmdParse;
 import net.foxdenstudio.foxguard.FGManager;
 import net.foxdenstudio.foxguard.FoxGuardMain;
 import net.foxdenstudio.foxguard.handler.IHandler;

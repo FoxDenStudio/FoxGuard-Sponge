@@ -26,7 +26,7 @@
 package net.foxdenstudio.foxguard.object.factory;
 
 
-import net.foxdenstudio.foxcore.commands.util.SourceState;
+import net.foxdenstudio.foxcore.command.util.SourceState;
 import net.foxdenstudio.foxguard.handler.IHandler;
 import org.spongepowered.api.command.CommandSource;
 

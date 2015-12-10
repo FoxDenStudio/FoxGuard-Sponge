@@ -25,7 +25,7 @@
 
 package net.foxdenstudio.foxguard.util;
 
-import net.foxdenstudio.foxcore.commands.FCCommandMainDispatcher;
+import net.foxdenstudio.foxcore.command.FCCommandMainDispatcher;
 import net.foxdenstudio.foxguard.handler.GlobalHandler;
 import net.foxdenstudio.foxguard.handler.IHandler;
 import net.foxdenstudio.foxguard.region.GlobalRegion;

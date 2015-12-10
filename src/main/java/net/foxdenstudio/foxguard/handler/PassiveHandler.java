@@ -25,8 +25,8 @@
 
 package net.foxdenstudio.foxguard.handler;
 
-import net.foxdenstudio.foxcore.commands.util.ProcessResult;
-import net.foxdenstudio.foxcore.commands.util.SourceState;
+import net.foxdenstudio.foxcore.command.util.ProcessResult;
+import net.foxdenstudio.foxcore.command.util.SourceState;
 import net.foxdenstudio.foxcore.util.CallbackHashMap;
 import net.foxdenstudio.foxcore.util.FCHelper;
 import net.foxdenstudio.foxguard.FoxGuardMain;
