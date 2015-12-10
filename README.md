@@ -28,7 +28,7 @@ Make sure you have git installed and then run:
 `git clone --recursive https://github.com/gravityfox/FoxGuard.git`
 
 ### Building
-Open a command line inside the directory. Make sure that the directory has been uncompressed/unzipped if you downloaded it that way.
+Open a command line inside the directory.
 
 If you have gradle installed:
 
