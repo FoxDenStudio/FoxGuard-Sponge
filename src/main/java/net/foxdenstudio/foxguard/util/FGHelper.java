@@ -26,10 +26,10 @@
 package net.foxdenstudio.foxguard.util;
 
 import net.foxdenstudio.foxcore.commands.FCCommandMainDispatcher;
-import net.foxdenstudio.foxguard.handlers.GlobalHandler;
-import net.foxdenstudio.foxguard.handlers.IHandler;
-import net.foxdenstudio.foxguard.regions.GlobalRegion;
-import net.foxdenstudio.foxguard.regions.IRegion;
+import net.foxdenstudio.foxguard.handler.GlobalHandler;
+import net.foxdenstudio.foxguard.handler.IHandler;
+import net.foxdenstudio.foxguard.region.GlobalRegion;
+import net.foxdenstudio.foxguard.region.IRegion;
 import net.foxdenstudio.foxguard.state.HandlersStateField;
 import net.foxdenstudio.foxguard.state.RegionsStateField;
 import org.spongepowered.api.command.CommandSource;

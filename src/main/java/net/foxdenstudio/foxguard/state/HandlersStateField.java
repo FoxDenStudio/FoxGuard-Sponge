@@ -29,7 +29,7 @@ import net.foxdenstudio.foxcore.commands.util.AdvCmdParse;
 import net.foxdenstudio.foxcore.commands.util.ProcessResult;
 import net.foxdenstudio.foxcore.state.ListStateFieldBase;
 import net.foxdenstudio.foxguard.FGManager;
-import net.foxdenstudio.foxguard.handlers.IHandler;
+import net.foxdenstudio.foxguard.handler.IHandler;
 import net.foxdenstudio.foxguard.util.FGHelper;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;

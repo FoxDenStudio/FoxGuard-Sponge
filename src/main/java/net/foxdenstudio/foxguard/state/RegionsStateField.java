@@ -30,7 +30,7 @@ import net.foxdenstudio.foxcore.commands.util.ProcessResult;
 import net.foxdenstudio.foxcore.state.ListStateFieldBase;
 import net.foxdenstudio.foxguard.FGManager;
 import net.foxdenstudio.foxguard.FoxGuardMain;
-import net.foxdenstudio.foxguard.regions.IRegion;
+import net.foxdenstudio.foxguard.region.IRegion;
 import net.foxdenstudio.foxguard.util.FGHelper;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;

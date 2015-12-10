@@ -29,9 +29,9 @@ import net.foxdenstudio.foxguard.FGManager;
 import net.foxdenstudio.foxguard.FGStorageManager;
 import net.foxdenstudio.foxguard.FoxGuardMain;
 import net.foxdenstudio.foxguard.IFGObject;
-import net.foxdenstudio.foxguard.factory.FGFactoryManager;
-import net.foxdenstudio.foxguard.handlers.IHandler;
-import net.foxdenstudio.foxguard.regions.IRegion;
+import net.foxdenstudio.foxguard.object.factory.FGFactoryManager;
+import net.foxdenstudio.foxguard.handler.IHandler;
+import net.foxdenstudio.foxguard.region.IRegion;
 import org.spongepowered.api.world.World;
 
 import javax.sql.DataSource;

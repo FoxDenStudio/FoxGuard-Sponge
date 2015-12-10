@@ -27,9 +27,9 @@ package net.foxdenstudio.foxguard;
 
 import net.foxdenstudio.foxcore.commands.util.ProcessResult;
 import net.foxdenstudio.foxcore.commands.util.SourceState;
-import net.foxdenstudio.foxguard.commands.CommandDetail;
-import net.foxdenstudio.foxguard.handlers.IHandler;
-import net.foxdenstudio.foxguard.regions.IRegion;
+import net.foxdenstudio.foxguard.command.CommandDetail;
+import net.foxdenstudio.foxguard.handler.IHandler;
+import net.foxdenstudio.foxguard.region.IRegion;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
 

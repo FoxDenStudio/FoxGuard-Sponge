@@ -27,8 +27,8 @@ package net.foxdenstudio.foxguard.listener;
 
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.foxguard.FGManager;
-import net.foxdenstudio.foxguard.handlers.IHandler;
-import net.foxdenstudio.foxguard.handlers.util.Flags;
+import net.foxdenstudio.foxguard.handler.IHandler;
+import net.foxdenstudio.foxguard.handler.util.Flags;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.living.player.Player;

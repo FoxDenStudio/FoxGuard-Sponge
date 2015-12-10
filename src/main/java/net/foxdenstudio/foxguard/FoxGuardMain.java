@@ -32,8 +32,8 @@ import net.foxdenstudio.foxcore.commands.FCCommandDispatcher;
 import net.foxdenstudio.foxcore.commands.FCCommandMainDispatcher;
 import net.foxdenstudio.foxcore.state.FCStateRegistry;
 import net.foxdenstudio.foxcore.util.Aliases;
-import net.foxdenstudio.foxguard.commands.*;
-import net.foxdenstudio.foxguard.commands.handlers.CommandPriority;
+import net.foxdenstudio.foxguard.command.*;
+import net.foxdenstudio.foxguard.command.handlers.CommandPriority;
 import net.foxdenstudio.foxguard.listener.BlockEventListener;
 import net.foxdenstudio.foxguard.listener.InteractListener;
 import net.foxdenstudio.foxguard.listener.PlayerEventListener;
@@ -312,7 +312,6 @@ public class FoxGuardMain {
         fgDispatcher.register(new CommandList(), "list", "ls");
         fgDispatcher.register(new CommandDetail(), "detail", "det", "show");
         registerCommonCommands(fgDispatcher);
-        fgDispatcher.register(new CommandTest(), "test");
         fgDispatcher.register(new CommandSave(), "save", "saveall", "save-all");
 
         fgHandlerDispatcher.register(new CommandPriority(), "priority", "prio", "level", "rank");

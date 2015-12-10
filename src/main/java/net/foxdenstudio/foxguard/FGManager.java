@@ -27,10 +27,10 @@ package net.foxdenstudio.foxguard;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.foxcore.util.CallbackHashMap;
-import net.foxdenstudio.foxguard.handlers.GlobalHandler;
-import net.foxdenstudio.foxguard.handlers.IHandler;
-import net.foxdenstudio.foxguard.regions.GlobalRegion;
-import net.foxdenstudio.foxguard.regions.IRegion;
+import net.foxdenstudio.foxguard.handler.GlobalHandler;
+import net.foxdenstudio.foxguard.handler.IHandler;
+import net.foxdenstudio.foxguard.region.GlobalRegion;
+import net.foxdenstudio.foxguard.region.IRegion;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.world.World;
 
