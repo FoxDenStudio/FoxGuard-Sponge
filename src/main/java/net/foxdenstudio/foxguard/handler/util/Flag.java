@@ -26,19 +26,21 @@
 package net.foxdenstudio.foxguard.handler.util;
 
 public enum Flag {
-    BLOCK("block", "Blocks"),
+    ALL("all", "Everything"),
+
+    BLOCK("block", "Blocks", ALL),
     BLOCK_PLACE("blockplace", "Place-Blocks", BLOCK),
     BLOCK_BREAK("blockbreak", "Break-Blocks", BLOCK),
     BLOCK_MODIFY("blockmodify", "Modify-Blocks", BLOCK),
     BLOCK_INTERACT("blockclick", "Click-Blocks", BLOCK),
     BLOCK_INTERACT_PRIMARY("blockattack", "Attack-Blocks", BLOCK_INTERACT),
     BLOCK_INTERACT_SECONDARY("blockinteract", "Interact-Blocks", BLOCK_INTERACT),
-    ENTITY_INTERACT("entityclick", "Click-Entities"),
+    ENTITY_INTERACT("entityclick", "Click-Entities", ALL),
     ENTITY_INTERACT_PRIMARY("entityattack", "Attack-Entities", ENTITY_INTERACT),
     ENTITY_INTERACT_SECONDARY("entityinteract", "Interact-Entities", ENTITY_INTERACT),
     BLOCK_FLUID("fluids", "Fluids", BLOCK),
     PLAYER_INTERACT_PRIMARY("playerattack", "Attack-Player", ENTITY_INTERACT_PRIMARY),
-    SPAWN_MOB("spawnmob", "Spawn-Mobs"),
+    SPAWN_MOB("spawnmob", "Spawn-Mobs", ALL),
     SPAWN_MOB_HOSTILE("spawnmobhostile", "Spawn-Hostile-Mobs", SPAWN_MOB),
     SPAWN_MOB_PASSIVE("spawnmobpassive", "Spawn-Passive-Mobs", SPAWN_MOB);
 
