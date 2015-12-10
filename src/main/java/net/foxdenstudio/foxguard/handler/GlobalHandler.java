@@ -90,9 +90,6 @@ public class GlobalHandler extends HandlerBase {
     public Tristate handle(User user, Flag flag, Event event) {
         try {
             this.lock.readLock().lock();
-            if (!isEnabled || user != null) {
-                return Tristate.UNDEFINED;
-            }
             Flag temp = flag;
             while (temp != null && !map.containsKey(temp)) {
                 temp = temp.getParent();
