@@ -26,7 +26,7 @@
 package net.foxdenstudio.foxguard.handler;
 
 import net.foxdenstudio.foxguard.IFGObject;
-import net.foxdenstudio.foxguard.handler.util.Flags;
+import net.foxdenstudio.foxguard.handler.util.Flag;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.util.Tristate;
@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
 
 public interface IHandler extends IFGObject, Comparable<IHandler> {
 
-    Tristate handle(@Nullable User user, Flags flag, Event event);
+    Tristate handle(@Nullable User user, Flag flag, Event event);
 
     int getPriority();
 

@@ -30,7 +30,7 @@ import net.foxdenstudio.foxcore.command.util.SourceState;
 import net.foxdenstudio.foxcore.util.CallbackHashMap;
 import net.foxdenstudio.foxcore.util.FCHelper;
 import net.foxdenstudio.foxguard.FoxGuardMain;
-import net.foxdenstudio.foxguard.handler.util.Flags;
+import net.foxdenstudio.foxguard.handler.util.Flag;
 import net.foxdenstudio.foxguard.object.IMembership;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.source.ProxySource;
@@ -58,9 +58,9 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
     private PassiveOptions passiveOption = PassiveOptions.PASSTHROUGH;
 
     private List<User> memberList = new LinkedList<>();
-    private Map<Flags, Tristate> ownerPermissions;
-    private Map<Flags, Tristate> memberPermissions;
-    private Map<Flags, Tristate> defaultPermissions;
+    private Map<Flag, Tristate> ownerPermissions;
+    private Map<Flag, Tristate> memberPermissions;
+    private Map<Flag, Tristate> defaultPermissions;
 
     public SimpleHandler(String name, int priority) {
         this(name, priority,
@@ -70,9 +70,9 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
     }
 
     public SimpleHandler(String name, int priority,
-                         Map<Flags, Tristate> ownerPermissions,
-                         Map<Flags, Tristate> memberPermissions,
-                         Map<Flags, Tristate> defaultPermissions) {
+                         Map<Flag, Tristate> ownerPermissions,
+                         Map<Flag, Tristate> memberPermissions,
+                         Map<Flag, Tristate> defaultPermissions) {
         super(name, priority);
         this.ownerPermissions = ownerPermissions;
         this.memberPermissions = memberPermissions;
@@ -159,7 +159,7 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                         return ProcessResult.of(false, Texts.of("Must specify a group!"));
                     }
                 } else if (isAlias(SET_ALIASES, args[0])) {
-                    Map<Flags, Tristate> map;
+                    Map<Flag, Tristate> map;
                     if (args.length > 1) {
                         if (isAlias(OWNER_GROUP_ALIASES, args[1])) {
                             map = ownerPermissions;
@@ -175,11 +175,11 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                         return ProcessResult.of(false, Texts.of("Must specify a group!"));
                     }
                     if (args.length > 2) {
-                        Flags flag;
+                        Flag flag;
                         if (args[2].equalsIgnoreCase("all")) {
                             flag = null;
                         } else {
-                            flag = Flags.flagFrom(args[2]);
+                            flag = Flag.flagFrom(args[2]);
                             if (flag == null) {
                                 return ProcessResult.of(false, Texts.of("Not a valid flag!"));
                             }
@@ -199,7 +199,7 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                                     return ProcessResult.of(false, Texts.of("Not a valid value!"));
                                 }
                                 if (flag == null) {
-                                    for (Flags thatExist : Flags.values()) {
+                                    for (Flag thatExist : Flag.values()) {
                                         map.put(thatExist, tristate);
                                     }
                                     return ProcessResult.of(true, Texts.of("Successfully set flags!"));
@@ -252,7 +252,7 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
     }
 
     @Override
-    public Tristate handle(User user, Flags flag, Event event) {
+    public Tristate handle(User user, Flag flag, Event event) {
         try {
             this.lock.readLock().lock();
             if (!isEnabled) return Tristate.UNDEFINED;
@@ -280,8 +280,8 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
         }
     }
 
-    private Tristate getResult(Map<Flags, Tristate> map, Flags flag) {
-        Flags temp = flag;
+    private Tristate getResult(Map<Flag, Tristate> map, Flag flag) {
+        Flag temp = flag;
         while (temp != null && !map.containsKey(temp)) {
             temp = temp.getParent();
         }
@@ -325,7 +325,7 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                     TextActions.suggestCommand("/foxguard modify handler " + this.name + " set owners "),
                     TextActions.showText(Texts.of("Click to Set a Flag")),
                     "Owner permissions:\n"));
-            for (Flags f : this.ownerPermissions.keySet()) {
+            for (Flag f : this.ownerPermissions.keySet()) {
                 builder.append(
                         Texts.builder().append(Texts.of("  " + f.toString() + ": "))
                                 .append(FCHelper.readableTristateText(ownerPermissions.get(f)))
@@ -339,7 +339,7 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                     TextActions.suggestCommand("/foxguard modify handler " + this.name + " set members "),
                     TextActions.showText(Texts.of("Click to Set a Flag")),
                     "Member permissions:\n"));
-            for (Flags f : this.memberPermissions.keySet()) {
+            for (Flag f : this.memberPermissions.keySet()) {
                 builder.append(
                         Texts.builder().append(Texts.of("  " + f.toString() + ": "))
                                 .append(FCHelper.readableTristateText(memberPermissions.get(f)))
@@ -353,7 +353,7 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                     TextActions.suggestCommand("/foxguard modify handler " + this.name + " set default "),
                     TextActions.showText(Texts.of("Click to Set a Flag")),
                     "Default permissions:\n"));
-            for (Flags f : this.defaultPermissions.keySet()) {
+            for (Flag f : this.defaultPermissions.keySet()) {
                 builder.append(
                         Texts.builder().append(Texts.of("  " + f.toString() + ": "))
                                 .append(FCHelper.readableTristateText(defaultPermissions.get(f)))
@@ -403,7 +403,7 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                         "DELETE FROM DEFAULTFLAGMAP;");
             }
             try (PreparedStatement statement = conn.prepareStatement("INSERT INTO OWNERFLAGMAP(KEY, VALUE) VALUES (? , ?)")) {
-                for (Map.Entry<Flags, Tristate> entry : ownerPermissions.entrySet()) {
+                for (Map.Entry<Flag, Tristate> entry : ownerPermissions.entrySet()) {
                     statement.setString(1, entry.getKey().name());
                     statement.setString(2, entry.getValue().name());
                     statement.addBatch();
@@ -411,7 +411,7 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                 statement.executeBatch();
             }
             try (PreparedStatement statement = conn.prepareStatement("INSERT INTO MEMBERFLAGMAP(KEY, VALUE) VALUES (? , ?)")) {
-                for (Map.Entry<Flags, Tristate> entry : memberPermissions.entrySet()) {
+                for (Map.Entry<Flag, Tristate> entry : memberPermissions.entrySet()) {
                     statement.setString(1, entry.getKey().name());
                     statement.setString(2, entry.getValue().name());
                     statement.addBatch();
@@ -419,7 +419,7 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                 statement.executeBatch();
             }
             try (PreparedStatement statement = conn.prepareStatement("INSERT INTO DEFAULTFLAGMAP(KEY, VALUE) VALUES (? , ?)")) {
-                for (Map.Entry<Flags, Tristate> entry : defaultPermissions.entrySet()) {
+                for (Map.Entry<Flag, Tristate> entry : defaultPermissions.entrySet()) {
                     statement.setString(1, entry.getKey().name());
                     statement.setString(2, entry.getValue().name());
                     statement.addBatch();

@@ -28,7 +28,7 @@ package net.foxdenstudio.foxguard.listener;
 import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.foxguard.FGManager;
 import net.foxdenstudio.foxguard.handler.IHandler;
-import net.foxdenstudio.foxguard.handler.util.Flags;
+import net.foxdenstudio.foxguard.handler.util.Flag;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
@@ -58,21 +58,21 @@ public class InteractListener implements EventListener<InteractEvent> {
         }
 
         World world = null;
-        Flags typeFlag = null;
+        Flag typeFlag = null;
         Vector3d loc = null;
         if (event instanceof InteractEntityEvent) {
             world = ((InteractEntityEvent) event).getTargetEntity().getWorld();
             loc = ((InteractEntityEvent) event).getTargetEntity().getLocation().getPosition();
             if (event instanceof InteractEntityEvent.Primary) {
-                typeFlag = Flags.ENTITY_INTERACT_PRIMARY;
+                typeFlag = Flag.ENTITY_INTERACT_PRIMARY;
                 if(((InteractEntityEvent.Primary) event).getTargetEntity() instanceof Player)
-                    typeFlag = Flags.PLAYER_INTERACT_PRIMARY;
-            } else if (event instanceof InteractEntityEvent.Secondary) typeFlag = Flags.ENTITY_INTERACT_SECONDARY;
+                    typeFlag = Flag.PLAYER_INTERACT_PRIMARY;
+            } else if (event instanceof InteractEntityEvent.Secondary) typeFlag = Flag.ENTITY_INTERACT_SECONDARY;
         } else if (event instanceof InteractBlockEvent) {
             world = ((InteractBlockEvent) event).getTargetBlock().getLocation().get().getExtent();
             loc = ((InteractBlockEvent) event).getTargetBlock().getPosition().toDouble();
-            if (event instanceof InteractBlockEvent.Primary) typeFlag = Flags.BLOCK_INTERACT_PRIMARY;
-            else if (event instanceof InteractBlockEvent.Secondary) typeFlag = Flags.BLOCK_INTERACT_SECONDARY;
+            if (event instanceof InteractBlockEvent.Primary) typeFlag = Flag.BLOCK_INTERACT_PRIMARY;
+            else if (event instanceof InteractBlockEvent.Secondary) typeFlag = Flag.BLOCK_INTERACT_SECONDARY;
         }
         if (typeFlag == null) return;
         List<IHandler> handlerList = new ArrayList<>();

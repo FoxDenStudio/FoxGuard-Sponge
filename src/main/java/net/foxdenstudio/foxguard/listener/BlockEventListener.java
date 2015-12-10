@@ -28,7 +28,7 @@ package net.foxdenstudio.foxguard.listener;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.foxguard.FGManager;
 import net.foxdenstudio.foxguard.handler.IHandler;
-import net.foxdenstudio.foxguard.handler.util.Flags;
+import net.foxdenstudio.foxguard.handler.util.Flag;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.living.player.Player;
@@ -58,11 +58,11 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
             user = null;
         }
         //DebugHelper.printBlockEvent(event);
-        Flags typeFlag;
-        if (event instanceof ChangeBlockEvent.Modify) typeFlag = Flags.BLOCK_MODIFY;
-        else if (event instanceof ChangeBlockEvent.Fluid) typeFlag = Flags.BLOCK_FLUID;
-        else if (event instanceof ChangeBlockEvent.Break) typeFlag = Flags.BLOCK_BREAK;
-        else if (event instanceof ChangeBlockEvent.Place) typeFlag = Flags.BLOCK_PLACE;
+        Flag typeFlag;
+        if (event instanceof ChangeBlockEvent.Modify) typeFlag = Flag.BLOCK_MODIFY;
+        else if (event instanceof ChangeBlockEvent.Fluid) typeFlag = Flag.BLOCK_FLUID;
+        else if (event instanceof ChangeBlockEvent.Break) typeFlag = Flag.BLOCK_BREAK;
+        else if (event instanceof ChangeBlockEvent.Place) typeFlag = Flag.BLOCK_PLACE;
         else return;
 
 

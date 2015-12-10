@@ -28,7 +28,7 @@ package net.foxdenstudio.foxguard.listener;
 import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.foxguard.FGManager;
 import net.foxdenstudio.foxguard.handler.IHandler;
-import net.foxdenstudio.foxguard.handler.util.Flags;
+import net.foxdenstudio.foxguard.handler.util.Flag;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.Creature;
 import org.spongepowered.api.entity.living.Hostile;
@@ -62,10 +62,10 @@ public class SpawnEntityEventListener implements EventListener<SpawnEntityEvent>
             user = null;
         }
 
-        Flags typeFlag = null;
+        Flag typeFlag = null;
         Entity oneEntity = event.getEntities().get(0);
-        if (oneEntity instanceof Creature) typeFlag = Flags.SPAWN_MOB_PASSIVE;
-        if (oneEntity instanceof Hostile) typeFlag = Flags.SPAWN_MOB_HOSTILE;
+        if (oneEntity instanceof Creature) typeFlag = Flag.SPAWN_MOB_PASSIVE;
+        if (oneEntity instanceof Hostile) typeFlag = Flag.SPAWN_MOB_HOSTILE;
         if (typeFlag == null) return;
 
         List<IHandler> handlerList = new ArrayList<>();

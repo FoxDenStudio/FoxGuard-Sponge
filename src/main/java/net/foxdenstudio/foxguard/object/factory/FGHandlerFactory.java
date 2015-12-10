@@ -34,7 +34,7 @@ import net.foxdenstudio.foxguard.handler.IHandler;
 import net.foxdenstudio.foxguard.handler.PassiveHandler;
 import net.foxdenstudio.foxguard.handler.PermissionHandler;
 import net.foxdenstudio.foxguard.handler.SimpleHandler;
-import net.foxdenstudio.foxguard.handler.util.Flags;
+import net.foxdenstudio.foxguard.handler.util.Flag;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
@@ -88,9 +88,9 @@ public class FGHandlerFactory implements IHandlerFactory {
             List<User> ownerList = new LinkedList<>();
             List<User> memberList = new LinkedList<>();
             SimpleHandler.PassiveOptions po = SimpleHandler.PassiveOptions.DEFAULT;
-            CallbackHashMap<Flags, Tristate> ownerFlagMap = new CallbackHashMap<>((key, map) -> Tristate.TRUE);
-            CallbackHashMap<Flags, Tristate> memberFlagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
-            CallbackHashMap<Flags, Tristate> defaultFlagMap = new CallbackHashMap<>((key, map) -> Tristate.FALSE);
+            CallbackHashMap<Flag, Tristate> ownerFlagMap = new CallbackHashMap<>((key, map) -> Tristate.TRUE);
+            CallbackHashMap<Flag, Tristate> memberFlagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
+            CallbackHashMap<Flag, Tristate> defaultFlagMap = new CallbackHashMap<>((key, map) -> Tristate.FALSE);
             try (Connection conn = source.getConnection()) {
                 try (Statement statement = conn.createStatement()) {
                     try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {
@@ -124,7 +124,7 @@ public class FGHandlerFactory implements IHandlerFactory {
                     try (ResultSet passiveMapEntrySet = statement.executeQuery("SELECT * FROM OWNERFLAGMAP")) {
                         while (passiveMapEntrySet.next()) {
                             try {
-                                ownerFlagMap.put(Flags.valueOf(passiveMapEntrySet.getString("KEY")),
+                                ownerFlagMap.put(Flag.valueOf(passiveMapEntrySet.getString("KEY")),
                                         Tristate.valueOf(passiveMapEntrySet.getString("VALUE")));
                             } catch (IllegalArgumentException ignored) {
                             }
@@ -133,7 +133,7 @@ public class FGHandlerFactory implements IHandlerFactory {
                     try (ResultSet passiveMapEntrySet = statement.executeQuery("SELECT * FROM MEMBERFLAGMAP")) {
                         while (passiveMapEntrySet.next()) {
                             try {
-                                memberFlagMap.put(Flags.valueOf(passiveMapEntrySet.getString("KEY")),
+                                memberFlagMap.put(Flag.valueOf(passiveMapEntrySet.getString("KEY")),
                                         Tristate.valueOf(passiveMapEntrySet.getString("VALUE")));
                             } catch (IllegalArgumentException ignored) {
                             }
@@ -142,7 +142,7 @@ public class FGHandlerFactory implements IHandlerFactory {
                     try (ResultSet passiveMapEntrySet = statement.executeQuery("SELECT * FROM DEFAULTFLAGMAP")) {
                         while (passiveMapEntrySet.next()) {
                             try {
-                                defaultFlagMap.put(Flags.valueOf(passiveMapEntrySet.getString("KEY")),
+                                defaultFlagMap.put(Flag.valueOf(passiveMapEntrySet.getString("KEY")),
                                         Tristate.valueOf(passiveMapEntrySet.getString("VALUE")));
                             } catch (IllegalArgumentException ignored) {
                             }
@@ -158,7 +158,7 @@ public class FGHandlerFactory implements IHandlerFactory {
             return handler;
         } else if (type.equalsIgnoreCase("passive")) {
             List<User> ownerList = new LinkedList<>();
-            CallbackHashMap<Flags, Tristate> flagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
+            CallbackHashMap<Flag, Tristate> flagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
             try (Connection conn = source.getConnection()) {
                 try (Statement statement = conn.createStatement()) {
                     try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {
@@ -171,7 +171,7 @@ public class FGHandlerFactory implements IHandlerFactory {
                     try (ResultSet passiveMapEntrySet = statement.executeQuery("SELECT * FROM FLAGMAP")) {
                         while (passiveMapEntrySet.next()) {
                             try {
-                                flagMap.put(Flags.valueOf(passiveMapEntrySet.getString("KEY")),
+                                flagMap.put(Flag.valueOf(passiveMapEntrySet.getString("KEY")),
                                         Tristate.valueOf(passiveMapEntrySet.getString("VALUE")));
                             } catch (IllegalArgumentException ignored) {
                             }

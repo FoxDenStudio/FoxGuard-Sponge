@@ -27,7 +27,7 @@ package net.foxdenstudio.foxguard.handler;
 
 import net.foxdenstudio.foxcore.command.util.ProcessResult;
 import net.foxdenstudio.foxcore.command.util.SourceState;
-import net.foxdenstudio.foxguard.handler.util.Flags;
+import net.foxdenstudio.foxguard.handler.util.Flag;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
@@ -95,7 +95,7 @@ public class GlobalHandler extends HandlerBase {
     }
 
     @Override
-    public Tristate handle(User user, Flags flag, Event event) {
+    public Tristate handle(User user, Flag flag, Event event) {
         return Tristate.TRUE;
     }
 

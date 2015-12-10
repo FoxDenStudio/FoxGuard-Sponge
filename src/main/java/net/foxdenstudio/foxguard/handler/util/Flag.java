@@ -25,7 +25,7 @@
 
 package net.foxdenstudio.foxguard.handler.util;
 
-public enum Flags {
+public enum Flag {
     BLOCK("block", "Blocks"),
     BLOCK_PLACE("blockplace", "Place-Blocks", BLOCK),
     BLOCK_BREAK("blockbreak", "Break-Blocks", BLOCK),
@@ -45,21 +45,21 @@ public enum Flags {
     String humanName;
     String flagName;
 
-    Flags parent = null;
+    Flag parent = null;
 
-    Flags(String flagName, String humanName) {
+    Flag(String flagName, String humanName) {
         this.humanName = humanName;
         this.flagName = flagName;
     }
 
-    Flags(String flagName, String humanName, Flags parent) {
+    Flag(String flagName, String humanName, Flag parent) {
         this.humanName = humanName;
         this.flagName = flagName;
         this.parent = parent;
     }
 
-    public static Flags flagFrom(String name) {
-        for (Flags flag : Flags.values()) {
+    public static Flag flagFrom(String name) {
+        for (Flag flag : Flag.values()) {
             if (flag.flagName.equalsIgnoreCase(name)) return flag;
         }
         return null;
@@ -78,7 +78,7 @@ public enum Flags {
         return parent != null;
     }
 
-    public Flags getParent() {
+    public Flag getParent() {
         return parent;
     }
 }

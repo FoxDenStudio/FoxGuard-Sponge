@@ -30,7 +30,7 @@ import net.foxdenstudio.foxcore.command.util.SourceState;
 import net.foxdenstudio.foxcore.util.CallbackHashMap;
 import net.foxdenstudio.foxcore.util.FCHelper;
 import net.foxdenstudio.foxguard.FoxGuardMain;
-import net.foxdenstudio.foxguard.handler.util.Flags;
+import net.foxdenstudio.foxguard.handler.util.Flag;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.source.ProxySource;
 import org.spongepowered.api.entity.living.player.Player;
@@ -55,25 +55,25 @@ import static net.foxdenstudio.foxcore.util.Aliases.*;
 
 public class PassiveHandler extends OwnableHandlerBase {
 
-    private Map<Flags, Tristate> passiveMap;
+    private Map<Flag, Tristate> passiveMap;
 
     public PassiveHandler(String name, int priority) {
         this(name, priority, new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED));
     }
 
-    public PassiveHandler(String name, int priority, CallbackHashMap<Flags, Tristate> map) {
+    public PassiveHandler(String name, int priority, CallbackHashMap<Flag, Tristate> map) {
         super(name, priority);
         this.passiveMap = map;
     }
 
     @Override
-    public Tristate handle(@Nullable User user, Flags flag, Event event) {
+    public Tristate handle(@Nullable User user, Flag flag, Event event) {
         try {
             this.lock.readLock().lock();
             if (!isEnabled || user != null) {
                 return Tristate.UNDEFINED;
             }
-            Flags temp = flag;
+            Flag temp = flag;
             while (temp != null && !passiveMap.containsKey(temp)) {
                 temp = temp.getParent();
             }
@@ -154,11 +154,11 @@ public class PassiveHandler extends OwnableHandlerBase {
 
                 } else if (isAlias(SET_ALIASES, args[0])) {
                     if (args.length > 1) {
-                        Flags flag;
+                        Flag flag;
                         if (args[1].equalsIgnoreCase("all")) {
                             flag = null;
                         } else {
-                            flag = Flags.flagFrom(args[1]);
+                            flag = Flag.flagFrom(args[1]);
                             if (flag == null) {
                                 return ProcessResult.of(false, Texts.of("Not a valid flag!"));
                             }
@@ -177,7 +177,7 @@ public class PassiveHandler extends OwnableHandlerBase {
                                 return ProcessResult.of(false, Texts.of("Not a valid value!"));
                             }
                             if (flag == null) {
-                                for (Flags thatExist : Flags.values()) {
+                                for (Flag thatExist : Flag.values()) {
                                     this.passiveMap.put(thatExist, tristate);
                                 }
                                 return ProcessResult.of(true, Texts.of("Successfully set flags!"));
@@ -212,7 +212,7 @@ public class PassiveHandler extends OwnableHandlerBase {
                 "Passive Flags:"));
         try {
             this.lock.readLock().lock();
-            for (Flags f : this.passiveMap.keySet()) {
+            for (Flag f : this.passiveMap.keySet()) {
                 builder.append(
                         Texts.builder().append(Texts.of("  " + f.toString() + ": "))
                                 .append(FCHelper.readableTristateText(passiveMap.get(f)))
@@ -238,7 +238,7 @@ public class PassiveHandler extends OwnableHandlerBase {
                         "DELETE FROM FLAGMAP;");
             }
             try (PreparedStatement statement = conn.prepareStatement("INSERT INTO FLAGMAP(KEY, VALUE) VALUES (? , ?)")) {
-                for (Map.Entry<Flags, Tristate> entry : passiveMap.entrySet()) {
+                for (Map.Entry<Flag, Tristate> entry : passiveMap.entrySet()) {
                     statement.setString(1, entry.getKey().name());
                     statement.setString(2, entry.getValue().name());
                     statement.addBatch();

@@ -36,7 +36,6 @@ import net.foxdenstudio.foxguard.command.*;
 import net.foxdenstudio.foxguard.command.handlers.CommandPriority;
 import net.foxdenstudio.foxguard.listener.BlockEventListener;
 import net.foxdenstudio.foxguard.listener.InteractListener;
-import net.foxdenstudio.foxguard.listener.PlayerEventListener;
 import net.foxdenstudio.foxguard.listener.SpawnEntityEventListener;
 import net.foxdenstudio.foxguard.state.HandlersStateField;
 import net.foxdenstudio.foxguard.state.RegionsStateField;
@@ -340,7 +339,6 @@ public class FoxGuardMain {
      * A private method that registers the Listener class and the corresponding event class.
      */
     private void registerListeners() {
-        eventManager.registerListener(this, TargetPlayerEvent.class, new PlayerEventListener());
         eventManager.registerListener(this, ChangeBlockEvent.class, new BlockEventListener());
         eventManager.registerListener(this, InteractEvent.class, new InteractListener());
         eventManager.registerListener(this, SpawnEntityEvent.class, new SpawnEntityEventListener());
