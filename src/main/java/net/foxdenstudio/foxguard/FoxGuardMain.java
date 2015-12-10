@@ -51,7 +51,6 @@ import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.action.InteractEvent;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.entity.SpawnEntityEvent;
-import org.spongepowered.api.event.entity.living.player.TargetPlayerEvent;
 import org.spongepowered.api.event.game.state.*;
 import org.spongepowered.api.event.world.LoadWorldEvent;
 import org.spongepowered.api.event.world.UnloadWorldEvent;
@@ -81,7 +80,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import static net.foxdenstudio.foxcore.util.Aliases.HANDLERS_ALIASES;
 
 @Plugin(id = "foxguard", name = "FoxGuard", version = FoxGuardMain.PLUGIN_VERSION, dependencies = "required-after:foxcore")
-public class FoxGuardMain {
+public final class FoxGuardMain {
 
     /**
      * String object containing the current version of the plugin.

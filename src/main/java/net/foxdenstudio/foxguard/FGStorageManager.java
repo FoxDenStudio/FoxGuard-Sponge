@@ -41,7 +41,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class FGStorageManager {
+public final class FGStorageManager {
     private static FGStorageManager instance;
     private List<String> markedForDeletion = new ArrayList<>();
     private List<DeferredObject> deferedObjects = new LinkedList<>();

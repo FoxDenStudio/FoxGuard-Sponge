@@ -33,7 +33,7 @@ import ninja.leaping.configurate.loader.ConfigurationLoader;
 import java.io.File;
 import java.io.IOException;
 
-public class FGConfigManager {
+public final class FGConfigManager {
 
     private static FGConfigManager instance;
 

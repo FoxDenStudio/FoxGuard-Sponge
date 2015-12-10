@@ -41,7 +41,7 @@ import java.util.Optional;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.stream.Stream;
 
-public class FGManager {
+public final class FGManager {
 
     private static FGManager instance;
     private final Map<World, List<IRegion>> regions;

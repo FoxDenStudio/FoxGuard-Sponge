@@ -38,7 +38,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FGFactoryManager {
+public final class FGFactoryManager {
 
     private static FGFactoryManager ourInstance = new FGFactoryManager();
     private final List<IRegionFactory> regionFactories;

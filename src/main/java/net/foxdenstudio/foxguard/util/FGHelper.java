@@ -38,7 +38,7 @@ import org.spongepowered.api.text.format.TextColors;
 
 import java.util.List;
 
-public class FGHelper {
+public final class FGHelper {
 
     public static TextColor getColorForRegion(IRegion region) {
         return region instanceof GlobalRegion ? TextColors.YELLOW : (region.isEnabled() ? TextColors.RESET : TextColors.GRAY);
