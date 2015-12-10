@@ -96,7 +96,7 @@ public class GlobalHandler extends HandlerBase {
 
     @Override
     public Tristate handle(User user, Flag flag, Event event) {
-        return Tristate.TRUE;
+        return Tristate.UNDEFINED;
     }
 
 }

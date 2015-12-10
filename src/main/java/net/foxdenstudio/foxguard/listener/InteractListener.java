@@ -102,6 +102,7 @@ public class InteractListener implements EventListener<InteractEvent> {
             flagState = flagState.and(handler.handle(user, typeFlag, event));
             currPriority = handler.getPriority();
         }
+        flagState = typeFlag.resolve(flagState);
         if (flagState == Tristate.FALSE) {
             if (user instanceof Player)
                 ((Player) user).sendMessage(Texts.of("You don't have permission!"));

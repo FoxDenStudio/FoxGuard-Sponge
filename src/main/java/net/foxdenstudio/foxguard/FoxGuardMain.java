@@ -296,7 +296,7 @@ public final class FoxGuardMain {
      */
     private void registerCommands() {
         FCCommandMainDispatcher fgDispatcher = new FCCommandMainDispatcher("/foxguard");
-        FCCommandDispatcher fgRegionDispatcher = new FCCommandDispatcher("/foxguard regions");
+        //FCCommandDispatcher fgRegionDispatcher = new FCCommandDispatcher("/foxguard regions");
         FCCommandDispatcher fgHandlerDispatcher = new FCCommandDispatcher("/foxguard handlers",
                 "Commands spcifically meant for managing Handlers.");
 
@@ -363,12 +363,11 @@ public final class FoxGuardMain {
     }
 
     /**
-     * Method that when called will return a UserStorage object that can be used to store or retrieve data corresponding to a specific player.
+     * Method that when called will return a UserStorageService object that can be used to store or retrieve data corresponding to a specific player.
      *
-     * @return
+     * @return UserStorageService object.
      */
-    public UserStorageService
-    getUserStorage() {
+    public UserStorageService getUserStorage() {
         return userStorage;
     }
 

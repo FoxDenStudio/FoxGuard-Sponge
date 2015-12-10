@@ -25,39 +25,38 @@
 
 package net.foxdenstudio.foxguard.handler.util;
 
-public enum Flag {
-    ALL("all", "Everything"),
+import org.spongepowered.api.util.Tristate;
 
-    BLOCK("block", "Blocks", ALL),
-    BLOCK_PLACE("blockplace", "Place-Blocks", BLOCK),
-    BLOCK_BREAK("blockbreak", "Break-Blocks", BLOCK),
-    BLOCK_MODIFY("blockmodify", "Modify-Blocks", BLOCK),
-    BLOCK_INTERACT("blockclick", "Click-Blocks", BLOCK),
-    BLOCK_INTERACT_PRIMARY("blockattack", "Attack-Blocks", BLOCK_INTERACT),
-    BLOCK_INTERACT_SECONDARY("blockinteract", "Interact-Blocks", BLOCK_INTERACT),
-    ENTITY_INTERACT("entityclick", "Click-Entities", ALL),
-    ENTITY_INTERACT_PRIMARY("entityattack", "Attack-Entities", ENTITY_INTERACT),
-    ENTITY_INTERACT_SECONDARY("entityinteract", "Interact-Entities", ENTITY_INTERACT),
-    BLOCK_FLUID("fluids", "Fluids", BLOCK),
-    PLAYER_INTERACT_PRIMARY("playerattack", "Attack-Player", ENTITY_INTERACT_PRIMARY),
-    SPAWN_MOB("spawnmob", "Spawn-Mobs", ALL),
-    SPAWN_MOB_HOSTILE("spawnmobhostile", "Spawn-Hostile-Mobs", SPAWN_MOB),
-    SPAWN_MOB_PASSIVE("spawnmobpassive", "Spawn-Passive-Mobs", SPAWN_MOB);
+public enum Flag {
+    ALL(null, true, "all", "Everything"),
+
+    BLOCK(ALL, true, "block", "Blocks"),
+    BLOCK_PLACE(BLOCK, true, "blockplace", "Place-Blocks"),
+    BLOCK_BREAK(BLOCK, true, "blockbreak", "Break-Blocks"),
+    BLOCK_MODIFY(BLOCK, true, "blockmodify", "Modify-Blocks"),
+    BLOCK_INTERACT(BLOCK, true, "blockclick", "Click-Blocks"),
+    BLOCK_INTERACT_PRIMARY(BLOCK_INTERACT, true, "blockattack", "Attack-Blocks"),
+    BLOCK_INTERACT_SECONDARY(BLOCK_INTERACT, true, "blockinteract", "Interact-Blocks"),
+    ENTITY_INTERACT(ALL, true, "entityclick", "Click-Entities"),
+    ENTITY_INTERACT_PRIMARY(ENTITY_INTERACT, true, "entityattack", "Attack-Entities"),
+    ENTITY_INTERACT_SECONDARY(ENTITY_INTERACT, true, "entityinteract", "Interact-Entities"),
+    BLOCK_FLUID(BLOCK, true, "fluids", "Fluids"),
+    PLAYER_INTERACT_PRIMARY(ENTITY_INTERACT_PRIMARY, true, "playerattack", "Attack-Player"),
+    SPAWN_MOB(ALL, true, "spawnmob", "Spawn-Mobs"),
+    SPAWN_MOB_HOSTILE(SPAWN_MOB, true, "spawnmobhostile", "Spawn-Hostile-Mobs"),
+    SPAWN_MOB_PASSIVE(SPAWN_MOB, true, "spawnmobpassive", "Spawn-Passive-Mobs");
 
     String humanName;
     String flagName;
+    boolean defaultValue;
 
     Flag parent = null;
 
-    Flag(String flagName, String humanName) {
-        this.humanName = humanName;
-        this.flagName = flagName;
-    }
-
-    Flag(String flagName, String humanName, Flag parent) {
-        this.humanName = humanName;
-        this.flagName = flagName;
+    Flag(Flag parent, boolean defaultValue, String flagName, String humanName) {
         this.parent = parent;
+        this.defaultValue = defaultValue;
+        this.flagName = flagName;
+        this.humanName = humanName;
     }
 
     public static Flag flagFrom(String name) {
@@ -82,5 +81,10 @@ public enum Flag {
 
     public Flag getParent() {
         return parent;
+    }
+
+    public Tristate resolve(Tristate input) {
+        if (input == Tristate.UNDEFINED) return this.defaultValue ? Tristate.TRUE : Tristate.FALSE;
+        else return input;
     }
 }
