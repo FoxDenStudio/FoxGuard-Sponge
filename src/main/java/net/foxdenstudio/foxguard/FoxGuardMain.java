@@ -208,6 +208,7 @@ public final class FoxGuardMain {
         FGStorageManager.getInstance().initHandlers();
         logger.info("Loading Handlers");
         FGStorageManager.getInstance().loadHandlers();
+        FGStorageManager.getInstance().loadGlobalHandler();
         loaded = true;
         logger.info("Loading Links");
         FGStorageManager.getInstance().loadLinks();

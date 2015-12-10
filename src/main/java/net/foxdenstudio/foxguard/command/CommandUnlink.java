@@ -91,7 +91,7 @@ public class CommandUnlink implements CommandCallable {
             source.sendMessage(Texts.of(TextColors.GREEN, "Successfully unlinked " + count[0] + "!"));
             FCCommandMainDispatcher.getInstance().getStateMap().get(source).flush(RegionsStateField.ID, HandlersStateField.ID);
             return CommandResult.builder().successCount(count[0]).build();
-        } else if (args[0].equals("ALL")) {
+        } else if (args[0].equals("EVERYTHING")) {
             int[] count = {0};
             FGManager.getInstance().getRegionsListCopy().forEach(
                     region -> {
@@ -130,6 +130,6 @@ public class CommandUnlink implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("unlink [FULL | ALL]");
+        return Texts.of("unlink [FULL | EVERYTHING]");
     }
 }

@@ -25,12 +25,14 @@
 
 package net.foxdenstudio.foxguard.handler;
 
+import net.foxdenstudio.foxcore.command.util.AdvCmdParse;
 import net.foxdenstudio.foxcore.command.util.ProcessResult;
 import net.foxdenstudio.foxcore.command.util.SourceState;
 import net.foxdenstudio.foxcore.util.CallbackHashMap;
 import net.foxdenstudio.foxcore.util.FCHelper;
 import net.foxdenstudio.foxguard.FoxGuardMain;
 import net.foxdenstudio.foxguard.handler.util.Flag;
+import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.source.ProxySource;
 import org.spongepowered.api.entity.living.player.Player;
@@ -55,7 +57,7 @@ import static net.foxdenstudio.foxcore.util.Aliases.*;
 
 public class PassiveHandler extends OwnableHandlerBase {
 
-    private Map<Flag, Tristate> passiveMap;
+    private Map<Flag, Tristate> map;
 
     public PassiveHandler(String name, int priority) {
         this(name, priority, new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED));
@@ -63,7 +65,7 @@ public class PassiveHandler extends OwnableHandlerBase {
 
     public PassiveHandler(String name, int priority, CallbackHashMap<Flag, Tristate> map) {
         super(name, priority);
-        this.passiveMap = map;
+        this.map = map;
     }
 
     @Override
@@ -74,24 +76,24 @@ public class PassiveHandler extends OwnableHandlerBase {
                 return Tristate.UNDEFINED;
             }
             Flag temp = flag;
-            while (temp != null && !passiveMap.containsKey(temp)) {
+            while (temp != null && !map.containsKey(temp)) {
                 temp = temp.getParent();
             }
-            if (temp != null) return passiveMap.get(temp);
-            else return passiveMap.get(flag);
+            if (temp != null) return map.get(temp);
+            else return map.get(flag);
         } finally {
             this.lock.readLock().unlock();
         }
     }
 
     @Override
-    public ProcessResult modify(String arguments, SourceState state, CommandSource source) {
+    public ProcessResult modify(String arguments, SourceState state, CommandSource source) throws CommandException {
         if (!source.hasPermission("foxguard.command.modify.objects.modify.handlers")) {
             if (source instanceof ProxySource) source = ((ProxySource) source).getOriginalSource();
             if (source instanceof Player && !this.ownerList.contains(source)) return ProcessResult.failure();
         }
-        String[] args = {};
-        if (!arguments.isEmpty()) args = arguments.split(" +");
+        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).build();
+        String[] args = parse.getArgs();
         try {
             this.lock.writeLock().lock();
             if (args.length > 0) {
@@ -165,10 +167,10 @@ public class PassiveHandler extends OwnableHandlerBase {
                         }
                         if (isAlias(CLEAR_ALIASES, args[2])) {
                             if (flag == null) {
-                                this.passiveMap.clear();
+                                this.map.clear();
                                 return ProcessResult.of(true, Texts.of("Successfully cleared flags!"));
                             } else {
-                                this.passiveMap.remove(flag);
+                                this.map.remove(flag);
                                 return ProcessResult.of(true, Texts.of("Successfully cleared flag!"));
                             }
                         } else {
@@ -178,11 +180,11 @@ public class PassiveHandler extends OwnableHandlerBase {
                             }
                             if (flag == null) {
                                 for (Flag thatExist : Flag.values()) {
-                                    this.passiveMap.put(thatExist, tristate);
+                                    this.map.put(thatExist, tristate);
                                 }
                                 return ProcessResult.of(true, Texts.of("Successfully set flags!"));
                             } else {
-                                this.passiveMap.put(flag, tristate);
+                                this.map.put(flag, tristate);
                                 return ProcessResult.of(true, Texts.of("Successfully set flag!"));
                             }
 
@@ -209,13 +211,13 @@ public class PassiveHandler extends OwnableHandlerBase {
         builder.append(Texts.of(TextColors.GOLD,
                 TextActions.suggestCommand("/foxguard modify handler " + this.name + " set "),
                 TextActions.showText(Texts.of("Click to Set a Flag")),
-                "Passive Flags:"));
+                "Passive Flags:\n"));
         try {
             this.lock.readLock().lock();
-            for (Flag f : this.passiveMap.keySet()) {
+            for (Flag f : this.map.keySet()) {
                 builder.append(
                         Texts.builder().append(Texts.of("  " + f.toString() + ": "))
-                                .append(FCHelper.readableTristateText(passiveMap.get(f)))
+                                .append(FCHelper.readableTristateText(map.get(f)))
                                 .append(Texts.of("\n"))
                                 .onClick(TextActions.suggestCommand("/foxguard modify handler " + this.name + " set " + f.flagName() + " "))
                                 .onHover(TextActions.showText(Texts.of("Click to Change This Flag")))
@@ -238,7 +240,7 @@ public class PassiveHandler extends OwnableHandlerBase {
                         "DELETE FROM FLAGMAP;");
             }
             try (PreparedStatement statement = conn.prepareStatement("INSERT INTO FLAGMAP(KEY, VALUE) VALUES (? , ?)")) {
-                for (Map.Entry<Flag, Tristate> entry : passiveMap.entrySet()) {
+                for (Map.Entry<Flag, Tristate> entry : map.entrySet()) {
                     statement.setString(1, entry.getKey().name());
                     statement.setString(2, entry.getValue().name());
                     statement.addBatch();

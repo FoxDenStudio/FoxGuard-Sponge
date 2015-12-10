@@ -28,21 +28,21 @@ package net.foxdenstudio.foxguard.handler.util;
 import org.spongepowered.api.util.Tristate;
 
 public enum Flag {
-    ALL(null, true, "all", "Everything"),
+    ROOT(null, true, "root", "Everything"),
 
-    BLOCK(ALL, true, "block", "Blocks"),
+    BLOCK(ROOT, true, "block", "Blocks"),
     BLOCK_PLACE(BLOCK, true, "blockplace", "Place-Blocks"),
     BLOCK_BREAK(BLOCK, true, "blockbreak", "Break-Blocks"),
     BLOCK_MODIFY(BLOCK, true, "blockmodify", "Modify-Blocks"),
     BLOCK_INTERACT(BLOCK, true, "blockclick", "Click-Blocks"),
     BLOCK_INTERACT_PRIMARY(BLOCK_INTERACT, true, "blockattack", "Attack-Blocks"),
     BLOCK_INTERACT_SECONDARY(BLOCK_INTERACT, true, "blockinteract", "Interact-Blocks"),
-    ENTITY_INTERACT(ALL, true, "entityclick", "Click-Entities"),
+    ENTITY_INTERACT(ROOT, true, "entityclick", "Click-Entities"),
     ENTITY_INTERACT_PRIMARY(ENTITY_INTERACT, true, "entityattack", "Attack-Entities"),
     ENTITY_INTERACT_SECONDARY(ENTITY_INTERACT, true, "entityinteract", "Interact-Entities"),
     BLOCK_FLUID(BLOCK, true, "fluids", "Fluids"),
     PLAYER_INTERACT_PRIMARY(ENTITY_INTERACT_PRIMARY, true, "playerattack", "Attack-Player"),
-    SPAWN_MOB(ALL, true, "spawnmob", "Spawn-Mobs"),
+    SPAWN_MOB(ROOT, true, "spawnmob", "Spawn-Mobs"),
     SPAWN_MOB_HOSTILE(SPAWN_MOB, true, "spawnmobhostile", "Spawn-Hostile-Mobs"),
     SPAWN_MOB_PASSIVE(SPAWN_MOB, true, "spawnmobpassive", "Spawn-Passive-Mobs");
 

@@ -25,8 +25,9 @@
 
 package net.foxdenstudio.foxguard;
 
-import net.foxdenstudio.foxguard.object.factory.FGFactoryManager;
+import net.foxdenstudio.foxguard.handler.GlobalHandler;
 import net.foxdenstudio.foxguard.handler.IHandler;
+import net.foxdenstudio.foxguard.object.factory.FGFactoryManager;
 import net.foxdenstudio.foxguard.region.IRegion;
 import net.foxdenstudio.foxguard.util.DeferredObject;
 import org.spongepowered.api.Server;
@@ -626,6 +627,17 @@ public final class FGStorageManager {
                 FoxGuardMain.instance().logger().info("Unable to resolve deferred object:\n" + o.toString());
                 e.printStackTrace();
             }
+        }
+    }
+
+    public synchronized void loadGlobalHandler() {
+        Server server = FoxGuardMain.instance().game().getServer();
+        try {
+            FGManager.getInstance().getGlobalHandler().loadFromDatabase(FoxGuardMain.instance().getDataSource(
+                    "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/handlers/" + GlobalHandler.NAME
+            ));
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 }

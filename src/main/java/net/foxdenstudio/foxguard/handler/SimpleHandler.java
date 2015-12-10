@@ -25,6 +25,7 @@
 
 package net.foxdenstudio.foxguard.handler;
 
+import net.foxdenstudio.foxcore.command.util.AdvCmdParse;
 import net.foxdenstudio.foxcore.command.util.ProcessResult;
 import net.foxdenstudio.foxcore.command.util.SourceState;
 import net.foxdenstudio.foxcore.util.CallbackHashMap;
@@ -32,6 +33,7 @@ import net.foxdenstudio.foxcore.util.FCHelper;
 import net.foxdenstudio.foxguard.FoxGuardMain;
 import net.foxdenstudio.foxguard.handler.util.Flag;
 import net.foxdenstudio.foxguard.object.IMembership;
+import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.source.ProxySource;
 import org.spongepowered.api.entity.living.player.Player;
@@ -80,13 +82,13 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
     }
 
     @Override
-    public ProcessResult modify(String arguments, SourceState state, CommandSource source) {
+    public ProcessResult modify(String arguments, SourceState state, CommandSource source) throws CommandException {
         if (!source.hasPermission("foxguard.command.modify.objects.modify.handlers")) {
             if (source instanceof ProxySource) source = ((ProxySource) source).getOriginalSource();
             if (source instanceof Player && !this.ownerList.contains(source)) return ProcessResult.failure();
         }
-        String[] args = {};
-        if (!arguments.isEmpty()) args = arguments.split(" +");
+        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).build();
+        String[] args = parse.getArgs();
         try {
             this.lock.writeLock().lock();
             if (args.length > 0) {

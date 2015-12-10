@@ -30,6 +30,7 @@ import net.foxdenstudio.foxcore.command.util.SourceState;
 import net.foxdenstudio.foxguard.command.CommandDetail;
 import net.foxdenstudio.foxguard.handler.IHandler;
 import net.foxdenstudio.foxguard.region.IRegion;
+import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
 
@@ -123,7 +124,7 @@ public interface IFGObject {
     /**
      * Specifies whether FoxGuard should attempt to save this object into SQL.
      * Set to false if a separate storage mechanism will be used. Defaults to true.
-     * Objects that return false must be responsible for storing and loading ALL data.
+     * Objects that return false must be responsible for storing and loading EVERYTHING data.
      * The only time this should be false is if another plugin is hooking into FoxGuard
      * using a delegate object. In that case the object is just a transient API accessor and should not be saved.
      *
@@ -133,6 +134,6 @@ public interface IFGObject {
         return true;
     }
 
-    ProcessResult modify(String arguments, SourceState state, CommandSource source);
+    ProcessResult modify(String arguments, SourceState state, CommandSource source) throws CommandException;
 
 }
