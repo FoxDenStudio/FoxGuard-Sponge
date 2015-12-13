@@ -1,7 +1,11 @@
+
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '1.2.2'
+}
+
 group 'net.foxdenstudio.foxguard'
 version 'ALPHA-SNAPSHOT'
-
-apply plugin: 'java'
 
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
@@ -12,10 +16,22 @@ repositories {
         name 'Sponge maven repo'
         url 'http://repo.spongepowered.org/maven'
     }
+    maven {
+        name 'Plugin Metrics'
+        url 'http://repo.mcstats.org/content/repositories/public'
+    }
 }
 
 dependencies {
-    compile project(":FoxCore")
-    compile "org.spongepowered:spongeapi:2.1-SNAPSHOT"
+    compile project(':FoxCore')
+    compile 'org.spongepowered:spongeapi:2.1-SNAPSHOT'
+    compile 'org.mcstats.sponge:metrics:R8-SNAPSHOT'
     testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+shadowJar {
+    dependencies {
+        include(dependency("org.mcstats.sponge:metrics"))
+    }
+    relocate 'org.mcstats', 'net.foxdenstudio.foxguard.mcstats'
 }

@@ -25,7 +25,7 @@ It also allows other plugins to add their own Regions and Handlers for plugin in
 ### Downloading
 Make sure you have git installed and then run:
 
-`git clone --recursive https://github.com/gravityfox/FoxGuard.git`
+`git clone --recursive https://github.com/foxdenstudio/FoxGuard.git`
 
 ### Building
 Open a command line inside the directory.
