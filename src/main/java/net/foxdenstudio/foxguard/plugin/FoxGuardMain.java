@@ -32,6 +32,7 @@ import net.foxdenstudio.foxcore.plugin.command.FCCommandDispatcher;
 import net.foxdenstudio.foxcore.plugin.command.FCCommandMainDispatcher;
 import net.foxdenstudio.foxcore.plugin.state.FCStateRegistry;
 import net.foxdenstudio.foxcore.plugin.util.Aliases;
+import net.foxdenstudio.foxguard.mcstats.Metrics;
 import net.foxdenstudio.foxguard.plugin.command.*;
 import net.foxdenstudio.foxguard.plugin.command.handlers.CommandPriority;
 import net.foxdenstudio.foxguard.plugin.listener.BlockEventListener;
@@ -67,6 +68,7 @@ import org.spongepowered.api.world.World;
 
 import javax.sql.DataSource;
 import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -117,62 +119,6 @@ public final class FoxGuardMain {
 
     //my uuid - f275f223-1643-4fac-9fb8-44aaf5b4b371
 
-    /**
-     * Used to create a new ReadWriteLock. Depending on config option, will either load a real one, or a "spoof" one.
-     *
-     * @return A ReadWriteLock Object that can be used.
-     */
-    public static ReadWriteLock getNewLock() {
-        if (FGConfigManager.getInstance().threadSafe()) {
-            return new ReentrantReadWriteLock();
-        } else {
-            return new ReadWriteLock() {
-
-                private final Lock lock = new Lock() {
-                    @Override
-                    public void lock() {
-
-                    }
-
-                    @Override
-                    public void lockInterruptibly() throws InterruptedException {
-
-                    }
-
-                    @Override
-                    public boolean tryLock() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
-                        return true;
-                    }
-
-                    @Override
-                    public void unlock() {
-
-                    }
-
-                    @Override
-                    public Condition newCondition() {
-                        throw new UnsupportedOperationException();
-                    }
-                };
-
-                @Override
-                public Lock readLock() {
-                    return this.lock;
-                }
-
-                @Override
-                public Lock writeLock() {
-                    return this.lock;
-                }
-            };
-        }
-    }
-
     @Listener
     public void gameConstruct(GameConstructionEvent event) {
         instance = this;
@@ -200,6 +146,13 @@ public final class FoxGuardMain {
 
         FCStateRegistry.instance().registerStateFactory(new RegionsStateFieldFactory(), RegionsStateField.ID, Aliases.REGIONS_ALIASES);
         FCStateRegistry.instance().registerStateFactory(new HandlersStateFieldFactory(), HandlersStateField.ID, Aliases.HANDLERS_ALIASES);
+
+        try {
+            Metrics metrics = new Metrics(game, game.getPluginManager().fromInstance(this).get());
+            metrics.start();
+        } catch (IOException e) {
+            // Failed to submit the stats :-(
+        }
     }
 
     @Listener
@@ -391,5 +344,61 @@ public final class FoxGuardMain {
      */
     public boolean isLoaded() {
         return loaded;
+    }
+
+    /**
+     * Used to create a new ReadWriteLock. Depending on config option, will either load a real one, or a "spoof" one.
+     *
+     * @return A ReadWriteLock Object that can be used.
+     */
+    public static ReadWriteLock getNewLock() {
+        if (FGConfigManager.getInstance().threadSafe()) {
+            return new ReentrantReadWriteLock();
+        } else {
+            return new ReadWriteLock() {
+
+                private final Lock lock = new Lock() {
+                    @Override
+                    public void lock() {
+
+                    }
+
+                    @Override
+                    public void lockInterruptibly() throws InterruptedException {
+
+                    }
+
+                    @Override
+                    public boolean tryLock() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
+                        return true;
+                    }
+
+                    @Override
+                    public void unlock() {
+
+                    }
+
+                    @Override
+                    public Condition newCondition() {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+
+                @Override
+                public Lock readLock() {
+                    return this.lock;
+                }
+
+                @Override
+                public Lock writeLock() {
+                    return this.lock;
+                }
+            };
+        }
     }
 }
