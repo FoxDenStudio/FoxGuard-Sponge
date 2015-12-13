@@ -20,7 +20,7 @@ notifications:
   email: false
 
 after_success:
-  - for f in "./build/libs/FoxGuard*.jar"; do mv ${f} "./build/libs/FoxGuard-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}-SNAPSHOT.jar"; done
+  - for f in "./build/libs/FoxGuard*SNAPSHOT.jar"; do mv ${f} "./build/libs/FoxGuard-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}-SNAPSHOT.jar"; done
 
 deploy:
   file_glob: true
