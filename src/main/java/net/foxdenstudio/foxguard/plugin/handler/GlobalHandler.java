@@ -213,6 +213,8 @@ public class GlobalHandler extends HandlerBase {
         try (Connection conn = dataSource.getConnection()) {
             CallbackHashMap<Flag, Tristate> flagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
             try (Statement statement = conn.createStatement()) {
+                statement.execute("CREATE TABLE IF NOT EXISTS FLAGMAP(KEY VARCHAR (256), VALUE VARCHAR (256));" +
+                        "DELETE FROM FLAGMAP;");
                 try (ResultSet mapEntrySet = statement.executeQuery("SELECT * FROM FLAGMAP")) {
                     while (mapEntrySet.next()) {
                         try {
