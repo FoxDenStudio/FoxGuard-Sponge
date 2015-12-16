@@ -23,18 +23,19 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.foxguard.plugin.listener;
+package net.foxdenstudio.foxguard.plugin.event;
 
-import com.flowpowered.math.vector.Vector3d;
+import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.foxguard.plugin.FGManager;
 import net.foxdenstudio.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.foxguard.plugin.handler.util.Flag;
+import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.block.BlockTypes;
+import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
-import org.spongepowered.api.event.action.InteractEvent;
-import org.spongepowered.api.event.block.InteractBlockEvent;
-import org.spongepowered.api.event.entity.InteractEntityEvent;
+import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
@@ -43,11 +44,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class InteractListener implements EventListener<InteractEvent> {
+public class BlockEventListener implements EventListener<ChangeBlockEvent> {
 
     @Override
-    public void handle(InteractEvent event) throws Exception {
+    public void handle(ChangeBlockEvent event) throws Exception {
         if (event.isCancelled()) return;
+        if (event.getTransactions().isEmpty()) return;
+        for (Transaction<BlockSnapshot> tr : event.getTransactions()) {
+            if (tr.getOriginal().getState().getType().equals(BlockTypes.DIRT)
+                    && tr.getFinal().getState().getType().equals(BlockTypes.GRASS)
+                    || tr.getOriginal().getState().getType().equals(BlockTypes.GRASS)
+                    && tr.getFinal().getState().getType().equals(BlockTypes.DIRT)) return;
+        }
         User user;
         if (event.getCause().any(Player.class)) {
             user = event.getCause().first(Player.class).get();
@@ -56,42 +64,28 @@ public class InteractListener implements EventListener<InteractEvent> {
         } else {
             user = null;
         }
+        //DebugHelper.printBlockEvent(event);
+        Flag typeFlag;
+        if (event instanceof ChangeBlockEvent.Modify) typeFlag = Flag.BLOCK_MODIFY;
+        else if (event instanceof ChangeBlockEvent.Fluid) typeFlag = Flag.BLOCK_FLUID;
+        else if (event instanceof ChangeBlockEvent.Break) typeFlag = Flag.BLOCK_BREAK;
+        else if (event instanceof ChangeBlockEvent.Place) typeFlag = Flag.BLOCK_PLACE;
+        else return;
 
-        World world = null;
-        Flag typeFlag = null;
-        Vector3d loc = null;
-        if (event instanceof InteractEntityEvent) {
-            world = ((InteractEntityEvent) event).getTargetEntity().getWorld();
-            loc = ((InteractEntityEvent) event).getTargetEntity().getLocation().getPosition();
-            if (event instanceof InteractEntityEvent.Primary) {
-                typeFlag = Flag.ENTITY_INTERACT_PRIMARY;
-                if (((InteractEntityEvent.Primary) event).getTargetEntity() instanceof Player)
-                    typeFlag = Flag.PLAYER_INTERACT_PRIMARY;
-            } else if (event instanceof InteractEntityEvent.Secondary) typeFlag = Flag.ENTITY_INTERACT_SECONDARY;
-        } else if (event instanceof InteractBlockEvent) {
-            world = ((InteractBlockEvent) event).getTargetBlock().getLocation().get().getExtent();
-            loc = ((InteractBlockEvent) event).getTargetBlock().getPosition().toDouble();
-            if (event instanceof InteractBlockEvent.Primary) typeFlag = Flag.BLOCK_INTERACT_PRIMARY;
-            else if (event instanceof InteractBlockEvent.Secondary) typeFlag = Flag.BLOCK_INTERACT_SECONDARY;
-        }
-        if (typeFlag == null) return;
+
+        //FoxGuardMain.instance().getLogger().info(player.getName());
+
         List<IHandler> handlerList = new ArrayList<>();
-        /*
-        if (event.getInteractionPoint().isPresent()) {
-            loc = event.getInteractionPoint().get();
-            System.out.println(loc);
-            FGManager.instance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
+        handlerList.add(FGManager.getInstance().getGlobalHandler());
+        World world = event.getTargetWorld();
+
+        for (Transaction<BlockSnapshot> trans : event.getTransactions()) {
+            Vector3i loc = trans.getOriginal().getLocation().get().getBlockPosition();
+            FGManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
                     .forEach(region -> region.getHandlersCopy().stream()
                             .filter(handler -> !handlerList.contains(handler))
                             .forEach(handlerList::add));
-        } else {
-        */
-        final Vector3d finalLoc = loc;
-        FGManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(finalLoc))
-                .forEach(region -> region.getHandlersCopy().stream()
-                        .filter(handler -> !handlerList.contains(handler))
-                        .forEach(handlerList::add));
-        //}
+        }
         Collections.sort(handlerList);
         int currPriority = handlerList.get(0).getPriority();
         Tristate flagState = Tristate.UNDEFINED;
@@ -112,4 +106,6 @@ public class InteractListener implements EventListener<InteractEvent> {
             event.setCancelled(false);
         }
     }
+
+
 }

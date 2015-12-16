@@ -23,19 +23,18 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.foxguard.plugin.listener;
+package net.foxdenstudio.foxguard.plugin.event;
 
 import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.foxguard.plugin.FGManager;
 import net.foxdenstudio.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.foxguard.plugin.handler.util.Flag;
-import org.spongepowered.api.entity.Entity;
-import org.spongepowered.api.entity.living.Creature;
-import org.spongepowered.api.entity.living.Hostile;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
-import org.spongepowered.api.event.entity.SpawnEntityEvent;
+import org.spongepowered.api.event.action.InteractEvent;
+import org.spongepowered.api.event.block.InteractBlockEvent;
+import org.spongepowered.api.event.entity.InteractEntityEvent;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
@@ -44,15 +43,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class SpawnEntityEventListener implements EventListener<SpawnEntityEvent> {
+public class InteractListener implements EventListener<InteractEvent> {
 
     @Override
-    public void handle(SpawnEntityEvent event) throws Exception {
+    public void handle(InteractEvent event) throws Exception {
         if (event.isCancelled()) return;
-        for (Entity entity : event.getEntities()) {
-            if (entity instanceof Player) return;
-        }
-        if (event.getEntities().isEmpty()) return;
         User user;
         if (event.getCause().any(Player.class)) {
             user = event.getCause().first(Player.class).get();
@@ -62,22 +57,41 @@ public class SpawnEntityEventListener implements EventListener<SpawnEntityEvent>
             user = null;
         }
 
+        World world = null;
         Flag typeFlag = null;
-        Entity oneEntity = event.getEntities().get(0);
-        if (oneEntity instanceof Creature) typeFlag = Flag.SPAWN_MOB_PASSIVE;
-        if (oneEntity instanceof Hostile) typeFlag = Flag.SPAWN_MOB_HOSTILE;
+        Vector3d loc = null;
+        if (event instanceof InteractEntityEvent) {
+            world = ((InteractEntityEvent) event).getTargetEntity().getWorld();
+            loc = ((InteractEntityEvent) event).getTargetEntity().getLocation().getPosition();
+            if (event instanceof InteractEntityEvent.Primary) {
+                typeFlag = Flag.ENTITY_INTERACT_PRIMARY;
+                if (((InteractEntityEvent.Primary) event).getTargetEntity() instanceof Player)
+                    typeFlag = Flag.PLAYER_INTERACT_PRIMARY;
+            } else if (event instanceof InteractEntityEvent.Secondary) typeFlag = Flag.ENTITY_INTERACT_SECONDARY;
+        } else if (event instanceof InteractBlockEvent) {
+            world = ((InteractBlockEvent) event).getTargetBlock().getLocation().get().getExtent();
+            loc = ((InteractBlockEvent) event).getTargetBlock().getPosition().toDouble();
+            if (event instanceof InteractBlockEvent.Primary) typeFlag = Flag.BLOCK_INTERACT_PRIMARY;
+            else if (event instanceof InteractBlockEvent.Secondary) typeFlag = Flag.BLOCK_INTERACT_SECONDARY;
+        }
         if (typeFlag == null) return;
-
         List<IHandler> handlerList = new ArrayList<>();
-        World world = event.getTargetWorld();
-
-        for (Entity entity : event.getEntities()) {
-            Vector3d loc = entity.getLocation().getPosition();
-            FGManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
+        /*
+        if (event.getInteractionPoint().isPresent()) {
+            loc = event.getInteractionPoint().get();
+            System.out.println(loc);
+            FGManager.instance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
                     .forEach(region -> region.getHandlersCopy().stream()
                             .filter(handler -> !handlerList.contains(handler))
                             .forEach(handlerList::add));
-        }
+        } else {
+        */
+        final Vector3d finalLoc = loc;
+        FGManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(finalLoc))
+                .forEach(region -> region.getHandlersCopy().stream()
+                        .filter(handler -> !handlerList.contains(handler))
+                        .forEach(handlerList::add));
+        //}
         Collections.sort(handlerList);
         int currPriority = handlerList.get(0).getPriority();
         Tristate flagState = Tristate.UNDEFINED;
@@ -88,6 +102,7 @@ public class SpawnEntityEventListener implements EventListener<SpawnEntityEvent>
             flagState = flagState.and(handler.handle(user, typeFlag, event));
             currPriority = handler.getPriority();
         }
+        flagState = typeFlag.resolve(flagState);
         if (flagState == Tristate.FALSE) {
             if (user instanceof Player)
                 ((Player) user).sendMessage(Texts.of("You don't have permission!"));
@@ -97,5 +112,4 @@ public class SpawnEntityEventListener implements EventListener<SpawnEntityEvent>
             event.setCancelled(false);
         }
     }
-
 }
