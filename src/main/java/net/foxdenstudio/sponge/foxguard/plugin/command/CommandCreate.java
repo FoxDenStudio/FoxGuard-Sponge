@@ -52,6 +52,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
+
 public class CommandCreate implements CommandCallable {
 
     private static final String[] PRIORITY_ALIASES = {"priority", "prio", "p", "order", "level", "rank"};

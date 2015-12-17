@@ -54,6 +54,7 @@ import java.sql.Statement;
 import java.util.*;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
+
 public class PassiveHandler extends OwnableHandlerBase {
 
     private final Map<Flag, Tristate> map;

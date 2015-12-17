@@ -53,6 +53,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
+
 public class CommandDetail implements CommandCallable {
 
     private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
