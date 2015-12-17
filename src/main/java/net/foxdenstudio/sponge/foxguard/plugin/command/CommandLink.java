@@ -26,8 +26,8 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandMainDispatcher;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
+import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
@@ -83,7 +83,7 @@ public class CommandLink implements CommandCallable {
                             .filter(handler -> !(handler instanceof GlobalHandler))
                             .forEach(handler -> successes[0] += FGManager.getInstance().link(region, handler) ? 1 : 0));
             source.sendMessage(Texts.of(TextColors.GREEN, "Successfully linked " + successes[0] + "!"));
-            FCCommandMainDispatcher.getInstance().getStateMap().get(source).flush(RegionsStateField.ID, HandlersStateField.ID);
+            FCStateManager.instance().getStateMap().get(source).flush(RegionsStateField.ID, HandlersStateField.ID);
             return CommandResult.builder().successCount(successes[0]).build();
         } else {
             String worldName = parse.getFlagmap().get("world");

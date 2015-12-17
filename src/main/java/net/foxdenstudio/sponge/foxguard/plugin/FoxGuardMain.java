@@ -29,8 +29,7 @@ import com.google.inject.Inject;
 import net.foxdenstudio.sponge.foxcore.plugin.FoxCoreMain;
 import net.foxdenstudio.sponge.foxcore.plugin.command.CommandAbout;
 import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandDispatcher;
-import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandMainDispatcher;
-import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateRegistry;
+import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.mcstats.Metrics;
 import net.foxdenstudio.sponge.foxguard.plugin.command.*;
@@ -200,8 +199,8 @@ public final class FoxGuardMain {
         logger.info("Setting default player permissions");
         configurePermissions();
 
-        FCStateRegistry.instance().registerStateFactory(new RegionsStateFieldFactory(), RegionsStateField.ID, Aliases.REGIONS_ALIASES);
-        FCStateRegistry.instance().registerStateFactory(new HandlersStateFieldFactory(), HandlersStateField.ID, Aliases.HANDLERS_ALIASES);
+        FCStateManager.instance().registerStateFactory(new RegionsStateFieldFactory(), RegionsStateField.ID, Aliases.REGIONS_ALIASES);
+        FCStateManager.instance().registerStateFactory(new HandlersStateFieldFactory(), HandlersStateField.ID, Aliases.HANDLERS_ALIASES);
 
         try {
             Metrics metrics = new Metrics(game, game.getPluginManager().fromInstance(this).get());
@@ -305,7 +304,8 @@ public final class FoxGuardMain {
      * A private method that registers the list of commands, their aliases, and the command class.
      */
     private void registerCommands() {
-        FCCommandMainDispatcher fgDispatcher = new FCCommandMainDispatcher("/foxguard");
+        FCCommandDispatcher fgDispatcher = new FCCommandDispatcher("/foxguard",
+                "FoxGuard commands for managing world protection. Use /help foxguard for subcommands.");
         //FCCommandDispatcher fgRegionDispatcher = new FCCommandDispatcher("/foxguard regions");
         FCCommandDispatcher fgHandlerDispatcher = new FCCommandDispatcher("/foxguard handlers",
                 "Commands spcifically meant for managing Handlers.");

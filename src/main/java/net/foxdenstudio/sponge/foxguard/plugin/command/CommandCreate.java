@@ -26,8 +26,8 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandMainDispatcher;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
+import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.state.PositionsStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
@@ -102,13 +102,13 @@ public class CommandCreate implements CommandCallable {
             IRegion newRegion = FGFactoryManager.getInstance().createRegion(
                     args[1], args[2],
                     args.length < 4 ? "" : args[3],
-                    FCCommandMainDispatcher.getInstance().getStateMap().get(source), world, source);
+                    FCStateManager.instance().getStateMap().get(source), world, source);
             if (newRegion == null)
                 throw new CommandException(Texts.of("Failed to create Region! Perhaps the type is invalid?"));
             boolean success = FGManager.getInstance().addRegion(world, newRegion);
             if (!success)
                 throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1], 1);
-            FCCommandMainDispatcher.getInstance().getStateMap().get(source).flush(PositionsStateField.ID);
+            FCStateManager.instance().getStateMap().get(source).flush(PositionsStateField.ID);
             source.sendMessage(Texts.of(TextColors.GREEN, "Region created successfully"));
             return CommandResult.success();
             //----------------------------------------------------------------------------------------------------------------------
@@ -130,7 +130,7 @@ public class CommandCreate implements CommandCallable {
             IHandler newHandler = FGFactoryManager.getInstance().createHandler(
                     args[1], args[2], priority,
                     args.length < 4 ? "" : args[3],
-                    FCCommandMainDispatcher.getInstance().getStateMap().get(source), source);
+                    FCStateManager.instance().getStateMap().get(source), source);
             if (newHandler == null)
                 throw new CommandException(Texts.of("Failed to create Handler! Perhaps the type is invalid?"));
             boolean success = FGManager.getInstance().addHandler(newHandler);

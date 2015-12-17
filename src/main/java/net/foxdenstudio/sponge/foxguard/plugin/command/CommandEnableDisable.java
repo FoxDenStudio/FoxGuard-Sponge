@@ -25,8 +25,9 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
-import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandMainDispatcher;
+import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
+import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
@@ -97,7 +98,7 @@ public class CommandEnableDisable implements CommandCallable {
                         successes++;
                     }
                 }
-                FCCommandMainDispatcher.getInstance().getStateMap().get(source).flush(RegionsStateField.ID, HandlersStateField.ID);
+                FCStateManager.instance().getStateMap().get(source).flush(RegionsStateField.ID, HandlersStateField.ID);
                 if (successes == 1 && failures == 0) {
                     source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " object!"));
                     return CommandResult.success();
@@ -143,7 +144,7 @@ public class CommandEnableDisable implements CommandCallable {
                     successes++;
                 }
             }
-            FCCommandMainDispatcher.getInstance().getStateMap().get(source).flush(RegionsStateField.ID);
+            FCStateManager.instance().getStateMap().get(source).flush(RegionsStateField.ID);
             if (successes == 1 && failures == 0) {
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " region!"));
                 return CommandResult.success();
@@ -178,7 +179,7 @@ public class CommandEnableDisable implements CommandCallable {
                     successes++;
                 }
             }
-            FCCommandMainDispatcher.getInstance().getStateMap().get(source).flush(HandlersStateField.ID);
+            FCStateManager.instance().getStateMap().get(source).flush(HandlersStateField.ID);
             if (successes == 1 && failures == 0) {
                 source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handler!"));
                 return CommandResult.success();
@@ -196,7 +197,7 @@ public class CommandEnableDisable implements CommandCallable {
 
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
-        return null;
+        return ImmutableList.of();
     }
 
     @Override

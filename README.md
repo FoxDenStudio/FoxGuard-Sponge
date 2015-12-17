@@ -1,5 +1,6 @@
 # FoxGuard [![Build Status](https://travis-ci.org/FoxDenStudio/FoxGuard.svg?branch=master)](https://travis-ci.org/FoxDenStudio/FoxGuard)
 A Minecraft world protection plugin for [SpongeAPI](https://github.com/SpongePowered/SpongeAPI).
+
 Requires [FoxCore](https://github.com/FoxDenStudio/FoxCore).
 
 ## Why not WorldGuard?

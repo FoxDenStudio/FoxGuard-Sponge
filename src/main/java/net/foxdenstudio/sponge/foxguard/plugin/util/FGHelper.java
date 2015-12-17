@@ -25,7 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.util;
 
-import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandMainDispatcher;
+import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
@@ -51,12 +51,12 @@ public final class FGHelper {
 
     @SuppressWarnings("unchecked")
     public static List<IRegion> getSelectedRegions(CommandSource source) {
-        return ((RegionsStateField) FCCommandMainDispatcher.getInstance().getStateMap().get(source).get(RegionsStateField.ID)).getList();
+        return ((RegionsStateField) FCStateManager.instance().getStateMap().get(source).get(RegionsStateField.ID)).getList();
     }
 
     @SuppressWarnings("unchecked")
     public static List<IHandler> getSelectedHandlers(CommandSource source) {
-        return ((HandlersStateField) FCCommandMainDispatcher.getInstance().getStateMap().get(source).get(HandlersStateField.ID)).getList();
+        return ((HandlersStateField) FCStateManager.instance().getStateMap().get(source).get(HandlersStateField.ID)).getList();
     }
 
 }

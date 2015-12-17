@@ -26,7 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandMainDispatcher;
+import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
@@ -69,7 +69,7 @@ public class CommandUnlink implements CommandCallable {
                             .filter(handler -> !(handler instanceof GlobalHandler))
                             .forEach(handler -> count[0] += FGManager.getInstance().unlink(region, handler) ? 1 : 0));
             source.sendMessage(Texts.of(TextColors.GREEN, "Successfully unlinked " + count[0] + "!"));
-            FCCommandMainDispatcher.getInstance().getStateMap().get(source).flush(RegionsStateField.ID, HandlersStateField.ID);
+            FCStateManager.instance().getStateMap().get(source).flush(RegionsStateField.ID, HandlersStateField.ID);
             return CommandResult.builder().successCount(count[0]).build();
         } else if (args[0].equals("FULL")) {
             if (FGHelper.getSelectedRegions(source).size() == 0 &&
@@ -89,7 +89,7 @@ public class CommandUnlink implements CommandCallable {
                     handler -> FGManager.getInstance().getRegionsListCopy().stream().forEach(
                             region -> count[0] += FGManager.getInstance().unlink(region, handler) ? 1 : 0));
             source.sendMessage(Texts.of(TextColors.GREEN, "Successfully unlinked " + count[0] + "!"));
-            FCCommandMainDispatcher.getInstance().getStateMap().get(source).flush(RegionsStateField.ID, HandlersStateField.ID);
+            FCStateManager.instance().getStateMap().get(source).flush(RegionsStateField.ID, HandlersStateField.ID);
             return CommandResult.builder().successCount(count[0]).build();
         } else if (args[0].equals("EVERYTHING")) {
             int[] count = {0};

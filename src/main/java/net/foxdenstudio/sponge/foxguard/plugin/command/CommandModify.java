@@ -26,9 +26,9 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandMainDispatcher;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
+import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCHelper;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
@@ -91,7 +91,7 @@ public class CommandModify implements CommandCallable {
             if (region == null)
                 throw new CommandException(Texts.of("No Region with name \"" + args[1] + "\"!"));
             ProcessResult result = region.modify(args.length < 3 ? "" : args[2],
-                    FCCommandMainDispatcher.getInstance().getStateMap().get(source), source);
+                    FCStateManager.instance().getStateMap().get(source), source);
 
             if (result.isSuccess()) {
                 if (result.getMessage().isPresent()) {
@@ -120,7 +120,7 @@ public class CommandModify implements CommandCallable {
             if (handler == null)
                 throw new CommandException(Texts.of("No Handler with name \"" + args[1] + "\"!"));
             ProcessResult result = handler.modify(args.length < 3 ? "" : args[2],
-                    FCCommandMainDispatcher.getInstance().getStateMap().get(source), source);
+                    FCStateManager.instance().getStateMap().get(source), source);
             if (result.isSuccess()) {
                 if (result.getMessage().isPresent()) {
                     if (!FCHelper.hasColor(result.getMessage().get())) {
