@@ -29,25 +29,14 @@ import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
-import org.spongepowered.api.event.cause.CauseTracked;
 
 class DebugHelper {
-
-    public static void printCauses(CauseTracked event) {
-        StringBuilder sb = new StringBuilder().append("\n");
-        for (Object o : event.getCause().all()) {
-            sb.append(o).append("\n");
-        }
-        FoxGuardMain.instance().logger().info(sb.toString());
-    }
 
     public static void printEvent(Event event) {
         StringBuilder sb = new StringBuilder().append("-----------------------------------\n");
         sb.append(event.getClass()).append("\n\n");
-        if (event instanceof CauseTracked) {
-            for (Object o : ((CauseTracked) event).getCause().all()) {
-                sb.append(o).append("\n");
-            }
+        for (Object o : event.getCause().all()) {
+            sb.append(o).append("\n");
         }
         FoxGuardMain.instance().logger().info(sb.toString());
     }

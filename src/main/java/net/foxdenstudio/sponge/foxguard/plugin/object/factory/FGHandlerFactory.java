@@ -88,9 +88,9 @@ public class FGHandlerFactory implements IHandlerFactory {
             List<User> ownerList = new LinkedList<>();
             List<User> memberList = new LinkedList<>();
             SimpleHandler.PassiveOptions po = SimpleHandler.PassiveOptions.DEFAULT;
-            CallbackHashMap<Flag, Tristate> ownerFlagMap = new CallbackHashMap<>((key, map) -> Tristate.TRUE);
+            CallbackHashMap<Flag, Tristate> ownerFlagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
             CallbackHashMap<Flag, Tristate> memberFlagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
-            CallbackHashMap<Flag, Tristate> defaultFlagMap = new CallbackHashMap<>((key, map) -> Tristate.FALSE);
+            CallbackHashMap<Flag, Tristate> defaultFlagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
             try (Connection conn = source.getConnection()) {
                 try (Statement statement = conn.createStatement()) {
                     try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {

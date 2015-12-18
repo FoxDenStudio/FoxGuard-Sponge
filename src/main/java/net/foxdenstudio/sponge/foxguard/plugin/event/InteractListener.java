@@ -49,9 +49,9 @@ public class InteractListener implements EventListener<InteractEvent> {
     public void handle(InteractEvent event) throws Exception {
         if (event.isCancelled()) return;
         User user;
-        if (event.getCause().any(Player.class)) {
+        if (event.getCause().containsType(Player.class)) {
             user = event.getCause().first(Player.class).get();
-        } else if (event.getCause().any(User.class)) {
+        } else if (event.getCause().containsType(User.class)) {
             user = event.getCause().first(User.class).get();
         } else {
             user = null;

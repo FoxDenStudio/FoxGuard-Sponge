@@ -65,9 +65,9 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
 
     public SimpleHandler(String name, int priority) {
         this(name, priority,
-                new CallbackHashMap<>((o, m) -> Tristate.TRUE),
                 new CallbackHashMap<>((o, m) -> Tristate.UNDEFINED),
-                new CallbackHashMap<>((o, m) -> Tristate.FALSE));
+                new CallbackHashMap<>((o, m) -> Tristate.UNDEFINED),
+                new CallbackHashMap<>((o, m) -> Tristate.UNDEFINED));
     }
 
     public SimpleHandler(String name, int priority,
