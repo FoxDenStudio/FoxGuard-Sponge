@@ -50,7 +50,7 @@ import java.util.function.Function;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
-class CommandRename implements CommandCallable {
+public class CommandRename implements CommandCallable {
 
     private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
         if (isAlias(WORLD_ALIASES, key) && !map.containsKey("world")) {

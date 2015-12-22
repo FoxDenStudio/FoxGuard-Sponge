@@ -313,6 +313,7 @@ public final class FoxGuardMain {
         fgDispatcher.register(new CommandCreate(), "create", "construct", "new", "make", "define", "mk", "cr");
         fgDispatcher.register(new CommandDelete(), "delete", "del", "remove", "rem", "rm", "destroy");
         fgDispatcher.register(new CommandModify(), "modify", "mod", "change", "edit", "update", "md", "ch");
+        fgDispatcher.register(new CommandRename(), "rename", "name", "rn");
         fgDispatcher.register(new CommandLink(), "link", "connect", "attach");
         fgDispatcher.register(new CommandUnlink(), "unlink", "disconnect", "detach");
         fgDispatcher.register(new CommandEnableDisable(true), "enable", "activate", "engage", "on");
