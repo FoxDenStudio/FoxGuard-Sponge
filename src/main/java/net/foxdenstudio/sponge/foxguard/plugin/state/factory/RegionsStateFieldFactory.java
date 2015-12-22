@@ -25,6 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.state.factory;
 
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
 import net.foxdenstudio.sponge.foxcore.plugin.state.IStateField;
 import net.foxdenstudio.sponge.foxcore.plugin.state.factory.IStateFieldFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
@@ -32,7 +33,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
 public class RegionsStateFieldFactory implements IStateFieldFactory {
 
     @Override
-    public IStateField createStateField() {
+    public IStateField createStateField(SourceState sourceState) {
         return new RegionsStateField();
     }
 

@@ -29,7 +29,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
-import net.foxdenstudio.sponge.foxcore.plugin.util.FCHelper;
+import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Flag;
 import org.spongepowered.api.command.CommandException;
@@ -114,32 +114,32 @@ public class PassiveHandler extends OwnableHandlerBase {
                             int failures = 0;
                             List<String> names = new ArrayList<>();
                             Collections.addAll(names, Arrays.copyOfRange(args, 2, args.length));
-                            List<User> users = new ArrayList<>();
+                            List<User> argUsers = new ArrayList<>();
                             for (String name : names) {
                                 Optional<User> optUser = FoxGuardMain.instance().getUserStorage().get(name);
-                                if (optUser.isPresent() && !FCHelper.isUserOnList(users, optUser.get()))
-                                    users.add(optUser.get());
+                                if (optUser.isPresent() && !FCHelper.isUserOnList(argUsers, optUser.get()))
+                                    argUsers.add(optUser.get());
                                 else failures++;
                             }
                             switch (op) {
                                 case ADD:
-                                    for (User user : users) {
+                                    for (User user : argUsers) {
                                         if (!FCHelper.isUserOnList(ownerList, user) && ownerList.add(user))
                                             successes++;
                                         else failures++;
                                     }
                                     break;
                                 case REMOVE:
-                                    for (User cUser : ownerList) {
-                                        if (FCHelper.isUserOnList(users, cUser)) {
-                                            ownerList.remove(cUser);
+                                    for (User user : argUsers) {
+                                        if (FCHelper.isUserOnList(ownerList, user)) {
+                                            ownerList.remove(user);
                                             successes++;
                                         } else failures++;
                                     }
                                     break;
                                 case SET:
                                     ownerList.clear();
-                                    for (User user : users) {
+                                    for (User user : argUsers) {
                                         ownerList.add(user);
                                         successes++;
                                     }

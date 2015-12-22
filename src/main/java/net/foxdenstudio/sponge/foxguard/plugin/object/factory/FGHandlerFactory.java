@@ -28,7 +28,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.object.factory;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
-import net.foxdenstudio.sponge.foxcore.plugin.util.FCHelper;
+import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.PassiveHandler;

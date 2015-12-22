@@ -52,7 +52,6 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
     @Override
     public Text state() {
         TextBuilder builder = Texts.builder();
-        builder.append(Texts.of(TextColors.GREEN, "Handlers: "));
         int index = 1;
         for (Iterator<IHandler> it = this.list.iterator(); it.hasNext(); ) {
             IHandler handler = it.next();

@@ -86,7 +86,7 @@ public final class FoxGuardMain {
     /**
      * String object containing the current version of the plugin.
      */
-    public static final String PLUGIN_VERSION = "0.11.1-SNAPSHOT";//VERSION
+    public static final String PLUGIN_VERSION = "0.13.0-SNAPSHOT";//VERSION
 
     /**
      * FoxGuardMain instance object.
@@ -357,8 +357,8 @@ public final class FoxGuardMain {
      * A private method that sets up the permissions.
      */
     private void configurePermissions() {
-        getPermissionService().getDefaultData().setPermission(SubjectData.GLOBAL_CONTEXT, "foxguard.command.info", Tristate.TRUE);
-        getPermissionService().getDefaultData().setPermission(SubjectData.GLOBAL_CONTEXT, "foxguard.override", Tristate.FALSE);
+        game.getServiceManager().provide(PermissionService.class).get()
+                .getDefaultData().setPermission(SubjectData.GLOBAL_CONTEXT, "foxguard.override", Tristate.FALSE);
     }
 
     /**
@@ -382,15 +382,6 @@ public final class FoxGuardMain {
      */
     public File getConfigDirectory() {
         return configDirectory;
-    }
-
-    /**
-     * A method that when called will return a PermissionService object, which can be used for permission creation/checking
-     *
-     * @return A PermissionService Object Instance
-     */
-    private PermissionService getPermissionService() {
-        return game.getServiceManager().provide(PermissionService.class).get();
     }
 
     /**

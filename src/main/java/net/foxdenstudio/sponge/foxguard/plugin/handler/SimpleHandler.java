@@ -29,7 +29,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
-import net.foxdenstudio.sponge.foxcore.plugin.util.FCHelper;
+import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IMembership;
@@ -117,32 +117,32 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                                 int failures = 0;
                                 List<String> names = new ArrayList<>();
                                 Collections.addAll(names, Arrays.copyOfRange(args, 3, args.length));
-                                List<User> users = new ArrayList<>();
+                                List<User> argUsers = new ArrayList<>();
                                 for (String name : names) {
                                     Optional<User> optUser = FoxGuardMain.instance().getUserStorage().get(name);
-                                    if (optUser.isPresent() && !FCHelper.isUserOnList(users, optUser.get()))
-                                        users.add(optUser.get());
+                                    if (optUser.isPresent() && !FCHelper.isUserOnList(argUsers, optUser.get()))
+                                        argUsers.add(optUser.get());
                                     else failures++;
                                 }
                                 switch (op) {
                                     case ADD:
-                                        for (User user : users) {
+                                        for (User user : argUsers) {
                                             if (!FCHelper.isUserOnList(list, user) && list.add(user))
                                                 successes++;
                                             else failures++;
                                         }
                                         break;
                                     case REMOVE:
-                                        for (User cUser : list) {
-                                            if (FCHelper.isUserOnList(users, cUser)) {
-                                                list.remove(cUser);
+                                        for (User user : argUsers) {
+                                            if (FCHelper.isUserOnList(list, user)) {
+                                                list.remove(user);
                                                 successes++;
                                             } else failures++;
                                         }
                                         break;
                                     case SET:
                                         list.clear();
-                                        for (User user : users) {
+                                        for (User user : argUsers) {
                                             list.add(user);
                                             successes++;
                                         }

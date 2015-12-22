@@ -66,13 +66,13 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
     @Override
     public Text state() {
         TextBuilder builder = Texts.builder();
-        builder.append(Texts.of(TextColors.GREEN, "Regions: "));
         Iterator<IRegion> regionIterator = this.list.iterator();
         int index = 1;
         while (regionIterator.hasNext()) {
             IRegion region = regionIterator.next();
             builder.append(Texts.of(FGHelper.getColorForRegion(region),
-                    "\n  " + (index++) + ": " + region.getShortTypeName() + " : " + region.getWorld().getName() + " : " + region.getName()));
+                    (index++) + ": " + region.getShortTypeName() + " : " + region.getWorld().getName() + " : " + region.getName()));
+            if(regionIterator.hasNext()) builder.append(Texts.of("\n"));
         }
         return builder.build();
     }
@@ -83,7 +83,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).build();
         String[] args = parse.getArgs();
 
-        if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
+        if (args.length < 1) throw new CommandException(Texts.of("Must specify a name!"));
         String worldName = parse.getFlagmap().get("world");
         World world = null;
         if (source instanceof Player) world = ((Player) source).getWorld();

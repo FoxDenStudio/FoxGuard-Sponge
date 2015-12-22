@@ -19,7 +19,7 @@ script: gradle build
 notifications:
   email: false
 
-after_success:
+before_deploy:
   - for f in "./build/libs/FoxGuard*SNAPSHOT.jar"; do mv ${f} "./build/libs/FoxGuard-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}-SNAPSHOT.jar"; done
 
 deploy:
