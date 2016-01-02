@@ -36,7 +36,7 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.entity.SpawnEntityEvent;
-import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
@@ -74,7 +74,7 @@ public class SpawnEntityEventListener implements EventListener<SpawnEntityEvent>
         for (Entity entity : event.getEntities()) {
             Vector3d loc = entity.getLocation().getPosition();
             FGManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
-                    .forEach(region -> region.getHandlersCopy().stream()
+                    .forEach(region -> region.getHandlers().stream()
                             .filter(handler -> !handlerList.contains(handler))
                             .forEach(handlerList::add));
         }
@@ -90,7 +90,7 @@ public class SpawnEntityEventListener implements EventListener<SpawnEntityEvent>
         }
         if (flagState == Tristate.FALSE) {
             if (user instanceof Player)
-                ((Player) user).sendMessage(Texts.of("You don't have permission!"));
+                ((Player) user).sendMessage(Text.of("You don't have permission!"));
             event.setCancelled(true);
         } else {
             //makes sure that handlers are unable to cancel the event directly.

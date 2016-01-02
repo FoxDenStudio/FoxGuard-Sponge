@@ -26,17 +26,15 @@
 package net.foxdenstudio.sponge.foxguard.plugin.region;
 
 import com.flowpowered.math.vector.Vector3i;
+import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
-import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.TextBuilder;
-import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 
 import javax.sql.DataSource;
@@ -65,15 +63,15 @@ public class ElevationRegion extends OwnableRegionBase {
         for (String arg : args) {
             int y;
             try {
-                y = FCHelper.parseCoordinate(source instanceof Player ?
+                y = (int) FCHelper.parseCoordinate(source instanceof Player ?
                         ((Player) source).getLocation().getBlockY() : 0, arg);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(
-                        Texts.of("Unable to parse \"" + arg + "\"!"), e, arg, 1);
+                        Text.of("Unable to parse \"" + arg + "\"!"), e, arg, 1);
             }
             allPositions.add(new Vector3i(0, y, 0));
         }
-        if (allPositions.isEmpty()) throw new CommandException(Texts.of("No parameters specified!"));
+        if (allPositions.isEmpty()) throw new CommandException(Text.of("No parameters specified!"));
         int a = allPositions.get(0).getY(), b = allPositions.get(0).getY();
         for (Vector3i pos : allPositions) {
             a = Math.min(a, pos.getY());
@@ -120,13 +118,13 @@ public class ElevationRegion extends OwnableRegionBase {
 
     @Override
     public Text getDetails(String arguments) {
-        TextBuilder builder = super.getDetails(arguments).builder();
-        builder.append(Texts.of(TextColors.GREEN, "\nBounds: "));
+        Text.Builder builder = super.getDetails(arguments).builder();
+        builder.append(Text.of(TextColors.GREEN, "\nBounds: "));
         try {
             this.lock.readLock().lock();
-            builder.append(Texts.of(TextColors.RESET, lowerBound));
-            builder.append(Texts.of(", "));
-            builder.append(Texts.of(upperBound));
+            builder.append(Text.of(TextColors.RESET, lowerBound));
+            builder.append(Text.of(", "));
+            builder.append(Text.of(upperBound));
         } finally {
             this.lock.readLock().unlock();
         }

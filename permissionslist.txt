@@ -11,6 +11,10 @@ foxguard {
                     regions
                     handlers
                 }
+                here {
+                    regions
+                    handlers
+                }
             }
         }
         state {

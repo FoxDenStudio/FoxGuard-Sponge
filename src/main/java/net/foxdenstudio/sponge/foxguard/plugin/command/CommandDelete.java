@@ -39,7 +39,6 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.World;
 
@@ -62,20 +61,19 @@ public class CommandDelete implements CommandCallable {
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {
-            source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
+            source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).build();
-        String[] args = parse.getArgs();
-        if (args.length == 0) {
-            source.sendMessage(Texts.builder()
-                    .append(Texts.of(TextColors.GREEN, "Usage: "))
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).parse2();
+        if (parse.args.length == 0) {
+            source.sendMessage(Text.builder()
+                    .append(Text.of(TextColors.GREEN, "Usage: "))
                     .append(getUsage(source))
                     .build());
             return CommandResult.empty();
-        } else if (isAlias(REGIONS_ALIASES, args[0])) {
-            if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-            String worldName = parse.getFlagmap().get("world");
+        } else if (isAlias(REGIONS_ALIASES, parse.args[0])) {
+            if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
+            String worldName = parse.flagmap.get("world");
             World world = null;
             if (source instanceof Player) world = ((Player) source).getWorld();
             if (!worldName.isEmpty()) {
@@ -84,25 +82,25 @@ public class CommandDelete implements CommandCallable {
                     world = optWorld.get();
                 }
             }
-            if (world == null) throw new CommandException(Texts.of("Must specify a world!"));
-            if (args[1].equalsIgnoreCase(GlobalRegion.NAME))
-                throw new CommandException(Texts.of("You may not delete the global Region!"));
-            boolean success = FGManager.getInstance().removeRegion(world, args[1]);
+            if (world == null) throw new CommandException(Text.of("Must specify a world!"));
+            if (parse.args[1].equalsIgnoreCase(GlobalRegion.NAME))
+                throw new CommandException(Text.of("You may not delete the global Region!"));
+            boolean success = FGManager.getInstance().removeRegion(world, parse.args[1]);
             if (!success)
-                throw new ArgumentParseException(Texts.of("No Region exists with that name!"), args[1], 1);
+                throw new ArgumentParseException(Text.of("No Region exists with that name!"), parse.args[1], 1);
 
-            source.sendMessage(Texts.of(TextColors.GREEN, "Region deleted successfully!"));
+            source.sendMessage(Text.of(TextColors.GREEN, "Region deleted successfully!"));
             return CommandResult.success();
-        } else if (isAlias(HANDLERS_ALIASES, args[0])) {
-            if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-            if (args[1].equalsIgnoreCase(GlobalHandler.NAME))
-                throw new CommandException(Texts.of("You may not delete the global Handler!"));
-            boolean success = FGManager.getInstance().removeHandler(args[1]);
+        } else if (isAlias(HANDLERS_ALIASES, parse.args[0])) {
+            if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
+            if (parse.args[1].equalsIgnoreCase(GlobalHandler.NAME))
+                throw new CommandException(Text.of("You may not delete the global Handler!"));
+            boolean success = FGManager.getInstance().removeHandler(parse.args[1]);
             if (!success)
-                throw new ArgumentParseException(Texts.of("No Handler exists with that name!"), args[1], 1);
-            source.sendMessage(Texts.of(TextColors.GREEN, "Handler deleted successfully!"));
+                throw new ArgumentParseException(Text.of("No Handler exists with that name!"), parse.args[1], 1);
+            source.sendMessage(Text.of(TextColors.GREEN, "Handler deleted successfully!"));
             return CommandResult.success();
-        } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
+        } else throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);
     }
 
     @Override
@@ -127,6 +125,6 @@ public class CommandDelete implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("delete <region [--w:<world>] | handler> <name>");
+        return Text.of("delete <region [--w:<world>] | handler> <name>");
     }
 }

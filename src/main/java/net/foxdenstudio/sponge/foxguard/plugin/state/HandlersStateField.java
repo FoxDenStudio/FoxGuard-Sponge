@@ -35,9 +35,6 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.TextBuilder;
-import org.spongepowered.api.text.Texts;
-import org.spongepowered.api.text.format.TextColors;
 
 import java.util.Iterator;
 
@@ -51,53 +48,51 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
 
     @Override
     public Text state() {
-        TextBuilder builder = Texts.builder();
+        Text.Builder builder = Text.builder();
         int index = 1;
         for (Iterator<IHandler> it = this.list.iterator(); it.hasNext(); ) {
             IHandler handler = it.next();
-            builder.append(Texts.of(FGHelper.getColorForHandler(handler), "  " + (index++) + ": " + handler.getShortTypeName() + " : " + handler.getName()));
-            if (it.hasNext()) builder.append(Texts.of("\n"));
+            builder.append(Text.of(FGHelper.getColorForHandler(handler), "  " + (index++) + ": " + handler.getShortTypeName() + " : " + handler.getName()));
+            if (it.hasNext()) builder.append(Text.of("\n"));
         }
         return builder.build();
     }
 
     @Override
     public ProcessResult add(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).build();
-        String[] args = parse.getArgs();
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).parse2();
 
-        if (args.length < 1) throw new CommandException(Texts.of("Must specify a name!"));
-        IHandler handler = FGManager.getInstance().gethandler(args[0]);
+        if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name!"));
+        IHandler handler = FGManager.getInstance().gethandler(parse.args[0]);
         if (handler == null)
-            throw new ArgumentParseException(Texts.of("No Handlers with this name!"), args[0], 1);
+            throw new ArgumentParseException(Text.of("No Handlers with this name!"), parse.args[0], 1);
         if (this.list.contains(handler))
-            throw new ArgumentParseException(Texts.of("Handler is already in your state buffer!"), args[0], 1);
+            throw new ArgumentParseException(Text.of("Handler is already in your state buffer!"), parse.args[0], 1);
         this.list.add(handler);
 
-        return ProcessResult.of(true, Texts.of("Successfully added Handler to your state buffer!"));
+        return ProcessResult.of(true, Text.of("Successfully added Handler to your state buffer!"));
     }
 
     @Override
     public ProcessResult subtract(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).build();
-        String[] args = parse.getArgs();
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).parse2();
 
-        if (args.length < 1) throw new CommandException(Texts.of("Must specify a name or a number!"));
+        if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name or a number!"));
         IHandler handler;
         try {
-            int index = Integer.parseInt(args[0]);
+            int index = Integer.parseInt(parse.args[0]);
             handler = this.list.get(index - 1);
         } catch (NumberFormatException e) {
-            handler = FGManager.getInstance().gethandler(args[1]);
+            handler = FGManager.getInstance().gethandler(parse.args[1]);
         } catch (IndexOutOfBoundsException e) {
-            throw new ArgumentParseException(Texts.of("Index out of bounds! (1 - " + this.list.size()), args[0], 1);
+            throw new ArgumentParseException(Text.of("Index out of bounds! (1 - " + this.list.size()), parse.args[0], 1);
         }
         if (handler == null)
-            throw new ArgumentParseException(Texts.of("No Handlers with this name!"), args[0], 1);
+            throw new ArgumentParseException(Text.of("No Handlers with this name!"), parse.args[0], 1);
         if (!this.list.contains(handler))
-            throw new ArgumentParseException(Texts.of("Handler is not in your state buffer!"), args[0], 1);
+            throw new ArgumentParseException(Text.of("Handler is not in your state buffer!"), parse.args[0], 1);
         this.list.remove(handler);
 
-        return ProcessResult.of(true, Texts.of("Successfully removed Handler from your state buffer!"));
+        return ProcessResult.of(true, Text.of("Successfully removed Handler from your state buffer!"));
     }
 }

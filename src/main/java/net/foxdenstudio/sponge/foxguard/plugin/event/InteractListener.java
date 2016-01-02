@@ -35,7 +35,7 @@ import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.action.InteractEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.entity.InteractEntityEvent;
-import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
@@ -81,14 +81,14 @@ public class InteractListener implements EventListener<InteractEvent> {
             loc = event.getInteractionPoint().get();
             System.out.println(loc);
             FGManager.instance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
-                    .forEach(region -> region.getHandlersCopy().stream()
+                    .forEach(region -> region.getHandlers().stream()
                             .filter(handler -> !handlerList.contains(handler))
                             .forEach(handlerList::add));
         } else {
         */
         final Vector3d finalLoc = loc;
         FGManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(finalLoc))
-                .forEach(region -> region.getHandlersCopy().stream()
+                .forEach(region -> region.getHandlers().stream()
                         .filter(handler -> !handlerList.contains(handler))
                         .forEach(handlerList::add));
         //}
@@ -105,7 +105,7 @@ public class InteractListener implements EventListener<InteractEvent> {
         flagState = typeFlag.resolve(flagState);
         if (flagState == Tristate.FALSE) {
             if (user instanceof Player)
-                ((Player) user).sendMessage(Texts.of("You don't have permission!"));
+                ((Player) user).sendMessage(Text.of("You don't have permission!"));
             event.setCancelled(true);
         } else {
             //makes sure that handlers are unable to cancel the event directly.

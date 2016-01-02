@@ -25,9 +25,10 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
+import com.flowpowered.math.vector.Vector3d;
 import com.google.common.collect.ImmutableList;
+import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
-import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
@@ -38,6 +39,7 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
@@ -46,11 +48,18 @@ import org.spongepowered.api.world.World;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
-public class CommandList implements CommandCallable {
+import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
+
+public class CommandHere implements CommandCallable {
 
     private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
-        if (Aliases.isAlias(Aliases.WORLD_ALIASES, key) && !map.containsKey("world")) {
+        if (isAlias(REGIONS_ALIASES, key) && !map.containsKey("region")) {
+            map.put("region", value);
+        } else if (isAlias(HANDLERS_ALIASES, key) && !map.containsKey("handler")) {
+            map.put("handler", value);
+        } else if (isAlias(WORLD_ALIASES, key) && !map.containsKey("world")) {
             map.put("world", value);
         }
     };
@@ -62,52 +71,77 @@ public class CommandList implements CommandCallable {
             return CommandResult.empty();
         }
         AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).parse2();
-
+        
+        String worldName = parse.flagmap.get("world");
+        World world = null;
+        if (source instanceof Player) world = ((Player) source).getWorld();
+        if (!worldName.isEmpty()) {
+            Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
+            if (optWorld.isPresent()) {
+                world = optWorld.get();
+            }
+        }
+        if (world == null) throw new CommandException(Text.of("Must specify a world!"));
+        double x, y, z;
+        Vector3d pPos = null;
+        if (source instanceof Player)
+            pPos = ((Player) source).getLocation().getPosition();
         if (parse.args.length == 0) {
-            source.sendMessage(Text.builder()
-                    .append(Text.of(TextColors.GREEN, "Usage: "))
-                    .append(getUsage(source))
-                    .build());
-            return CommandResult.empty();
-        } else if (contains(Aliases.REGIONS_ALIASES, parse.args[0])) {
-            List<IRegion> regionList = new LinkedList<>();
-            boolean allFlag = true;
-            String worldName = parse.flagmap.get("world");
-            if (!worldName.isEmpty()) {
-                Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
-                if (optWorld.isPresent()) {
-                    FGManager.getInstance().getRegionsListCopy(optWorld.get()).forEach(regionList::add);
-                    allFlag = false;
-                }
+            if (pPos == null)
+                throw new CommandException(Text.of("Must specify coordinates!"));
+            x = pPos.getX();
+            y = pPos.getY();
+            z = pPos.getZ();
+        } else if (parse.args.length > 0 && parse.args.length < 3) {
+            throw new CommandException(Text.of("Not enough arguments!"));
+        } else if (parse.args.length == 3) {
+            if (pPos == null)
+                pPos = Vector3d.ZERO;
+            try {
+                x = FCHelper.parseCoordinate(pPos.getX(), parse.args[0]);
+            } catch (NumberFormatException e) {
+                throw new ArgumentParseException(Text.of("Unable to parse \"" + parse.args[0] + "\"!"), e, parse.args[0], 0);
             }
-            if (allFlag) {
-                FGManager.getInstance().getRegionsListCopy().forEach(regionList::add);
+            try {
+                y = FCHelper.parseCoordinate(pPos.getY(), parse.args[1]);
+            } catch (NumberFormatException e) {
+                throw new ArgumentParseException(Text.of("Unable to parse \"" + parse.args[1] + "\"!"), e, parse.args[1], 1);
             }
-
-            Text.Builder output = Text.builder()
-                    .append(Text.of(TextColors.GOLD, "-----------------------------------------------------\n"))
-                    .append(Text.of(TextColors.GREEN, "---Regions" + (allFlag ? "" : (" for world: \"" + worldName + "\"")) + "---\n"));
+            try {
+                z = FCHelper.parseCoordinate(pPos.getZ(), parse.args[2]);
+            } catch (NumberFormatException e) {
+                throw new ArgumentParseException(Text.of("Unable to parse \"" + parse.args[2] + "\"!"), e, parse.args[2], 2);
+            }
+        } else {
+            throw new CommandException(Text.of("Too many arguments!"));
+        }
+        boolean flag = false;
+        Text.Builder output = Text.builder();
+        List<IRegion> regionList = FGManager.getInstance().getRegionsListCopy(world).stream()
+                .filter(region -> region.isInRegion(x, y, z))
+                .collect(Collectors.toList());
+        output.append(Text.of(TextColors.GOLD, "-----------------------------------------------------\n"));
+        output.append(Text.of(TextColors.AQUA, "----- Position: (" + String.format("%.1f, %.1f, %.1f", x, y, z) + ") -----\n"));
+        if (!parse.flagmap.containsKey("handler") || parse.flagmap.containsKey("region")) {
+            output.append(Text.of(TextColors.GREEN, "----- Regions Located Here -----\n"));
             ListIterator<IRegion> regionListIterator = regionList.listIterator();
             while (regionListIterator.hasNext()) {
                 IRegion region = regionListIterator.next();
                 output.append(Text.of(FGHelper.getColorForRegion(region),
                         TextActions.runCommand("/foxguard detail region --w:" + region.getWorld().getName() + " " + region.getName()),
                         TextActions.showText(Text.of("View Details")),
-                        getRegionName(region, allFlag)));
+                        region.getShortTypeName() + " : " + region.getName()));
                 if (regionListIterator.hasNext()) output.append(Text.of("\n"));
             }
-            source.sendMessage(output.build());
-        } else if (contains(Aliases.HANDLERS_ALIASES, parse.args[0])) {
-            List<IHandler> handlerList = FGManager.getInstance().getHandlerListCopy();
-
-                    /*try {
-                        page = Integer.parseInt(parse.args[1]);
-                    } catch (NumberFormatException ignored) {
-                    }*/
-
-            Text.Builder output = Text.builder()
-                    .append(Text.of(TextColors.GOLD, "-----------------------------------------------------\n"))
-                    .append(Text.of(TextColors.GREEN, "---Handlers---\n"));
+            flag = true;
+        }
+        if (!parse.flagmap.containsKey("region") || parse.flagmap.containsKey("handler")) {
+            if (flag) output.append(Text.of("\n"));
+            List<IHandler> handlerList = new ArrayList<>();
+            regionList.forEach(region -> region.getHandlers().stream()
+                    .filter(handler -> !handlerList.contains(handler))
+                    .forEach(handlerList::add));
+            output.append(Text.of(TextColors.GREEN, "----- Handlers Located Here -----\n"));
             ListIterator<IHandler> handlerListIterator = handlerList.listIterator();
             while (handlerListIterator.hasNext()) {
                 IHandler handler = handlerListIterator.next();
@@ -117,23 +151,9 @@ public class CommandList implements CommandCallable {
                         handler.getShortTypeName() + " : " + handler.getName()));
                 if (handlerListIterator.hasNext()) output.append(Text.of("\n"));
             }
-            source.sendMessage(output.build());
-        } else {
-            throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);
         }
+        source.sendMessage(output.build());
         return CommandResult.empty();
-    }
-
-
-    private String getRegionName(IRegion region, boolean dispWorld) {
-        return region.getShortTypeName() + " : " + (dispWorld ? region.getWorld().getName() + " : " : "") + region.getName();
-    }
-
-    private boolean contains(String[] aliases, String input) {
-        for (String alias : aliases) {
-            if (alias.equalsIgnoreCase(input)) return true;
-        }
-        return false;
     }
 
     @Override
@@ -143,12 +163,12 @@ public class CommandList implements CommandCallable {
 
     @Override
     public boolean testPermission(CommandSource source) {
-        return source.hasPermission("foxguard.command.info.objects.list");
+        return source.hasPermission("foxguard.command.info.here");
     }
 
     @Override
     public Optional<? extends Text> getShortDescription(CommandSource source) {
-        return Optional.of(Text.of("Lists the regions/handlers on this server"));
+        return Optional.empty();
     }
 
     @Override
@@ -158,6 +178,6 @@ public class CommandList implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Text.of("list <regions [--w:<world>] | handlers>");
+        return Text.of("here [-r] [-h] [--w:<world>] [<x> <y> <z>]");
     }
 }

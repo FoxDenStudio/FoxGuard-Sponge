@@ -33,7 +33,6 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.World;
 
@@ -45,14 +44,14 @@ public class CommandSave implements CommandCallable {
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {
-            source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
+            source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
         FGStorageManager.getInstance().writeHandlers();
         for (World world : Sponge.getGame().getServer().getWorlds()) {
             FGStorageManager.getInstance().writeWorld(world);
         }
-        source.sendMessage(Texts.of(TextColors.GREEN, "Successfully saved!"));
+        source.sendMessage(Text.of(TextColors.GREEN, "Successfully saved!"));
         return CommandResult.success();
     }
 
@@ -78,7 +77,7 @@ public class CommandSave implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("save");
+        return Text.of("save");
     }
 
 }

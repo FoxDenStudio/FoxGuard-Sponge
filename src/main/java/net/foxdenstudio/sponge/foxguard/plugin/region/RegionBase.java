@@ -57,7 +57,7 @@ public abstract class RegionBase extends FGObjectBase implements IRegion {
     }
 
     @Override
-    public List<IHandler> getHandlersCopy() {
+    public List<IHandler> getHandlers() {
         try {
             this.lock.readLock().lock();
             return ImmutableList.copyOf(this.handlers);

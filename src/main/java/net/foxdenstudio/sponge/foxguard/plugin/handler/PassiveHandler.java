@@ -25,11 +25,11 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
+import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
-import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Flag;
 import org.spongepowered.api.command.CommandException;
@@ -39,8 +39,6 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.TextBuilder;
-import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
@@ -92,28 +90,27 @@ public class PassiveHandler extends OwnableHandlerBase {
             if (source instanceof ProxySource) source = ((ProxySource) source).getOriginalSource();
             if (source instanceof Player && !this.ownerList.contains(source)) return ProcessResult.failure();
         }
-        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).build();
-        String[] args = parse.getArgs();
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).parse2();
         try {
             this.lock.writeLock().lock();
-            if (args.length > 0) {
-                if (isAlias(OWNER_GROUP_ALIASES, args[0])) {
-                    if (args.length > 1) {
+            if (parse.args.length > 0) {
+                if (isAlias(OWNER_GROUP_ALIASES, parse.args[0])) {
+                    if (parse.args.length > 1) {
                         UserOperations op;
-                        if (args[1].equalsIgnoreCase("add")) {
+                        if (parse.args[1].equalsIgnoreCase("add")) {
                             op = UserOperations.ADD;
-                        } else if (args[1].equalsIgnoreCase("remove")) {
+                        } else if (parse.args[1].equalsIgnoreCase("remove")) {
                             op = UserOperations.REMOVE;
-                        } else if (args[1].equalsIgnoreCase("set")) {
+                        } else if (parse.args[1].equalsIgnoreCase("set")) {
                             op = UserOperations.SET;
                         } else {
-                            return ProcessResult.of(false, Texts.of("Not a valid operation!"));
+                            return ProcessResult.of(false, Text.of("Not a valid operation!"));
                         }
-                        if (args.length > 2) {
+                        if (parse.args.length > 2) {
                             int successes = 0;
                             int failures = 0;
                             List<String> names = new ArrayList<>();
-                            Collections.addAll(names, Arrays.copyOfRange(args, 2, args.length));
+                            Collections.addAll(names, Arrays.copyOfRange(parse.args, 2, parse.args.length));
                             List<User> argUsers = new ArrayList<>();
                             for (String name : names) {
                                 Optional<User> optUser = FoxGuardMain.instance().getUserStorage().get(name);
@@ -144,57 +141,57 @@ public class PassiveHandler extends OwnableHandlerBase {
                                         successes++;
                                     }
                             }
-                            return ProcessResult.of(true, Texts.of("Modified list with " + successes + " successes and " + failures + " failures."));
+                            return ProcessResult.of(true, Text.of("Modified list with " + successes + " successes and " + failures + " failures."));
                         } else {
-                            return ProcessResult.of(false, Texts.of("Must specify one or more users!"));
+                            return ProcessResult.of(false, Text.of("Must specify one or more users!"));
                         }
                     } else {
-                        return ProcessResult.of(false, Texts.of("Must specify an operation!"));
+                        return ProcessResult.of(false, Text.of("Must specify an operation!"));
                     }
 
-                } else if (isAlias(SET_ALIASES, args[0])) {
-                    if (args.length > 1) {
+                } else if (isAlias(SET_ALIASES, parse.args[0])) {
+                    if (parse.args.length > 1) {
                         Flag flag;
-                        if (args[1].equalsIgnoreCase("all")) {
+                        if (parse.args[1].equalsIgnoreCase("all")) {
                             flag = null;
                         } else {
-                            flag = Flag.flagFrom(args[1]);
+                            flag = Flag.flagFrom(parse.args[1]);
                             if (flag == null) {
-                                return ProcessResult.of(false, Texts.of("Not a valid flag!"));
+                                return ProcessResult.of(false, Text.of("Not a valid flag!"));
                             }
                         }
-                        if (isAlias(CLEAR_ALIASES, args[2])) {
+                        if (isAlias(CLEAR_ALIASES, parse.args[2])) {
                             if (flag == null) {
                                 this.map.clear();
-                                return ProcessResult.of(true, Texts.of("Successfully cleared flags!"));
+                                return ProcessResult.of(true, Text.of("Successfully cleared flags!"));
                             } else {
                                 this.map.remove(flag);
-                                return ProcessResult.of(true, Texts.of("Successfully cleared flag!"));
+                                return ProcessResult.of(true, Text.of("Successfully cleared flag!"));
                             }
                         } else {
-                            Tristate tristate = tristateFrom(args[2]);
+                            Tristate tristate = tristateFrom(parse.args[2]);
                             if (tristate == null) {
-                                return ProcessResult.of(false, Texts.of("Not a valid value!"));
+                                return ProcessResult.of(false, Text.of("Not a valid value!"));
                             }
                             if (flag == null) {
                                 for (Flag thatExist : Flag.values()) {
                                     this.map.put(thatExist, tristate);
                                 }
-                                return ProcessResult.of(true, Texts.of("Successfully set flags!"));
+                                return ProcessResult.of(true, Text.of("Successfully set flags!"));
                             } else {
                                 this.map.put(flag, tristate);
-                                return ProcessResult.of(true, Texts.of("Successfully set flag!"));
+                                return ProcessResult.of(true, Text.of("Successfully set flag!"));
                             }
 
                         }
                     } else {
-                        return ProcessResult.of(false, Texts.of("Must specify a flag!"));
+                        return ProcessResult.of(false, Text.of("Must specify a flag!"));
                     }
                 } else {
-                    return ProcessResult.of(false, Texts.of("Not a valid PassiveHandler command!"));
+                    return ProcessResult.of(false, Text.of("Not a valid PassiveHandler command!"));
                 }
             } else {
-                return ProcessResult.of(false, Texts.of("Must specify a command!"));
+                return ProcessResult.of(false, Text.of("Must specify a command!"));
             }
         } finally {
             this.lock.writeLock().unlock();
@@ -204,21 +201,21 @@ public class PassiveHandler extends OwnableHandlerBase {
 
     @Override
     public Text getDetails(String arguments) {
-        TextBuilder builder = super.getDetails(arguments).builder();
-        builder.append(Texts.of("\n"));
-        builder.append(Texts.of(TextColors.GOLD,
+        Text.Builder builder = super.getDetails(arguments).builder();
+        builder.append(Text.of("\n"));
+        builder.append(Text.of(TextColors.GOLD,
                 TextActions.suggestCommand("/foxguard modify handler " + this.name + " set "),
-                TextActions.showText(Texts.of("Click to Set a Flag")),
+                TextActions.showText(Text.of("Click to Set a Flag")),
                 "Passive Flags:\n"));
         try {
             this.lock.readLock().lock();
             for (Flag f : this.map.keySet()) {
                 builder.append(
-                        Texts.builder().append(Texts.of("  " + f.toString() + ": "))
+                        Text.builder().append(Text.of("  " + f.toString() + ": "))
                                 .append(FCHelper.readableTristateText(map.get(f)))
-                                .append(Texts.of("\n"))
+                                .append(Text.of("\n"))
                                 .onClick(TextActions.suggestCommand("/foxguard modify handler " + this.name + " set " + f.flagName() + " "))
-                                .onHover(TextActions.showText(Texts.of("Click to Change This Flag")))
+                                .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
                                 .build()
                 );
             }

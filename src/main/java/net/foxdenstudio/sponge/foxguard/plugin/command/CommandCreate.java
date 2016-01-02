@@ -41,7 +41,6 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.World;
 
@@ -68,21 +67,21 @@ public class CommandCreate implements CommandCallable {
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {
-            source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
+            source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).limit(3).flagMapper(MAPPER).build();
-        String[] args = parse.getArgs();
-        if (args.length == 0) {
-            source.sendMessage(Texts.builder()
-                    .append(Texts.of(TextColors.GREEN, "Usage: "))
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).limit(3).flagMapper(MAPPER).parse2();
+
+        if (parse.args.length == 0) {
+            source.sendMessage(Text.builder()
+                    .append(Text.of(TextColors.GREEN, "Usage: "))
                     .append(getUsage(source))
                     .build());
             return CommandResult.empty();
             //----------------------------------------------------------------------------------------------------------------------
-        } else if (isAlias(REGIONS_ALIASES, args[0])) {
-            if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-            String worldName = parse.getFlagmap().get("world");
+        } else if (isAlias(REGIONS_ALIASES, parse.args[0])) {
+            if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
+            String worldName = parse.flagmap.get("world");
             World world = null;
             if (source instanceof Player) world = ((Player) source).getWorld();
             if (!worldName.isEmpty()) {
@@ -91,55 +90,55 @@ public class CommandCreate implements CommandCallable {
                     world = optWorld.get();
                 }
             }
-            if (world == null) throw new CommandException(Texts.of("Must specify a world!"));
-            if (args[1].matches("^.*[^0-9a-zA-Z_$].*$"))
-                throw new ArgumentParseException(Texts.of("Name must be alphanumeric!"), args[1], 1);
-            if (args[1].matches("^[^a-zA-Z_$].*$"))
-                throw new ArgumentParseException(Texts.of("Name can't start with a number!"), args[1], 1);
-            if (args[1].equalsIgnoreCase("all") || args[1].equalsIgnoreCase("state"))
-                throw new CommandException(Texts.of("You may not use \"" + args[1] + "\" as a name!"));
-            if (args.length < 3) throw new CommandException(Texts.of("Must specify a type!"));
+            if (world == null) throw new CommandException(Text.of("Must specify a world!"));
+            if (parse.args[1].matches("^.*[^0-9a-zA-Z_$].*$"))
+                throw new ArgumentParseException(Text.of("Name must be alphanumeric!"), parse.args[1], 1);
+            if (parse.args[1].matches("^[^a-zA-Z_$].*$"))
+                throw new ArgumentParseException(Text.of("Name can't start with a number!"), parse.args[1], 1);
+            if (parse.args[1].equalsIgnoreCase("all") || parse.args[1].equalsIgnoreCase("state"))
+                throw new CommandException(Text.of("You may not use \"" + parse.args[1] + "\" as a name!"));
+            if (parse.args.length < 3) throw new CommandException(Text.of("Must specify a type!"));
             IRegion newRegion = FGFactoryManager.getInstance().createRegion(
-                    args[1], args[2],
-                    args.length < 4 ? "" : args[3],
+                    parse.args[1], parse.args[2],
+                    parse.args.length < 4 ? "" : parse.args[3],
                     FCStateManager.instance().getStateMap().get(source), world, source);
             if (newRegion == null)
-                throw new CommandException(Texts.of("Failed to create Region! Perhaps the type is invalid?"));
+                throw new CommandException(Text.of("Failed to create Region! Perhaps the type is invalid?"));
             boolean success = FGManager.getInstance().addRegion(world, newRegion);
             if (!success)
-                throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1], 1);
+                throw new ArgumentParseException(Text.of("That name is already taken!"), parse.args[1], 1);
             FCStateManager.instance().getStateMap().get(source).flush(PositionsStateField.ID);
-            source.sendMessage(Texts.of(TextColors.GREEN, "Region created successfully"));
+            source.sendMessage(Text.of(TextColors.GREEN, "Region created successfully"));
             return CommandResult.success();
             //----------------------------------------------------------------------------------------------------------------------
-        } else if (isAlias(HANDLERS_ALIASES, args[0])) {
-            if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-            if (args[1].matches("^.*[^0-9a-zA-Z_$].*$"))
-                throw new ArgumentParseException(Texts.of("Name must be alphanumeric!"), args[1], 1);
-            if (args[1].matches("^[^a-zA-Z_$].*$"))
-                throw new ArgumentParseException(Texts.of("Name can't start with a number!"), args[1], 1);
-            if (args[1].equalsIgnoreCase("all") || args[1].equalsIgnoreCase("state") || args[1].equalsIgnoreCase("full"))
-                throw new CommandException(Texts.of("You may not use \"" + args[1] + "\" as a name!"));
+        } else if (isAlias(HANDLERS_ALIASES, parse.args[0])) {
+            if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
+            if (parse.args[1].matches("^.*[^0-9a-zA-Z_$].*$"))
+                throw new ArgumentParseException(Text.of("Name must be alphanumeric!"), parse.args[1], 1);
+            if (parse.args[1].matches("^[^a-zA-Z_$].*$"))
+                throw new ArgumentParseException(Text.of("Name can't start with a number!"), parse.args[1], 1);
+            if (parse.args[1].equalsIgnoreCase("all") || parse.args[1].equalsIgnoreCase("state") || parse.args[1].equalsIgnoreCase("full"))
+                throw new CommandException(Text.of("You may not use \"" + parse.args[1] + "\" as a name!"));
             int priority = 0;
             try {
-                priority = Integer.parseInt(parse.getFlagmap().get("priority"));
+                priority = Integer.parseInt(parse.flagmap.get("priority"));
             } catch (NumberFormatException ignored) {
             }
 
-            if (args.length < 3) throw new CommandException(Texts.of("Must specify a type!"));
+            if (parse.args.length < 3) throw new CommandException(Text.of("Must specify a type!"));
             IHandler newHandler = FGFactoryManager.getInstance().createHandler(
-                    args[1], args[2], priority,
-                    args.length < 4 ? "" : args[3],
+                    parse.args[1], parse.args[2], priority,
+                    parse.args.length < 4 ? "" : parse.args[3],
                     FCStateManager.instance().getStateMap().get(source), source);
             if (newHandler == null)
-                throw new CommandException(Texts.of("Failed to create Handler! Perhaps the type is invalid?"));
+                throw new CommandException(Text.of("Failed to create Handler! Perhaps the type is invalid?"));
             boolean success = FGManager.getInstance().addHandler(newHandler);
             if (!success)
-                throw new ArgumentParseException(Texts.of("That name is already taken!"), args[1], 1);
-            source.sendMessage(Texts.of(TextColors.GREEN, "Handler created successfully!"));
+                throw new ArgumentParseException(Text.of("That name is already taken!"), parse.args[1], 1);
+            source.sendMessage(Text.of(TextColors.GREEN, "Handler created successfully!"));
             return CommandResult.success();
             //----------------------------------------------------------------------------------------------------------------------
-        } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
+        } else throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);
     }
 
     @Override
@@ -164,6 +163,6 @@ public class CommandCreate implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("create <region [--w:<world>] | handler> <name> [--priority:<num>] <type> [args...]");
+        return Text.of("create <region [--w:<world>] | handler> <name> [--priority:<num>] <type> [parse.args...]");
     }
 }

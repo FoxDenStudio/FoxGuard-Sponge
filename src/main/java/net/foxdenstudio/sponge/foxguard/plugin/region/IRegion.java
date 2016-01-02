@@ -27,13 +27,11 @@ package net.foxdenstudio.sponge.foxguard.plugin.region;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import net.foxdenstudio.sponge.foxguard.plugin.IFGObject;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 import org.spongepowered.api.world.World;
 
-import java.util.List;
-
-public interface IRegion extends IFGObject {
+public interface IRegion extends IFGObject, ILinkable {
 
     boolean isInRegion(int x, int y, int z);
 
@@ -42,12 +40,6 @@ public interface IRegion extends IFGObject {
     boolean isInRegion(double x, double y, double z);
 
     boolean isInRegion(Vector3d vec);
-
-    List<IHandler> getHandlersCopy();
-
-    boolean addHandler(IHandler handler);
-
-    boolean removeHandler(IHandler handler);
 
     World getWorld();
 

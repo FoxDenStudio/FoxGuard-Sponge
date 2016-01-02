@@ -40,7 +40,6 @@ import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.World;
 
@@ -64,29 +63,29 @@ public class CommandLink implements CommandCallable {
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {
-            source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
+            source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).flagMapper(mapper).build();
-        String[] args = parse.getArgs();
-        if (args.length == 0) {
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).flagMapper(mapper).parse2();
+        
+        if (parse.args.length == 0) {
             if (FGHelper.getSelectedRegions(source).size() == 0 &&
                     FGHelper.getSelectedHandlers(source).size() == 0)
-                throw new CommandException(Texts.of("You don't have any Regions or Handlers in your state buffer!"));
+                throw new CommandException(Text.of("You don't have any Regions or Handlers in your state buffer!"));
             if (FGHelper.getSelectedRegions(source).size() == 0)
-                throw new CommandException(Texts.of("You don't have any Regions in your state buffer!"));
+                throw new CommandException(Text.of("You don't have any Regions in your state buffer!"));
             if (FGHelper.getSelectedHandlers(source).size() == 0)
-                throw new CommandException(Texts.of("You don't have any Handlers in your state buffer!"));
+                throw new CommandException(Text.of("You don't have any Handlers in your state buffer!"));
             int[] successes = {0};
             FGHelper.getSelectedRegions(source).stream().forEach(
                     region -> FGHelper.getSelectedHandlers(source).stream()
                             .filter(handler -> !(handler instanceof GlobalHandler))
                             .forEach(handler -> successes[0] += FGManager.getInstance().link(region, handler) ? 1 : 0));
-            source.sendMessage(Texts.of(TextColors.GREEN, "Successfully linked " + successes[0] + "!"));
+            source.sendMessage(Text.of(TextColors.GREEN, "Successfully formed " + successes[0] + " links!"));
             FCStateManager.instance().getStateMap().get(source).flush(RegionsStateField.ID, HandlersStateField.ID);
             return CommandResult.builder().successCount(successes[0]).build();
         } else {
-            String worldName = parse.getFlagmap().get("world");
+            String worldName = parse.flagmap.get("world");
             World world = null;
             if (source instanceof Player) world = ((Player) source).getWorld();
             if (!worldName.isEmpty()) {
@@ -95,15 +94,15 @@ public class CommandLink implements CommandCallable {
                     world = optWorld.get();
                 }
             }
-            if (world == null) throw new CommandException(Texts.of("Must specify a world!"));
-            if (args.length < 1) throw new CommandException(Texts.of("Must specify items to link!"));
-            if (args.length < 2) throw new CommandException(Texts.of("Must specify a Handler!"));
-            boolean success = FGManager.getInstance().link(world, args[0], args[1]);
+            if (world == null) throw new CommandException(Text.of("Must specify a world!"));
+            if (parse.args.length < 1) throw new CommandException(Text.of("Must specify items to link!"));
+            if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a Handler!"));
+            boolean success = FGManager.getInstance().link(world, parse.args[0], parse.args[1]);
             if (success) {
-                source.sendMessage(Texts.of(TextColors.GREEN, "Successfully linked!"));
+                source.sendMessage(Text.of(TextColors.GREEN, "Successfully linked!"));
                 return CommandResult.success();
             } else {
-                source.sendMessage(Texts.of(TextColors.RED, "There was an error linking. Check their names and also make sure they haven't already been linked."));
+                source.sendMessage(Text.of(TextColors.RED, "There was an error linking. Check their names and also make sure they haven't already been linked."));
                 return CommandResult.empty();
             }
         }
@@ -131,6 +130,6 @@ public class CommandLink implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("link [ [--w:<worldname>] <region name> <handler name> ]");
+        return Text.of("link [ [--w:<worldname>] <region name> <handler name> ]");
     }
 }

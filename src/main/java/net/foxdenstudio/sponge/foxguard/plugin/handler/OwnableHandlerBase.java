@@ -29,8 +29,6 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IOwnable;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.TextBuilder;
-import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
 
@@ -92,18 +90,18 @@ abstract public class OwnableHandlerBase extends HandlerBase implements IOwnable
 
     @Override
     public Text getDetails(String arguments) {
-        TextBuilder builder = Texts.builder();
-        builder.append(Texts.of(TextColors.GOLD,
+        Text.Builder builder = Text.builder();
+        builder.append(Text.of(TextColors.GOLD,
                 TextActions.suggestCommand(getAddOwnerSuggestion()),
-                TextActions.showText(Texts.of("Click to Add a Player(s) to Owners")),
+                TextActions.showText(Text.of("Click to Add a Player(s) to Owners")),
                 "Owners: "));
         try {
             this.lock.readLock().lock();
             for (User u : ownerList) {
-                builder.append(Texts.of(TextColors.RESET,
+                builder.append(Text.of(TextColors.RESET,
                         TextActions.suggestCommand(getRemoveOwnerSuggestion(u)),
-                        TextActions.showText(Texts.of("Click to Remove Player \"" + u.getName() + "\" from Owners")),
-                        u.getName())).append(Texts.of("  "));
+                        TextActions.showText(Text.of("Click to Remove Player \"" + u.getName() + "\" from Owners")),
+                        u.getName())).append(Text.of("  "));
             }
         } finally {
             this.lock.readLock().unlock();

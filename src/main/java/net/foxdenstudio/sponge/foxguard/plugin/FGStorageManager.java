@@ -27,6 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin;
 
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.DeferredObject;
@@ -368,7 +369,7 @@ public final class FGStorageManager {
                                 region.getName() + "', '" +
                                 region.getUniqueTypeString() + "', " +
                                 (region.isEnabled() ? "TRUE" : "FALSE") + ");");
-                        for (IHandler handler : region.getHandlersCopy()) {
+                        for (IHandler handler : region.getHandlers()) {
                             statement.addBatch("INSERT INTO LINKAGES(REGION, HANDLER) VALUES ('" +
                                     region.getName() + "', '" +
                                     handler.getName() + "');");
@@ -510,7 +511,7 @@ public final class FGStorageManager {
                                     region.getName() + "', '" +
                                     region.getUniqueTypeString() + "', " +
                                     (region.isEnabled() ? "TRUE" : "FALSE") + ");");
-                            for (IHandler handler : region.getHandlersCopy()) {
+                            for (IHandler handler : region.getHandlers()) {
                                 statement.addBatch("INSERT INTO LINKAGES(REGION, HANDLER) VALUES ('" +
                                         region.getName() + "', '" +
                                         handler.getName() + "');");

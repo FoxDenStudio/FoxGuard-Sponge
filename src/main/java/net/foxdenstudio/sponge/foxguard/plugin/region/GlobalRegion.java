@@ -31,7 +31,6 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.Texts;
 
 import javax.sql.DataSource;
 
@@ -65,7 +64,7 @@ public class GlobalRegion extends RegionBase {
 
     @Override
     public Text getDetails(String arguments) {
-        return Texts.of("It's global. Nothing to see here. Now move along.");
+        return Text.of("It's global. Nothing to see here. Now move along.");
     }
 
     @Override

@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-TRAVIS_TAG="asdf"
-
 if [ ! -z ${TRAVIS_TAG} ]
 then
     echo "This is a tagged commit! (Tag: ${TRAVIS_TAG}) Injecting version into main class..."

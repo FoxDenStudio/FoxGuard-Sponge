@@ -27,9 +27,9 @@ package net.foxdenstudio.sponge.foxguard.plugin.object.factory;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
+import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
 import net.foxdenstudio.sponge.foxcore.plugin.state.PositionsStateField;
-import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.region.CuboidRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.ElevationRegion;

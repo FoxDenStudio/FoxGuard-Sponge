@@ -23,22 +23,18 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.handler;
+package net.foxdenstudio.sponge.foxguard.plugin.object;
 
-import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Flag;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
-import org.spongepowered.api.entity.living.player.User;
-import org.spongepowered.api.event.Event;
-import org.spongepowered.api.util.Tristate;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 
-import javax.annotation.Nullable;
+import java.util.List;
 
-public interface IHandler extends IFGObject, Comparable<IHandler> {
+public interface ILinkable {
 
-    Tristate handle(@Nullable User user, Flag flag, Event event);
+    List<IHandler> getHandlers();
 
-    int getPriority();
+    boolean addHandler(IHandler handler);
 
-    void setPriority(int priority);
+    boolean removeHandler(IHandler handler);
 
 }

@@ -59,8 +59,7 @@ import org.spongepowered.api.service.permission.PermissionService;
 import org.spongepowered.api.service.permission.SubjectData;
 import org.spongepowered.api.service.sql.SqlService;
 import org.spongepowered.api.service.user.UserStorageService;
-import org.spongepowered.api.text.TextBuilder;
-import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
@@ -188,6 +187,8 @@ public final class FoxGuardMain {
 
     @Listener
     public void gameInit(GameInitializationEvent event) {
+
+
         userStorage = game.getServiceManager().provide(UserStorageService.class).get();
         logger.info("Initializing FoxGuard Manager instance");
         FGManager.init();
@@ -199,8 +200,8 @@ public final class FoxGuardMain {
         logger.info("Setting default player permissions");
         configurePermissions();
 
-        FCStateManager.instance().registerStateFactory(new RegionsStateFieldFactory(), RegionsStateField.ID, Aliases.REGIONS_ALIASES);
-        FCStateManager.instance().registerStateFactory(new HandlersStateFieldFactory(), HandlersStateField.ID, Aliases.HANDLERS_ALIASES);
+        FCStateManager.instance().registerStateFactory(new RegionsStateFieldFactory(), RegionsStateField.ID,RegionsStateField.ID, Aliases.REGIONS_ALIASES);
+        FCStateManager.instance().registerStateFactory(new HandlersStateFieldFactory(), HandlersStateField.ID, HandlersStateField.ID, Aliases.HANDLERS_ALIASES);
 
         try {
             Metrics metrics = new Metrics(game, game.getPluginManager().fromInstance(this).get());
@@ -310,6 +311,7 @@ public final class FoxGuardMain {
         FCCommandDispatcher fgHandlerDispatcher = new FCCommandDispatcher("/foxguard handlers",
                 "Commands spcifically meant for managing Handlers.");
 
+        registerCommonCommands(fgDispatcher);
         fgDispatcher.register(new CommandCreate(), "create", "construct", "new", "make", "define", "mk", "cr");
         fgDispatcher.register(new CommandDelete(), "delete", "del", "remove", "rem", "rm", "destroy");
         fgDispatcher.register(new CommandModify(), "modify", "mod", "change", "edit", "update", "md", "ch");
@@ -319,8 +321,8 @@ public final class FoxGuardMain {
         fgDispatcher.register(new CommandEnableDisable(true), "enable", "activate", "engage", "on");
         fgDispatcher.register(new CommandEnableDisable(false), "disable", "deactivate", "disengage", "off");
         fgDispatcher.register(new CommandList(), "list", "ls");
+        fgDispatcher.register(new CommandHere(), "here", "current", "cur", "around");
         fgDispatcher.register(new CommandDetail(), "detail", "det", "show");
-        registerCommonCommands(fgDispatcher);
         fgDispatcher.register(new CommandSave(), "save", "saveall", "save-all");
 
         fgHandlerDispatcher.register(new CommandPriority(), "priority", "prio", "level", "rank");
@@ -331,10 +333,10 @@ public final class FoxGuardMain {
     }
 
     private void registerCommonCommands(FCCommandDispatcher dispatcher) {
-        TextBuilder builder = Texts.builder();
-        builder.append(Texts.of(TextColors.GOLD, "FoxGuard World Protection Plugin\n"));
-        builder.append(Texts.of("Version: " + FoxGuardMain.PLUGIN_VERSION + "\n"));
-        builder.append(Texts.of("Author: gravityfox\n"));
+        Text.Builder builder = Text.builder();
+        builder.append(Text.of(TextColors.GOLD, "FoxGuard World Protection Plugin\n"));
+        builder.append(Text.of("Version: " + FoxGuardMain.PLUGIN_VERSION + "\n"));
+        builder.append(Text.of("Author: gravityfox\n"));
 
         for (CommandMapping mapping : FoxCoreMain.instance().getFCDispatcher().getCommands()) {
             Set<String> secondary = new HashSet<>(mapping.getAllAliases());

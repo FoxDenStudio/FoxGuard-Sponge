@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import org.spongepowered.api.Server;
@@ -195,7 +196,7 @@ public final class FGManager {
             try {
                 lock.readLock().lock();
                 list.stream()
-                        .filter(region -> region.getHandlersCopy().contains(handler))
+                        .filter(region -> region.getHandlers().contains(handler))
                         .forEach(region -> region.removeHandler(handler));
             } finally {
                 lock.readLock().unlock();
@@ -251,7 +252,7 @@ public final class FGManager {
     }
 
     public boolean link(IRegion region, IHandler handler) {
-        if (region == null || handler == null || region.getHandlersCopy().contains(handler)) return false;
+        if (region == null || handler == null || region.getHandlers().contains(handler)) return false;
         return !(handler instanceof GlobalHandler && !(region instanceof GlobalRegion)) && region.addHandler(handler);
     }
 
@@ -267,7 +268,7 @@ public final class FGManager {
     }
 
     public boolean unlink(IRegion region, IHandler handler) {
-        if (region == null || handler == null || !region.getHandlersCopy().contains(handler)) return false;
+        if (region == null || handler == null || !region.getHandlers().contains(handler)) return false;
         return !(handler instanceof GlobalHandler && region instanceof GlobalRegion) && region.removeHandler(handler);
     }
 

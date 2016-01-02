@@ -25,6 +25,8 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin;
 
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+
 import java.util.concurrent.locks.ReadWriteLock;
 
 public abstract class FGObjectBase implements IFGObject {

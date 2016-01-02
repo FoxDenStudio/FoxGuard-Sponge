@@ -26,9 +26,9 @@
 package net.foxdenstudio.sponge.foxguard.plugin.region;
 
 import com.flowpowered.math.vector.Vector3i;
+import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
-import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxguard.plugin.region.util.BoundingBox3;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
@@ -36,8 +36,6 @@ import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.TextBuilder;
-import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 
 import javax.sql.DataSource;
@@ -65,29 +63,29 @@ public class CuboidRegion extends OwnableRegionBase {
         for (int i = 0; i < args.length - 2; i += 3) {
             int x, y, z;
             try {
-                x = FCHelper.parseCoordinate(source instanceof Player ?
+                x = (int) FCHelper.parseCoordinate(source instanceof Player ?
                         ((Player) source).getLocation().getBlockX() : 0, args[i]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(
-                        Texts.of("Unable to parse \"" + args[i] + "\"!"), e, args[i], i);
+                        Text.of("Unable to parse \"" + args[i] + "\"!"), e, args[i], i);
             }
             try {
-                y = FCHelper.parseCoordinate(source instanceof Player ?
+                y = (int) FCHelper.parseCoordinate(source instanceof Player ?
                         ((Player) source).getLocation().getBlockY() : 0, args[i + 1]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(
-                        Texts.of("Unable to parse \"" + args[i + 1] + "\"!"), e, args[i + 1], i + 1);
+                        Text.of("Unable to parse \"" + args[i + 1] + "\"!"), e, args[i + 1], i + 1);
             }
             try {
-                z = FCHelper.parseCoordinate(source instanceof Player ?
+                z = (int) FCHelper.parseCoordinate(source instanceof Player ?
                         ((Player) source).getLocation().getBlockZ() : 0, args[i + 2]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(
-                        Texts.of("Unable to parse \"" + args[i + 2] + "\"!"), e, args[i + 2], i + 2);
+                        Text.of("Unable to parse \"" + args[i + 2] + "\"!"), e, args[i + 2], i + 2);
             }
             allPositions.add(new Vector3i(x, y, z));
         }
-        if (allPositions.isEmpty()) throw new CommandException(Texts.of("No parameters specified!"));
+        if (allPositions.isEmpty()) throw new CommandException(Text.of("No parameters specified!"));
         Vector3i a = allPositions.get(0), b = allPositions.get(0);
         for (Vector3i pos : allPositions) {
             a = a.min(pos);
@@ -150,11 +148,11 @@ public class CuboidRegion extends OwnableRegionBase {
 
     @Override
     public Text getDetails(String arguments) {
-        TextBuilder builder = super.getDetails(arguments).builder();
-        builder.append(Texts.of(TextColors.GREEN, "\nBounds: "));
+        Text.Builder builder = super.getDetails(arguments).builder();
+        builder.append(Text.of(TextColors.GREEN, "\nBounds: "));
         try {
             this.lock.readLock().lock();
-            builder.append(Texts.of(TextColors.RESET, boundingBox.toString()));
+            builder.append(Text.of(TextColors.RESET, boundingBox.toString()));
         } finally {
             this.lock.readLock().unlock();
         }

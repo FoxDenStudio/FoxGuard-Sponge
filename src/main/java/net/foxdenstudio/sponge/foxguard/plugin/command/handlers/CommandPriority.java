@@ -35,7 +35,6 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 
 import java.util.LinkedList;
@@ -47,14 +46,14 @@ public class CommandPriority implements CommandCallable {
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {
-            source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
+            source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
         String[] args = {};
         if (!arguments.isEmpty()) args = arguments.split(" +");
         if (args.length == 0) {
-            source.sendMessage(Texts.builder()
-                    .append(Texts.of(TextColors.GREEN, "Usage: "))
+            source.sendMessage(Text.builder()
+                    .append(Text.of(TextColors.GREEN, "Usage: "))
                     .append(getUsage(source))
                     .build());
             return CommandResult.empty();
@@ -78,7 +77,7 @@ public class CommandPriority implements CommandCallable {
                 }
             }
             if (machine == null) {
-                throw new CommandException(Texts.of("You must specify a priority!"));
+                throw new CommandException(Text.of("You must specify a priority!"));
             }
             for (IHandler handler : handlers) {
                 if (handler instanceof GlobalHandler) failures++;
@@ -87,8 +86,8 @@ public class CommandPriority implements CommandCallable {
                     successes++;
                 }
             }
-            if (handlers.size() < 1) throw new CommandException(Texts.of("You must specify at least one Handler!"));
-            source.sendMessage(Texts.of(TextColors.GREEN, "Successfully changed priorities with "
+            if (handlers.size() < 1) throw new CommandException(Text.of("You must specify at least one Handler!"));
+            source.sendMessage(Text.of(TextColors.GREEN, "Successfully changed priorities with "
                     + successes + " successes and " + failures + " failures!"));
             return CommandResult.builder().successCount(successes).build();
         }
@@ -106,12 +105,12 @@ public class CommandPriority implements CommandCallable {
 
     @Override
     public Optional<? extends Text> getShortDescription(CommandSource source) {
-        return Optional.of(Texts.of("Sets or changes the priority of one or more Handlers."));
+        return Optional.of(Text.of("Sets or changes the priority of one or more Handlers."));
     }
 
     @Override
     public Optional<? extends Text> getHelp(CommandSource source) {
-        return Optional.of(Texts.of("This command will modify the priorities of all Handlers currently in your state buffer.\n" +
+        return Optional.of(Text.of("This command will modify the priorities of all Handlers currently in your state buffer.\n" +
                 "This command takes a minimum of one parameter, which is the priority that all Handlers will be set to.\n" +
                 "Prefixing this value with a tilde (\" ~ \") instead increments or decrements the priority of each Handler by that value.\n" +
                 "Any arguments after the priority are understood to be additional Handler names not already in your state buffer."));
@@ -119,7 +118,7 @@ public class CommandPriority implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("priority <priority> [handlers...]");
+        return Text.of("priority <priority> [handlers...]");
     }
 
     private static class PriorityMachine {

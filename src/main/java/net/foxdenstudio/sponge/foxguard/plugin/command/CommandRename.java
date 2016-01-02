@@ -38,7 +38,6 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.World;
 
@@ -61,20 +60,19 @@ public class CommandRename implements CommandCallable {
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {
-            source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
+            source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).build();
-        String[] args = parse.getArgs();
-        if (args.length == 0) {
-            source.sendMessage(Texts.builder()
-                    .append(Texts.of(TextColors.GREEN, "Usage: "))
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).parse2();
+        if (parse.args.length == 0) {
+            source.sendMessage(Text.builder()
+                    .append(Text.of(TextColors.GREEN, "Usage: "))
                     .append(getUsage(source))
                     .build());
             return CommandResult.empty();
-        } else if (isAlias(REGIONS_ALIASES, args[0])) {
-            if (args.length < 2) throw new CommandException(Texts.of("You must specify a name!"));
-            String worldName = parse.getFlagmap().get("world");
+        } else if (isAlias(REGIONS_ALIASES, parse.args[0])) {
+            if (parse.args.length < 2) throw new CommandException(Text.of("You must specify a name!"));
+            String worldName = parse.flagmap.get("world");
             World world = null;
             if (source instanceof Player) world = ((Player) source).getWorld();
             if (!worldName.isEmpty()) {
@@ -83,36 +81,36 @@ public class CommandRename implements CommandCallable {
                     world = optWorld.get();
                 }
             }
-            if (world == null) throw new CommandException(Texts.of("You must specify a world!"));
-            if (args[1].equalsIgnoreCase(GlobalRegion.NAME))
-                throw new CommandException(Texts.of("You may not rename the global Region!"));
-            if (FGManager.getInstance().getRegion(world, args[1]) == null)
-                throw new CommandException(Texts.of("No Region exists with the name \"" + args[1] + "\"!"));
-            if (args.length < 3) throw new CommandException(Texts.of("Must specify a new name!"));
-            if (args[2].matches("^.*[^0-9a-zA-Z_$].*$"))
-                throw new ArgumentParseException(Texts.of("New name (\"" + args[2] + "\") must be alphanumeric!"), args[2], 1);
-            if (args[2].matches("^[^a-zA-Z_$].*$"))
-                throw new ArgumentParseException(Texts.of("New name (\"" + args[2] + "\") can't start with a number!"), args[2], 1);
-            if (FGManager.getInstance().getRegion(world, args[2]) != null)
-                throw new CommandException(Texts.of("There is already a region with the name \"" + args[2] + "\"!"));
-            FGManager.getInstance().renameRegion(world, args[1], args[2]);
-            source.sendMessage(Texts.of(TextColors.GREEN, "Region \"" + args[1] + "\" successfully renamed to \"" + args[2] + "\"!"));
-        } else if (isAlias(HANDLERS_ALIASES, args[0])) {
-            if (args.length < 2) throw new CommandException(Texts.of("You must specify a name!"));
-            if (args[1].equalsIgnoreCase(GlobalHandler.NAME))
-                throw new CommandException(Texts.of("You may not rename the global Handler!"));
-            if (FGManager.getInstance().gethandler(args[1]) == null)
-                throw new CommandException(Texts.of("No Handler exists with the name \"" + args[1] + "\"!"));
-            if (args.length < 3) throw new CommandException(Texts.of("Must specify a new name!"));
-            if (args[2].matches("^.*[^0-9a-zA-Z_$].*$"))
-                throw new ArgumentParseException(Texts.of("New name (\"" + args[2] + "\") must be alphanumeric!"), args[2], 1);
-            if (args[2].matches("^[^a-zA-Z_$].*$"))
-                throw new ArgumentParseException(Texts.of("New name (\"" + args[2] + "\") can't start with a number!"), args[2], 1);
-            if (FGManager.getInstance().gethandler(args[2]) != null)
-                throw new CommandException(Texts.of("There is already a handler with the name \"" + args[2] + "\"!"));
-            FGManager.getInstance().renameHandler( args[1], args[2]);
-            source.sendMessage(Texts.of(TextColors.GREEN, "Handler \"" + args[1] + "\" successfully renamed to \"" + args[2] + "\"!"));
-        } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
+            if (world == null) throw new CommandException(Text.of("You must specify a world!"));
+            if (parse.args[1].equalsIgnoreCase(GlobalRegion.NAME))
+                throw new CommandException(Text.of("You may not rename the global Region!"));
+            if (FGManager.getInstance().getRegion(world, parse.args[1]) == null)
+                throw new CommandException(Text.of("No Region exists with the name \"" + parse.args[1] + "\"!"));
+            if (parse.args.length < 3) throw new CommandException(Text.of("Must specify a new name!"));
+            if (parse.args[2].matches("^.*[^0-9a-zA-Z_$].*$"))
+                throw new ArgumentParseException(Text.of("New name (\"" + parse.args[2] + "\") must be alphanumeric!"), parse.args[2], 1);
+            if (parse.args[2].matches("^[^a-zA-Z_$].*$"))
+                throw new ArgumentParseException(Text.of("New name (\"" + parse.args[2] + "\") can't start with a number!"), parse.args[2], 1);
+            if (FGManager.getInstance().getRegion(world, parse.args[2]) != null)
+                throw new CommandException(Text.of("There is already a region with the name \"" + parse.args[2] + "\"!"));
+            FGManager.getInstance().renameRegion(world, parse.args[1], parse.args[2]);
+            source.sendMessage(Text.of(TextColors.GREEN, "Region \"" + parse.args[1] + "\" successfully renamed to \"" + parse.args[2] + "\"!"));
+        } else if (isAlias(HANDLERS_ALIASES, parse.args[0])) {
+            if (parse.args.length < 2) throw new CommandException(Text.of("You must specify a name!"));
+            if (parse.args[1].equalsIgnoreCase(GlobalHandler.NAME))
+                throw new CommandException(Text.of("You may not rename the global Handler!"));
+            if (FGManager.getInstance().gethandler(parse.args[1]) == null)
+                throw new CommandException(Text.of("No Handler exists with the name \"" + parse.args[1] + "\"!"));
+            if (parse.args.length < 3) throw new CommandException(Text.of("Must specify a new name!"));
+            if (parse.args[2].matches("^.*[^0-9a-zA-Z_$].*$"))
+                throw new ArgumentParseException(Text.of("New name (\"" + parse.args[2] + "\") must be alphanumeric!"), parse.args[2], 1);
+            if (parse.args[2].matches("^[^a-zA-Z_$].*$"))
+                throw new ArgumentParseException(Text.of("New name (\"" + parse.args[2] + "\") can't start with a number!"), parse.args[2], 1);
+            if (FGManager.getInstance().gethandler(parse.args[2]) != null)
+                throw new CommandException(Text.of("There is already a handler with the name \"" + parse.args[2] + "\"!"));
+            FGManager.getInstance().renameHandler(parse.args[1], parse.args[2]);
+            source.sendMessage(Text.of(TextColors.GREEN, "Handler \"" + parse.args[1] + "\" successfully renamed to \"" + parse.args[2] + "\"!"));
+        } else throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);
         return CommandResult.empty();
     }
 
@@ -138,6 +136,6 @@ public class CommandRename implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("rename <region [--w:<world>] | handler> <oldname> <newname>");
+        return Text.of("rename <region [--w:<world>] | handler> <oldname> <newname>");
     }
 }

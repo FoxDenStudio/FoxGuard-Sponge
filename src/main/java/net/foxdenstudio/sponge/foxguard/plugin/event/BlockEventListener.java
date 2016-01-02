@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.event;
 
 import com.flowpowered.math.vector.Vector3i;
+import net.foxdenstudio.sponge.foxcore.plugin.command.CommandDebug;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Flag;
@@ -36,7 +37,7 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
-import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
@@ -81,7 +82,7 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
         for (Transaction<BlockSnapshot> trans : event.getTransactions()) {
             Vector3i loc = trans.getOriginal().getLocation().get().getBlockPosition();
             FGManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
-                    .forEach(region -> region.getHandlersCopy().stream()
+                    .forEach(region -> region.getHandlers().stream()
                             .filter(handler -> !handlerList.contains(handler))
                             .forEach(handlerList::add));
         }
@@ -96,9 +97,18 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
             currPriority = handler.getPriority();
         }
         flagState = typeFlag.resolve(flagState);
+        if (user instanceof Player && CommandDebug.instance().getDebug().get(user)) {
+            ((Player) user).sendMessage(Text.of());
+        } else {
+            if (flagState == Tristate.FALSE) {
+                if (user instanceof Player)
+                    ((Player) user).sendMessage(Text.of("You don't have permission!"));
+            } else {
+
+            }
+        }
         if (flagState == Tristate.FALSE) {
-            if (user instanceof Player)
-                ((Player) user).sendMessage(Texts.of("You don't have permission!"));
+
             event.setCancelled(true);
         } else {
             //makes sure that handlers are unable to cancel the event directly.

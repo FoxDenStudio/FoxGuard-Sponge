@@ -29,8 +29,6 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IOwnable;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.TextBuilder;
-import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 
 import javax.sql.DataSource;
@@ -92,12 +90,12 @@ abstract public class OwnableRegionBase extends RegionBase implements IOwnable {
 
     @Override
     public Text getDetails(String arguments) {
-        TextBuilder builder = Texts.builder();
-        builder.append(Texts.of(TextColors.GOLD, "Owners: "));
+        Text.Builder builder = Text.builder();
+        builder.append(Text.of(TextColors.GOLD, "Owners: "));
         try {
             this.lock.readLock().lock();
             for (User p : ownerList) {
-                builder.append(Texts.of(TextColors.RESET, p.getName() + " "));
+                builder.append(Text.of(TextColors.RESET, p.getName() + " "));
             }
         } finally {
             this.lock.readLock().unlock();

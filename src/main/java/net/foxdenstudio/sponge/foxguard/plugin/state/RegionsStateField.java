@@ -36,9 +36,6 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.TextBuilder;
-import org.spongepowered.api.text.Texts;
-import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.World;
 
 import java.util.Iterator;
@@ -65,14 +62,14 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
 
     @Override
     public Text state() {
-        TextBuilder builder = Texts.builder();
+        Text.Builder builder = Text.builder();
         Iterator<IRegion> regionIterator = this.list.iterator();
         int index = 1;
         while (regionIterator.hasNext()) {
             IRegion region = regionIterator.next();
-            builder.append(Texts.of(FGHelper.getColorForRegion(region),
+            builder.append(Text.of(FGHelper.getColorForRegion(region),
                     (index++) + ": " + region.getShortTypeName() + " : " + region.getWorld().getName() + " : " + region.getName()));
-            if(regionIterator.hasNext()) builder.append(Texts.of("\n"));
+            if(regionIterator.hasNext()) builder.append(Text.of("\n"));
         }
         return builder.build();
     }
@@ -80,11 +77,10 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
     @Override
     public ProcessResult add(CommandSource source, String arguments) throws CommandException {
         System.out.println(arguments);
-        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).build();
-        String[] args = parse.getArgs();
-
-        if (args.length < 1) throw new CommandException(Texts.of("Must specify a name!"));
-        String worldName = parse.getFlagmap().get("world");
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).parse2();
+        
+        if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name!"));
+        String worldName = parse.flagmap.get("world");
         World world = null;
         if (source instanceof Player) world = ((Player) source).getWorld();
         if (!worldName.isEmpty()) {
@@ -93,24 +89,23 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                 world = optWorld.get();
             }
         }
-        if (world == null) throw new CommandException(Texts.of("Must specify a world!"));
-        IRegion region = FGManager.getInstance().getRegion(world, args[0]);
+        if (world == null) throw new CommandException(Text.of("Must specify a world!"));
+        IRegion region = FGManager.getInstance().getRegion(world, parse.args[0]);
         if (region == null)
-            throw new CommandException(Texts.of("No Regions with the name\"" + args[0] + "\"!"));
+            throw new CommandException(Text.of("No Regions with the name\"" + parse.args[0] + "\"!"));
         if (this.list.contains(region))
-            throw new CommandException(Texts.of("Region is already in your state buffer!"));
+            throw new CommandException(Text.of("Region is already in your state buffer!"));
         this.list.add(region);
 
-        return ProcessResult.of(true, Texts.of("Successfully added Region to your state buffer!"));
+        return ProcessResult.of(true, Text.of("Successfully added Region to your state buffer!"));
     }
 
     @Override
     public ProcessResult subtract(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).build();
-        String[] args = parse.getArgs();
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).parse2();
 
-        if (args.length < 1) throw new CommandException(Texts.of("Must specify a name or a number!"));
-        String worldName = parse.getFlagmap().get("world");
+        if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name or a number!"));
+        String worldName = parse.flagmap.get("world");
         World world = null;
         if (source instanceof Player) world = ((Player) source).getWorld();
         if (!worldName.isEmpty()) {
@@ -121,21 +116,21 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         }
         IRegion region;
         try {
-            int index = Integer.parseInt(args[0]);
+            int index = Integer.parseInt(parse.args[0]);
             region = this.list.get(index - 1);
         } catch (NumberFormatException e) {
-            if (world == null) throw new CommandException(Texts.of("Must specify a world!"));
-            region = FGManager.getInstance().getRegion(world, args[0]);
+            if (world == null) throw new CommandException(Text.of("Must specify a world!"));
+            region = FGManager.getInstance().getRegion(world, parse.args[0]);
         } catch (IndexOutOfBoundsException e) {
-            throw new CommandException(Texts.of("Index " + args[0] + " out of bounds! (1 - "
+            throw new CommandException(Text.of("Index " + parse.args[0] + " out of bounds! (1 - "
                     + this.list.size()));
         }
         if (region == null)
-            throw new CommandException(Texts.of("No Regions with the name\"" + args[0] + "\"!"));
+            throw new CommandException(Text.of("No Regions with the name\"" + parse.args[0] + "\"!"));
         if (!this.list.contains(region))
-            throw new CommandException(Texts.of("Region is not in your state buffer!"));
+            throw new CommandException(Text.of("Region is not in your state buffer!"));
         this.list.remove(region);
 
-        return ProcessResult.of(true, Texts.of("Successfully removed Region from your state buffer!"));
+        return ProcessResult.of(true, Text.of("Successfully removed Region from your state buffer!"));
     }
 }

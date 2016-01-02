@@ -29,9 +29,9 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
@@ -45,7 +45,6 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.World;
 
@@ -72,15 +71,14 @@ public class CommandEnableDisable implements CommandCallable {
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {
-            source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
+            source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).build();
-        String[] args = parse.getArgs();
-        if (args.length == 0) {
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).parse2();
+        if (parse.args.length == 0) {
             if (FGHelper.getSelectedRegions(source).isEmpty() && FGHelper.getSelectedHandlers(source).isEmpty()) {
-                source.sendMessage(Texts.builder()
-                        .append(Texts.of(TextColors.GREEN, "Usage: "))
+                source.sendMessage(Text.builder()
+                        .append(Text.of(TextColors.GREEN, "Usage: "))
                         .append(getUsage(source))
                         .build());
                 return CommandResult.empty();
@@ -100,20 +98,20 @@ public class CommandEnableDisable implements CommandCallable {
                 }
                 FCStateManager.instance().getStateMap().get(source).flush(RegionsStateField.ID, HandlersStateField.ID);
                 if (successes == 1 && failures == 0) {
-                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " object!"));
+                    source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " object!"));
                     return CommandResult.success();
                 } else if (successes > 0) {
-                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " objects with "
+                    source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " objects with "
                             + successes + " successes" + (failures > 0 ? " and " + failures + " failures!" : "!")));
                     return CommandResult.builder().successCount(successes).build();
                 } else {
-                    throw new CommandException(Texts.of(failures + " failures while trying to " + (this.enableState ? "enable" : "disable") +
+                    throw new CommandException(Text.of(failures + " failures while trying to " + (this.enableState ? "enable" : "disable") +
                             " " + failures + (failures > 1 ? " objects" : " object") + ". Check to make sure you spelled their names correctly and that they are not already "
                             + (this.enableState ? "enabled." : "disabled.")));
                 }
             }
-        } else if (isAlias(REGIONS_ALIASES, args[0])) {
-            String worldName = parse.getFlagmap().get("world");
+        } else if (isAlias(REGIONS_ALIASES, parse.args[0])) {
+            String worldName = parse.flagmap.get("world");
             World world = null;
             if (source instanceof Player) world = ((Player) source).getWorld();
             if (!worldName.isEmpty()) {
@@ -122,13 +120,13 @@ public class CommandEnableDisable implements CommandCallable {
                     world = optWorld.get();
                 }
             }
-            if (world == null) throw new CommandException(Texts.of("Must specify a world!"));
+            if (world == null) throw new CommandException(Text.of("Must specify a world!"));
             int successes = 0;
             int failures = 0;
             List<IRegion> regions = new LinkedList<>();
             FGHelper.getSelectedRegions(source).stream().forEach(regions::add);
-            if (args.length > 1) {
-                for (String name : Arrays.copyOfRange(args, 1, args.length)) {
+            if (parse.args.length > 1) {
+                for (String name : Arrays.copyOfRange(parse.args, 1, parse.args.length)) {
                     IRegion region = FGManager.getInstance().getRegion(world, name);
                     if (region == null) failures++;
                     else {
@@ -136,7 +134,7 @@ public class CommandEnableDisable implements CommandCallable {
                     }
                 }
             }
-            if (regions.isEmpty()) throw new CommandException(Texts.of("Must specify at least one Region!"));
+            if (regions.isEmpty()) throw new CommandException(Text.of("Must specify at least one Region!"));
             for (IRegion region : regions) {
                 if (region instanceof GlobalRegion || region.isEnabled() == this.enableState) failures++;
                 else {
@@ -146,32 +144,32 @@ public class CommandEnableDisable implements CommandCallable {
             }
             FCStateManager.instance().getStateMap().get(source).flush(RegionsStateField.ID);
             if (successes == 1 && failures == 0) {
-                source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " region!"));
+                source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " region!"));
                 return CommandResult.success();
             } else if (successes > 0) {
-                source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " regions with "
+                source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " regions with "
                         + successes + " successes" + (failures > 0 ? " and " + failures + " failures!" : "!")));
                 return CommandResult.builder().successCount(successes).build();
             } else {
-                throw new CommandException(Texts.of(failures + " failures while trying to " + (this.enableState ? "enable" : "disable") +
+                throw new CommandException(Text.of(failures + " failures while trying to " + (this.enableState ? "enable" : "disable") +
                         " " + failures + (failures > 1 ? " regions" : " region") + ". Check to make sure you spelled their names correctly and that they are not already "
                         + (this.enableState ? "enabled." : "disabled.")));
             }
 
-        } else if (isAlias(HANDLERS_ALIASES, args[0])) {
-            if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
+        } else if (isAlias(HANDLERS_ALIASES, parse.args[0])) {
+            if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
             int successes = 0;
             int failures = 0;
             List<IHandler> handlers = new LinkedList<>();
             FGHelper.getSelectedHandlers(source).stream().forEach(handlers::add);
-            for (String name : Arrays.copyOfRange(args, 1, args.length)) {
+            for (String name : Arrays.copyOfRange(parse.args, 1, parse.args.length)) {
                 IHandler handler = FGManager.getInstance().gethandler(name);
                 if (handler == null) failures++;
                 else {
                     handlers.add(handler);
                 }
             }
-            if (handlers.isEmpty()) throw new CommandException(Texts.of("Must specify at least one Handler!"));
+            if (handlers.isEmpty()) throw new CommandException(Text.of("Must specify at least one Handler!"));
             for (IHandler handler : handlers) {
                 if (handler instanceof GlobalRegion || handler.isEnabled() == this.enableState) failures++;
                 else {
@@ -181,18 +179,18 @@ public class CommandEnableDisable implements CommandCallable {
             }
             FCStateManager.instance().getStateMap().get(source).flush(HandlersStateField.ID);
             if (successes == 1 && failures == 0) {
-                source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handler!"));
+                source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handler!"));
                 return CommandResult.success();
             } else if (successes > 0) {
-                source.sendMessage(Texts.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handlers with "
+                source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handlers with "
                         + successes + " successes" + (failures > 0 ? " and " + failures + " failures!" : "!")));
                 return CommandResult.builder().successCount(successes).build();
             } else {
-                throw new CommandException(Texts.of(failures + " failures while trying to " + (this.enableState ? "enable" : "disable") +
+                throw new CommandException(Text.of(failures + " failures while trying to " + (this.enableState ? "enable" : "disable") +
                         " " + failures + (failures > 1 ? " handlers" : " handler") + ". Check to make sure you spelled their names correctly and that they are not already "
                         + (this.enableState ? "enabled." : "disabled.")));
             }
-        } else throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
+        } else throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);
     }
 
     @Override
@@ -218,7 +216,7 @@ public class CommandEnableDisable implements CommandCallable {
     @Override
     public Text getUsage(CommandSource source) {
         if (source instanceof Player)
-            return Texts.of((this.enableState ? "enable" : "disable") + " <region [--w:<worldname>] | handler> [names]...");
-        else return Texts.of((this.enableState ? "enable" : "disable") + " <region <worldname> | handler> [names]...");
+            return Text.of((this.enableState ? "enable" : "disable") + " <region [--w:<worldname>] | handler> [names]...");
+        else return Text.of((this.enableState ? "enable" : "disable") + " <region <worldname> | handler> [names]...");
     }
 }

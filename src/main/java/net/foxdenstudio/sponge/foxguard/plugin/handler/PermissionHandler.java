@@ -32,7 +32,6 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
 
@@ -53,9 +52,9 @@ public class PermissionHandler extends HandlerBase {
             if (!isEnabled || user == null) return Tristate.UNDEFINED;
             this.lock.readLock().unlock();
             while (flag != null) {
-                if (user.hasPermission("foxguard.flags." + this.name.toLowerCase() + "." + flag.flagName() + ".allow"))
+                if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." + flag.flagName() + ".allow"))
                     return Tristate.TRUE;
-                else if (user.hasPermission("foxguard.flags." + this.name.toLowerCase() + "." + flag.flagName() + ".deny"))
+                else if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." + flag.flagName() + ".deny"))
                     return Tristate.FALSE;
                 flag = flag.getParent();
             }
@@ -82,18 +81,18 @@ public class PermissionHandler extends HandlerBase {
 
     @Override
     public Text getDetails(String arguments) {
-        return Texts.builder()
-                .append(Texts.of(TextColors.GOLD, "Permission: "))
-                .append(Texts.of(TextColors.RESET, "foxguard.flags."))
-                .append(Texts.of(TextColors.YELLOW, this.getName()))
-                .append(Texts.of(TextColors.RESET, "."))
-                .append(Texts.of(TextColors.AQUA, "<flagname>"))
-                .append(Texts.of(TextColors.RESET, "."))
-                .append(Texts.of(TextColors.AQUA, "<"))
-                .append(Texts.of(TextColors.GREEN, "allow"))
-                .append(Texts.of(TextColors.AQUA, "/"))
-                .append(Texts.of(TextColors.RED, "deny"))
-                .append(Texts.of(TextColors.AQUA, ">")).build();
+        return Text.builder()
+                .append(Text.of(TextColors.GOLD, "Permission: "))
+                .append(Text.of(TextColors.RESET, "foxguard.handler."))
+                .append(Text.of(TextColors.YELLOW, this.getName()))
+                .append(Text.of(TextColors.RESET, "."))
+                .append(Text.of(TextColors.AQUA, "<flagname>"))
+                .append(Text.of(TextColors.RESET, "."))
+                .append(Text.of(TextColors.AQUA, "<"))
+                .append(Text.of(TextColors.GREEN, "allow"))
+                .append(Text.of(TextColors.AQUA, "/"))
+                .append(Text.of(TextColors.RED, "deny"))
+                .append(Text.of(TextColors.AQUA, ">")).build();
 
     }
 
@@ -104,7 +103,7 @@ public class PermissionHandler extends HandlerBase {
 
     @Override
     public ProcessResult modify(String arguments, SourceState state, CommandSource source) {
-        return ProcessResult.of(false, Texts.of(TextColors.WHITE, "Permission Handlers have no configurable parameters!"));
+        return ProcessResult.of(false, Text.of(TextColors.WHITE, "Permission Handlers have no configurable parameters!"));
     }
 
 }

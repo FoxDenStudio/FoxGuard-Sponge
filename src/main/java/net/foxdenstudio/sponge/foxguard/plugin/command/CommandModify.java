@@ -26,10 +26,10 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
+import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
-import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
@@ -41,7 +41,6 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.World;
 
@@ -64,20 +63,19 @@ public class CommandModify implements CommandCallable {
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {
-            source.sendMessage(Texts.of(TextColors.RED, "You don't have permission to use this command!"));
+            source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParse parse = AdvCmdParse.builder().arguments(arguments).limit(2).flagMapper(MAPPER).build();
-        String[] args = parse.getArgs();
-        if (args.length == 0) {
-            source.sendMessage(Texts.builder()
-                    .append(Texts.of(TextColors.GREEN, "Usage: "))
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).limit(2).flagMapper(MAPPER).parse2();
+        if (parse.args.length == 0) {
+            source.sendMessage(Text.builder()
+                    .append(Text.of(TextColors.GREEN, "Usage: "))
                     .append(getUsage(source))
                     .build());
             return CommandResult.empty();
-        } else if (isAlias(REGIONS_ALIASES, args[0])) {
-            if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-            String worldName = parse.getFlagmap().get("world");
+        } else if (isAlias(REGIONS_ALIASES, parse.args[0])) {
+            if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
+            String worldName = parse.flagmap.get("world");
             World world = null;
             if (source instanceof Player) world = ((Player) source).getWorld();
             if (!worldName.isEmpty()) {
@@ -86,11 +84,11 @@ public class CommandModify implements CommandCallable {
                     world = optWorld.get();
                 }
             }
-            if (world == null) throw new CommandException(Texts.of("Must specify a world!"));
-            IRegion region = FGManager.getInstance().getRegion(world, args[1]);
+            if (world == null) throw new CommandException(Text.of("Must specify a world!"));
+            IRegion region = FGManager.getInstance().getRegion(world, parse.args[1]);
             if (region == null)
-                throw new CommandException(Texts.of("No Region with name \"" + args[1] + "\"!"));
-            ProcessResult result = region.modify(args.length < 3 ? "" : args[2],
+                throw new CommandException(Text.of("No Region with name \"" + parse.args[1] + "\"!"));
+            ProcessResult result = region.modify(parse.args.length < 3 ? "" : parse.args[2],
                     FCStateManager.instance().getStateMap().get(source), source);
 
             if (result.isSuccess()) {
@@ -101,7 +99,7 @@ public class CommandModify implements CommandCallable {
                         source.sendMessage(result.getMessage().get());
                     }
                 } else {
-                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully modified Region!"));
+                    source.sendMessage(Text.of(TextColors.GREEN, "Successfully modified Region!"));
                 }
             } else {
                 if (result.getMessage().isPresent()) {
@@ -111,15 +109,15 @@ public class CommandModify implements CommandCallable {
                         source.sendMessage(result.getMessage().get());
                     }
                 } else {
-                    source.sendMessage(Texts.of(TextColors.RED, "Modification Failed for Region!"));
+                    source.sendMessage(Text.of(TextColors.RED, "Modification Failed for Region!"));
                 }
             }
-        } else if (isAlias(HANDLERS_ALIASES, args[0])) {
-            if (args.length < 2) throw new CommandException(Texts.of("Must specify a name!"));
-            IHandler handler = FGManager.getInstance().gethandler(args[1]);
+        } else if (isAlias(HANDLERS_ALIASES, parse.args[0])) {
+            if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
+            IHandler handler = FGManager.getInstance().gethandler(parse.args[1]);
             if (handler == null)
-                throw new CommandException(Texts.of("No Handler with name \"" + args[1] + "\"!"));
-            ProcessResult result = handler.modify(args.length < 3 ? "" : args[2],
+                throw new CommandException(Text.of("No Handler with name \"" + parse.args[1] + "\"!"));
+            ProcessResult result = handler.modify(parse.args.length < 3 ? "" : parse.args[2],
                     FCStateManager.instance().getStateMap().get(source), source);
             if (result.isSuccess()) {
                 if (result.getMessage().isPresent()) {
@@ -129,7 +127,7 @@ public class CommandModify implements CommandCallable {
                         source.sendMessage(result.getMessage().get());
                     }
                 } else {
-                    source.sendMessage(Texts.of(TextColors.GREEN, "Successfully modified Handler!"));
+                    source.sendMessage(Text.of(TextColors.GREEN, "Successfully modified Handler!"));
                 }
             } else {
                 if (result.getMessage().isPresent()) {
@@ -139,11 +137,11 @@ public class CommandModify implements CommandCallable {
                         source.sendMessage(result.getMessage().get());
                     }
                 } else {
-                    source.sendMessage(Texts.of(TextColors.RED, "Modification Failed for Handler!"));
+                    source.sendMessage(Text.of(TextColors.RED, "Modification Failed for Handler!"));
                 }
             }
         } else {
-            throw new ArgumentParseException(Texts.of("Not a valid category!"), args[0], 0);
+            throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);
         }
         return CommandResult.empty();
     }
@@ -170,6 +168,6 @@ public class CommandModify implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("detail <region [--w:<worldname>] | handler> <name> [args...]");
+        return Text.of("detail <region [--w:<worldname>] | handler> <name> [parse.args...]");
     }
 }
