@@ -27,6 +27,7 @@
  */
 package net.foxdenstudio.sponge.foxguard.mcstats;
 
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
@@ -547,7 +548,7 @@ public class Metrics {
         connection.setDoOutput(true);
 
         if (debug) {
-            System.out.println("[Metrics] Prepared request for " + pluginName + " uncompressed=" + uncompressed.length + " compressed=" + compressed.length);
+            FoxGuardMain.instance().logger().info("[Metrics] Prepared request for " + pluginName + " uncompressed=" + uncompressed.length + " compressed=" + compressed.length);
         }
 
         // Write the data
