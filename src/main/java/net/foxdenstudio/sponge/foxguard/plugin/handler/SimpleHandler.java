@@ -302,7 +302,7 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
 
     @Override
     public Text getDetails(String arguments) {
-        Text.Builder builder = super.getDetails(arguments).builder();
+        Text.Builder builder = super.getDetails(arguments).toBuilder();
         builder.append(Text.of("\n"));
         builder.append(Text.of(TextColors.GREEN,
                 TextActions.suggestCommand("/foxguard modify handler " + this.name + " group members add "),

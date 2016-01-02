@@ -148,7 +148,7 @@ public class CuboidRegion extends OwnableRegionBase {
 
     @Override
     public Text getDetails(String arguments) {
-        Text.Builder builder = super.getDetails(arguments).builder();
+        Text.Builder builder = super.getDetails(arguments).toBuilder();
         builder.append(Text.of(TextColors.GREEN, "\nBounds: "));
         try {
             this.lock.readLock().lock();
