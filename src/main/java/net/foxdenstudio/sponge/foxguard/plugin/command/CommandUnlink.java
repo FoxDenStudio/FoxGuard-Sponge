@@ -114,7 +114,7 @@ public class CommandUnlink implements CommandCallable {
 
     @Override
     public boolean testPermission(CommandSource source) {
-        return source.hasPermission("foxguard.command.modify.link.remove");
+        return source.hasPermission("foxguard.command.modify.link.unlink");
     }
 
     @Override

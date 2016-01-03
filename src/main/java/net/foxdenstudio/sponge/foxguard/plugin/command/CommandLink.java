@@ -115,7 +115,7 @@ public class CommandLink implements CommandCallable {
 
     @Override
     public boolean testPermission(CommandSource source) {
-        return source.hasPermission("foxguard.command.modify.link.add");
+        return source.hasPermission("foxguard.command.modify.link.link");
     }
 
     @Override
