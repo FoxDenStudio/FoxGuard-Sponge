@@ -85,7 +85,7 @@ public final class FoxGuardMain {
     /**
      * String object containing the current version of the plugin.
      */
-    public static final String PLUGIN_VERSION = "0.13.0-SNAPSHOT";//VERSION
+    public static final String PLUGIN_VERSION = "0.14.3-SNAPSHOT";//VERSION
 
     /**
      * FoxGuardMain instance object.

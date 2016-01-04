@@ -27,12 +27,13 @@ package net.foxdenstudio.sponge.foxguard.plugin.region;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
+import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
 
 import javax.sql.DataSource;
+import java.util.List;
 
 public class GlobalRegion extends RegionBase {
 
@@ -82,8 +83,13 @@ public class GlobalRegion extends RegionBase {
     }
 
     @Override
-    public ProcessResult modify(String arguments, SourceState state, CommandSource source) {
+    public ProcessResult modify(CommandSource source, String arguments) {
         return ProcessResult.failure();
+    }
+
+    @Override
+    public List<String> modifySuggestions(CommandSource source, String arguments) {
+        return ImmutableList.of();
     }
 
     public boolean isInRegion(int x, int y, int z) {

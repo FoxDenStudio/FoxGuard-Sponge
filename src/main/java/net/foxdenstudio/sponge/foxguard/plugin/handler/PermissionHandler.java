@@ -25,8 +25,8 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
+import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Flag;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.User;
@@ -38,6 +38,7 @@ import org.spongepowered.api.util.Tristate;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import java.sql.SQLException;
+import java.util.List;
 
 public class PermissionHandler extends HandlerBase {
 
@@ -102,8 +103,13 @@ public class PermissionHandler extends HandlerBase {
     }
 
     @Override
-    public ProcessResult modify(String arguments, SourceState state, CommandSource source) {
+    public ProcessResult modify(CommandSource source, String arguments) {
         return ProcessResult.of(false, Text.of(TextColors.WHITE, "Permission Handlers have no configurable parameters!"));
+    }
+
+    @Override
+    public List<String> modifySuggestions(CommandSource source, String arguments) {
+        return ImmutableList.of();
     }
 
 }

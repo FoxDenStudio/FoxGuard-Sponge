@@ -44,6 +44,8 @@ import java.util.stream.Stream;
 
 public final class FGManager {
 
+    public static final String[] TYPES = {"region", "handler"};
+
     private static FGManager instance;
     private final Map<World, List<IRegion>> regions;
     private final List<IHandler> handlers;

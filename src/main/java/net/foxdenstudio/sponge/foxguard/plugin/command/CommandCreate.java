@@ -42,8 +42,11 @@ import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.GuavaCollectors;
+import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.world.World;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,9 +60,10 @@ public class CommandCreate implements CommandCallable {
     private static final String[] PRIORITY_ALIASES = {"priority", "prio", "p", "order", "level", "rank"};
 
     private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
-        if (isAlias(WORLD_ALIASES, key) && !map.containsKey("world")) {
+        map.put(key, value);
+        if (isIn(WORLD_ALIASES, key) && !map.containsKey("world")) {
             map.put("world", value);
-        } else if (isAlias(PRIORITY_ALIASES, key) && !map.containsKey("priority")) {
+        } else if (isIn(PRIORITY_ALIASES, key) && !map.containsKey("priority")) {
             map.put("priority", value);
         }
     };
@@ -70,7 +74,7 @@ public class CommandCreate implements CommandCallable {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).limit(3).flagMapper(MAPPER).parse2();
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).limit(3).flagMapper(MAPPER).parse();
 
         if (parse.args.length == 0) {
             source.sendMessage(Text.builder()
@@ -79,7 +83,7 @@ public class CommandCreate implements CommandCallable {
                     .build());
             return CommandResult.empty();
             //----------------------------------------------------------------------------------------------------------------------
-        } else if (isAlias(REGIONS_ALIASES, parse.args[0])) {
+        } else if (isIn(REGIONS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
             String worldName = parse.flagmap.get("world");
             World world = null;
@@ -111,7 +115,7 @@ public class CommandCreate implements CommandCallable {
             source.sendMessage(Text.of(TextColors.GREEN, "Region created successfully"));
             return CommandResult.success();
             //----------------------------------------------------------------------------------------------------------------------
-        } else if (isAlias(HANDLERS_ALIASES, parse.args[0])) {
+        } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
             if (parse.args[1].matches("^.*[^0-9a-zA-Z_$].*$"))
                 throw new ArgumentParseException(Text.of("Name must be alphanumeric!"), parse.args[1], 1);
@@ -143,6 +147,46 @@ public class CommandCreate implements CommandCallable {
 
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
+        if (!testPermission(source)) return ImmutableList.of();
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+                .arguments(arguments)
+                .limit(3)
+                .flagMapper(MAPPER)
+                .excludeCurrent(true)
+                .autoCloseQuotes(true)
+                .parse();
+        if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
+            if (parse.current.index == 0)
+                return Arrays.asList(FGManager.TYPES).stream()
+                        .filter(new StartsWithPredicate(parse.current.token))
+                        .collect(GuavaCollectors.toImmutableList());
+            else if (parse.current.index == 2) {
+                if (isIn(REGIONS_ALIASES, parse.args[0])) {
+                    return FGFactoryManager.getInstance().getPrimaryRegionTypeAliases().stream()
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
+                    return FGFactoryManager.getInstance().getPrimaryHandlerTypeAliases().stream()
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                }
+            }
+        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGKEY))
+            return ImmutableList.of("world", "priority").stream()
+                    .filter(new StartsWithPredicate(parse.current.token))
+                    .map(args -> parse.current.prefix + args)
+                    .collect(GuavaCollectors.toImmutableList());
+        else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGVALUE)) {
+            if (parse.current.key.equals("world"))
+                return Sponge.getGame().getServer().getWorlds().stream()
+                        .map(World::getName)
+                        .filter(new StartsWithPredicate(parse.current.token))
+                        .map(args -> parse.current.prefix + args)
+                        .collect(GuavaCollectors.toImmutableList());
+        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
+            return ImmutableList.of(parse.current.prefix + " ");
         return ImmutableList.of();
     }
 
@@ -163,6 +207,6 @@ public class CommandCreate implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Text.of("create <region [--w:<world>] | handler> <name> [--priority:<num>] <type> [parse.args...]");
+        return Text.of("create <region [--w:<world>] | handler> <name> [--priority:<num>] <type> [args...]");
     }
 }

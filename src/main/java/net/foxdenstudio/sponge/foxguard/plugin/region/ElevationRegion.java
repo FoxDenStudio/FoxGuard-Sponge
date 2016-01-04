@@ -26,9 +26,9 @@
 package net.foxdenstudio.sponge.foxguard.plugin.region;
 
 import com.flowpowered.math.vector.Vector3i;
+import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
@@ -92,8 +92,13 @@ public class ElevationRegion extends OwnableRegionBase {
     }
 
     @Override
-    public ProcessResult modify(String arguments, SourceState state, CommandSource source) {
+    public ProcessResult modify(CommandSource source, String arguments) {
         return ProcessResult.failure();
+    }
+
+    @Override
+    public List<String> modifySuggestions(CommandSource source, String arguments) {
+        return ImmutableList.of();
     }
 
     @Override

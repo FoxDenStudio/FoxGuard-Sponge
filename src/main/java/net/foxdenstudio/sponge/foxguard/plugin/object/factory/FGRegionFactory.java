@@ -52,7 +52,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isAlias;
+import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isIn;
 
 public class FGRegionFactory implements IRegionFactory {
 
@@ -61,22 +61,37 @@ public class FGRegionFactory implements IRegionFactory {
     private static final String[] elevAliases = {"elevation", "elev", "height", "y", "vertical", "vert", "level", "updown"};
     private static final String[] types = {"rectangular", "cuboid", "elevation"};
 
+    @Override
+    public String[] getAliases() {
+        return FCHelper.concatAll(rectAliases, cuboidAliases, elevAliases);
+    }
+
+    @Override
+    public String[] getTypes() {
+        return types;
+    }
+
+    @Override
+    public String[] getPrimaryAliases() {
+        return types;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public IRegion createRegion(String name, String type, String arguments, SourceState state, CommandSource source) throws CommandException {
         String[] args = {};
         if (!arguments.isEmpty()) args = arguments.split(" +");
-        if (isAlias(rectAliases, type)) {
+        if (isIn(rectAliases, type)) {
             if (source instanceof Player)
                 return new RectangularRegion(name, ((PositionsStateField) state.get(PositionsStateField.ID)).getList(), args, source, (Player) source);
             else
                 return new RectangularRegion(name, ((PositionsStateField) state.get(PositionsStateField.ID)).getList(), args, source);
-        } else if (isAlias(cuboidAliases, type)) {
+        } else if (isIn(cuboidAliases, type)) {
             if (source instanceof Player)
                 return new CuboidRegion(name, ((PositionsStateField) state.get(PositionsStateField.ID)).getList(), args, source, (Player) source);
             else
                 return new CuboidRegion(name, ((PositionsStateField) state.get(PositionsStateField.ID)).getList(), args, source);
-        } else if (isAlias(elevAliases, type)) {
+        } else if (isIn(elevAliases, type)) {
             if (source instanceof Player)
                 return new ElevationRegion(name, ((PositionsStateField) state.get(PositionsStateField.ID)).getList(), args, source, (Player) source);
             else
@@ -158,15 +173,5 @@ public class FGRegionFactory implements IRegionFactory {
             region.setIsEnabled(isEnabled);
             return region;
         } else return null;
-    }
-
-    @Override
-    public String[] getAliases() {
-        return FCHelper.concatAll(rectAliases, cuboidAliases, elevAliases);
-    }
-
-    @Override
-    public String[] getTypes() {
-        return types;
     }
 }

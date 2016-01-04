@@ -25,18 +25,27 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.state;
 
+import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.state.ListStateFieldBase;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGHelper;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.GuavaCollectors;
+import org.spongepowered.api.util.StartsWithPredicate;
+import org.spongepowered.api.world.World;
 
 import java.util.Iterator;
+import java.util.List;
 
 public class HandlersStateField extends ListStateFieldBase<IHandler> {
 
@@ -60,7 +69,7 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
 
     @Override
     public ProcessResult add(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).parse2();
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).parse();
 
         if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name!"));
         IHandler handler = FGManager.getInstance().gethandler(parse.args[0]);
@@ -74,25 +83,92 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
     }
 
     @Override
+    public List<String> addSuggestions(CommandSource source, String arguments) throws CommandException {
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+                .arguments(arguments)
+                .autoCloseQuotes(true)
+                .parse();
+        if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
+            if (parse.current.index == 0)
+                return FGManager.getInstance().getHandlerListCopy().stream()
+                        .map(IFGObject::getName)
+                        .filter(new StartsWithPredicate(parse.current.token))
+                        .map(args -> parse.current.prefix + args)
+                        .collect(GuavaCollectors.toImmutableList());
+        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
+            return ImmutableList.of(parse.current.prefix + " ");
+        return ImmutableList.of();
+    }
+
+    @Override
     public ProcessResult subtract(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).parse2();
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).parse();
 
         if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name or a number!"));
-        IHandler handler;
-        try {
-            int index = Integer.parseInt(parse.args[0]);
-            handler = this.list.get(index - 1);
-        } catch (NumberFormatException e) {
-            handler = FGManager.getInstance().gethandler(parse.args[1]);
-        } catch (IndexOutOfBoundsException e) {
-            throw new ArgumentParseException(Text.of("Index out of bounds! (1 - " + this.list.size()), parse.args[0], 1);
+        if (parse.args.length == 1) {
+            IHandler handler;
+            try {
+                int index = Integer.parseInt(parse.args[0]);
+                handler = this.list.get(index - 1);
+            } catch (NumberFormatException e) {
+                handler = FGManager.getInstance().gethandler(parse.args[0]);
+            } catch (IndexOutOfBoundsException e) {
+                throw new ArgumentParseException(Text.of("Index out of bounds! (1 - " + this.list.size()), parse.args[0], 1);
+            }
+            if (handler == null)
+                throw new ArgumentParseException(Text.of("No Handlers with this name!"), parse.args[0], 1);
+            if (!this.list.contains(handler))
+                throw new ArgumentParseException(Text.of("Handler is not in your state buffer!"), parse.args[0], 1);
+            this.list.remove(handler);
+            return ProcessResult.of(true, Text.of("Successfully removed Handler from your state buffer!"));
+        } else {
+            int successes = 0, failures = 0;
+            for (String arg : parse.args) {
+                IHandler handler;
+                try {
+                    int index = Integer.parseInt(arg);
+                    handler = this.list.get(index - 1);
+                } catch (NumberFormatException e) {
+                    handler = FGManager.getInstance().gethandler(arg);
+                } catch (IndexOutOfBoundsException e) {
+                    failures++;
+                    continue;
+                }
+                if (handler == null) {
+                    failures++;
+                    continue;
+                }
+                if (!this.list.contains(handler)) {
+                    failures++;
+                    continue;
+                }
+                this.list.remove(handler);
+                successes++;
+            }
+            if (successes > 0) {
+                return ProcessResult.of(true, Text.of(TextColors.GREEN, "Successfully removed handlers handlers from your state buffer with "
+                        + successes + " successes" + (failures > 0 ? " and " + failures + " failures!" : "!")));
+            } else {
+                return ProcessResult.of(false, Text.of(failures + " failures while trying to remove handlers from your state buffer. " +
+                        "Check that their names or indices are valid."));
+            }
         }
-        if (handler == null)
-            throw new ArgumentParseException(Text.of("No Handlers with this name!"), parse.args[0], 1);
-        if (!this.list.contains(handler))
-            throw new ArgumentParseException(Text.of("Handler is not in your state buffer!"), parse.args[0], 1);
-        this.list.remove(handler);
+    }
 
-        return ProcessResult.of(true, Text.of("Successfully removed Handler from your state buffer!"));
+    @Override
+    public List<String> subtractSuggestions(CommandSource source, String arguments) throws CommandException {
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+                .arguments(arguments)
+                .autoCloseQuotes(true)
+                .parse();
+        if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
+            if (parse.current.index == 0)
+                return this.list.stream()
+                        .map(IFGObject::getName)
+                        .filter(new StartsWithPredicate(parse.current.token))
+                        .collect(GuavaCollectors.toImmutableList());
+        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
+            return ImmutableList.of(parse.current.prefix + " ");
+        return ImmutableList.of();
     }
 }

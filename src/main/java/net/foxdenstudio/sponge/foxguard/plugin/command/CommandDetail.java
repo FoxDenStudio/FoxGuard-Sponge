@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGHelper;
 import org.spongepowered.api.Sponge;
@@ -42,8 +43,11 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.format.TextStyles;
+import org.spongepowered.api.util.GuavaCollectors;
+import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.world.World;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -55,7 +59,8 @@ import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 public class CommandDetail implements CommandCallable {
 
     private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
-        if (isAlias(WORLD_ALIASES, key) && !map.containsKey("world")) {
+        map.put(key, value);
+        if (isIn(WORLD_ALIASES, key) && !map.containsKey("world")) {
             map.put("world", value);
         }
     };
@@ -66,14 +71,14 @@ public class CommandDetail implements CommandCallable {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).limit(2).flagMapper(MAPPER).parse2();
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).limit(2).flagMapper(MAPPER).parse();
         if (parse.args.length == 0) {
             source.sendMessage(Text.builder()
                     .append(Text.of(TextColors.GREEN, "Usage: "))
                     .append(getUsage(source))
                     .build());
             return CommandResult.empty();
-        } else if (isAlias(REGIONS_ALIASES, parse.args[0])) {
+        } else if (isIn(REGIONS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
             String worldName = parse.flagmap.get("world");
             World world = null;
@@ -89,7 +94,7 @@ public class CommandDetail implements CommandCallable {
             if (region == null)
                 throw new CommandException(Text.of("No Region with name \"" + parse.args[1] + "\"!"));
             Text.Builder builder = Text.builder();
-            builder.append(Text.of(TextColors.GOLD, "-----------------------------------------------------\n"));
+            builder.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
             builder.append(Text.of(TextColors.GREEN, "---General---\n"));
             builder.append(Text.of(TextColors.GOLD, "Name: "), Text.of(TextColors.RESET, region.getName() + "\n"));
             builder.append(Text.of(TextColors.GOLD, "Type: "), Text.of(TextColors.RESET, region.getLongTypeName() + "\n"));
@@ -113,14 +118,14 @@ public class CommandDetail implements CommandCallable {
             )));
             source.sendMessage(builder.build());
             return CommandResult.empty();
-        } else if (isAlias(HANDLERS_ALIASES, parse.args[0])) {
+        } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
 
             IHandler handler = FGManager.getInstance().gethandler(parse.args[1]);
             if (handler == null)
                 throw new CommandException(Text.of("No Handler with name \"" + parse.args[1] + "\"!"));
             Text.Builder builder = Text.builder();
-            builder.append(Text.of(TextColors.GOLD, "-----------------------------------------------------\n"));
+            builder.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
             builder.append(Text.of(TextColors.GREEN, "---General---\n"));
             builder.append(Text.of(TextColors.GOLD, "Name: "), Text.of(TextColors.RESET, handler.getName() + "\n"));
             builder.append(Text.of(TextColors.GOLD, "Type: "), Text.of(TextColors.RESET, handler.getLongTypeName() + "\n"));
@@ -147,6 +152,59 @@ public class CommandDetail implements CommandCallable {
 
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
+        if (!testPermission(source)) return ImmutableList.of();
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+                .arguments(arguments)
+                .limit(2)
+                .flagMapper(MAPPER)
+                .excludeCurrent(true)
+                .autoCloseQuotes(true)
+                .parse();
+        if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
+            if (parse.current.index == 0)
+                return Arrays.asList(FGManager.TYPES).stream()
+                        .filter(new StartsWithPredicate(parse.current.token))
+                        .map(args -> parse.current.prefix + args)
+                        .collect(GuavaCollectors.toImmutableList());
+            else if (parse.current.index == 1) {
+                if (isIn(REGIONS_ALIASES, parse.args[0])) {
+                    String worldName = parse.flagmap.get("world");
+                    World world = null;
+                    if (source instanceof Player) world = ((Player) source).getWorld();
+                    if (!worldName.isEmpty()) {
+                        Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
+                        if (optWorld.isPresent()) {
+                            world = optWorld.get();
+                        }
+                    }
+                    if (world == null) return ImmutableList.of();
+                    return FGManager.getInstance().getRegionListAsStream(world)
+                            .map(IFGObject::getName)
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
+                    return FGManager.getInstance().getHandlerListCopy().stream()
+                            .map(IFGObject::getName)
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                }
+            }
+        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGKEY))
+            return ImmutableList.of("world").stream()
+                    .filter(new StartsWithPredicate(parse.current.token))
+                    .map(args -> parse.current.prefix + args)
+                    .collect(GuavaCollectors.toImmutableList());
+        else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGVALUE)) {
+            if (parse.current.key.equals("world"))
+                return Sponge.getGame().getServer().getWorlds().stream()
+                        .map(World::getName)
+                        .filter(new StartsWithPredicate(parse.current.token))
+                        .map(args -> parse.current.prefix + args)
+                        .collect(GuavaCollectors.toImmutableList());
+        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
+            return ImmutableList.of(parse.current.prefix + " ");
         return ImmutableList.of();
     }
 
@@ -168,6 +226,6 @@ public class CommandDetail implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Text.of("detail <region [--w:<worldname>] | handler> <name> [parse.args...]");
+        return Text.of("detail <region [--w:<worldname>] | handler> <name> [args...]");
     }
 }

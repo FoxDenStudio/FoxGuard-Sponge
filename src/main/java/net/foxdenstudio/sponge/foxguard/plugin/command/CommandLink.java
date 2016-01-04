@@ -50,12 +50,13 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.WORLD_ALIASES;
-import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isAlias;
+import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isIn;
 
 public class CommandLink implements CommandCallable {
 
     private static final Function<Map<String, String>, Function<String, Consumer<String>>> mapper = map -> key -> value -> {
-        if (isAlias(WORLD_ALIASES, key) && !map.containsKey("world")) {
+        map.put(key, value);
+        if (isIn(WORLD_ALIASES, key) && !map.containsKey("world")) {
             map.put("world", value);
         }
     };
@@ -66,7 +67,7 @@ public class CommandLink implements CommandCallable {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).flagMapper(mapper).parse2();
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).flagMapper(mapper).parse();
         
         if (parse.args.length == 0) {
             if (FGHelper.getSelectedRegions(source).size() == 0 &&

@@ -68,16 +68,21 @@ public class FGHandlerFactory implements IHandlerFactory {
     }
 
     @Override
+    public String[] getPrimaryAliases() {
+        return types;
+    }
+
+    @Override
     public IHandler createHandler(String name, String type, int priority, String arguments, SourceState state, CommandSource source) {
-        if (Aliases.isAlias(simpleAliases, type)) {
+        if (Aliases.isIn(simpleAliases, type)) {
             SimpleHandler handler = new SimpleHandler(name, priority);
             if (source instanceof Player) handler.addOwner((Player) source);
             return handler;
-        } else if (Aliases.isAlias(passiveAliases, type)) {
+        } else if (Aliases.isIn(passiveAliases, type)) {
             PassiveHandler handler = new PassiveHandler(name, priority);
             if (source instanceof Player) handler.addOwner((Player) source);
             return handler;
-        } else if (Aliases.isAlias(permissionAliases, type)) {
+        } else if (Aliases.isIn(permissionAliases, type)) {
             return new PermissionHandler(name, priority);
         } else return null;
     }

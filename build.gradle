@@ -1,4 +1,3 @@
-
 plugins {
     id 'java'
     // id 'com.github.johnrengelman.shadow' version '1.2.2'
@@ -6,6 +5,8 @@ plugins {
 
 group 'net.foxdenstudio.sponge.foxguard'
 version 'ALPHA-SNAPSHOT'
+
+apply from: project(":FoxCore").file("sponge.gradle")
 
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
@@ -20,7 +21,7 @@ repositories {
 
 dependencies {
     compile project(':FoxCore')
-    compile 'org.spongepowered:spongeapi:2.1-SNAPSHOT'
+    compile "org.spongepowered:spongeapi:$spongeVersion"
     // compile 'org.mcstats.sponge:metrics:R8-SNAPSHOT'
     testCompile group: 'junit', name: 'junit', version: '4.11'
 }

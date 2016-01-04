@@ -36,6 +36,7 @@ import org.spongepowered.api.text.Text;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * Interface for all FoxGuard Objects. Inherited by {@link IRegion Regions}
@@ -135,6 +136,8 @@ public interface IFGObject {
         return true;
     }
 
-    ProcessResult modify(String arguments, SourceState state, CommandSource source) throws CommandException;
+    ProcessResult modify(CommandSource source, String arguments) throws CommandException;
+
+    List<String> modifySuggestions(CommandSource source, String arguments) throws CommandException;
 
 }

@@ -28,7 +28,6 @@ package net.foxdenstudio.sponge.foxguard.plugin.region;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
 import net.foxdenstudio.sponge.foxguard.plugin.region.util.BoundingBox3;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
@@ -105,8 +104,13 @@ public class CuboidRegion extends OwnableRegionBase {
     }
 
     @Override
-    public ProcessResult modify(String arguments, SourceState state, CommandSource source) {
+    public ProcessResult modify(CommandSource source, String arguments) {
         return ProcessResult.failure();
+    }
+
+    @Override
+    public List<String> modifySuggestions(CommandSource source, String arguments) {
+        return null;
     }
 
     @Override

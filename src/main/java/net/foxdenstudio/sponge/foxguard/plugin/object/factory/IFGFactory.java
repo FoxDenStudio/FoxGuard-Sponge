@@ -31,5 +31,6 @@ interface IFGFactory {
 
     String[] getTypes();
 
+    String[] getPrimaryAliases();
 
 }

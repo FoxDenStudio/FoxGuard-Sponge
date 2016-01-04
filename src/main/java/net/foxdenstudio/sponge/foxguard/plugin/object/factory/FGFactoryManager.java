@@ -36,6 +36,7 @@ import org.spongepowered.api.world.World;
 import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public final class FGFactoryManager {
@@ -57,7 +58,7 @@ public final class FGFactoryManager {
 
     public IRegion createRegion(String name, String type, String args, SourceState state, World world, CommandSource source) throws CommandException {
         for (IRegionFactory rf : regionFactories) {
-            if (Aliases.isAlias(rf.getAliases(), type)) {
+            if (Aliases.isIn(rf.getAliases(), type)) {
                 IRegion region = rf.createRegion(name, type, args, state, source);
                 if (region != null) return region;
             }
@@ -67,7 +68,7 @@ public final class FGFactoryManager {
 
     public IRegion createRegion(DataSource source, String name, String type, boolean isEnabled) throws SQLException {
         for (IRegionFactory rf : regionFactories) {
-            if (Aliases.isAlias(rf.getTypes(), type)) {
+            if (Aliases.isIn(rf.getTypes(), type)) {
                 IRegion region = rf.createRegion(source, name, type, isEnabled);
                 if (region != null) return region;
             }
@@ -78,7 +79,7 @@ public final class FGFactoryManager {
 
     public IHandler createHandler(String name, String type, int priority, String args, SourceState state, CommandSource source) {
         for (IHandlerFactory fsf : handlerFactories) {
-            if (Aliases.isAlias(fsf.getAliases(), type)) {
+            if (Aliases.isIn(fsf.getAliases(), type)) {
                 IHandler handler = fsf.createHandler(name, type, priority, args, state, source);
                 if (handler != null) return handler;
             }
@@ -88,7 +89,7 @@ public final class FGFactoryManager {
 
     public IHandler createHandler(DataSource source, String name, String type, int priority, boolean isEnabled) throws SQLException {
         for (IHandlerFactory fsf : handlerFactories) {
-            if (Aliases.isAlias(fsf.getTypes(), type)) {
+            if (Aliases.isIn(fsf.getTypes(), type)) {
                 IHandler handler = fsf.createHandler(source, name, type, priority, isEnabled);
                 if (handler != null) return handler;
             }
@@ -114,5 +115,21 @@ public final class FGFactoryManager {
         else if (factory instanceof IHandlerFactory)
             return handlerFactories.remove(factory);
         return false;
+    }
+
+    public List<String> getPrimaryHandlerTypeAliases() {
+        List<String> aliases = new ArrayList<>();
+        for (IFGFactory factory : handlerFactories) {
+            aliases.addAll(Arrays.asList(factory.getPrimaryAliases()));
+        }
+        return aliases;
+    }
+
+    public List<String> getPrimaryRegionTypeAliases() {
+        List<String> aliases = new ArrayList<>();
+        for (IFGFactory factory : regionFactories) {
+            aliases.addAll(Arrays.asList(factory.getPrimaryAliases()));
+        }
+        return aliases;
     }
 }

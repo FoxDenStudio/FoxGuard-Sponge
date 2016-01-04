@@ -25,14 +25,15 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
+import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IMembership;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.source.ProxySource;
@@ -42,6 +43,8 @@ import org.spongepowered.api.event.Event;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.GuavaCollectors;
+import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
 
 import javax.sql.DataSource;
@@ -79,21 +82,21 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
     }
 
     @Override
-    public ProcessResult modify(String arguments, SourceState state, CommandSource source) throws CommandException {
+    public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
         if (!source.hasPermission("foxguard.command.modify.objects.modify.handlers")) {
             if (source instanceof ProxySource) source = ((ProxySource) source).getOriginalSource();
             if (source instanceof Player && !this.ownerList.contains(source)) return ProcessResult.failure();
         }
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).parse2();
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).parse();
         try {
             this.lock.writeLock().lock();
             if (parse.args.length > 0) {
-                if (isAlias(GROUPS_ALIASES, parse.args[0])) {
+                if (isIn(GROUPS_ALIASES, parse.args[0])) {
                     if (parse.args.length > 1) {
                         List<User> list;
-                        if (isAlias(OWNER_GROUP_ALIASES, parse.args[1])) {
+                        if (isIn(OWNER_GROUP_ALIASES, parse.args[1])) {
                             list = this.ownerList;
-                        } else if (isAlias(MEMBER_GROUP_ALIASES, parse.args[1])) {
+                        } else if (isIn(MEMBER_GROUP_ALIASES, parse.args[1])) {
                             list = this.memberList;
                         } else {
                             return ProcessResult.of(false, Text.of(TextColors.RED, "Not a valid group!"));
@@ -154,14 +157,14 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                     } else {
                         return ProcessResult.of(false, Text.of("Must specify a group!"));
                     }
-                } else if (isAlias(SET_ALIASES, parse.args[0])) {
+                } else if (isIn(SET_ALIASES, parse.args[0])) {
                     Map<Flag, Tristate> map;
                     if (parse.args.length > 1) {
-                        if (isAlias(OWNER_GROUP_ALIASES, parse.args[1])) {
+                        if (isIn(OWNER_GROUP_ALIASES, parse.args[1])) {
                             map = ownerPermissions;
-                        } else if (isAlias(MEMBER_GROUP_ALIASES, parse.args[1])) {
+                        } else if (isIn(MEMBER_GROUP_ALIASES, parse.args[1])) {
                             map = memberPermissions;
-                        } else if (isAlias(DEFAULT_GROUP_ALIASES, parse.args[1])) {
+                        } else if (isIn(DEFAULT_GROUP_ALIASES, parse.args[1])) {
                             map = defaultPermissions;
                         } else {
 
@@ -181,7 +184,7 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                             }
                         }
                         if (parse.args.length > 3) {
-                            if (isAlias(CLEAR_ALIASES, parse.args[3])) {
+                            if (isIn(CLEAR_ALIASES, parse.args[3])) {
                                 if (flag == null) {
                                     map.clear();
                                     return ProcessResult.of(true, Text.of("Successfully cleared flags!"));
@@ -210,24 +213,24 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                     } else {
                         return ProcessResult.of(false, Text.of("Must specify a flag!"));
                     }
-                } else if (isAlias(PASSIVE_ALIASES, parse.args[0])) {
+                } else if (isIn(PASSIVE_ALIASES, parse.args[0])) {
                     if (parse.args.length > 1) {
-                        if (isAlias(TRUE_ALIASES, parse.args[1])) {
+                        if (isIn(TRUE_ALIASES, parse.args[1])) {
                             this.passiveOption = PassiveOptions.ALLOW;
                             return ProcessResult.of(true, Text.of("Successfully set passive option!"));
-                        } else if (isAlias(FALSE_ALIASES, parse.args[1])) {
+                        } else if (isIn(FALSE_ALIASES, parse.args[1])) {
                             this.passiveOption = PassiveOptions.DENY;
                             return ProcessResult.of(true, Text.of("Successfully set passive option!"));
-                        } else if (isAlias(PASSTHROUGH_ALIASES, parse.args[1])) {
+                        } else if (isIn(PASSTHROUGH_ALIASES, parse.args[1])) {
                             this.passiveOption = PassiveOptions.PASSTHROUGH;
                             return ProcessResult.of(true, Text.of("Successfully set passive option!"));
-                        } else if (isAlias(OWNER_GROUP_ALIASES, parse.args[1])) {
+                        } else if (isIn(OWNER_GROUP_ALIASES, parse.args[1])) {
                             this.passiveOption = PassiveOptions.OWNER;
                             return ProcessResult.of(true, Text.of("Successfully set passive option!"));
-                        } else if (isAlias(MEMBER_GROUP_ALIASES, parse.args[1])) {
+                        } else if (isIn(MEMBER_GROUP_ALIASES, parse.args[1])) {
                             this.passiveOption = PassiveOptions.MEMBER;
                             return ProcessResult.of(true, Text.of("Successfully set passive option!"));
-                        } else if (isAlias(DEFAULT_GROUP_ALIASES, parse.args[1])) {
+                        } else if (isIn(DEFAULT_GROUP_ALIASES, parse.args[1])) {
                             this.passiveOption = PassiveOptions.DEFAULT;
                             return ProcessResult.of(true, Text.of("Successfully set passive option!"));
                         } else {
@@ -245,6 +248,105 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
         } finally {
             this.lock.writeLock().unlock();
         }
+    }
+
+    @Override
+    public List<String> modifySuggestions(CommandSource source, String arguments) throws CommandException {
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+                .arguments(arguments)
+                .excludeCurrent(true)
+                .autoCloseQuotes(true)
+                .parse();
+        if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
+            if (parse.current.index == 0) {
+                return ImmutableList.of("set", "group", "passive").stream()
+                        .filter(new StartsWithPredicate(parse.current.token))
+                        .map(args -> parse.current.prefix + args)
+                        .collect(GuavaCollectors.toImmutableList());
+            } else if (parse.current.index == 1) {
+                if (isIn(GROUPS_ALIASES, parse.args[0]) || isIn(SET_ALIASES, parse.args[0])) {
+                    return ImmutableList.of("owner", "member").stream()
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                } else if (isIn(PASSIVE_ALIASES, parse.args[0])) {
+                    return ImmutableList.of("true", "false", "passthrough", "owner", "member", "default").stream()
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                }
+            } else if (parse.current.index == 2) {
+                if (isIn(OWNER_GROUP_ALIASES, parse.args[0])) {
+                    return ImmutableList.of("add", "remove", "set").stream()
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                } else if (isIn(SET_ALIASES, parse.args[0])) {
+                    return Arrays.stream(Flag.values())
+                            .map(Flag::flagName)
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                }
+            } else if (parse.current.index == 3) {
+                if (isIn(GROUPS_ALIASES, parse.args[0])) {
+                    if (parse.args[1].equalsIgnoreCase("set")) {
+                        return Sponge.getGame().getServer().getOnlinePlayers().stream()
+                                .map(Player::getName)
+                                .filter(new StartsWithPredicate(parse.current.token))
+                                .map(args -> parse.current.prefix + args)
+                                .collect(GuavaCollectors.toImmutableList());
+                    } else if (parse.args[1].equalsIgnoreCase("add")) {
+                        return Sponge.getGame().getServer().getOnlinePlayers().stream()
+                                .filter(player -> !FCHelper.isUserOnList(this.ownerList, player))
+                                .map(Player::getName)
+                                .filter(new StartsWithPredicate(parse.current.token))
+                                .map(args -> parse.current.prefix + args)
+                                .collect(GuavaCollectors.toImmutableList());
+                    } else if (parse.args[1].equalsIgnoreCase("remove")) {
+                        return Sponge.getGame().getServer().getOnlinePlayers().stream()
+                                .filter(player -> FCHelper.isUserOnList(this.ownerList, player))
+                                .map(Player::getName)
+                                .filter(new StartsWithPredicate(parse.current.token))
+                                .map(args -> parse.current.prefix + args)
+                                .collect(GuavaCollectors.toImmutableList());
+                    }
+                } else if (isIn(SET_ALIASES, parse.args[0])) {
+                    return ImmutableList.of("true", "false", "passthrough").stream()
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                }
+            } else if (parse.current.index > 3) {
+                if (isIn(GROUPS_ALIASES, parse.args[0])) {
+                    if (parse.args[1].equalsIgnoreCase("set")) {
+                        return Sponge.getGame().getServer().getOnlinePlayers().stream()
+                                .map(Player::getName)
+                                .filter(new StartsWithPredicate(parse.current.token))
+                                .map(args -> parse.current.prefix + args)
+                                .collect(GuavaCollectors.toImmutableList());
+                    } else if (parse.args[1].equalsIgnoreCase("add")) {
+                        return Sponge.getGame().getServer().getOnlinePlayers().stream()
+                                .filter(player -> !FCHelper.isUserOnList(this.ownerList, player))
+                                .map(Player::getName)
+                                .filter(alias -> !isIn(Arrays.copyOfRange(parse.args, 2, parse.args.length), alias))
+                                .filter(new StartsWithPredicate(parse.current.token))
+                                .map(args -> parse.current.prefix + args)
+                                .collect(GuavaCollectors.toImmutableList());
+                    } else if (parse.args[1].equalsIgnoreCase("remove")) {
+                        return Sponge.getGame().getServer().getOnlinePlayers().stream()
+                                .filter(player -> FCHelper.isUserOnList(this.ownerList, player))
+                                .map(Player::getName)
+                                .filter(alias -> !isIn(Arrays.copyOfRange(parse.args, 2, parse.args.length), alias))
+                                .filter(new StartsWithPredicate(parse.current.token))
+                                .map(args -> parse.current.prefix + args)
+                                .collect(GuavaCollectors.toImmutableList());
+                    }
+                }
+            }
+        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
+            return ImmutableList.of(parse.current.prefix + " ");
+        return ImmutableList.of();
     }
 
     @Override
