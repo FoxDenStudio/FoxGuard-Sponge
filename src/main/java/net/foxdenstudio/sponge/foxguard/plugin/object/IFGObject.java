@@ -26,7 +26,6 @@
 package net.foxdenstudio.sponge.foxguard.plugin.object;
 
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
 import net.foxdenstudio.sponge.foxguard.plugin.command.CommandDetail;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;

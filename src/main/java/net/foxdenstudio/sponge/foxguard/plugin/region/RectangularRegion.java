@@ -42,8 +42,8 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 public class RectangularRegion extends OwnableRegionBase {
@@ -59,7 +59,7 @@ public class RectangularRegion extends OwnableRegionBase {
     public RectangularRegion(String name, List<Vector3i> positions, String[] args, CommandSource source)
             throws CommandException {
         super(name);
-        List<Vector3i> allPositions = new LinkedList<>(positions);
+        List<Vector3i> allPositions = new ArrayList<>(positions);
         for (int i = 0; i < args.length - 1; i += 2) {
             int x, z;
             try {

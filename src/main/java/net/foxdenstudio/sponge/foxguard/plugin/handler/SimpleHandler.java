@@ -62,7 +62,7 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
     private final Map<Flag, Tristate> memberPermissions;
     private final Map<Flag, Tristate> defaultPermissions;
     private PassiveOptions passiveOption = PassiveOptions.PASSTHROUGH;
-    private List<User> memberList = new LinkedList<>();
+    private List<User> memberList = new ArrayList<>();
 
     public SimpleHandler(String name, int priority) {
         this(name, priority,

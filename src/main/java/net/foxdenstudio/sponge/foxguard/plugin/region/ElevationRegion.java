@@ -41,8 +41,8 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 public class ElevationRegion extends OwnableRegionBase {
@@ -59,7 +59,7 @@ public class ElevationRegion extends OwnableRegionBase {
     public ElevationRegion(String name, List<Vector3i> positions, String[] args, CommandSource source)
             throws CommandException {
         super(name);
-        List<Vector3i> allPositions = new LinkedList<>(positions);
+        List<Vector3i> allPositions = new ArrayList<>(positions);
         for (String arg : args) {
             int y;
             try {

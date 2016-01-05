@@ -37,7 +37,7 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,7 +60,7 @@ public class CommandPriority implements CommandCallable {
         } else {
             int successes = 0;
             int failures = 0;
-            List<IHandler> handlers = new LinkedList<>();
+            List<IHandler> handlers = new ArrayList<>();
             FGHelper.getSelectedHandlers(source).stream().forEach(handlers::add);
             PriorityMachine machine = null;
             for (String arg : args) {

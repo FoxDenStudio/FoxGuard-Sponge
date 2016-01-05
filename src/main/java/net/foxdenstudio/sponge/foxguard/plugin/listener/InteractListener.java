@@ -23,7 +23,7 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.event;
+package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;

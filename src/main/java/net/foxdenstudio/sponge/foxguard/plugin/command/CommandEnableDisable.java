@@ -86,7 +86,7 @@ public class CommandEnableDisable implements CommandCallable {
                         .build());
                 return CommandResult.empty();
             } else {
-                List<IFGObject> objects = new LinkedList<>();
+                List<IFGObject> objects = new ArrayList<>();
                 FGHelper.getSelectedRegions(source).stream().forEach(objects::add);
                 FGHelper.getSelectedHandlers(source).stream().forEach(objects::add);
                 int successes = 0;
@@ -126,7 +126,7 @@ public class CommandEnableDisable implements CommandCallable {
             if (world == null) throw new CommandException(Text.of("Must specify a world!"));
             int successes = 0;
             int failures = 0;
-            List<IRegion> regions = new LinkedList<>();
+            List<IRegion> regions = new ArrayList<>();
             FGHelper.getSelectedRegions(source).stream().forEach(regions::add);
             if (parse.args.length > 1) {
                 for (String name : Arrays.copyOfRange(parse.args, 1, parse.args.length)) {
@@ -163,7 +163,7 @@ public class CommandEnableDisable implements CommandCallable {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
             int successes = 0;
             int failures = 0;
-            List<IHandler> handlers = new LinkedList<>();
+            List<IHandler> handlers = new ArrayList<>();
             FGHelper.getSelectedHandlers(source).stream().forEach(handlers::add);
             for (String name : Arrays.copyOfRange(parse.args, 1, parse.args.length)) {
                 IHandler handler = FGManager.getInstance().gethandler(name);

@@ -26,7 +26,6 @@
 package net.foxdenstudio.sponge.foxguard.plugin.object.factory;
 
 
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import org.spongepowered.api.command.CommandSource;
 
@@ -35,7 +34,7 @@ import java.sql.SQLException;
 
 interface IHandlerFactory extends IFGFactory {
 
-    IHandler createHandler(String name, String type, int priority, String arguments, SourceState state, CommandSource source);
+    IHandler createHandler(String name, String type, int priority, String arguments, CommandSource source);
 
     IHandler createHandler(DataSource source, String name, String type, int priority, boolean isEnabled) throws SQLException;
 

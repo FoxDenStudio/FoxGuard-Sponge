@@ -33,7 +33,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.FGObjectBase;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import org.spongepowered.api.world.World;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 public abstract class RegionBase extends FGObjectBase implements IRegion {
@@ -43,7 +43,7 @@ public abstract class RegionBase extends FGObjectBase implements IRegion {
 
     RegionBase(String name) {
         super(name);
-        this.handlers = new LinkedList<>();
+        this.handlers = new ArrayList<>();
     }
 
     @Override

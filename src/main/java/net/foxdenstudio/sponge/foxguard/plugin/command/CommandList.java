@@ -73,7 +73,7 @@ public class CommandList implements CommandCallable {
                     .build());
             return CommandResult.empty();
         } else if (contains(Aliases.REGIONS_ALIASES, parse.args[0])) {
-            List<IRegion> regionList = new LinkedList<>();
+            List<IRegion> regionList = new ArrayList<>();
             boolean allFlag = true;
             String worldName = parse.flagmap.get("world");
             if (!worldName.isEmpty()) {

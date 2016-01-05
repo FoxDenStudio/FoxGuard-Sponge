@@ -25,19 +25,19 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.object.factory;
 
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
-import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
+import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.world.World;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isIn;
 
 public final class FGFactoryManager {
 
@@ -56,10 +56,10 @@ public final class FGFactoryManager {
         return ourInstance;
     }
 
-    public IRegion createRegion(String name, String type, String args, SourceState state, World world, CommandSource source) throws CommandException {
+    public IRegion createRegion(String name, String type, String arguments, CommandSource source) throws CommandException {
         for (IRegionFactory rf : regionFactories) {
-            if (Aliases.isIn(rf.getAliases(), type)) {
-                IRegion region = rf.createRegion(name, type, args, state, source);
+            if (isIn(rf.getAliases(), type)) {
+                IRegion region = rf.createRegion(name, type, arguments, source);
                 if (region != null) return region;
             }
         }
@@ -68,7 +68,7 @@ public final class FGFactoryManager {
 
     public IRegion createRegion(DataSource source, String name, String type, boolean isEnabled) throws SQLException {
         for (IRegionFactory rf : regionFactories) {
-            if (Aliases.isIn(rf.getTypes(), type)) {
+            if (isIn(rf.getTypes(), type)) {
                 IRegion region = rf.createRegion(source, name, type, isEnabled);
                 if (region != null) return region;
             }
@@ -77,10 +77,10 @@ public final class FGFactoryManager {
     }
 
 
-    public IHandler createHandler(String name, String type, int priority, String args, SourceState state, CommandSource source) {
-        for (IHandlerFactory fsf : handlerFactories) {
-            if (Aliases.isIn(fsf.getAliases(), type)) {
-                IHandler handler = fsf.createHandler(name, type, priority, args, state, source);
+    public IHandler createHandler(String name, String type, int priority, String args, CommandSource source) {
+        for (IHandlerFactory hf : handlerFactories) {
+            if (isIn(hf.getAliases(), type)) {
+                IHandler handler = hf.createHandler(name, type, priority, args, source);
                 if (handler != null) return handler;
             }
         }
@@ -88,13 +88,31 @@ public final class FGFactoryManager {
     }
 
     public IHandler createHandler(DataSource source, String name, String type, int priority, boolean isEnabled) throws SQLException {
-        for (IHandlerFactory fsf : handlerFactories) {
-            if (Aliases.isIn(fsf.getTypes(), type)) {
-                IHandler handler = fsf.createHandler(source, name, type, priority, isEnabled);
+        for (IHandlerFactory hf : handlerFactories) {
+            if (isIn(hf.getTypes(), type)) {
+                IHandler handler = hf.createHandler(source, name, type, priority, isEnabled);
                 if (handler != null) return handler;
             }
         }
         return null;
+    }
+
+    public List<String> regionSuggestions(CommandSource source, String arguments, String type) throws CommandException {
+        for (IRegionFactory rf : regionFactories) {
+            if (isIn(rf.getTypes(), type)) {
+                return rf.createSuggestions(source, arguments, type);
+            }
+        }
+        return ImmutableList.of();
+    }
+
+    public List<String> handlerSuggestions(CommandSource source, String arguments, String type) throws CommandException {
+        for (IHandlerFactory hf : handlerFactories) {
+            if (isIn(hf.getTypes(), type)) {
+                return hf.createSuggestions(source, arguments, type);
+            }
+        }
+        return ImmutableList.of();
     }
 
     public boolean registerRegionFactory(IRegionFactory factory) {
@@ -109,7 +127,7 @@ public final class FGFactoryManager {
         return true;
     }
 
-    public boolean unregister(Object factory) {
+    public boolean unregister(IFGFactory factory) {
         if (factory instanceof IRegionFactory)
             return regionFactories.remove(factory);
         else if (factory instanceof IHandlerFactory)

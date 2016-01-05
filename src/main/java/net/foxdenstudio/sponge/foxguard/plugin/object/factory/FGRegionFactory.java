@@ -27,9 +27,9 @@ package net.foxdenstudio.sponge.foxguard.plugin.object.factory;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
+import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.FCHelper;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
-import net.foxdenstudio.sponge.foxcore.plugin.state.PositionsStateField;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.region.CuboidRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.ElevationRegion;
@@ -47,7 +47,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -76,26 +76,39 @@ public class FGRegionFactory implements IRegionFactory {
         return types;
     }
 
+    @Override
+    public List<String> createSuggestions(CommandSource source, String arguments, String type) throws CommandException {
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+                .arguments(arguments)
+                .excludeCurrent(true)
+                .autoCloseQuotes(true)
+                .parse();
+        if (isIn(FCHelper.concatAll(rectAliases, cuboidAliases, elevAliases), type)) {
+            return ImmutableList.of(parse.current.prefix + "~");
+        } else return ImmutableList.of();
+    }
+
     @SuppressWarnings("unchecked")
     @Override
-    public IRegion createRegion(String name, String type, String arguments, SourceState state, CommandSource source) throws CommandException {
-        String[] args = {};
-        if (!arguments.isEmpty()) args = arguments.split(" +");
+    public IRegion createRegion(String name, String type, String arguments, CommandSource source) throws CommandException {
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+                .arguments(arguments)
+                .parse();
         if (isIn(rectAliases, type)) {
             if (source instanceof Player)
-                return new RectangularRegion(name, ((PositionsStateField) state.get(PositionsStateField.ID)).getList(), args, source, (Player) source);
+                return new RectangularRegion(name, FCHelper.getPositions(source), parse.args, source, (Player) source);
             else
-                return new RectangularRegion(name, ((PositionsStateField) state.get(PositionsStateField.ID)).getList(), args, source);
+                return new RectangularRegion(name, FCHelper.getPositions(source), parse.args, source);
         } else if (isIn(cuboidAliases, type)) {
             if (source instanceof Player)
-                return new CuboidRegion(name, ((PositionsStateField) state.get(PositionsStateField.ID)).getList(), args, source, (Player) source);
+                return new CuboidRegion(name, FCHelper.getPositions(source), parse.args, source, (Player) source);
             else
-                return new CuboidRegion(name, ((PositionsStateField) state.get(PositionsStateField.ID)).getList(), args, source);
+                return new CuboidRegion(name, FCHelper.getPositions(source), parse.args, source);
         } else if (isIn(elevAliases, type)) {
             if (source instanceof Player)
-                return new ElevationRegion(name, ((PositionsStateField) state.get(PositionsStateField.ID)).getList(), args, source, (Player) source);
+                return new ElevationRegion(name, FCHelper.getPositions(source), parse.args, source, (Player) source);
             else
-                return new ElevationRegion(name, ((PositionsStateField) state.get(PositionsStateField.ID)).getList(), args, source);
+                return new ElevationRegion(name, FCHelper.getPositions(source), parse.args, source);
         } else return null;
     }
 
@@ -103,7 +116,7 @@ public class FGRegionFactory implements IRegionFactory {
     public IRegion createRegion(DataSource source, String name, String type, boolean isEnabled) throws SQLException {
         if (type.equalsIgnoreCase("rectangular")) {
             Vector2i a, b;
-            List<User> userList = new LinkedList<>();
+            List<User> userList = new ArrayList<>();
             try (Connection conn = source.getConnection()) {
                 try (Statement statement = conn.createStatement()) {
                     try (ResultSet boundSet = statement.executeQuery("SELECT * FROM BOUNDS")) {
@@ -127,7 +140,7 @@ public class FGRegionFactory implements IRegionFactory {
             return region;
         } else if (type.equalsIgnoreCase("cuboid")) {
             Vector3i a, b;
-            List<User> userList = new LinkedList<>();
+            List<User> userList = new ArrayList<>();
             try (Connection conn = source.getConnection()) {
                 try (Statement statement = conn.createStatement()) {
                     try (ResultSet boundSet = statement.executeQuery("SELECT * FROM BOUNDS")) {
@@ -150,7 +163,7 @@ public class FGRegionFactory implements IRegionFactory {
             return region;
         } else if (type.equalsIgnoreCase("elevation")) {
             int lowerBound, upperBound;
-            List<User> userList = new LinkedList<>();
+            List<User> userList = new ArrayList<>();
             try (Connection conn = source.getConnection()) {
                 try (Statement statement = conn.createStatement()) {
                     try (ResultSet boundSet = statement.executeQuery("SELECT * FROM BOUNDS")) {

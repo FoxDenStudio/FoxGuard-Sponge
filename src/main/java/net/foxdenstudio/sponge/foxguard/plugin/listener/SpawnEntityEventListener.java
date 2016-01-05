@@ -23,20 +23,19 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.event;
+package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
-import com.flowpowered.math.vector.Vector3i;
-import net.foxdenstudio.sponge.foxcore.plugin.command.CommandDebug;
+import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Flag;
-import org.spongepowered.api.block.BlockSnapshot;
-import org.spongepowered.api.block.BlockTypes;
-import org.spongepowered.api.data.Transaction;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.living.Creature;
+import org.spongepowered.api.entity.living.Hostile;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
-import org.spongepowered.api.event.block.ChangeBlockEvent;
+import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
@@ -45,18 +44,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class BlockEventListener implements EventListener<ChangeBlockEvent> {
+public class SpawnEntityEventListener implements EventListener<SpawnEntityEvent> {
 
     @Override
-    public void handle(ChangeBlockEvent event) throws Exception {
+    public void handle(SpawnEntityEvent event) throws Exception {
         if (event.isCancelled()) return;
-        if (event.getTransactions().isEmpty()) return;
-        for (Transaction<BlockSnapshot> tr : event.getTransactions()) {
-            if (tr.getOriginal().getState().getType().equals(BlockTypes.DIRT)
-                    && tr.getFinal().getState().getType().equals(BlockTypes.GRASS)
-                    || tr.getOriginal().getState().getType().equals(BlockTypes.GRASS)
-                    && tr.getFinal().getState().getType().equals(BlockTypes.DIRT)) return;
+        for (Entity entity : event.getEntities()) {
+            if (entity instanceof Player) return;
         }
+        if (event.getEntities().isEmpty()) return;
         User user;
         if (event.getCause().containsType(Player.class)) {
             user = event.getCause().first(Player.class).get();
@@ -65,22 +61,18 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
         } else {
             user = null;
         }
-        //DebugHelper.printBlockEvent(event);
-        Flag typeFlag;
-        if (event instanceof ChangeBlockEvent.Modify) typeFlag = Flag.BLOCK_MODIFY;
-        else if (event instanceof ChangeBlockEvent.Break) typeFlag = Flag.BLOCK_BREAK;
-        else if (event instanceof ChangeBlockEvent.Place) typeFlag = Flag.BLOCK_PLACE;
-        else return;
 
-
-        //FoxGuardMain.instance().getLogger().info(player.getName());
+        Flag typeFlag = null;
+        Entity oneEntity = event.getEntities().get(0);
+        if (oneEntity instanceof Creature) typeFlag = Flag.SPAWN_MOB_PASSIVE;
+        if (oneEntity instanceof Hostile) typeFlag = Flag.SPAWN_MOB_HOSTILE;
+        if (typeFlag == null) return;
 
         List<IHandler> handlerList = new ArrayList<>();
-        handlerList.add(FGManager.getInstance().getGlobalHandler());
         World world = event.getTargetWorld();
 
-        for (Transaction<BlockSnapshot> trans : event.getTransactions()) {
-            Vector3i loc = trans.getOriginal().getLocation().get().getBlockPosition();
+        for (Entity entity : event.getEntities()) {
+            Vector3d loc = entity.getLocation().getPosition();
             FGManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
                     .forEach(region -> region.getHandlers().stream()
                             .filter(handler -> !handlerList.contains(handler))
@@ -96,25 +88,14 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
             flagState = flagState.and(handler.handle(user, typeFlag, event));
             currPriority = handler.getPriority();
         }
-        flagState = typeFlag.resolve(flagState);
-        if (user instanceof Player && CommandDebug.instance().getDebug().get(user)) {
-            ((Player) user).sendMessage(Text.of());
-        } else {
-            if (flagState == Tristate.FALSE) {
-                if (user instanceof Player)
-                    ((Player) user).sendMessage(Text.of("You don't have permission!"));
-            } else {
-
-            }
-        }
         if (flagState == Tristate.FALSE) {
-
+            if (user instanceof Player)
+                ((Player) user).sendMessage(Text.of("You don't have permission!"));
             event.setCancelled(true);
         } else {
             //makes sure that handlers are unable to cancel the event directly.
             event.setCancelled(false);
         }
     }
-
 
 }

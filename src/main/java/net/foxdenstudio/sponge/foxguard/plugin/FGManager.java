@@ -25,6 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin;
 
+import com.flowpowered.math.vector.Vector2i;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
@@ -35,7 +36,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.world.World;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,6 +54,8 @@ public final class FGManager {
     private final ReadWriteLock handlerLock;
     private final GlobalHandler globalHandler;
 
+    private final Map<World, Map<Vector2i, List<IRegion>>> regionCache;
+
     private FGManager() {
         instance = this;
         regionLocks = new CallbackHashMap<>((key, map) -> {
@@ -63,10 +66,23 @@ public final class FGManager {
             } else return null;
         });
         handlerLock = FoxGuardMain.getNewLock();
-        regions = new CallbackHashMap<>((key, map) -> new LinkedList<>());
-        handlers = new LinkedList<>();
+        regions = new CallbackHashMap<>((key, map) -> new ArrayList<>());
+        handlers = new ArrayList<>();
         globalHandler = new GlobalHandler();
         this.addHandler(globalHandler);
+
+        regionCache = new CallbackHashMap<>((world, map1) -> {
+            if (world instanceof World) {
+                Map<Vector2i, List<IRegion>> worldCache = new CallbackHashMap<>((chunk, map2) -> {
+                    if (chunk instanceof Vector2i) {
+                        List<IRegion> cachedRegions = this.calculateRegionsForChunk((Vector2i) chunk, (World) world);
+                        map2.put((Vector2i) chunk, cachedRegions);
+                        return cachedRegions;
+                    } else return null;
+                });
+                return worldCache;
+            } else return null;
+        });
     }
 
     public static synchronized void init() {
@@ -127,7 +143,7 @@ public final class FGManager {
     }
 
     public List<IRegion> getRegionsListCopy() {
-        List<IRegion> list = new LinkedList<>();
+        List<IRegion> list = new ArrayList<>();
         this.regions.forEach((world, tlist) -> {
             ReadWriteLock lock = this.regionLocks.get(world);
             try {
@@ -301,7 +317,7 @@ public final class FGManager {
     }
 
     private void createLists(World world) {
-        regions.put(world, new LinkedList<>());
+        regions.put(world, new ArrayList<>());
     }
 
     public void populateWorld(World world) {
@@ -313,5 +329,13 @@ public final class FGManager {
 
     public GlobalHandler getGlobalHandler() {
         return globalHandler;
+    }
+
+    private List<IRegion> calculateRegionsForChunk(Vector2i chunk, World world) {
+        List<IRegion> cache = new ArrayList<>();
+        this.getRegionListAsStream(world)
+                .filter(region -> region.isInChunk(chunk))
+                .forEach(cache::add);
+        return cache;
     }
 }

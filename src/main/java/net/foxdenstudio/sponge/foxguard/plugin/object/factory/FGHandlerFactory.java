@@ -25,8 +25,8 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.object.factory;
 
+import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.FCHelper;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
@@ -35,6 +35,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.PassiveHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.PermissionHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.SimpleHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Flag;
+import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
@@ -45,7 +46,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -73,7 +74,12 @@ public class FGHandlerFactory implements IHandlerFactory {
     }
 
     @Override
-    public IHandler createHandler(String name, String type, int priority, String arguments, SourceState state, CommandSource source) {
+    public List<String> createSuggestions(CommandSource source, String arguments, String type) throws CommandException {
+        return ImmutableList.of();
+    }
+
+    @Override
+    public IHandler createHandler(String name, String type, int priority, String arguments, CommandSource source) {
         if (Aliases.isIn(simpleAliases, type)) {
             SimpleHandler handler = new SimpleHandler(name, priority);
             if (source instanceof Player) handler.addOwner((Player) source);
@@ -90,8 +96,8 @@ public class FGHandlerFactory implements IHandlerFactory {
     @Override
     public IHandler createHandler(DataSource source, String name, String type, int priority, boolean isEnabled) throws SQLException {
         if (type.equalsIgnoreCase("simple")) {
-            List<User> ownerList = new LinkedList<>();
-            List<User> memberList = new LinkedList<>();
+            List<User> ownerList = new ArrayList<>();
+            List<User> memberList = new ArrayList<>();
             SimpleHandler.PassiveOptions po = SimpleHandler.PassiveOptions.DEFAULT;
             CallbackHashMap<Flag, Tristate> ownerFlagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
             CallbackHashMap<Flag, Tristate> memberFlagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
@@ -162,7 +168,7 @@ public class FGHandlerFactory implements IHandlerFactory {
             handler.setIsEnabled(isEnabled);
             return handler;
         } else if (type.equalsIgnoreCase("passive")) {
-            List<User> ownerList = new LinkedList<>();
+            List<User> ownerList = new ArrayList<>();
             CallbackHashMap<Flag, Tristate> flagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
             try (Connection conn = source.getConnection()) {
                 try (Statement statement = conn.createStatement()) {

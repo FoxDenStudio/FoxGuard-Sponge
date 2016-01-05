@@ -25,7 +25,6 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.object.factory;
 
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
@@ -35,7 +34,7 @@ import java.sql.SQLException;
 
 interface IRegionFactory extends IFGFactory {
 
-    IRegion createRegion(String name, String type, String arguments, SourceState state, CommandSource source) throws CommandException;
+    IRegion createRegion(String name, String type, String arguments, CommandSource source) throws CommandException;
 
     IRegion createRegion(DataSource source, String name, String type, boolean isEnabled) throws SQLException;
 

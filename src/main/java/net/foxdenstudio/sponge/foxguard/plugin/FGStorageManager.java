@@ -41,13 +41,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public final class FGStorageManager {
     private static FGStorageManager instance;
     private final List<String> markedForDeletion = new ArrayList<>();
-    private final List<DeferredObject> deferedObjects = new LinkedList<>();
+    private final List<DeferredObject> deferedObjects = new ArrayList<>();
 
     public static FGStorageManager getInstance() {
         if (instance == null) {

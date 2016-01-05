@@ -37,12 +37,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 abstract public class OwnableHandlerBase extends HandlerBase implements IOwnable {
 
-    List<User> ownerList = new LinkedList<>();
+    List<User> ownerList = new ArrayList<>();
 
     OwnableHandlerBase(String name, int priority) {
         super(name, priority);

@@ -25,6 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.region;
 
+import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
@@ -44,5 +45,9 @@ public interface IRegion extends IFGObject, ILinkable {
     World getWorld();
 
     void setWorld(World world);
+
+    default boolean isInChunk(Vector2i chunk) {
+        return true;
+    }
 
 }

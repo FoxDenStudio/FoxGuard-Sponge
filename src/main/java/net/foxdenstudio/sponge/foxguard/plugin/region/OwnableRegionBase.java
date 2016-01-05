@@ -36,12 +36,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 abstract public class OwnableRegionBase extends RegionBase implements IOwnable {
 
-    List<User> ownerList = new LinkedList<>();
+    List<User> ownerList = new ArrayList<>();
 
     OwnableRegionBase(String name) {
         super(name);

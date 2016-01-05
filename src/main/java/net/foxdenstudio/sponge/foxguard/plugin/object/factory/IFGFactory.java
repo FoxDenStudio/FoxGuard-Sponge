@@ -25,6 +25,11 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.object.factory;
 
+import org.spongepowered.api.command.CommandException;
+import org.spongepowered.api.command.CommandSource;
+
+import java.util.List;
+
 interface IFGFactory {
 
     String[] getAliases();
@@ -32,5 +37,7 @@ interface IFGFactory {
     String[] getTypes();
 
     String[] getPrimaryAliases();
+
+    List<String> createSuggestions(CommandSource source, String arguments, String type) throws CommandException;
 
 }

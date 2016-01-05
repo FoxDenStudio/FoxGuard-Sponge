@@ -105,7 +105,7 @@ public class CommandCreate implements CommandCallable {
             IRegion newRegion = FGFactoryManager.getInstance().createRegion(
                     parse.args[1], parse.args[2],
                     parse.args.length < 4 ? "" : parse.args[3],
-                    FCStateManager.instance().getStateMap().get(source), world, source);
+                    source);
             if (newRegion == null)
                 throw new CommandException(Text.of("Failed to create Region! Perhaps the type is invalid?"));
             boolean success = FGManager.getInstance().addRegion(world, newRegion);
@@ -133,7 +133,7 @@ public class CommandCreate implements CommandCallable {
             IHandler newHandler = FGFactoryManager.getInstance().createHandler(
                     parse.args[1], parse.args[2], priority,
                     parse.args.length < 4 ? "" : parse.args[3],
-                    FCStateManager.instance().getStateMap().get(source), source);
+                    source);
             if (newHandler == null)
                 throw new CommandException(Text.of("Failed to create Handler! Perhaps the type is invalid?"));
             boolean success = FGManager.getInstance().addHandler(newHandler);
@@ -154,6 +154,7 @@ public class CommandCreate implements CommandCallable {
                 .flagMapper(MAPPER)
                 .excludeCurrent(true)
                 .autoCloseQuotes(true)
+                .leaveFinalAsIs(true)
                 .parse();
         if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0)
@@ -185,6 +186,12 @@ public class CommandCreate implements CommandCallable {
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
+        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.FINAL)) {
+            if (isIn(REGIONS_ALIASES, parse.args[0])) {
+                return FGFactoryManager.getInstance().regionSuggestions(source, parse.current.token, parse.args[2]);
+            } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
+                return FGFactoryManager.getInstance().handlerSuggestions(source, parse.current.token, parse.args[2]);
+            }
         } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
             return ImmutableList.of(parse.current.prefix + " ");
         return ImmutableList.of();
