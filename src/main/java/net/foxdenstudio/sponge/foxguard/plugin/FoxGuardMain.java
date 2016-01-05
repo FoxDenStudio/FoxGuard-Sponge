@@ -180,15 +180,16 @@ public final class FoxGuardMain {
 
     @Listener
     public void gamePreInit(GamePreInitializationEvent event) {
+        logger.info("Beginning FoxGuard initialization");
         logger.info("Loading configs");
         new FGConfigManager();
+        logger.info("Saving configs");
         FGConfigManager.getInstance().save();
     }
 
     @Listener
     public void gameInit(GameInitializationEvent event) {
-
-
+        logger.info("Getting User Storage");
         userStorage = game.getServiceManager().provide(UserStorageService.class).get();
         logger.info("Initializing FoxGuard Manager instance");
         FGManager.init();
@@ -199,10 +200,11 @@ public final class FoxGuardMain {
         registerListeners();
         logger.info("Setting default player permissions");
         configurePermissions();
-
+        logger.info("Registering Regions state field");
         FCStateManager.instance().registerStateFactory(new RegionsStateFieldFactory(), RegionsStateField.ID,RegionsStateField.ID, Aliases.REGIONS_ALIASES);
+        logger.info("Registering Handlers state field");
         FCStateManager.instance().registerStateFactory(new HandlersStateFieldFactory(), HandlersStateField.ID, HandlersStateField.ID, Aliases.HANDLERS_ALIASES);
-
+        logger.info("Starting MCStats metrics extension");
         try {
             Metrics metrics = new Metrics(game, game.getPluginManager().fromInstance(this).get());
             metrics.start();
@@ -236,8 +238,8 @@ public final class FoxGuardMain {
 
     @Listener
     public void serverStopping(GameStoppingServerEvent event) {
-        FGStorageManager.getInstance().writeHandlers();
         logger.info("Saving Handlers");
+        FGStorageManager.getInstance().writeHandlers();
     }
 
     @Listener

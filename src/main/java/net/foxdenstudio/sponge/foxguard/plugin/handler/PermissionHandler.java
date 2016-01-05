@@ -57,6 +57,8 @@ public class PermissionHandler extends HandlerBase {
                     return Tristate.TRUE;
                 else if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." + flag.flagName() + ".deny"))
                     return Tristate.FALSE;
+                else if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." + flag.flagName() + ".pass"))
+                    return Tristate.UNDEFINED;
                 flag = flag.getParent();
             }
             return Tristate.UNDEFINED;
@@ -91,6 +93,8 @@ public class PermissionHandler extends HandlerBase {
                 .append(Text.of(TextColors.RESET, "."))
                 .append(Text.of(TextColors.AQUA, "<"))
                 .append(Text.of(TextColors.GREEN, "allow"))
+                .append(Text.of(TextColors.AQUA, "/"))
+                .append(Text.of(TextColors.YELLOW, "pass"))
                 .append(Text.of(TextColors.AQUA, "/"))
                 .append(Text.of(TextColors.RED, "deny"))
                 .append(Text.of(TextColors.AQUA, ">")).build();
