@@ -115,23 +115,13 @@ public class CuboidRegion extends OwnableRegionBase {
 
     @Override
     public boolean isInRegion(int x, int y, int z) {
-        try {
-            this.lock.readLock().lock();
-            return isEnabled && boundingBox.contains(x, y, z);
-        } finally {
-            this.lock.readLock().unlock();
-        }
+        return boundingBox.contains(x, y, z);
     }
 
 
     @Override
     public boolean isInRegion(double x, double y, double z) {
-        try {
-            this.lock.readLock().lock();
-            return isEnabled && boundingBox.contains(x, y, z);
-        } finally {
-            this.lock.readLock().unlock();
-        }
+        return boundingBox.contains(x, y, z);
     }
 
     @Override
@@ -154,19 +144,13 @@ public class CuboidRegion extends OwnableRegionBase {
     public Text getDetails(String arguments) {
         Text.Builder builder = super.getDetails(arguments).toBuilder();
         builder.append(Text.of(TextColors.GREEN, "\nBounds: "));
-        try {
-            this.lock.readLock().lock();
-            builder.append(Text.of(TextColors.RESET, boundingBox.toString()));
-        } finally {
-            this.lock.readLock().unlock();
-        }
+        builder.append(Text.of(TextColors.RESET, boundingBox.toString()));
         return builder.build();
     }
 
     @Override
     public void writeToDatabase(DataSource dataSource) throws SQLException {
         super.writeToDatabase(dataSource);
-        this.lock.readLock().lock();
         try (Connection conn = dataSource.getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 statement.execute("CREATE TABLE IF NOT EXISTS BOUNDS(X INTEGER, Y INTEGER, Z INTEGER);" +
@@ -174,18 +158,11 @@ public class CuboidRegion extends OwnableRegionBase {
                         "INSERT INTO BOUNDS(X, Y, Z) VALUES (" + boundingBox.a.getX() + ", " + boundingBox.a.getY() + ", " + boundingBox.a.getZ() + ");" +
                         "INSERT INTO BOUNDS(X, Y, Z) VALUES (" + boundingBox.b.getX() + ", " + boundingBox.b.getY() + ", " + boundingBox.b.getZ() + ");");
             }
-        } finally {
-            this.lock.readLock().unlock();
         }
     }
 
     @Override
     public String toString() {
-        try {
-            this.lock.readLock().lock();
-            return this.boundingBox.toString();
-        } finally {
-            this.lock.readLock().unlock();
-        }
+        return this.boundingBox.toString();
     }
 }

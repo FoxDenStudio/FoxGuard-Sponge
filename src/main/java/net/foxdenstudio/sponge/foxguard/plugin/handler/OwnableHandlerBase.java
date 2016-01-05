@@ -50,42 +50,22 @@ abstract public class OwnableHandlerBase extends HandlerBase implements IOwnable
 
     @Override
     public boolean removeOwner(User user) {
-        try {
-            this.lock.writeLock().lock();
-            return ownerList.remove(user);
-        } finally {
-            this.lock.writeLock().unlock();
-        }
+        return ownerList.remove(user);
     }
 
     @Override
     public boolean addOwner(User user) {
-        try {
-            this.lock.writeLock().lock();
-            return ownerList.add(user);
-        } finally {
-            this.lock.writeLock().unlock();
-        }
+        return ownerList.add(user);
     }
 
     @Override
     public List<User> getOwners() {
-        try {
-            this.lock.readLock().lock();
-            return ImmutableList.copyOf(ownerList);
-        } finally {
-            this.lock.readLock().unlock();
-        }
+        return ImmutableList.copyOf(ownerList);
     }
 
     @Override
     public void setOwners(List<User> owners) {
-        try {
-            this.lock.writeLock().lock();
-            this.ownerList = owners;
-        } finally {
-            this.lock.writeLock().unlock();
-        }
+        this.ownerList = owners;
     }
 
     @Override
@@ -95,23 +75,17 @@ abstract public class OwnableHandlerBase extends HandlerBase implements IOwnable
                 TextActions.suggestCommand(getAddOwnerSuggestion()),
                 TextActions.showText(Text.of("Click to Add a Player(s) to Owners")),
                 "Owners: "));
-        try {
-            this.lock.readLock().lock();
-            for (User u : ownerList) {
-                builder.append(Text.of(TextColors.RESET,
-                        TextActions.suggestCommand(getRemoveOwnerSuggestion(u)),
-                        TextActions.showText(Text.of("Click to Remove Player \"" + u.getName() + "\" from Owners")),
-                        u.getName())).append(Text.of("  "));
-            }
-        } finally {
-            this.lock.readLock().unlock();
+        for (User u : ownerList) {
+            builder.append(Text.of(TextColors.RESET,
+                    TextActions.suggestCommand(getRemoveOwnerSuggestion(u)),
+                    TextActions.showText(Text.of("Click to Remove Player \"" + u.getName() + "\" from Owners")),
+                    u.getName())).append(Text.of("  "));
         }
         return builder.build();
     }
 
     @Override
     public void writeToDatabase(DataSource dataSource) throws SQLException {
-        this.lock.readLock().lock();
         try (Connection conn = dataSource.getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 statement.execute("CREATE TABLE IF NOT EXISTS OWNERS(NAMES VARCHAR(256), USERUUID UUID);" +
@@ -125,8 +99,6 @@ abstract public class OwnableHandlerBase extends HandlerBase implements IOwnable
                 }
                 insert.executeBatch();
             }
-        } finally {
-            this.lock.readLock().unlock();
         }
     }
 

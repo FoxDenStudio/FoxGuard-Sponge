@@ -40,7 +40,6 @@ public final class FGConfigManager {
 
     private boolean forceLoad;
     private boolean purgeDatabases;
-    private boolean threadSafe = false;
 
 
     public FGConfigManager() {
@@ -72,7 +71,6 @@ public final class FGConfigManager {
 
         forceLoad = root.getNode("storage", "forceLoad").getBoolean(false);
         purgeDatabases = root.getNode("storage", "purgeDatabases").getBoolean(true);
-        threadSafe = root.getNode("threading", "threadSafe").getBoolean(false);
 
         //--------------------------------------------------------------------------------------------------------------
     }
@@ -109,10 +107,6 @@ public final class FGConfigManager {
                 "Setting this option to false will prevent databases from being deleted.\n" +
                 "However, they will still be overwritten if a new database is made with the same name.")
                 .setValue(purgeDatabases);
-        root.getNode("threading", "threadSafe").setComment("Set this to true if you are using a multi-threaded server like glowstone.\n" +
-                "You can also try enabling this if you are seeing ConcurrentModificationException errors in the logs.\n" +
-                "However be careful, as enabling this on single threaded servers like SpongeForge and SpongeVanilla will significantly decrease performance.")
-                .setValue(threadSafe);
 
         //--------------------------------------------------------------------------------------------------------------
         try {
@@ -130,7 +124,4 @@ public final class FGConfigManager {
         return purgeDatabases;
     }
 
-    public boolean threadSafe() {
-        return threadSafe;
-    }
 }

@@ -29,6 +29,7 @@ import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.Creature;
 import org.spongepowered.api.entity.living.Hostile;
@@ -74,7 +75,9 @@ public class SpawnEntityEventListener implements EventListener<SpawnEntityEvent>
         for (Entity entity : event.getEntities()) {
             Vector3d loc = entity.getLocation().getPosition();
             FGManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
+                    .filter(IFGObject::isEnabled)
                     .forEach(region -> region.getHandlers().stream()
+                            .filter(IFGObject::isEnabled)
                             .filter(handler -> !handlerList.contains(handler))
                             .forEach(handlerList::add));
         }

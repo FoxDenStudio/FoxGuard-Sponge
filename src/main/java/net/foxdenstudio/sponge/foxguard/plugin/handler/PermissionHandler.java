@@ -48,23 +48,17 @@ public class PermissionHandler extends HandlerBase {
 
     @Override
     public Tristate handle(@Nullable User user, Flag flag, Event event) {
-        try {
-            this.lock.readLock().lock();
-            if (!isEnabled || user == null) return Tristate.UNDEFINED;
-            this.lock.readLock().unlock();
-            while (flag != null) {
-                if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." + flag.flagName() + ".allow"))
-                    return Tristate.TRUE;
-                else if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." + flag.flagName() + ".deny"))
-                    return Tristate.FALSE;
-                else if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." + flag.flagName() + ".pass"))
-                    return Tristate.UNDEFINED;
-                flag = flag.getParent();
-            }
-            return Tristate.UNDEFINED;
-        } finally {
-            this.lock.readLock().unlock();
+        if (user == null) return Tristate.UNDEFINED;
+        while (flag != null) {
+            if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." + flag.flagName() + ".allow"))
+                return Tristate.TRUE;
+            else if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." + flag.flagName() + ".deny"))
+                return Tristate.FALSE;
+            else if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." + flag.flagName() + ".pass"))
+                return Tristate.UNDEFINED;
+            flag = flag.getParent();
         }
+        return Tristate.UNDEFINED;
     }
 
     @Override

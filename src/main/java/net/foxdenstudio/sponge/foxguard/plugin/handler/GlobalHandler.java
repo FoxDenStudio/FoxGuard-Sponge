@@ -90,17 +90,13 @@ public class GlobalHandler extends HandlerBase {
 
     @Override
     public Tristate handle(User user, Flag flag, Event event) {
-        try {
-            this.lock.readLock().lock();
-            Flag temp = flag;
-            while (temp != null && !map.containsKey(temp)) {
-                temp = temp.getParent();
-            }
-            if (temp != null) return map.get(temp);
-            else return map.get(flag);
-        } finally {
-            this.lock.readLock().unlock();
+        Flag temp = flag;
+        while (temp != null && !map.containsKey(temp)) {
+            temp = temp.getParent();
         }
+        if (temp != null) return map.get(temp);
+        else return map.get(flag);
+
     }
 
     @Override
@@ -211,7 +207,6 @@ public class GlobalHandler extends HandlerBase {
 
     @Override
     public void writeToDatabase(DataSource dataSource) throws SQLException {
-        this.lock.readLock().lock();
         try (Connection conn = dataSource.getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 statement.execute("CREATE TABLE IF NOT EXISTS FLAGMAP(KEY VARCHAR (256), VALUE VARCHAR (256));" +
@@ -225,8 +220,6 @@ public class GlobalHandler extends HandlerBase {
                 }
                 statement.executeBatch();
             }
-        } finally {
-            this.lock.readLock().unlock();
         }
     }
 

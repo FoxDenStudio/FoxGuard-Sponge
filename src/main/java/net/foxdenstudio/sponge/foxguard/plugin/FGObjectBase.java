@@ -27,60 +27,32 @@ package net.foxdenstudio.sponge.foxguard.plugin;
 
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 
-import java.util.concurrent.locks.ReadWriteLock;
-
 public abstract class FGObjectBase implements IFGObject {
 
-    protected final ReadWriteLock lock;
     protected String name;
     protected boolean isEnabled = true;
 
     protected FGObjectBase(String name) {
-        lock = FoxGuardMain.getNewLock();
         this.name = name;
     }
 
     @Override
     public String getName() {
-        String name;
-        try {
-            this.lock.readLock().lock();
-            name = this.name;
-        } finally {
-            this.lock.readLock().unlock();
-        }
         return name;
     }
 
     @Override
     public void setName(String name) {
-        try {
-            this.lock.writeLock().lock();
-            this.name = name;
-        } finally {
-            this.lock.writeLock().unlock();
-        }
+        this.name = name;
     }
 
     @Override
     public boolean isEnabled() {
-        boolean isEnabled;
-        try {
-            this.lock.readLock().lock();
-            isEnabled = this.isEnabled;
-        } finally {
-            this.lock.readLock().unlock();
-        }
         return isEnabled;
     }
 
     @Override
     public void setIsEnabled(boolean state) {
-        try {
-            this.lock.writeLock().lock();
-            this.isEnabled = state;
-        } finally {
-            this.lock.writeLock().unlock();
-        }
+        this.isEnabled = state;
     }
 }

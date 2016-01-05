@@ -49,63 +49,36 @@ abstract public class OwnableRegionBase extends RegionBase implements IOwnable {
 
     @Override
     public boolean removeOwner(User user) {
-        try {
-            this.lock.writeLock().lock();
-            return ownerList.remove(user);
-        } finally {
-            this.lock.writeLock().unlock();
-        }
+        return ownerList.remove(user);
     }
 
     @Override
     public boolean addOwner(User user) {
-        try {
-            this.lock.writeLock().lock();
-            return ownerList.add(user);
-        } finally {
-            this.lock.writeLock().unlock();
-        }
-
+        return ownerList.add(user);
     }
 
     @Override
     public List<User> getOwners() {
-        try {
-            this.lock.readLock().lock();
-            return ImmutableList.copyOf(ownerList);
-        } finally {
-            this.lock.readLock().unlock();
-        }
+        return ImmutableList.copyOf(ownerList);
     }
 
     @Override
     public void setOwners(List<User> owners) {
-        try {
-            this.lock.writeLock().lock();
-            this.ownerList = owners;
-        } finally {
-            this.lock.writeLock().unlock();
-        }
+        this.ownerList = owners;
     }
 
     @Override
     public Text getDetails(String arguments) {
         Text.Builder builder = Text.builder();
         builder.append(Text.of(TextColors.GOLD, "Owners: "));
-        try {
-            this.lock.readLock().lock();
-            for (User p : ownerList) {
-                builder.append(Text.of(TextColors.RESET, p.getName() + " "));
-            }
-        } finally {
-            this.lock.readLock().unlock();
+        for (User p : ownerList) {
+            builder.append(Text.of(TextColors.RESET, p.getName() + " "));
         }
         return builder.build();
     }
 
     @Override
     public void writeToDatabase(DataSource dataSource) throws SQLException {
-        this.lock.readLock().lock();
         try (Connection conn = dataSource.getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 statement.execute("CREATE TABLE IF NOT EXISTS OWNERS(NAMES VARCHAR(256), USERUUID UUID);" +
@@ -119,8 +92,6 @@ abstract public class OwnableRegionBase extends RegionBase implements IOwnable {
                 }
                 insert.executeBatch();
             }
-        } finally {
-            lock.readLock().unlock();
         }
     }
 }

@@ -75,7 +75,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
             IRegion region = regionIterator.next();
             builder.append(Text.of(FGHelper.getColorForRegion(region),
                     (index++) + ": " + region.getShortTypeName() + " : " + region.getWorld().getName() + " : " + region.getName()));
-            if(regionIterator.hasNext()) builder.append(Text.of("\n"));
+            if (regionIterator.hasNext()) builder.append(Text.of("\n"));
         }
         return builder.build();
     }
@@ -84,7 +84,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
     public ProcessResult add(CommandSource source, String arguments) throws CommandException {
         System.out.println(arguments);
         AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).parse();
-        
+
         if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name!"));
         String worldName = parse.flagmap.get("world");
         World world = null;
@@ -114,7 +114,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                 .autoCloseQuotes(true)
                 .parse();
         if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
-            if (parse.current.index == 0){
+            if (parse.current.index == 0) {
                 String worldName = parse.flagmap.get("world");
                 World world = null;
                 if (source instanceof Player) world = ((Player) source).getWorld();
@@ -129,7 +129,8 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                         .map(IFGObject::getName)
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
-                        .collect(GuavaCollectors.toImmutableList());}
+                        .collect(GuavaCollectors.toImmutableList());
+            }
         } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGKEY))
             return ImmutableList.of("world").stream()
                     .filter(new StartsWithPredicate(parse.current.token))

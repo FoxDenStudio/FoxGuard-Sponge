@@ -71,11 +71,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.HANDLERS_ALIASES;
 
@@ -122,56 +117,7 @@ public final class FoxGuardMain {
      *
      * @return A ReadWriteLock Object that can be used.
      */
-    public static ReadWriteLock getNewLock() {
-        if (FGConfigManager.getInstance().threadSafe()) {
-            return new ReentrantReadWriteLock();
-        } else {
-            return new ReadWriteLock() {
 
-                private final Lock lock = new Lock() {
-                    @Override
-                    public void lock() {
-
-                    }
-
-                    @Override
-                    public void lockInterruptibly() throws InterruptedException {
-
-                    }
-
-                    @Override
-                    public boolean tryLock() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
-                        return true;
-                    }
-
-                    @Override
-                    public void unlock() {
-
-                    }
-
-                    @Override
-                    public Condition newCondition() {
-                        throw new UnsupportedOperationException();
-                    }
-                };
-
-                @Override
-                public Lock readLock() {
-                    return this.lock;
-                }
-
-                @Override
-                public Lock writeLock() {
-                    return this.lock;
-                }
-            };
-        }
-    }
 
     @Listener
     public void gameConstruct(GameConstructionEvent event) {
@@ -201,7 +147,7 @@ public final class FoxGuardMain {
         logger.info("Setting default player permissions");
         configurePermissions();
         logger.info("Registering Regions state field");
-        FCStateManager.instance().registerStateFactory(new RegionsStateFieldFactory(), RegionsStateField.ID,RegionsStateField.ID, Aliases.REGIONS_ALIASES);
+        FCStateManager.instance().registerStateFactory(new RegionsStateFieldFactory(), RegionsStateField.ID, RegionsStateField.ID, Aliases.REGIONS_ALIASES);
         logger.info("Registering Handlers state field");
         FCStateManager.instance().registerStateFactory(new HandlersStateFieldFactory(), HandlersStateField.ID, HandlersStateField.ID, Aliases.HANDLERS_ALIASES);
         logger.info("Starting MCStats metrics extension");

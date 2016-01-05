@@ -103,43 +103,27 @@ public class ElevationRegion extends OwnableRegionBase {
 
     @Override
     public boolean isInRegion(int x, int y, int z) {
-        try {
-            this.lock.readLock().lock();
-            return isEnabled && y >= lowerBound && y <= upperBound;
-        } finally {
-            this.lock.readLock().unlock();
-        }
+        return y >= lowerBound && y <= upperBound;
     }
 
     @Override
     public boolean isInRegion(double x, double y, double z) {
-        try {
-            this.lock.readLock().lock();
-            return isEnabled && y >= lowerBound && y <= upperBound;
-        } finally {
-            this.lock.readLock().unlock();
-        }
+        return  y >= lowerBound && y <= upperBound;
     }
 
     @Override
     public Text getDetails(String arguments) {
         Text.Builder builder = super.getDetails(arguments).toBuilder();
         builder.append(Text.of(TextColors.GREEN, "\nBounds: "));
-        try {
-            this.lock.readLock().lock();
-            builder.append(Text.of(TextColors.RESET, lowerBound));
-            builder.append(Text.of(", "));
-            builder.append(Text.of(upperBound));
-        } finally {
-            this.lock.readLock().unlock();
-        }
+        builder.append(Text.of(TextColors.RESET, lowerBound));
+        builder.append(Text.of(", "));
+        builder.append(Text.of(upperBound));
         return builder.build();
     }
 
     @Override
     public void writeToDatabase(DataSource dataSource) throws SQLException {
         super.writeToDatabase(dataSource);
-        this.lock.readLock().lock();
         try (Connection conn = dataSource.getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 statement.execute("CREATE TABLE IF NOT EXISTS BOUNDS(Y INTEGER);" +
@@ -147,45 +131,23 @@ public class ElevationRegion extends OwnableRegionBase {
                         "INSERT INTO BOUNDS(Y) VALUES (" + lowerBound + ");" +
                         "INSERT INTO BOUNDS(Y) VALUES (" + upperBound + ");");
             }
-        } finally {
-            this.lock.readLock().unlock();
         }
     }
 
     public int getUpperBound() {
-        try {
-            this.lock.readLock().lock();
-            return upperBound;
-        } finally {
-            this.lock.readLock().unlock();
-        }
+        return upperBound;
     }
 
     public void setUpperBound(int upperBound) {
-        try {
-            this.lock.writeLock().lock();
-            this.upperBound = upperBound;
-        } finally {
-            this.lock.writeLock().unlock();
-        }
+        this.upperBound = upperBound;
     }
 
     public int getLowerBound() {
-        try {
-            this.lock.readLock().lock();
-            return lowerBound;
-        } finally {
-            this.lock.readLock().unlock();
-        }
+        return lowerBound;
     }
 
     public void setLowerBound(int lowerBound) {
-        try {
-            this.lock.writeLock().lock();
-            this.lowerBound = lowerBound;
-        } finally {
-            this.lock.writeLock().unlock();
-        }
+        this.lowerBound = lowerBound;
     }
 
     @Override

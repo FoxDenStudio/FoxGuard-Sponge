@@ -68,7 +68,7 @@ public class CommandLink implements CommandCallable {
             return CommandResult.empty();
         }
         AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).flagMapper(mapper).parse();
-        
+
         if (parse.args.length == 0) {
             if (FGHelper.getSelectedRegions(source).size() == 0 &&
                     FGHelper.getSelectedHandlers(source).size() == 0)

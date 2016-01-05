@@ -29,6 +29,8 @@ import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
@@ -88,7 +90,9 @@ public class InteractListener implements EventListener<InteractEvent> {
         */
         final Vector3d finalLoc = loc;
         FGManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(finalLoc))
+                .filter(IFGObject::isEnabled)
                 .forEach(region -> region.getHandlers().stream()
+                        .filter(IFGObject::isEnabled)
                         .filter(handler -> !handlerList.contains(handler))
                         .forEach(handlerList::add));
         //}

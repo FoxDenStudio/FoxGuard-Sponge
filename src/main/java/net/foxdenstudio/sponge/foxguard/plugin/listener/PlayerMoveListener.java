@@ -10,6 +10,6 @@ import org.spongepowered.api.event.entity.DisplaceEntityEvent;
 public class PlayerMoveListener implements EventListener<DisplaceEntityEvent.Move.TargetPlayer> {
     @Override
     public void handle(DisplaceEntityEvent.Move.TargetPlayer event) throws Exception {
-        
+
     }
 }

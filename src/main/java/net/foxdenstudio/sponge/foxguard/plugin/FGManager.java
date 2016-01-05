@@ -40,7 +40,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.stream.Stream;
 
 public final class FGManager {
@@ -50,22 +49,12 @@ public final class FGManager {
     private static FGManager instance;
     private final Map<World, List<IRegion>> regions;
     private final List<IHandler> handlers;
-    private final Map<World, ReadWriteLock> regionLocks;
-    private final ReadWriteLock handlerLock;
     private final GlobalHandler globalHandler;
 
     private final Map<World, Map<Vector2i, List<IRegion>>> regionCache;
 
     private FGManager() {
         instance = this;
-        regionLocks = new CallbackHashMap<>((key, map) -> {
-            if (key instanceof World) {
-                ReadWriteLock lock = FoxGuardMain.getNewLock();
-                map.put((World) key, lock);
-                return lock;
-            } else return null;
-        });
-        handlerLock = FoxGuardMain.getNewLock();
         regions = new CallbackHashMap<>((key, map) -> new ArrayList<>());
         handlers = new ArrayList<>();
         globalHandler = new GlobalHandler();
@@ -94,41 +83,24 @@ public final class FGManager {
     }
 
     public boolean isRegistered(IHandler handler) {
-        try {
-            this.handlerLock.readLock().lock();
-            return handlers.contains(handler);
-        } finally {
-            this.handlerLock.readLock().unlock();
-        }
+        return handlers.contains(handler);
     }
 
     public boolean addRegion(World world, IRegion region) {
         if (region == null) return false;
         if (region.getWorld() != null || getRegion(world, region.getName()) != null) return false;
         region.setWorld(world);
-        ReadWriteLock lock = this.regionLocks.get(world);
-        try {
-            lock.writeLock().lock();
-            this.regions.get(world).add(region);
-        } finally {
-            lock.writeLock().unlock();
-        }
+        this.regions.get(world).add(region);
         FGStorageManager.getInstance().unmarkForDeletion(region);
         FGStorageManager.getInstance().updateRegion(region);
         return true;
     }
 
     public IRegion getRegion(World world, String name) {
-        ReadWriteLock lock = this.regionLocks.get(world);
-        try {
-            lock.readLock().lock();
-            for (IRegion region : this.regions.get(world)) {
-                if (region.getName().equalsIgnoreCase(name)) {
-                    return region;
-                }
+        for (IRegion region : this.regions.get(world)) {
+            if (region.getName().equalsIgnoreCase(name)) {
+                return region;
             }
-        } finally {
-            lock.readLock().unlock();
         }
         return null;
     }
@@ -145,60 +117,33 @@ public final class FGManager {
     public List<IRegion> getRegionsListCopy() {
         List<IRegion> list = new ArrayList<>();
         this.regions.forEach((world, tlist) -> {
-            ReadWriteLock lock = this.regionLocks.get(world);
-            try {
-                lock.readLock().lock();
-                tlist.forEach(list::add);
-            } finally {
-                lock.readLock().unlock();
-            }
+            tlist.forEach(list::add);
         });
         return list;
     }
 
     public List<IRegion> getRegionsListCopy(World world) {
-        ReadWriteLock lock = this.regionLocks.get(world);
-        try {
-            lock.readLock().lock();
-            return ImmutableList.copyOf(this.regions.get(world));
-        } finally {
-            lock.readLock().unlock();
-        }
+        return ImmutableList.copyOf(this.regions.get(world));
     }
 
     public List<IHandler> getHandlerListCopy() {
-        try {
-            this.handlerLock.readLock().lock();
-            return ImmutableList.copyOf(this.handlers);
-        } finally {
-            this.handlerLock.readLock().unlock();
-        }
+        return ImmutableList.copyOf(this.handlers);
     }
 
     public boolean addHandler(IHandler handler) {
         if (handler == null) return false;
         if (gethandler(handler.getName()) != null) return false;
-        try {
-            this.handlerLock.writeLock().lock();
-            handlers.add(handler);
-        } finally {
-            this.handlerLock.writeLock().unlock();
-        }
+        handlers.add(handler);
         FGStorageManager.getInstance().unmarkForDeletion(handler);
         FGStorageManager.getInstance().updateHandler(handler);
         return true;
     }
 
     public IHandler gethandler(String name) {
-        try {
-            this.handlerLock.readLock().lock();
-            for (IHandler handler : handlers) {
-                if (handler.getName().equalsIgnoreCase(name)) {
-                    return handler;
-                }
+        for (IHandler handler : handlers) {
+            if (handler.getName().equalsIgnoreCase(name)) {
+                return handler;
             }
-        } finally {
-            this.handlerLock.readLock().unlock();
         }
         return null;
     }
@@ -210,27 +155,16 @@ public final class FGManager {
     private boolean removeHandler(IHandler handler) {
         if (handler == null || handler instanceof GlobalHandler) return false;
         this.regions.forEach((world, list) -> {
-            ReadWriteLock lock = this.regionLocks.get(world);
-            try {
-                lock.readLock().lock();
-                list.stream()
-                        .filter(region -> region.getHandlers().contains(handler))
-                        .forEach(region -> region.removeHandler(handler));
-            } finally {
-                lock.readLock().unlock();
-            }
+            list.stream()
+                    .filter(region -> region.getHandlers().contains(handler))
+                    .forEach(region -> region.removeHandler(handler));
         });
-        try {
-            this.handlerLock.writeLock().lock();
-            if (!this.handlers.contains(handler)) {
-                return false;
-            }
-            FGStorageManager.getInstance().markForDeletion(handler);
-            handlers.remove(handler);
-            return true;
-        } finally {
-            this.handlerLock.writeLock().unlock();
+        if (!this.handlers.contains(handler)) {
+            return false;
         }
+        FGStorageManager.getInstance().markForDeletion(handler);
+        handlers.remove(handler);
+        return true;
     }
 
     public boolean removeRegion(World world, String name) {
@@ -244,18 +178,12 @@ public final class FGManager {
 
     private boolean removeRegion(World world, IRegion region) {
         if (region == null || region instanceof GlobalRegion) return false;
-        ReadWriteLock lock = this.regionLocks.get(world);
-        try {
-            lock.writeLock().lock();
-            if (!this.regions.get(world).contains(region)) {
-                return false;
-            }
-            FGStorageManager.getInstance().markForDeletion(region);
-            this.regions.get(world).remove(region);
-            return true;
-        } finally {
-            lock.writeLock().unlock();
+        if (!this.regions.get(world).contains(region)) {
+            return false;
         }
+        FGStorageManager.getInstance().markForDeletion(region);
+        this.regions.get(world).remove(region);
+        return true;
     }
 
     public boolean link(Server server, String worldName, String regionName, String handlerName) {

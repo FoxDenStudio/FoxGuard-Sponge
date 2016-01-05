@@ -30,6 +30,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.CommandDebug;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.data.Transaction;
@@ -82,7 +83,9 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
         for (Transaction<BlockSnapshot> trans : event.getTransactions()) {
             Vector3i loc = trans.getOriginal().getLocation().get().getBlockPosition();
             FGManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
+                    .filter(IFGObject::isEnabled)
                     .forEach(region -> region.getHandlers().stream()
+                            .filter(IFGObject::isEnabled)
                             .filter(handler -> !handlerList.contains(handler))
                             .forEach(handlerList::add));
         }

@@ -58,12 +58,7 @@ public abstract class RegionBase extends FGObjectBase implements IRegion {
 
     @Override
     public List<IHandler> getHandlers() {
-        try {
-            this.lock.readLock().lock();
-            return ImmutableList.copyOf(this.handlers);
-        } finally {
-            this.lock.readLock().unlock();
-        }
+        return ImmutableList.copyOf(this.handlers);
     }
 
     @Override
@@ -71,43 +66,23 @@ public abstract class RegionBase extends FGObjectBase implements IRegion {
         if (!FGManager.getInstance().isRegistered(handler)) {
             return false;
         }
-        try {
-            this.lock.writeLock().lock();
-            return this.handlers.add(handler);
-        } finally {
-            this.lock.writeLock().unlock();
-        }
+        return this.handlers.add(handler);
     }
 
     @Override
     public boolean removeHandler(IHandler handler) {
-        try {
-            this.lock.writeLock().lock();
-            return this.handlers.remove(handler);
-        } finally {
-            this.lock.writeLock().unlock();
-        }
+        return this.handlers.remove(handler);
     }
 
     @Override
     public World getWorld() {
-        try {
-            this.lock.readLock().lock();
-            return this.world;
-        } finally {
-            this.lock.readLock().unlock();
-        }
+        return this.world;
     }
 
     @Override
     public void setWorld(World world) {
-        try {
-            this.lock.writeLock().lock();
-            if (this.world == null) {
-                this.world = world;
-            }
-        } finally {
-            this.lock.writeLock().unlock();
+        if (this.world == null) {
+            this.world = world;
         }
     }
 
