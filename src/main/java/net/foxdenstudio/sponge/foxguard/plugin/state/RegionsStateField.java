@@ -125,7 +125,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                     }
                 }
                 if (world == null) return ImmutableList.of();
-                return FGManager.getInstance().getRegionListAsStream(world)
+                return FGManager.getInstance().getRegionsList(world).stream()
                         .map(IFGObject::getName)
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)

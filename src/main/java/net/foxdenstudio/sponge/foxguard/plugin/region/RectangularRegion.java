@@ -25,6 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.region;
 
+import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.FCHelper;
@@ -116,6 +117,12 @@ public class RectangularRegion extends OwnableRegionBase {
     @Override
     public boolean isInRegion(double x, double y, double z) {
         return boundingBox.contains(x, z);
+    }
+
+    @Override
+    public boolean isInChunk(Vector2i chunk) {
+        Vector2i a = chunk.mul(16), b = a.add(16, 16), c = this.boundingBox.a, d = this.boundingBox.b;
+        return !(a.getX() > d.getX() || b.getX() < c.getX() || a.getY() > d.getY() || b.getY() < c.getY());
     }
 
     @Override

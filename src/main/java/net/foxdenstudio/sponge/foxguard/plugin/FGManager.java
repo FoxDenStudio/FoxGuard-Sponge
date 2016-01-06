@@ -40,7 +40,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 public final class FGManager {
 
@@ -69,6 +68,7 @@ public final class FGManager {
                         return cachedRegions;
                     } else return null;
                 });
+                map1.put((World) world, worldCache);
                 return worldCache;
             } else return null;
         });
@@ -91,6 +91,7 @@ public final class FGManager {
         if (region.getWorld() != null || getRegion(world, region.getName()) != null) return false;
         region.setWorld(world);
         this.regions.get(world).add(region);
+        this.regionCache.get(world).clear();
         FGStorageManager.getInstance().unmarkForDeletion(region);
         FGStorageManager.getInstance().updateRegion(region);
         return true;
@@ -110,23 +111,21 @@ public final class FGManager {
         return world.isPresent() ? this.getRegion(world.get(), regionName) : null;
     }
 
-    public Stream<IRegion> getRegionListAsStream(World world) {
-        return this.getRegionsListCopy(world).stream();
-    }
-
-    public List<IRegion> getRegionsListCopy() {
+    public List<IRegion> getRegionsList() {
         List<IRegion> list = new ArrayList<>();
-        this.regions.forEach((world, tlist) -> {
-            tlist.forEach(list::add);
-        });
-        return list;
+        this.regions.forEach((world, tlist) -> tlist.forEach(list::add));
+        return ImmutableList.copyOf(list);
     }
 
-    public List<IRegion> getRegionsListCopy(World world) {
+    public List<IRegion> getRegionsList(World world) {
         return ImmutableList.copyOf(this.regions.get(world));
     }
 
-    public List<IHandler> getHandlerListCopy() {
+    public List<IRegion> getRegionsList(World world, Vector2i chunk) {
+        return ImmutableList.copyOf(this.regionCache.get(world).get(chunk));
+    }
+
+    public List<IHandler> getHandlerList() {
         return ImmutableList.copyOf(this.handlers);
     }
 
@@ -183,6 +182,7 @@ public final class FGManager {
         }
         FGStorageManager.getInstance().markForDeletion(region);
         this.regions.get(world).remove(region);
+        this.regionCache.get(world).clear();
         return true;
     }
 
@@ -261,9 +261,13 @@ public final class FGManager {
 
     private List<IRegion> calculateRegionsForChunk(Vector2i chunk, World world) {
         List<IRegion> cache = new ArrayList<>();
-        this.getRegionListAsStream(world)
+        this.getRegionsList(world).stream()
                 .filter(region -> region.isInChunk(chunk))
                 .forEach(cache::add);
         return cache;
+    }
+
+    public void clearCache(World world) {
+        this.regionCache.get(world).clear();
     }
 }

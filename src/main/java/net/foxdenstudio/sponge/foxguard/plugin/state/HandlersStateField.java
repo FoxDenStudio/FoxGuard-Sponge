@@ -87,7 +87,7 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
                 .parse();
         if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0)
-                return FGManager.getInstance().getHandlerListCopy().stream()
+                return FGManager.getInstance().getHandlerList().stream()
                         .map(IFGObject::getName)
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)

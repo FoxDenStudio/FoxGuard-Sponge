@@ -178,13 +178,13 @@ public class CommandDetail implements CommandCallable {
                         }
                     }
                     if (world == null) return ImmutableList.of();
-                    return FGManager.getInstance().getRegionListAsStream(world)
+                    return FGManager.getInstance().getRegionsList(world).stream()
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
-                    return FGManager.getInstance().getHandlerListCopy().stream()
+                    return FGManager.getInstance().getHandlerList().stream()
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)

@@ -97,8 +97,8 @@ public class CommandModify implements CommandCallable {
             if (region == null)
                 throw new CommandException(Text.of("No Region with name \"" + parse.args[1] + "\"!"));
             ProcessResult result = region.modify(source, parse.args.length < 3 ? "" : parse.args[2]);
-
             if (result.isSuccess()) {
+                FGManager.getInstance().clearCache(world);
                 if (result.getMessage().isPresent()) {
                     if (!FCHelper.hasColor(result.getMessage().get())) {
                         source.sendMessage(result.getMessage().get().toBuilder().color(TextColors.GREEN).build());
@@ -181,13 +181,13 @@ public class CommandModify implements CommandCallable {
                         }
                     }
                     if (world == null) return ImmutableList.of();
-                    return FGManager.getInstance().getRegionListAsStream(world)
+                    return FGManager.getInstance().getRegionsList(world).stream()
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
-                    return FGManager.getInstance().getHandlerListCopy().stream()
+                    return FGManager.getInstance().getHandlerList().stream()
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)

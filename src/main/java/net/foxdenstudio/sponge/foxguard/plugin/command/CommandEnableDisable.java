@@ -223,7 +223,7 @@ public class CommandEnableDisable implements CommandCallable {
                         }
                     }
                     if (world == null) return ImmutableList.of();
-                    return FGManager.getInstance().getRegionListAsStream(world)
+                    return FGManager.getInstance().getRegionsList(world).stream()
                             .filter(region -> region.isEnabled() != this.enableState && !(region instanceof GlobalRegion))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
@@ -231,7 +231,7 @@ public class CommandEnableDisable implements CommandCallable {
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
-                    return FGManager.getInstance().getHandlerListCopy().stream()
+                    return FGManager.getInstance().getHandlerList().stream()
                             .filter(handler -> handler.isEnabled() != this.enableState && !(handler instanceof GlobalHandler))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))

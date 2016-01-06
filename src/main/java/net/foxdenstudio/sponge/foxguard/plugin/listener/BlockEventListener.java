@@ -25,6 +25,8 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
+import com.flowpowered.math.GenericMath;
+import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxcore.plugin.command.CommandDebug;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
@@ -82,7 +84,11 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
 
         for (Transaction<BlockSnapshot> trans : event.getTransactions()) {
             Vector3i loc = trans.getOriginal().getLocation().get().getBlockPosition();
-            FGManager.getInstance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
+            Vector2i chunk = new Vector2i(
+                    GenericMath.floor(((double) loc.getX()) / 16.0),
+                    GenericMath.floor(((double) loc.getZ()) / 16.0));
+            FGManager.getInstance().getRegionsList(world, chunk).stream()
+                    .filter(region -> region.isInRegion(loc))
                     .filter(IFGObject::isEnabled)
                     .forEach(region -> region.getHandlers().stream()
                             .filter(IFGObject::isEnabled)

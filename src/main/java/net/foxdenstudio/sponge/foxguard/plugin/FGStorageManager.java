@@ -304,7 +304,7 @@ public final class FGStorageManager {
         try (Connection conn = FoxGuardMain.instance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 statement.addBatch("DELETE FROM HANDLERS;");
-                for (IHandler handler : FGManager.getInstance().getHandlerListCopy()) {
+                for (IHandler handler : FGManager.getInstance().getHandlerList()) {
                     if (handler.autoSave()) {
                         statement.addBatch("INSERT INTO HANDLERS(NAME, TYPE, PRIORITY, ENABLED) VALUES ('" +
                                 handler.getName() + "', '" +
@@ -319,7 +319,7 @@ public final class FGStorageManager {
             e.printStackTrace();
         }
 
-        FGManager.getInstance().getHandlerListCopy().stream().filter(IFGObject::autoSave).forEach(handler -> {
+        FGManager.getInstance().getHandlerList().stream().filter(IFGObject::autoSave).forEach(handler -> {
             try {
                 DataSource source = FoxGuardMain.instance().getDataSource(
                         "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() +
@@ -362,7 +362,7 @@ public final class FGStorageManager {
         try (Connection conn = FoxGuardMain.instance().getDataSource(dataBaseDir + "foxguard").getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 statement.addBatch("DELETE FROM REGIONS; DELETE FROM LINKAGES;");
-                for (IRegion region : FGManager.getInstance().getRegionsListCopy(world)) {
+                for (IRegion region : FGManager.getInstance().getRegionsList(world)) {
                     if (region.autoSave()) {
                         statement.addBatch("INSERT INTO REGIONS(NAME, TYPE, ENABLED) VALUES ('" +
                                 region.getName() + "', '" +
@@ -380,7 +380,7 @@ public final class FGStorageManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        FGManager.getInstance().getRegionsListCopy(world).stream().filter(IFGObject::autoSave).forEach(region -> {
+        FGManager.getInstance().getRegionsList(world).stream().filter(IFGObject::autoSave).forEach(region -> {
             try {
                 DataSource source = FoxGuardMain.instance().getDataSource(dataBaseDir + "regions/" + region.getName());
                 try (Connection conn = source.getConnection()) {
@@ -504,7 +504,7 @@ public final class FGStorageManager {
             try (Connection conn = FoxGuardMain.instance().getDataSource(dataBaseDir + "foxguard").getConnection()) {
                 try (Statement statement = conn.createStatement()) {
                     statement.addBatch("DELETE FROM REGIONS; DELETE FROM LINKAGES;");
-                    for (IRegion region : FGManager.getInstance().getRegionsListCopy(world)) {
+                    for (IRegion region : FGManager.getInstance().getRegionsList(world)) {
                         if (region.autoSave()) {
                             statement.addBatch("INSERT INTO REGIONS(NAME, TYPE, ENABLED) VALUES ('" +
                                     region.getName() + "', '" +
@@ -526,7 +526,7 @@ public final class FGStorageManager {
         try (Connection conn = FoxGuardMain.instance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 statement.addBatch("DELETE FROM HANDLERS;");
-                for (IHandler handler : FGManager.getInstance().getHandlerListCopy()) {
+                for (IHandler handler : FGManager.getInstance().getHandlerList()) {
                     if (handler.autoSave()) {
                         statement.addBatch("INSERT INTO HANDLERS(NAME, TYPE, PRIORITY, ENABLED) VALUES ('" +
                                 handler.getName() + "', '" +

@@ -25,6 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.region;
 
+import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
@@ -122,6 +123,12 @@ public class CuboidRegion extends OwnableRegionBase {
     @Override
     public boolean isInRegion(double x, double y, double z) {
         return boundingBox.contains(x, y, z);
+    }
+
+    @Override
+    public boolean isInChunk(Vector2i chunk) {
+        Vector2i a = chunk.mul(16), b = a.add(16, 16), c = this.boundingBox.a.toVector2(true), d = this.boundingBox.b.toVector2(true);
+        return !(a.getX() > d.getX() || b.getX() < c.getX() || a.getY() > d.getY() || b.getY() < c.getY());
     }
 
     @Override

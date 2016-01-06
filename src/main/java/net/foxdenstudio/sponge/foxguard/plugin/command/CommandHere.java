@@ -120,7 +120,7 @@ public class CommandHere implements CommandCallable {
         }
         boolean flag = false;
         Text.Builder output = Text.builder();
-        List<IRegion> regionList = FGManager.getInstance().getRegionsListCopy(world).stream()
+        List<IRegion> regionList = FGManager.getInstance().getRegionsList(world).stream()
                 .filter(region -> region.isInRegion(x, y, z))
                 .collect(Collectors.toList());
         output.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));

@@ -79,12 +79,12 @@ public class CommandList implements CommandCallable {
             if (!worldName.isEmpty()) {
                 Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
                 if (optWorld.isPresent()) {
-                    FGManager.getInstance().getRegionsListCopy(optWorld.get()).forEach(regionList::add);
+                    FGManager.getInstance().getRegionsList(optWorld.get()).forEach(regionList::add);
                     allFlag = false;
                 }
             }
             if (allFlag) {
-                FGManager.getInstance().getRegionsListCopy().forEach(regionList::add);
+                FGManager.getInstance().getRegionsList().forEach(regionList::add);
             }
 
             Text.Builder output = Text.builder()
@@ -101,7 +101,7 @@ public class CommandList implements CommandCallable {
             }
             source.sendMessage(output.build());
         } else if (contains(Aliases.HANDLERS_ALIASES, parse.args[0])) {
-            List<IHandler> handlerList = FGManager.getInstance().getHandlerListCopy();
+            List<IHandler> handlerList = FGManager.getInstance().getHandlerList();
 
                     /*try {
                         page = Integer.parseInt(parse.args[1]);
