@@ -147,9 +147,9 @@ public final class FoxGuardMain {
         logger.info("Setting default player permissions");
         configurePermissions();
         logger.info("Registering Regions state field");
-        FCStateManager.instance().registerStateFactory(new RegionsStateFieldFactory(), RegionsStateField.ID, RegionsStateField.ID, Aliases.REGIONS_ALIASES);
+        FCStateManager.instance().registerStateFactory(new RegionsStateFieldFactory(), RegionsStateField.class, RegionsStateField.ID, RegionsStateField.ID, Aliases.REGIONS_ALIASES);
         logger.info("Registering Handlers state field");
-        FCStateManager.instance().registerStateFactory(new HandlersStateFieldFactory(), HandlersStateField.ID, HandlersStateField.ID, Aliases.HANDLERS_ALIASES);
+        FCStateManager.instance().registerStateFactory(new HandlersStateFieldFactory(),HandlersStateField.class, HandlersStateField.ID, HandlersStateField.ID, Aliases.HANDLERS_ALIASES);
         logger.info("Starting MCStats metrics extension");
         try {
             Metrics metrics = new Metrics(game, game.getPluginManager().fromInstance(this).get());
