@@ -25,7 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin;
 
-import com.flowpowered.math.vector.Vector2i;
+import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
@@ -50,7 +50,7 @@ public final class FGManager {
     private final List<IHandler> handlers;
     private final GlobalHandler globalHandler;
 
-    private final Map<World, Map<Vector2i, List<IRegion>>> regionCache;
+    private final Map<World, Map<Vector3i, List<IRegion>>> regionCache;
 
     private FGManager() {
         instance = this;
@@ -61,10 +61,10 @@ public final class FGManager {
 
         regionCache = new CallbackHashMap<>((world, map1) -> {
             if (world instanceof World) {
-                Map<Vector2i, List<IRegion>> worldCache = new CallbackHashMap<>((chunk, map2) -> {
-                    if (chunk instanceof Vector2i) {
-                        List<IRegion> cachedRegions = this.calculateRegionsForChunk((Vector2i) chunk, (World) world);
-                        map2.put((Vector2i) chunk, cachedRegions);
+                Map<Vector3i, List<IRegion>> worldCache = new CallbackHashMap<>((chunk, map2) -> {
+                    if (chunk instanceof Vector3i) {
+                        List<IRegion> cachedRegions = this.calculateRegionsForChunk((Vector3i) chunk, (World) world);
+                        map2.put((Vector3i) chunk, cachedRegions);
                         return cachedRegions;
                     } else return null;
                 });
@@ -121,7 +121,7 @@ public final class FGManager {
         return ImmutableList.copyOf(this.regions.get(world));
     }
 
-    public List<IRegion> getRegionsList(World world, Vector2i chunk) {
+    public List<IRegion> getRegionsList(World world, Vector3i chunk) {
         return ImmutableList.copyOf(this.regionCache.get(world).get(chunk));
     }
 
@@ -259,7 +259,7 @@ public final class FGManager {
         return globalHandler;
     }
 
-    private List<IRegion> calculateRegionsForChunk(Vector2i chunk, World world) {
+    private List<IRegion> calculateRegionsForChunk(Vector3i chunk, World world) {
         List<IRegion> cache = new ArrayList<>();
         this.getRegionsList(world).stream()
                 .filter(region -> region.isInChunk(chunk))

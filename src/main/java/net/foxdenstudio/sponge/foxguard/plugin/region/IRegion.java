@@ -46,7 +46,7 @@ public interface IRegion extends IFGObject, ILinkable {
 
     void setWorld(World world);
 
-    default boolean isInChunk(Vector2i chunk) {
+    default boolean isInChunk(Vector3i chunk) {
         return true;
     }
 

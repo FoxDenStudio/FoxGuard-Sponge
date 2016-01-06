@@ -25,7 +25,6 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.region;
 
-import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.FCHelper;
@@ -113,8 +112,9 @@ public class ElevationRegion extends OwnableRegionBase {
     }
 
     @Override
-    public boolean isInChunk(Vector2i chunk) {
-        return true;
+    public boolean isInChunk(Vector3i chunk) {
+        int a = chunk.getY() * 16, b = a + 16;
+        return !(a > this.upperBound || b < this.lowerBound);
     }
 
     @Override
