@@ -26,7 +26,6 @@
 package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.GenericMath;
-import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
@@ -80,16 +79,6 @@ public class InteractListener implements EventListener<InteractEvent> {
         }
         if (typeFlag == null) return;
         List<IHandler> handlerList = new ArrayList<>();
-        /*
-        if (event.getInteractionPoint().isPresent()) {
-            loc = event.getInteractionPoint().get();
-            System.out.println(loc);
-            FGManager.instance().getRegionListAsStream(world).filter(region -> region.isInRegion(loc))
-                    .forEach(region -> region.getHandlers().stream()
-                            .filter(handler -> !handlerList.contains(handler))
-                            .forEach(handlerList::add));
-        } else {
-        */
         final Vector3d finalLoc = loc;
         Vector3i chunk = new Vector3i(
                 GenericMath.floor(loc.getX() / 16.0),
@@ -102,7 +91,7 @@ public class InteractListener implements EventListener<InteractEvent> {
                         .filter(IFGObject::isEnabled)
                         .filter(handler -> !handlerList.contains(handler))
                         .forEach(handlerList::add));
-        //}
+
         Collections.sort(handlerList);
         int currPriority = handlerList.get(0).getPriority();
         Tristate flagState = Tristate.UNDEFINED;

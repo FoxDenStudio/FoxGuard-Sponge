@@ -51,12 +51,12 @@ public final class FGHelper {
 
     @SuppressWarnings("unchecked")
     public static List<IRegion> getSelectedRegions(CommandSource source) {
-        return ((RegionsStateField) FCStateManager.instance().getStateMap().get(source).get(RegionsStateField.ID)).getList();
+        return ((RegionsStateField) FCStateManager.instance().getStateMap().get(source).getOrCreate(RegionsStateField.ID).get()).getList();
     }
 
     @SuppressWarnings("unchecked")
     public static List<IHandler> getSelectedHandlers(CommandSource source) {
-        return ((HandlersStateField) FCStateManager.instance().getStateMap().get(source).get(HandlersStateField.ID)).getList();
+        return ((HandlersStateField) FCStateManager.instance().getStateMap().get(source).getOrCreate(HandlersStateField.ID).get()).getList();
     }
 
 }

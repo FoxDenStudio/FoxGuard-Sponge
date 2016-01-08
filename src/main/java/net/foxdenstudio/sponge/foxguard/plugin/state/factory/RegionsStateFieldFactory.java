@@ -25,8 +25,8 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.state.factory;
 
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.SourceState;
 import net.foxdenstudio.sponge.foxcore.plugin.state.IStateField;
+import net.foxdenstudio.sponge.foxcore.plugin.state.SourceState;
 import net.foxdenstudio.sponge.foxcore.plugin.state.factory.IStateFieldFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
 

@@ -26,7 +26,6 @@
 package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.GenericMath;
-import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxcore.plugin.command.CommandDebug;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
