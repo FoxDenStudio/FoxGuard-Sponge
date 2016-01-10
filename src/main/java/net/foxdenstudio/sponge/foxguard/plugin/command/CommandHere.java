@@ -126,14 +126,14 @@ public class CommandHere implements CommandCallable {
         output.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
         output.append(Text.of(TextColors.AQUA, "----- Position: (" + String.format("%.1f, %.1f, %.1f", x, y, z) + ") -----\n"));
         if (!parse.flagmap.containsKey("handler") || parse.flagmap.containsKey("region")) {
-            output.append(Text.of(TextColors.GREEN, "----- Regions Located Here -----\n"));
+            output.append(Text.of(TextColors.GREEN, "------- Regions Located Here -------\n"));
             ListIterator<IRegion> regionListIterator = regionList.listIterator();
             while (regionListIterator.hasNext()) {
                 IRegion region = regionListIterator.next();
                 output.append(Text.of(FGHelper.getColorForRegion(region),
                         TextActions.runCommand("/foxguard detail region --w:" + region.getWorld().getName() + " " + region.getName()),
                         TextActions.showText(Text.of("View Details")),
-                        region.getShortTypeName() + " : " + region.getName()));
+                        FGHelper.getRegionName(region, false)));
                 if (regionListIterator.hasNext()) output.append(Text.of("\n"));
             }
             flag = true;
@@ -144,7 +144,7 @@ public class CommandHere implements CommandCallable {
             regionList.forEach(region -> region.getHandlers().stream()
                     .filter(handler -> !handlerList.contains(handler))
                     .forEach(handlerList::add));
-            output.append(Text.of(TextColors.GREEN, "----- Handlers Located Here -----\n"));
+            output.append(Text.of(TextColors.GREEN, "------- Handlers Located Here -------\n"));
             ListIterator<IHandler> handlerListIterator = handlerList.listIterator();
             while (handlerListIterator.hasNext()) {
                 IHandler handler = handlerListIterator.next();

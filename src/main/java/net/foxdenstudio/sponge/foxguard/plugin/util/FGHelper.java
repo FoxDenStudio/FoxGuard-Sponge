@@ -59,4 +59,7 @@ public final class FGHelper {
         return ((HandlersStateField) FCStateManager.instance().getStateMap().get(source).getOrCreate(HandlersStateField.ID).get()).getList();
     }
 
+    public static String getRegionName(IRegion region, boolean dispWorld) {
+        return region.getShortTypeName() + " : " + (dispWorld ? region.getWorld().getName() + " : " : "") + region.getName();
+    }
 }

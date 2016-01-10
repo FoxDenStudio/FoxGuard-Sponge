@@ -89,14 +89,14 @@ public class CommandList implements CommandCallable {
 
             Text.Builder output = Text.builder()
                     .append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"))
-                    .append(Text.of(TextColors.GREEN, "---Regions" + (allFlag ? "" : (" for world: \"" + worldName + "\"")) + "---\n"));
+                    .append(Text.of(TextColors.GREEN, "------- Regions" + (allFlag ? "" : (" for world: \"" + worldName + "\"")) + " -------\n"));
             ListIterator<IRegion> regionListIterator = regionList.listIterator();
             while (regionListIterator.hasNext()) {
                 IRegion region = regionListIterator.next();
                 output.append(Text.of(FGHelper.getColorForRegion(region),
                         TextActions.runCommand("/foxguard detail region --w:" + region.getWorld().getName() + " " + region.getName()),
                         TextActions.showText(Text.of("View Details")),
-                        getRegionName(region, allFlag)));
+                        FGHelper.getRegionName(region, allFlag)));
                 if (regionListIterator.hasNext()) output.append(Text.of("\n"));
             }
             source.sendMessage(output.build());
@@ -110,7 +110,7 @@ public class CommandList implements CommandCallable {
 
             Text.Builder output = Text.builder()
                     .append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"))
-                    .append(Text.of(TextColors.GREEN, "---Handlers---\n"));
+                    .append(Text.of(TextColors.GREEN, "------- Handlers -------\n"));
             ListIterator<IHandler> handlerListIterator = handlerList.listIterator();
             while (handlerListIterator.hasNext()) {
                 IHandler handler = handlerListIterator.next();
@@ -127,10 +127,6 @@ public class CommandList implements CommandCallable {
         return CommandResult.empty();
     }
 
-
-    private String getRegionName(IRegion region, boolean dispWorld) {
-        return region.getShortTypeName() + " : " + (dispWorld ? region.getWorld().getName() + " : " : "") + region.getName();
-    }
 
     private boolean contains(String[] aliases, String input) {
         for (String alias : aliases) {
