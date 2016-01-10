@@ -222,7 +222,7 @@ public class CommandDetail implements CommandCallable {
     @Override
     public boolean testPermission(CommandSource source) {
 
-        return source.hasPermission("foxguard.command.info.objects.detail");
+        return source.hasPermission("foxguard.command.info.detail");
     }
 
     @Override

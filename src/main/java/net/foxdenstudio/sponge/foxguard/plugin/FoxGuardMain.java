@@ -202,6 +202,7 @@ public final class FoxGuardMain {
     public void worldUnload(UnloadWorldEvent event) {
         logger.info("Saving data for World: \"" + event.getTargetWorld().getName() + "\"");
         FGStorageManager.getInstance().writeWorld(event.getTargetWorld());
+        FGManager.getInstance().unloadWorld(event.getTargetWorld());
     }
 
     @Listener

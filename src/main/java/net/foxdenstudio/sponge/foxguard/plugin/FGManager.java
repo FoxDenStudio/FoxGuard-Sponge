@@ -255,6 +255,10 @@ public final class FGManager {
         addRegion(world, gr);
     }
 
+    public void unloadWorld(World world){
+        this.regions.remove(world);
+    }
+
     public GlobalHandler getGlobalHandler() {
         return globalHandler;
     }

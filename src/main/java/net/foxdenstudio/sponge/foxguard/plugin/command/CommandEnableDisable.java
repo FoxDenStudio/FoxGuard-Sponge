@@ -174,7 +174,7 @@ public class CommandEnableDisable implements CommandCallable {
             }
             if (handlers.isEmpty()) throw new CommandException(Text.of("Must specify at least one Handler!"));
             for (IHandler handler : handlers) {
-                if (handler instanceof GlobalRegion || handler.isEnabled() == this.enableState) failures++;
+                if (handler instanceof GlobalHandler || handler.isEnabled() == this.enableState) failures++;
                 else {
                     handler.setIsEnabled(this.enableState);
                     successes++;

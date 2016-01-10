@@ -107,11 +107,23 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
         }
         flagState = typeFlag.resolve(flagState);
         if (user instanceof Player && CommandDebug.instance().getDebug().get(user)) {
-            ((Player) user).sendMessage(Text.of());
+            Vector3i vec = event.getTransactions().get(0).getOriginal().getPosition();
+            ((Player) user).sendMessage(Text.of("Block action denied at (" + vec.getX() + ", " + vec.getY() + ", " + vec.getZ() + ")"
+                    + (event.getTransactions().size() > 1 ? " and " + (event.getTransactions().size() - 1) + " other positions" : "") + "!"));
         } else {
             if (flagState == Tristate.FALSE) {
-                if (user instanceof Player)
-                    ((Player) user).sendMessage(Text.of("You don't have permission!"));
+                if (user instanceof Player) {
+                    Player player = (Player) user;
+                    Vector3i pos = player.getLocation().getPosition().toInt();
+                    boolean flag = false;
+                    for (Transaction<BlockSnapshot> trans : event.getTransactions()) {
+                        if (trans.getOriginal().getPosition().distanceSquared(pos) < 4096) {
+                            flag = true;
+                            break;
+                        }
+                    }
+                    if (flag) player.sendMessage(Text.of("You don't have permission!"));
+                }
             } else {
 
             }

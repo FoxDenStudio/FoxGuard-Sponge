@@ -241,7 +241,7 @@ public class PassiveHandler extends OwnableHandlerBase {
                                 .collect(GuavaCollectors.toImmutableList());
                     }
                 } else if (isIn(SET_ALIASES, parse.args[0])) {
-                    return ImmutableList.of("true", "false", "passthrough").stream()
+                    return ImmutableList.of("true", "false", "passthrough", "clear").stream()
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());

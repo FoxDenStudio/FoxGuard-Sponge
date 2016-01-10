@@ -174,7 +174,7 @@ public class GlobalHandler extends HandlerBase {
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             } else if (parse.current.index == 2) {
-                return ImmutableList.of("true", "false", "passthrough").stream()
+                return ImmutableList.of("true", "false", "passthrough", "clear").stream()
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
