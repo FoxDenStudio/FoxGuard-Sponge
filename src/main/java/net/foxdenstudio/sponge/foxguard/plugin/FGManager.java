@@ -90,7 +90,7 @@ public final class FGManager {
         return handlers.contains(handler);
     }
 
-    public boolean addRegion(World world, IRegion region) {
+    public boolean addRegion(World world, IRegion region, boolean update) {
         if (region == null) return false;
         if (region.getWorld() != null || getRegion(world, region.getName()) != null) return false;
         region.setWorld(world);
@@ -108,8 +108,12 @@ public final class FGManager {
             }
         });
         FGStorageManager.getInstance().unmarkForDeletion(region);
-        FGStorageManager.getInstance().updateRegion(region);
+        if (update) FGStorageManager.getInstance().updateRegion(region);
         return true;
+    }
+
+    public boolean addRegion(World world, IRegion region) {
+        return addRegion(world, region, true);
     }
 
     public IRegion getRegion(World world, String name) {
@@ -312,7 +316,7 @@ public final class FGManager {
         this.createLists(world);
         GlobalRegion gr = new GlobalRegion();
         gr.addHandler(this.globalHandler);
-        addRegion(world, gr);
+        addRegion(world, gr, false);
     }
 
     public void unloadWorld(World world) {

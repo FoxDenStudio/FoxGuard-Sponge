@@ -211,10 +211,10 @@ public final class FoxGuardMain {
 
     @Listener
     public void worldLoad(LoadWorldEvent event) {
-        logger.info("Constructing Regions for World: \"" + event.getTargetWorld().getName() + "\"");
-        FGManager.getInstance().populateWorld(event.getTargetWorld());
         logger.info("Initializing Regions database for World: \"" + event.getTargetWorld().getName() + "\"");
         FGStorageManager.getInstance().initWorld(event.getTargetWorld());
+        logger.info("Constructing Regions for World: \"" + event.getTargetWorld().getName() + "\"");
+        FGManager.getInstance().populateWorld(event.getTargetWorld());
         logger.info("Loading Regions for World: \"" + event.getTargetWorld().getName() + "\"");
         FGStorageManager.getInstance().loadWorldRegions(event.getTargetWorld());
         if (loaded) {
