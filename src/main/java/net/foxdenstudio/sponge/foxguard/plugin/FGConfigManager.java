@@ -32,6 +32,8 @@ import ninja.leaping.configurate.loader.ConfigurationLoader;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.EnumMap;
+import java.util.Map;
 
 public final class FGConfigManager {
 
@@ -41,6 +43,7 @@ public final class FGConfigManager {
     private boolean forceLoad;
     private boolean purgeDatabases;
 
+    private Map<Module, Boolean> modules = new EnumMap<>(Module.class);
 
     public FGConfigManager() {
         if (instance == null) instance = this;
@@ -71,6 +74,9 @@ public final class FGConfigManager {
 
         forceLoad = root.getNode("storage", "forceLoad").getBoolean(false);
         purgeDatabases = root.getNode("storage", "purgeDatabases").getBoolean(true);
+        for (Module m : Module.values()) {
+            this.modules.put(m, root.getNode("module", m.name).getBoolean(true));
+        }
 
         //--------------------------------------------------------------------------------------------------------------
     }
@@ -108,6 +114,11 @@ public final class FGConfigManager {
                 "However, they will still be overwritten if a new database is made with the same name.")
                 .setValue(purgeDatabases);
 
+        for (Module m : Module.values()) {
+            root.getNode("module", m.name).setValue(this.modules.get(m));
+        }
+
+
         //--------------------------------------------------------------------------------------------------------------
         try {
             loader.save(root);
@@ -122,6 +133,20 @@ public final class FGConfigManager {
 
     public boolean purgeDatabases() {
         return purgeDatabases;
+    }
+
+    public Map<Module, Boolean> getModules() {
+        return this.modules;
+    }
+
+    public enum Module {
+        MOVEMENT("movement");
+
+        String name;
+
+        Module(String name) {
+            this.name = name;
+        }
     }
 
 }

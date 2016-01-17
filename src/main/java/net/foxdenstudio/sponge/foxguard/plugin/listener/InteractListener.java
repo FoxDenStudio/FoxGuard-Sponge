@@ -29,8 +29,8 @@ import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
@@ -39,6 +39,7 @@ import org.spongepowered.api.event.action.InteractEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.entity.InteractEntityEvent;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
@@ -99,13 +100,13 @@ public class InteractListener implements EventListener<InteractEvent> {
             if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
                 break;
             }
-            flagState = flagState.and(handler.handle(user, typeFlag, event));
+            flagState = flagState.and(handler.handle(user, typeFlag, event).getState());
             currPriority = handler.getPriority();
         }
         flagState = typeFlag.resolve(flagState);
         if (flagState == Tristate.FALSE) {
             if (user instanceof Player)
-                ((Player) user).sendMessage(Text.of("You don't have permission!"));
+                ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
             event.setCancelled(true);
         } else {
             //makes sure that handlers are unable to cancel the event directly.

@@ -23,22 +23,52 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.handler;
+package net.foxdenstudio.sponge.foxguard.plugin.listener.util;
 
-import net.foxdenstudio.sponge.foxguard.plugin.Flag;
-import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
-import org.spongepowered.api.entity.living.player.User;
-import org.spongepowered.api.event.Event;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.util.Tristate;
 
-import javax.annotation.Nullable;
+import java.util.Optional;
 
-public interface IHandler extends IFGObject, Comparable<IHandler> {
+public final class EventResult {
 
-    EventResult handle(@Nullable User user, Flag flag, Event event);
+    private static final EventResult SUCCESS = of(Tristate.TRUE);
+    private static final EventResult PASSTHROUGH = of(Tristate.UNDEFINED);
+    private static final EventResult FAILURE = of(Tristate.FALSE);
 
-    int getPriority();
+    private final Tristate state;
+    private final Optional<Text> message;
 
-    void setPriority(int priority);
+    private EventResult(Tristate success, Optional<Text> message) {
+        this.state = success;
+        this.message = message;
+    }
 
+    public static EventResult of(Tristate state) {
+        return new EventResult(state, Optional.empty());
+    }
+
+    public static EventResult of(Tristate success, Text message) {
+        return new EventResult(success, Optional.of(message));
+    }
+
+    public static EventResult allow() {
+        return SUCCESS;
+    }
+
+    public static EventResult pass() {
+        return PASSTHROUGH;
+    }
+
+    public static EventResult deny() {
+        return FAILURE;
+    }
+
+    public Tristate getState() {
+        return state;
+    }
+
+    public Optional<Text> getMessage() {
+        return message;
+    }
 }

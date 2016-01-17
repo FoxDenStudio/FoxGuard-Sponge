@@ -23,22 +23,14 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.handler;
+package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
-import net.foxdenstudio.sponge.foxguard.plugin.Flag;
-import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
-import org.spongepowered.api.entity.living.player.User;
-import org.spongepowered.api.event.Event;
+import org.spongepowered.api.event.EventListener;
+import org.spongepowered.api.event.world.ExplosionEvent;
 
-import javax.annotation.Nullable;
+public class ExplosionEventListener implements EventListener<ExplosionEvent> {
+    @Override
+    public void handle(ExplosionEvent event) throws Exception {
 
-public interface IHandler extends IFGObject, Comparable<IHandler> {
-
-    EventResult handle(@Nullable User user, Flag flag, Event event);
-
-    int getPriority();
-
-    void setPriority(int priority);
-
+    }
 }

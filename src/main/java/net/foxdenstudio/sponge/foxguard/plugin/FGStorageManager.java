@@ -58,7 +58,7 @@ public final class FGStorageManager {
     public synchronized void initHandlers() {
         Server server = Sponge.getGame().getServer();
 
-        try (Connection conn = FoxGuardMain.instance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
+        try (Connection conn = FoxGuardMain.instance().getDataSource("jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/foxguard/foxguard").getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 statement.execute(
                         "CREATE TABLE IF NOT EXISTS HANDLERS (" +
@@ -77,9 +77,9 @@ public final class FGStorageManager {
         String dataBaseDir;
         Server server = Sponge.getGame().getServer();
         if (world.getProperties().equals(server.getDefaultWorld().get())) {
-            dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/";
+            dataBaseDir = "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/foxguard/";
         } else {
-            dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + world.getName() + "/foxguard/";
+            dataBaseDir = "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/" + world.getName() + "/foxguard/";
         }
         try (Connection conn = FoxGuardMain.instance().getDataSource(dataBaseDir + "foxguard").getConnection()) {
             try (Statement statement = conn.createStatement()) {
@@ -100,14 +100,13 @@ public final class FGStorageManager {
     public synchronized void loadHandlers() {
         Server server = Sponge.getGame().getServer();
 
-        try (Connection conn = FoxGuardMain.instance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
+        try (Connection conn = FoxGuardMain.instance().getDataSource("jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/foxguard/foxguard").getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 try (ResultSet handlerDataSet = statement.executeQuery("SELECT * FROM HANDLERS;")) {
                     while (handlerDataSet.next()) {
                         try {
-                            String databaseDir = "jdbc:h2:./" +
-                                    server.getDefaultWorld().get().getWorldName() + "/foxguard/handlers/" +
-                                    handlerDataSet.getString("NAME");
+                            String databaseDir = "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName())
+                                    + "/foxguard/handlers/" + handlerDataSet.getString("NAME");
                             DataSource source = FoxGuardMain.instance().getDataSource(databaseDir);
                             try (Connection metaConn = source.getConnection()) {
                                 try (Statement metaStatement = metaConn.createStatement()) {
@@ -155,16 +154,16 @@ public final class FGStorageManager {
                                                         deferredHandler.metaEnabled = metaSet.getBoolean("ENABLED");
                                                         this.deferedObjects.add(deferredHandler);
                                                     } else {
-                                                        FoxGuardMain.instance().logger().info("Found potentially corrupted database.");
+                                                        FoxGuardMain.instance().logger().warn("Found potentially corrupted database.");
                                                         markForDeletion(databaseDir);
                                                     }
                                                 } else {
-                                                    FoxGuardMain.instance().logger().info("Found potentially corrupted database.");
+                                                    FoxGuardMain.instance().logger().warn("Found potentially corrupted database.");
                                                     markForDeletion(databaseDir);
                                                 }
                                             }
                                         } else {
-                                            FoxGuardMain.instance().logger().info("Found potentially corrupted database.");
+                                            FoxGuardMain.instance().logger().warn("Found potentially corrupted database.");
                                             markForDeletion(databaseDir);
                                         }
                                     }
@@ -185,9 +184,9 @@ public final class FGStorageManager {
         Server server = Sponge.getGame().getServer();
         String worldDatabaseDir;
         if (world.getProperties().equals(server.getDefaultWorld().get())) {
-            worldDatabaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/";
+            worldDatabaseDir = "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/foxguard/";
         } else {
-            worldDatabaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + world.getName() + "/foxguard/";
+            worldDatabaseDir = "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/" + world.getName() + "/foxguard/";
         }
 
         try (Connection conn = FoxGuardMain.instance().getDataSource(worldDatabaseDir + "foxguard").getConnection()) {
@@ -246,23 +245,23 @@ public final class FGStorageManager {
                                                         deferredHandler.metaEnabled = metaSet.getBoolean("ENABLED");
                                                         this.deferedObjects.add(deferredHandler);
                                                     } else {
-                                                        FoxGuardMain.instance().logger().info("Found potentially corrupted database.");
+                                                        FoxGuardMain.instance().logger().warn("Found potentially corrupted database.");
                                                         markForDeletion(databaseDir);
                                                     }
                                                 } else {
-                                                    FoxGuardMain.instance().logger().info("Found potentially corrupted database.");
+                                                    FoxGuardMain.instance().logger().warn("Found potentially corrupted database.");
                                                     markForDeletion(databaseDir);
                                                 }
                                             }
                                         } else {
-                                            FoxGuardMain.instance().logger().info("Found potentially corrupted database.");
+                                            FoxGuardMain.instance().logger().warn("Found potentially corrupted database.");
                                             markForDeletion(databaseDir);
                                         }
                                     }
                                 }
                             }
                         } catch (SQLException e) {
-                            FoxGuardMain.instance().logger().info("Unable to load Region in world \"" + world.getName() + "\". Perhaps the database is corrupted?");
+                            FoxGuardMain.instance().logger().error("Unable to load Region in world \"" + world.getName() + "\". Perhaps the database is corrupted?");
                             e.printStackTrace();
                         }
                     }
@@ -277,9 +276,9 @@ public final class FGStorageManager {
         Server server = Sponge.getGame().getServer();
         String dataBaseDir;
         if (world.getProperties().equals(server.getDefaultWorld().get())) {
-            dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/";
+            dataBaseDir = "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/foxguard/";
         } else {
-            dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + world.getName() + "/foxguard/";
+            dataBaseDir = "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/" + world.getName() + "/foxguard/";
         }
 
         try (Connection conn = FoxGuardMain.instance().getDataSource(dataBaseDir + "foxguard").getConnection()) {
@@ -301,9 +300,15 @@ public final class FGStorageManager {
 
     public synchronized void writeHandlers() {
         Server server = Sponge.getGame().getServer();
-        try (Connection conn = FoxGuardMain.instance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
+        try (Connection conn = FoxGuardMain.instance().getDataSource("jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/foxguard/foxguard").getConnection()) {
             try (Statement statement = conn.createStatement()) {
-                statement.addBatch("DELETE FROM HANDLERS;");
+                statement.addBatch("DROP TABLE IF EXISTS HANDLERS;");
+                statement.addBatch(
+                        "CREATE TABLE HANDLERS (" +
+                                "NAME VARCHAR(256), " +
+                                "TYPE VARCHAR(256)," +
+                                "PRIORITY INTEGER," +
+                                "ENABLED BOOLEAN);");
                 for (IHandler handler : FGManager.getInstance().getHandlerList()) {
                     if (handler.autoSave()) {
                         statement.addBatch("INSERT INTO HANDLERS(NAME, TYPE, PRIORITY, ENABLED) VALUES ('" +
@@ -322,7 +327,7 @@ public final class FGStorageManager {
         FGManager.getInstance().getHandlerList().stream().filter(IFGObject::autoSave).forEach(handler -> {
             try {
                 DataSource source = FoxGuardMain.instance().getDataSource(
-                        "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() +
+                        "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) +
                                 "/foxguard/handlers/" + handler.getName());
                 try (Connection conn = source.getConnection()) {
                     try (Statement statement = conn.createStatement()) {
@@ -355,9 +360,9 @@ public final class FGStorageManager {
         Server server = Sponge.getGame().getServer();
         String dataBaseDir;
         if (world.getProperties().equals(server.getDefaultWorld().get())) {
-            dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/";
+            dataBaseDir = "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/foxguard/";
         } else {
-            dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + world.getName() + "/foxguard/";
+            dataBaseDir = "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/" + world.getName() + "/foxguard/";
         }
         try (Connection conn = FoxGuardMain.instance().getDataSource(dataBaseDir + "foxguard").getConnection()) {
             try (Statement statement = conn.createStatement()) {
@@ -423,9 +428,9 @@ public final class FGStorageManager {
         World world = region.getWorld();
         String dataBaseDir;
         if (world.getProperties().equals(server.getDefaultWorld().get())) {
-            dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/";
+            dataBaseDir = "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/foxguard/";
         } else {
-            dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + world.getName() + "/foxguard/";
+            dataBaseDir = "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/" + world.getName() + "/foxguard/";
         }
         try {
             DataSource source = FoxGuardMain.instance().getDataSource(dataBaseDir + "regions/" + region.getName());
@@ -462,7 +467,7 @@ public final class FGStorageManager {
         Server server = Sponge.getGame().getServer();
         try {
             DataSource source = FoxGuardMain.instance().getDataSource(
-                    "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() +
+                    "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) +
                             "/foxguard/handlers/" + handler.getName());
             try (Connection conn = source.getConnection()) {
                 try (Statement statement = conn.createStatement()) {
@@ -497,9 +502,9 @@ public final class FGStorageManager {
         for (World world : Sponge.getGame().getServer().getWorlds()) {
             String dataBaseDir;
             if (world.getProperties().equals(server.getDefaultWorld().get())) {
-                dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/";
+                dataBaseDir = "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/foxguard/";
             } else {
-                dataBaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + world.getName() + "/foxguard/";
+                dataBaseDir = "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/" + world.getName() + "/foxguard/";
             }
             try (Connection conn = FoxGuardMain.instance().getDataSource(dataBaseDir + "foxguard").getConnection()) {
                 try (Statement statement = conn.createStatement()) {
@@ -523,7 +528,7 @@ public final class FGStorageManager {
                 e.printStackTrace();
             }
         }
-        try (Connection conn = FoxGuardMain.instance().getDataSource("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/foxguard").getConnection()) {
+        try (Connection conn = FoxGuardMain.instance().getDataSource("jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/foxguard/foxguard").getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 statement.addBatch("DELETE FROM HANDLERS;");
                 for (IHandler handler : FGManager.getInstance().getHandlerList()) {
@@ -562,14 +567,14 @@ public final class FGStorageManager {
             IRegion region = (IRegion) object;
             String databaseDir;
             if (region.getWorld().getProperties().equals(server.getDefaultWorld().get())) {
-                databaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/regions/";
+                databaseDir = "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/foxguard/regions/";
             } else {
-                databaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + region.getWorld().getName() + "/foxguard/regions/";
+                databaseDir = "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/" + region.getWorld().getName() + "/foxguard/regions/";
             }
             databaseDir += region.getName();
             markForDeletion(databaseDir);
         } else if (object instanceof IHandler) {
-            String databaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/handlers/" + object.getName();
+            String databaseDir = "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/foxguard/handlers/" + object.getName();
             markForDeletion(databaseDir);
         }
     }
@@ -591,15 +596,15 @@ public final class FGStorageManager {
             IRegion region = (IRegion) object;
             String databaseDir;
             if (region.getWorld().getProperties().equals(server.getDefaultWorld().get())) {
-                databaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/regions/";
+                databaseDir = "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/foxguard/regions/";
             } else {
-                databaseDir = "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/" + region.getWorld().getName() + "/foxguard/regions/";
+                databaseDir = "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/" + region.getWorld().getName() + "/foxguard/regions/";
             }
             databaseDir += region.getName();
             unmarkForDeletion(databaseDir);
         } else if (object instanceof IHandler) {
             if (server.getDefaultWorld().isPresent()) {
-                unmarkForDeletion("jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/handlers/" + object.getName());
+                unmarkForDeletion("jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/foxguard/handlers/" + object.getName());
             }
         }
     }
@@ -623,9 +628,9 @@ public final class FGStorageManager {
             try {
                 IFGObject result = o.resolve();
                 if (result == null)
-                    FoxGuardMain.instance().logger().info("Unable to resolve deferred object:\n" + o.toString());
+                    FoxGuardMain.instance().logger().warn("Unable to resolve deferred object:\n" + o.toString());
             } catch (SQLException e) {
-                FoxGuardMain.instance().logger().info("Unable to resolve deferred object:\n" + o.toString());
+                FoxGuardMain.instance().logger().warn("Unable to resolve deferred object:\n" + o.toString());
                 e.printStackTrace();
             }
         }
@@ -635,7 +640,7 @@ public final class FGStorageManager {
         Server server = Sponge.getGame().getServer();
         try {
             FGManager.getInstance().getGlobalHandler().loadFromDatabase(FoxGuardMain.instance().getDataSource(
-                    "jdbc:h2:./" + server.getDefaultWorld().get().getWorldName() + "/foxguard/handlers/" + GlobalHandler.NAME
+                    "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/foxguard/handlers/" + GlobalHandler.NAME
             ));
         } catch (SQLException e) {
             e.printStackTrace();

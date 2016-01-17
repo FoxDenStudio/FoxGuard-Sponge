@@ -27,13 +27,13 @@ package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.util.Tristate;
 
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
@@ -47,18 +47,18 @@ public class PermissionHandler extends HandlerBase {
     }
 
     @Override
-    public Tristate handle(@Nullable User user, Flag flag, Event event) {
-        if (user == null) return Tristate.UNDEFINED;
+    public EventResult handle(@Nullable User user, Flag flag, Event event) {
+        if (user == null) return EventResult.pass();
         while (flag != null) {
             if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." + flag.flagName() + ".allow"))
-                return Tristate.TRUE;
+                return EventResult.allow();
             else if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." + flag.flagName() + ".deny"))
-                return Tristate.FALSE;
+                return EventResult.deny();
             else if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." + flag.flagName() + ".pass"))
-                return Tristate.UNDEFINED;
+                return EventResult.pass();
             flag = flag.getParent();
         }
-        return Tristate.UNDEFINED;
+        return EventResult.pass();
     }
 
     @Override
@@ -79,7 +79,7 @@ public class PermissionHandler extends HandlerBase {
     @Override
     public Text getDetails(String arguments) {
         return Text.builder()
-                .append(Text.of(TextColors.GOLD, "Permission: "))
+                .append(Text.of(TextColors.GOLD, "Permission:\n"))
                 .append(Text.of(TextColors.RESET, "foxguard.handler."))
                 .append(Text.of(TextColors.YELLOW, this.getName()))
                 .append(Text.of(TextColors.RESET, "."))

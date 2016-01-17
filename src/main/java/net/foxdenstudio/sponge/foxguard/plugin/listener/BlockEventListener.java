@@ -29,8 +29,8 @@ import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxcore.plugin.command.CommandDebug;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockTypes;
@@ -40,6 +40,7 @@ import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
@@ -74,7 +75,6 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
         else if (event instanceof ChangeBlockEvent.Place) typeFlag = Flag.BLOCK_PLACE;
         else return;
 
-
         //FoxGuardMain.instance().getLogger().info(player.getName());
 
         List<IHandler> handlerList = new ArrayList<>();
@@ -102,14 +102,16 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
             if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
                 break;
             }
-            flagState = flagState.and(handler.handle(user, typeFlag, event));
+            flagState = flagState.and(handler.handle(user, typeFlag, event).getState());
             currPriority = handler.getPriority();
         }
         flagState = typeFlag.resolve(flagState);
         if (user instanceof Player && CommandDebug.instance().getDebug().get(user)) {
-            Vector3i vec = event.getTransactions().get(0).getOriginal().getPosition();
-            ((Player) user).sendMessage(Text.of("Block action denied at (" + vec.getX() + ", " + vec.getY() + ", " + vec.getZ() + ")"
-                    + (event.getTransactions().size() > 1 ? " and " + (event.getTransactions().size() - 1) + " other positions" : "") + "!"));
+            if (flagState == Tristate.FALSE) {
+                Vector3i vec = event.getTransactions().get(0).getOriginal().getPosition();
+                ((Player) user).sendMessage(Text.of("Block action denied at (" + vec.getX() + ", " + vec.getY() + ", " + vec.getZ() + ")"
+                        + (event.getTransactions().size() > 1 ? " and " + (event.getTransactions().size() - 1) + " other positions" : "") + "!"));
+            }
         } else {
             if (flagState == Tristate.FALSE) {
                 if (user instanceof Player) {
@@ -122,7 +124,7 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
                             break;
                         }
                     }
-                    if (flag) player.sendMessage(Text.of("You don't have permission!"));
+                    if (flag) player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
                 }
             } else {
 

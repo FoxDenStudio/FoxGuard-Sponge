@@ -29,6 +29,8 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
+import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
@@ -44,6 +46,7 @@ import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
@@ -101,9 +104,21 @@ public class CommandEnableDisable implements CommandCallable {
                 }
                 FCStateManager.instance().getStateMap().get(source).flush(RegionsStateField.ID, HandlersStateField.ID);
                 if (successes == 1 && failures == 0) {
+                    Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
+                        @Override
+                        public Cause getCause() {
+                            return Cause.of(FoxGuardMain.instance());
+                        }
+                    });
                     source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " object!"));
                     return CommandResult.success();
                 } else if (successes > 0) {
+                    Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
+                        @Override
+                        public Cause getCause() {
+                            return Cause.of(FoxGuardMain.instance());
+                        }
+                    });
                     source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " objects with "
                             + successes + " successes" + (failures > 0 ? " and " + failures + " failures!" : "!")));
                     return CommandResult.builder().successCount(successes).build();
@@ -147,9 +162,21 @@ public class CommandEnableDisable implements CommandCallable {
             }
             FCStateManager.instance().getStateMap().get(source).flush(RegionsStateField.ID);
             if (successes == 1 && failures == 0) {
+                Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
+                    @Override
+                    public Cause getCause() {
+                        return Cause.of(FoxGuardMain.instance());
+                    }
+                });
                 source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " region!"));
                 return CommandResult.success();
             } else if (successes > 0) {
+                Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
+                    @Override
+                    public Cause getCause() {
+                        return Cause.of(FoxGuardMain.instance());
+                    }
+                });
                 source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " regions with "
                         + successes + " successes" + (failures > 0 ? " and " + failures + " failures!" : "!")));
                 return CommandResult.builder().successCount(successes).build();
@@ -182,9 +209,21 @@ public class CommandEnableDisable implements CommandCallable {
             }
             FCStateManager.instance().getStateMap().get(source).flush(HandlersStateField.ID);
             if (successes == 1 && failures == 0) {
+                Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
+                    @Override
+                    public Cause getCause() {
+                        return Cause.of(FoxGuardMain.instance());
+                    }
+                });
                 source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handler!"));
                 return CommandResult.success();
             } else if (successes > 0) {
+                Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
+                    @Override
+                    public Cause getCause() {
+                        return Cause.of(FoxGuardMain.instance());
+                    }
+                });
                 source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handlers with "
                         + successes + " successes" + (failures > 0 ? " and " + failures + " failures!" : "!")));
                 return CommandResult.builder().successCount(successes).build();

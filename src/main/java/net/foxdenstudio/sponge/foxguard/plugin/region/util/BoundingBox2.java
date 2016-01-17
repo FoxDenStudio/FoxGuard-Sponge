@@ -95,8 +95,8 @@ public class BoundingBox2 implements Serializable {
     }
 
     public boolean contains(double x, double y) {
-        return (x > this.a.getX() && x < this.b.getX() + 1 &&
-                y > this.a.getY() && y < this.b.getY() + 1);
+        return (x >= this.a.getX() && x <= this.b.getX() + 1 &&
+                y >= this.a.getY() && y <= this.b.getY() + 1);
     }
 
 

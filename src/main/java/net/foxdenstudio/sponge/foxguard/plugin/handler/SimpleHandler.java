@@ -30,8 +30,9 @@ import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
+import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IMembership;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
@@ -345,26 +346,27 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
     }
 
     @Override
-    public Tristate handle(User user, Flag flag, Event event) {
+    public EventResult handle(User user, Flag flag, Event event) {
         if (user == null) {
             switch (this.passiveOption) {
                 case OWNER:
-                    return getResult(this.ownerPermissions, flag);
+                    return EventResult.of(getResult(this.ownerPermissions, flag));
                 case MEMBER:
-                    return getResult(this.memberPermissions, flag);
+                    return EventResult.of(getResult(this.memberPermissions, flag));
                 case DEFAULT:
-                    return getResult(this.defaultPermissions, flag);
+                    return EventResult.of(getResult(this.defaultPermissions, flag));
                 case ALLOW:
-                    return Tristate.TRUE;
+                    return EventResult.allow();
                 case DENY:
-                    return Tristate.FALSE;
+                    return EventResult.deny();
                 case PASSTHROUGH:
-                    return Tristate.UNDEFINED;
+                    return EventResult.pass();
             }
         }
-        if (FCHelper.isUserOnList(this.ownerList, user)) return getResult(this.ownerPermissions, flag);
-        else if (FCHelper.isUserOnList(this.memberList, user)) return getResult(this.memberPermissions, flag);
-        else return getResult(this.defaultPermissions, flag);
+        if (FCHelper.isUserOnList(this.ownerList, user)) return EventResult.of(getResult(this.ownerPermissions, flag));
+        else if (FCHelper.isUserOnList(this.memberList, user))
+            return EventResult.of(getResult(this.memberPermissions, flag));
+        else return EventResult.of(getResult(this.defaultPermissions, flag));
     }
 
     private Tristate getResult(Map<Flag, Tristate> map, Flag flag) {

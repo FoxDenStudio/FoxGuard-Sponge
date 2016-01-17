@@ -108,7 +108,7 @@ public class ElevationRegion extends OwnableRegionBase {
 
     @Override
     public boolean isInRegion(double x, double y, double z) {
-        return y >= lowerBound && y <= upperBound;
+        return y >= lowerBound && y <= upperBound + 1;
     }
 
     @Override

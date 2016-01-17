@@ -30,8 +30,9 @@ import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
+import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
@@ -70,16 +71,16 @@ public class PassiveHandler extends OwnableHandlerBase {
     }
 
     @Override
-    public Tristate handle(@Nullable User user, Flag flag, Event event) {
+    public EventResult handle(@Nullable User user, Flag flag, Event event) {
         if (user != null) {
-            return Tristate.UNDEFINED;
+            return EventResult.pass();
         }
         Flag temp = flag;
         while (temp != null && !map.containsKey(temp)) {
             temp = temp.getParent();
         }
-        if (temp != null) return map.get(temp);
-        else return map.get(flag);
+        if (temp != null) return EventResult.of(map.get(temp));
+        else return EventResult.of(map.get(flag));
     }
 
     @Override

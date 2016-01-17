@@ -30,7 +30,8 @@ import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.source.ProxySource;
@@ -89,13 +90,13 @@ public class GlobalHandler extends HandlerBase {
     }
 
     @Override
-    public Tristate handle(User user, Flag flag, Event event) {
+    public EventResult handle(User user, Flag flag, Event event) {
         Flag temp = flag;
         while (temp != null && !map.containsKey(temp)) {
             temp = temp.getParent();
         }
-        if (temp != null) return map.get(temp);
-        else return map.get(flag);
+        if (temp != null) return EventResult.of(map.get(temp));
+        else return EventResult.of(map.get(flag));
 
     }
 
@@ -118,29 +119,33 @@ public class GlobalHandler extends HandlerBase {
                             return ProcessResult.of(false, Text.of("Not a valid flag!"));
                         }
                     }
-                    if (isIn(CLEAR_ALIASES, parse.args[2])) {
-                        if (flag == null) {
-                            this.map.clear();
-                            return ProcessResult.of(true, Text.of("Successfully cleared flags!"));
+                    if (parse.args.length > 2) {
+                        if (isIn(CLEAR_ALIASES, parse.args[2])) {
+                            if (flag == null) {
+                                this.map.clear();
+                                return ProcessResult.of(true, Text.of("Successfully cleared flags!"));
+                            } else {
+                                this.map.remove(flag);
+                                return ProcessResult.of(true, Text.of("Successfully cleared flag!"));
+                            }
                         } else {
-                            this.map.remove(flag);
-                            return ProcessResult.of(true, Text.of("Successfully cleared flag!"));
+                            Tristate tristate = tristateFrom(parse.args[2]);
+                            if (tristate == null) {
+                                return ProcessResult.of(false, Text.of("Not a valid value!"));
+                            }
+                            if (flag == null) {
+                                for (Flag thatExist : Flag.values()) {
+                                    this.map.put(thatExist, tristate);
+                                }
+                                return ProcessResult.of(true, Text.of("Successfully set flags!"));
+                            } else {
+                                this.map.put(flag, tristate);
+                                return ProcessResult.of(true, Text.of("Successfully set flag!"));
+                            }
+
                         }
                     } else {
-                        Tristate tristate = tristateFrom(parse.args[2]);
-                        if (tristate == null) {
-                            return ProcessResult.of(false, Text.of("Not a valid value!"));
-                        }
-                        if (flag == null) {
-                            for (Flag thatExist : Flag.values()) {
-                                this.map.put(thatExist, tristate);
-                            }
-                            return ProcessResult.of(true, Text.of("Successfully set flags!"));
-                        } else {
-                            this.map.put(flag, tristate);
-                            return ProcessResult.of(true, Text.of("Successfully set flag!"));
-                        }
-
+                        return ProcessResult.of(false, Text.of("Must specify a value!"));
                     }
                 } else {
                     return ProcessResult.of(false, Text.of("Must specify a flag!"));

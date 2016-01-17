@@ -30,6 +30,8 @@ import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
+import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateObjectEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
@@ -40,6 +42,7 @@ import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
@@ -99,6 +102,17 @@ public class CommandModify implements CommandCallable {
             ProcessResult result = region.modify(source, parse.args.length < 3 ? "" : parse.args[2]);
             if (result.isSuccess()) {
                 FGManager.getInstance().clearCache(world);
+                Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
+                    @Override
+                    public IFGObject getTarget() {
+                        return region;
+                    }
+
+                    @Override
+                    public Cause getCause() {
+                        return Cause.of(FoxGuardMain.instance());
+                    }
+                });
                 if (result.getMessage().isPresent()) {
                     if (!FCHelper.hasColor(result.getMessage().get())) {
                         source.sendMessage(result.getMessage().get().toBuilder().color(TextColors.GREEN).build());
@@ -126,6 +140,17 @@ public class CommandModify implements CommandCallable {
                 throw new CommandException(Text.of("No Handler with name \"" + parse.args[1] + "\"!"));
             ProcessResult result = handler.modify(source, parse.args.length < 3 ? "" : parse.args[2]);
             if (result.isSuccess()) {
+                Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
+                    @Override
+                    public IFGObject getTarget() {
+                        return handler;
+                    }
+
+                    @Override
+                    public Cause getCause() {
+                        return Cause.of(FoxGuardMain.instance());
+                    }
+                });
                 if (result.getMessage().isPresent()) {
                     if (!FCHelper.hasColor(result.getMessage().get())) {
                         source.sendMessage(result.getMessage().get().toBuilder().color(TextColors.GREEN).build());

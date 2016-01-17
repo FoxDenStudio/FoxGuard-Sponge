@@ -23,28 +23,36 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.handler.util;
+package net.foxdenstudio.sponge.foxguard.plugin;
 
 import org.spongepowered.api.util.Tristate;
 
 public enum Flag {
+
     ROOT(null, true, "root", "Everything"),
 
     BLOCK(ROOT, true, "block", "Blocks"),
-    BLOCK_PLACE(BLOCK, true, "blockplace", "Place-Blocks"),
-    BLOCK_BREAK(BLOCK, true, "blockbreak", "Break-Blocks"),
-    BLOCK_MODIFY(BLOCK, true, "blockmodify", "Modify-Blocks"),
+    BLOCK_CHANGE(BLOCK, true, "blockchange", "Change-Blocks"),
+    BLOCK_PLACE(BLOCK_CHANGE, true, "blockplace", "Place-Blocks"),
+    BLOCK_BREAK(BLOCK_CHANGE, true, "blockbreak", "Break-Blocks"),
+    BLOCK_MODIFY(BLOCK_CHANGE, true, "blockmodify", "Modify-Blocks"),
     BLOCK_INTERACT(BLOCK, true, "blockclick", "Click-Blocks"),
     BLOCK_INTERACT_PRIMARY(BLOCK_INTERACT, true, "blockattack", "Attack-Blocks"),
     BLOCK_INTERACT_SECONDARY(BLOCK_INTERACT, true, "blockinteract", "Interact-Blocks"),
+
     ENTITY_INTERACT(ROOT, true, "entityclick", "Click-Entities"),
     ENTITY_INTERACT_PRIMARY(ENTITY_INTERACT, true, "entityattack", "Attack-Entities"),
     ENTITY_INTERACT_SECONDARY(ENTITY_INTERACT, true, "entityinteract", "Interact-Entities"),
-    BLOCK_FLUID(BLOCK, true, "fluids", "Fluids"),
     PLAYER_INTERACT_PRIMARY(ENTITY_INTERACT_PRIMARY, true, "playerattack", "Attack-Player"),
+
     SPAWN_MOB(ROOT, true, "spawnmob", "Spawn-Mobs"),
     SPAWN_MOB_HOSTILE(SPAWN_MOB, true, "spawnmobhostile", "Spawn-Hostile-Mobs"),
-    SPAWN_MOB_PASSIVE(SPAWN_MOB, true, "spawnmobpassive", "Spawn-Passive-Mobs");
+    SPAWN_MOB_PASSIVE(SPAWN_MOB, true, "spawnmobpassive", "Spawn-Passive-Mobs"),
+
+    PLAYER_PASS(ROOT, true, "playerpass", "Player-Pass-Borders"),
+    PLAYER_ENTER(PLAYER_PASS, true, "playerenter", "Player-Enter"),
+    PLAYER_EXIT(PLAYER_PASS, true, "playerexit", "Player-Exit");
+
 
     final String humanName;
     final String flagName;

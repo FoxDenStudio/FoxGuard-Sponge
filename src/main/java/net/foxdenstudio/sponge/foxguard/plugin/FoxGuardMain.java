@@ -36,6 +36,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.command.*;
 import net.foxdenstudio.sponge.foxguard.plugin.command.handlers.CommandPriority;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.BlockEventListener;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.InteractListener;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.PlayerMoveListener;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.SpawnEntityEventListener;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
@@ -50,6 +51,7 @@ import org.spongepowered.api.event.EventManager;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.action.InteractEvent;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
+import org.spongepowered.api.event.entity.DisplaceEntityEvent;
 import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.event.game.state.*;
 import org.spongepowered.api.event.world.LoadWorldEvent;
@@ -166,13 +168,14 @@ public final class FoxGuardMain {
         logger.info("Loading Handlers");
         FGStorageManager.getInstance().loadHandlers();
         FGStorageManager.getInstance().loadGlobalHandler();
-        loaded = true;
-        logger.info("Loading Links");
-        FGStorageManager.getInstance().loadLinks();
+
         if (FGConfigManager.getInstance().forceLoad()) {
             logger.info("Resolving deferred objects");
             FGStorageManager.getInstance().resolveDeferredObjects();
         }
+        loaded = true;
+        logger.info("Loading linkages");
+        FGStorageManager.getInstance().loadLinks();
         logger.info("Saving Handlers");
         FGStorageManager.getInstance().writeHandlers();
         logger.info("Saving World data");
@@ -180,6 +183,7 @@ public final class FoxGuardMain {
             logger.info("Saving data for World: \"" + world.getName() + "\"");
             FGStorageManager.getInstance().writeWorld(world);
         }
+
     }
 
     @Listener
@@ -303,6 +307,11 @@ public final class FoxGuardMain {
         eventManager.registerListener(this, ChangeBlockEvent.class, new BlockEventListener());
         eventManager.registerListener(this, InteractEvent.class, new InteractListener());
         eventManager.registerListener(this, SpawnEntityEvent.class, new SpawnEntityEventListener());
+        if (FGConfigManager.getInstance().getModules().get(FGConfigManager.Module.MOVEMENT)) {
+            PlayerMoveListener pml = new PlayerMoveListener();
+            eventManager.registerListener(this, DisplaceEntityEvent.Move.TargetPlayer.class, pml);
+            eventManager.registerListeners(this, pml.new Listeners());
+        }
     }
 
     /**

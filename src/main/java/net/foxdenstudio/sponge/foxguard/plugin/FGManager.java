@@ -28,12 +28,16 @@ package net.foxdenstudio.sponge.foxguard.plugin;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
+import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
+import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateObjectEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import org.spongepowered.api.Server;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.world.World;
 
 import java.util.ArrayList;
@@ -92,6 +96,17 @@ public final class FGManager {
         region.setWorld(world);
         this.regions.get(world).add(region);
         this.regionCache.get(world).clear();
+        Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
+            @Override
+            public IFGObject getTarget() {
+                return region;
+            }
+
+            @Override
+            public Cause getCause() {
+                return Cause.of(FoxGuardMain.instance());
+            }
+        });
         FGStorageManager.getInstance().unmarkForDeletion(region);
         FGStorageManager.getInstance().updateRegion(region);
         return true;
@@ -133,6 +148,17 @@ public final class FGManager {
         if (handler == null) return false;
         if (gethandler(handler.getName()) != null) return false;
         handlers.add(handler);
+        Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
+            @Override
+            public IFGObject getTarget() {
+                return handler;
+            }
+
+            @Override
+            public Cause getCause() {
+                return Cause.of(FoxGuardMain.instance());
+            }
+        });
         FGStorageManager.getInstance().unmarkForDeletion(handler);
         FGStorageManager.getInstance().updateHandler(handler);
         return true;
@@ -161,6 +187,17 @@ public final class FGManager {
         if (!this.handlers.contains(handler)) {
             return false;
         }
+        Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
+            @Override
+            public IFGObject getTarget() {
+                return handler;
+            }
+
+            @Override
+            public Cause getCause() {
+                return Cause.of(FoxGuardMain.instance());
+            }
+        });
         FGStorageManager.getInstance().markForDeletion(handler);
         handlers.remove(handler);
         return true;
@@ -180,6 +217,17 @@ public final class FGManager {
         if (!this.regions.get(world).contains(region)) {
             return false;
         }
+        Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
+            @Override
+            public IFGObject getTarget() {
+                return region;
+            }
+
+            @Override
+            public Cause getCause() {
+                return Cause.of(FoxGuardMain.instance());
+            }
+        });
         FGStorageManager.getInstance().markForDeletion(region);
         this.regions.get(world).remove(region);
         this.regionCache.get(world).clear();
@@ -199,6 +247,12 @@ public final class FGManager {
 
     public boolean link(IRegion region, IHandler handler) {
         if (region == null || handler == null || region.getHandlers().contains(handler)) return false;
+        Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
+            @Override
+            public Cause getCause() {
+                return Cause.of(FoxGuardMain.instance());
+            }
+        });
         return !(handler instanceof GlobalHandler && !(region instanceof GlobalRegion)) && region.addHandler(handler);
     }
 
@@ -215,6 +269,12 @@ public final class FGManager {
 
     public boolean unlink(IRegion region, IHandler handler) {
         if (region == null || handler == null || !region.getHandlers().contains(handler)) return false;
+        Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
+            @Override
+            public Cause getCause() {
+                return Cause.of(FoxGuardMain.instance());
+            }
+        });
         return !(handler instanceof GlobalHandler && region instanceof GlobalRegion) && region.removeHandler(handler);
     }
 
@@ -255,7 +315,7 @@ public final class FGManager {
         addRegion(world, gr);
     }
 
-    public void unloadWorld(World world){
+    public void unloadWorld(World world) {
         this.regions.remove(world);
     }
 
@@ -266,6 +326,7 @@ public final class FGManager {
     private List<IRegion> calculateRegionsForChunk(Vector3i chunk, World world) {
         List<IRegion> cache = new ArrayList<>();
         this.getRegionsList(world).stream()
+                .filter(IFGObject::isEnabled)
                 .filter(region -> region.isInChunk(chunk))
                 .forEach(cache::add);
         return cache;
