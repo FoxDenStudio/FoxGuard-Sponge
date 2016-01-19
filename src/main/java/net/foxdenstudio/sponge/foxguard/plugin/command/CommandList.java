@@ -49,6 +49,9 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.WORLD_ALIASES;
+import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isIn;
+
 public class CommandList implements CommandCallable {
 
     private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
@@ -157,7 +160,7 @@ public class CommandList implements CommandCallable {
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());
         else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGVALUE)) {
-            if (parse.current.key.equals("world"))
+            if (isIn(WORLD_ALIASES, parse.current.key))
                 return Sponge.getGame().getServer().getWorlds().stream()
                         .map(World::getName)
                         .filter(new StartsWithPredicate(parse.current.token))
