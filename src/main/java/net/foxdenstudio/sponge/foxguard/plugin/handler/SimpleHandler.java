@@ -272,7 +272,7 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                             .collect(GuavaCollectors.toImmutableList());
                 }
             } else if (parse.current.index == 2) {
-                if (isIn(OWNER_GROUP_ALIASES, parse.args[0])) {
+                if (isIn(GROUPS_ALIASES, parse.args[0])) {
                     return ImmutableList.of("add", "remove", "set").stream()
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
@@ -286,22 +286,30 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                 }
             } else if (parse.current.index == 3) {
                 if (isIn(GROUPS_ALIASES, parse.args[0])) {
-                    if (parse.args[1].equalsIgnoreCase("set")) {
+                    List<User> list;
+                    if (isIn(OWNER_GROUP_ALIASES, parse.args[1])) {
+                        list = this.ownerList;
+                    } else if (isIn(MEMBER_GROUP_ALIASES, parse.args[1])) {
+                        list = this.memberList;
+                    } else {
+                        return ImmutableList.of();
+                    }
+                    if (parse.args[2].equalsIgnoreCase("set")) {
                         return Sponge.getGame().getServer().getOnlinePlayers().stream()
                                 .map(Player::getName)
                                 .filter(new StartsWithPredicate(parse.current.token))
                                 .map(args -> parse.current.prefix + args)
                                 .collect(GuavaCollectors.toImmutableList());
-                    } else if (parse.args[1].equalsIgnoreCase("add")) {
+                    } else if (parse.args[2].equalsIgnoreCase("add")) {
                         return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .filter(player -> !FCHelper.isUserOnList(this.ownerList, player))
+                                .filter(player -> !FCHelper.isUserOnList(list, player))
                                 .map(Player::getName)
                                 .filter(new StartsWithPredicate(parse.current.token))
                                 .map(args -> parse.current.prefix + args)
                                 .collect(GuavaCollectors.toImmutableList());
-                    } else if (parse.args[1].equalsIgnoreCase("remove")) {
+                    } else if (parse.args[2].equalsIgnoreCase("remove")) {
                         return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .filter(player -> FCHelper.isUserOnList(this.ownerList, player))
+                                .filter(player -> FCHelper.isUserOnList(list, player))
                                 .map(Player::getName)
                                 .filter(new StartsWithPredicate(parse.current.token))
                                 .map(args -> parse.current.prefix + args)
@@ -315,23 +323,31 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                 }
             } else if (parse.current.index > 3) {
                 if (isIn(GROUPS_ALIASES, parse.args[0])) {
-                    if (parse.args[1].equalsIgnoreCase("set")) {
+                    List<User> list;
+                    if (isIn(OWNER_GROUP_ALIASES, parse.args[1])) {
+                        list = this.ownerList;
+                    } else if (isIn(MEMBER_GROUP_ALIASES, parse.args[1])) {
+                        list = this.memberList;
+                    } else {
+                        return ImmutableList.of();
+                    }
+                    if (parse.args[2].equalsIgnoreCase("set")) {
                         return Sponge.getGame().getServer().getOnlinePlayers().stream()
                                 .map(Player::getName)
                                 .filter(new StartsWithPredicate(parse.current.token))
                                 .map(args -> parse.current.prefix + args)
                                 .collect(GuavaCollectors.toImmutableList());
-                    } else if (parse.args[1].equalsIgnoreCase("add")) {
+                    } else if (parse.args[2].equalsIgnoreCase("add")) {
                         return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .filter(player -> !FCHelper.isUserOnList(this.ownerList, player))
+                                .filter(player -> !FCHelper.isUserOnList(list, player))
                                 .map(Player::getName)
                                 .filter(alias -> !isIn(Arrays.copyOfRange(parse.args, 2, parse.args.length), alias))
                                 .filter(new StartsWithPredicate(parse.current.token))
                                 .map(args -> parse.current.prefix + args)
                                 .collect(GuavaCollectors.toImmutableList());
-                    } else if (parse.args[1].equalsIgnoreCase("remove")) {
+                    } else if (parse.args[2].equalsIgnoreCase("remove")) {
                         return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .filter(player -> FCHelper.isUserOnList(this.ownerList, player))
+                                .filter(player -> FCHelper.isUserOnList(list, player))
                                 .map(Player::getName)
                                 .filter(alias -> !isIn(Arrays.copyOfRange(parse.args, 2, parse.args.length), alias))
                                 .filter(new StartsWithPredicate(parse.current.token))

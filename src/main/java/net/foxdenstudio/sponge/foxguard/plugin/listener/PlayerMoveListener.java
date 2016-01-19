@@ -39,11 +39,11 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
     public void handle(DisplaceEntityEvent event) throws Exception {
         if (event.isCancelled()) return;
         Player player;
-        if (event instanceof DisplaceEntityEvent.TargetPlayer)
-            player = ((DisplaceEntityEvent.TargetPlayer) event).getTargetEntity();
-        else if (event.getTargetEntity().getPassenger().isPresent() && event.getTargetEntity().getPassenger().get() instanceof Player)
+        if (event.getTargetEntity().getPassenger().isPresent() && event.getTargetEntity().getPassenger().get() instanceof Player) {
             player = (Player) event.getTargetEntity().getPassenger().get();
-        else return;
+        } else if (event instanceof DisplaceEntityEvent.TargetPlayer) {
+            player = ((DisplaceEntityEvent.TargetPlayer) event).getTargetEntity();
+        } else return;
         World world = event.getTargetEntity().getWorld();
         List<IHandler> fromList = last.get(player).list, toList = new ArrayList<>();
         Vector3d to = event.getToTransform().getPosition().add(0, 0.1, 0);
@@ -62,7 +62,6 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
                             .filter(handler -> !temp.contains(handler))
                             .forEach(temp::add));
         }
-
         FGManager.getInstance().getRegionsList(world, new Vector3i(
                 GenericMath.floor(to.getX() / 16.0),
                 GenericMath.floor(to.getY() / 16.0),

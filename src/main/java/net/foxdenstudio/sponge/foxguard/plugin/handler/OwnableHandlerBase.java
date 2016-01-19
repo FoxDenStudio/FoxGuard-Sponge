@@ -104,7 +104,7 @@ abstract public class OwnableHandlerBase extends HandlerBase implements IOwnable
 
     protected abstract String getAddOwnerSuggestion();
 
-    abstract protected String getRemoveOwnerSuggestion(User user);
+    protected abstract String getRemoveOwnerSuggestion(User user);
 
     public enum UserOperations {
         ADD,

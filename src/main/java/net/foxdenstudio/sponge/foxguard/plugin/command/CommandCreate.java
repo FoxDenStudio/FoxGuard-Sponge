@@ -58,6 +58,7 @@ import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 public class CommandCreate implements CommandCallable {
 
     private static final String[] PRIORITY_ALIASES = {"priority", "prio", "p", "order", "level", "rank"};
+    private static final String[] RESERVED = {"all", "state", "full", "everything"};
 
     private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
         map.put(key, value);
@@ -121,7 +122,7 @@ public class CommandCreate implements CommandCallable {
                 throw new ArgumentParseException(Text.of("Name must be alphanumeric!"), parse.args[1], 1);
             if (parse.args[1].matches("^[^a-zA-Z_$].*$"))
                 throw new ArgumentParseException(Text.of("Name can't start with a number!"), parse.args[1], 1);
-            if (parse.args[1].equalsIgnoreCase("all") || parse.args[1].equalsIgnoreCase("state") || parse.args[1].equalsIgnoreCase("full"))
+            if (isIn(RESERVED, parse.args[1]))
                 throw new CommandException(Text.of("You may not use \"" + parse.args[1] + "\" as a name!"));
             int priority = 0;
             try {
