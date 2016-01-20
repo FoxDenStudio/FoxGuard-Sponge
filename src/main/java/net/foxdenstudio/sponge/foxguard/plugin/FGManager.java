@@ -308,12 +308,11 @@ public final class FGManager {
         return this.rename(this.gethandler(oldName), newName);
     }
 
-    private void createLists(World world) {
+    public void createLists(World world) {
         regions.put(world, new ArrayList<>());
     }
 
-    public void populateWorld(World world) {
-        this.createLists(world);
+    public void initWorld(World world) {
         GlobalRegion gr = new GlobalRegion();
         gr.addHandler(this.globalHandler);
         addRegion(world, gr, false);

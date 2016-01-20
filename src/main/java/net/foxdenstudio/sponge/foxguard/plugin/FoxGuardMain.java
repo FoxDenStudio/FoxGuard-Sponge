@@ -213,10 +213,12 @@ public final class FoxGuardMain {
     public void worldLoad(LoadWorldEvent event) {
         logger.info("Initializing Regions database for World: \"" + event.getTargetWorld().getName() + "\"");
         FGStorageManager.getInstance().initWorld(event.getTargetWorld());
-        logger.info("Constructing Regions for World: \"" + event.getTargetWorld().getName() + "\"");
-        FGManager.getInstance().populateWorld(event.getTargetWorld());
+        logger.info("Constructing Region list for World: \"" + event.getTargetWorld().getName() + "\"");
+        FGManager.getInstance().createLists(event.getTargetWorld());
         logger.info("Loading Regions for World: \"" + event.getTargetWorld().getName() + "\"");
         FGStorageManager.getInstance().loadWorldRegions(event.getTargetWorld());
+        logger.info("Initializing Global Region for World: \"" + event.getTargetWorld().getName() + "\"");
+        FGManager.getInstance().initWorld(event.getTargetWorld());
         if (loaded) {
             if (FGConfigManager.getInstance().forceLoad()) {
                 logger.info("Resolving deferred objects for World: " + event.getTargetWorld().getName() + "\"");

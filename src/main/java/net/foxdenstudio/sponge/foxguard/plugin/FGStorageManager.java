@@ -245,16 +245,16 @@ public final class FGStorageManager {
                                                         deferredHandler.metaEnabled = metaSet.getBoolean("ENABLED");
                                                         this.deferedObjects.add(deferredHandler);
                                                     } else {
-                                                        FoxGuardMain.instance().logger().warn("Found potentially corrupted database.");
+                                                        FoxGuardMain.instance().logger().warn("Found potentially corrupted database. 1");
                                                         markForDeletion(databaseDir);
                                                     }
                                                 } else {
-                                                    FoxGuardMain.instance().logger().warn("Found potentially corrupted database.");
+                                                    FoxGuardMain.instance().logger().warn("Found potentially corrupted database. 2");
                                                     markForDeletion(databaseDir);
                                                 }
                                             }
                                         } else {
-                                            FoxGuardMain.instance().logger().warn("Found potentially corrupted database.");
+                                            FoxGuardMain.instance().logger().warn("Found potentially corrupted database. 3");
                                             markForDeletion(databaseDir);
                                         }
                                     }
@@ -587,7 +587,10 @@ public final class FGStorageManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        markedForDeletion.remove(databaseDir);
+        if (markedForDeletion.contains(databaseDir)) {
+            FoxGuardMain.instance().logger().info("Unmarking " + databaseDir + " for deletion.");
+            markedForDeletion.remove(databaseDir);
+        }
     }
 
     public synchronized void unmarkForDeletion(IFGObject object) {
