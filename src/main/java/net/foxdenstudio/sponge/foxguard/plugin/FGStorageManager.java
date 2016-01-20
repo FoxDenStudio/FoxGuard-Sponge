@@ -245,16 +245,16 @@ public final class FGStorageManager {
                                                         deferredHandler.metaEnabled = metaSet.getBoolean("ENABLED");
                                                         this.deferedObjects.add(deferredHandler);
                                                     } else {
-                                                        FoxGuardMain.instance().logger().warn("Found potentially corrupted database. 1");
+                                                        FoxGuardMain.instance().logger().warn("Found potentially corrupted database.");
                                                         markForDeletion(databaseDir);
                                                     }
                                                 } else {
-                                                    FoxGuardMain.instance().logger().warn("Found potentially corrupted database. 2");
+                                                    FoxGuardMain.instance().logger().warn("Found potentially corrupted database.");
                                                     markForDeletion(databaseDir);
                                                 }
                                             }
                                         } else {
-                                            FoxGuardMain.instance().logger().warn("Found potentially corrupted database. 3");
+                                            FoxGuardMain.instance().logger().warn("Found potentially corrupted database.");
                                             markForDeletion(databaseDir);
                                         }
                                     }
