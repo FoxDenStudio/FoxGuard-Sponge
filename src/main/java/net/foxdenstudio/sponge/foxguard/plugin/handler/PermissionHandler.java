@@ -83,7 +83,7 @@ public class PermissionHandler extends HandlerBase {
                 .append(Text.of(TextColors.RESET, "foxguard.handler."))
                 .append(Text.of(TextColors.YELLOW, this.getName()))
                 .append(Text.of(TextColors.RESET, "."))
-                .append(Text.of(TextColors.AQUA, "<flagname>"))
+                .append(Text.of(TextColors.AQUA, "<flag>"))
                 .append(Text.of(TextColors.RESET, "."))
                 .append(Text.of(TextColors.AQUA, "<"))
                 .append(Text.of(TextColors.GREEN, "allow"))

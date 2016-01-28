@@ -60,13 +60,13 @@ public class GlobalHandler extends HandlerBase {
     private Map<Flag, Tristate> map;
 
     public GlobalHandler() {
-        super(NAME, Integer.MIN_VALUE);
+        super(NAME, Integer.MIN_VALUE / 2);
         map = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
     }
 
     @Override
     public void setPriority(int priority) {
-        this.priority = Integer.MIN_VALUE;
+        this.priority = Integer.MIN_VALUE / 2;
     }
 
     @Override

@@ -55,6 +55,7 @@ import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isIn;
 public class RegionsStateField extends ListStateFieldBase<IRegion> {
 
     public static final String ID = "region";
+
     private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
         map.put(key, value);
         if (isIn(WORLD_ALIASES, key) && !map.containsKey("world")) {
@@ -67,7 +68,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
     }
 
     @Override
-    public Text state() {
+    public Text currentState() {
         Text.Builder builder = Text.builder();
         Iterator<IRegion> regionIterator = this.list.iterator();
         int index = 1;
@@ -81,8 +82,77 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
     }
 
     @Override
+    public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).limit(1).parseLastFlags(false).parse();
+        String newArgs = parse.args.length > 1 ? parse.args[1] : "";
+        if (parse.args.length == 0 || parse.args[0].equalsIgnoreCase("add")) {
+            return add(source, newArgs);
+        } else if (parse.args[0].equalsIgnoreCase("remove")) {
+            return remove(source, newArgs);
+        }
+        return ProcessResult.of(false, Text.of("Not a valid"));
+    }
+
+    @Override
+    public List<String> modifySuggestions(CommandSource source, String arguments) throws CommandException {
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+                .arguments(arguments)
+                .flagMapper(MAPPER)
+                .excludeCurrent(true)
+                .autoCloseQuotes(true)
+                .parse();
+        if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
+            if (parse.current.index == 0) {
+                return ImmutableList.of("add", "remove").stream()
+                        .filter(new StartsWithPredicate(parse.current.token))
+                        .collect(GuavaCollectors.toImmutableList());
+            } else if (parse.current.index == 1) {
+                String worldName = parse.flagmap.get("world");
+                World world = null;
+                if (source instanceof Player) world = ((Player) source).getWorld();
+                if (!worldName.isEmpty()) {
+                    Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
+                    if (optWorld.isPresent()) {
+                        world = optWorld.get();
+                    }
+                }
+                if (world == null) return ImmutableList.of();
+                if (parse.args[0].equals("add")) {
+                    return FGManager.getInstance().getRegionsList(world).stream()
+                            .filter(region -> !this.list.contains(region))
+                            .map(IFGObject::getName)
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                } else if (parse.args[0].equals("remove")) {
+                    final World finalWorld = world;
+                    return this.list.stream()
+                            .filter(region -> region.getWorld().equals(finalWorld))
+                            .map(IFGObject::getName)
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                }
+
+            }
+        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGKEY))
+            return ImmutableList.of("world").stream()
+                    .filter(new StartsWithPredicate(parse.current.token))
+                    .map(args -> parse.current.prefix + args)
+                    .collect(GuavaCollectors.toImmutableList());
+        else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGVALUE)) {
+            if (isIn(WORLD_ALIASES, parse.current.key))
+                return Sponge.getGame().getServer().getWorlds().stream()
+                        .map(World::getName)
+                        .filter(new StartsWithPredicate(parse.current.token))
+                        .map(args -> parse.current.prefix + args)
+                        .collect(GuavaCollectors.toImmutableList());
+        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
+            return ImmutableList.of(parse.current.prefix + " ");
+        return ImmutableList.of();
+    }
+
     public ProcessResult add(CommandSource source, String arguments) throws CommandException {
-        System.out.println(arguments);
         AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).parse();
 
         if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name!"));
@@ -106,50 +176,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         return ProcessResult.of(true, Text.of("Successfully added Region to your state buffer!"));
     }
 
-    @Override
-    public List<String> addSuggestions(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
-                .arguments(arguments)
-                .flagMapper(MAPPER)
-                .autoCloseQuotes(true)
-                .parse();
-        if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
-            if (parse.current.index == 0) {
-                String worldName = parse.flagmap.get("world");
-                World world = null;
-                if (source instanceof Player) world = ((Player) source).getWorld();
-                if (!worldName.isEmpty()) {
-                    Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
-                    if (optWorld.isPresent()) {
-                        world = optWorld.get();
-                    }
-                }
-                if (world == null) return ImmutableList.of();
-                return FGManager.getInstance().getRegionsList(world).stream()
-                        .map(IFGObject::getName)
-                        .filter(new StartsWithPredicate(parse.current.token))
-                        .map(args -> parse.current.prefix + args)
-                        .collect(GuavaCollectors.toImmutableList());
-            }
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGKEY))
-            return ImmutableList.of("world").stream()
-                    .filter(new StartsWithPredicate(parse.current.token))
-                    .map(args -> parse.current.prefix + args)
-                    .collect(GuavaCollectors.toImmutableList());
-        else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGVALUE)) {
-            if (isIn(WORLD_ALIASES, parse.current.key))
-                return Sponge.getGame().getServer().getWorlds().stream()
-                        .map(World::getName)
-                        .filter(new StartsWithPredicate(parse.current.token))
-                        .map(args -> parse.current.prefix + args)
-                        .collect(GuavaCollectors.toImmutableList());
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
-            return ImmutableList.of(parse.current.prefix + " ");
-        return ImmutableList.of();
-    }
-
-    @Override
-    public ProcessResult subtract(CommandSource source, String arguments) throws CommandException {
+    public ProcessResult remove(CommandSource source, String arguments) throws CommandException {
         AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).parse();
 
         if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name or a number!"));
@@ -180,49 +207,5 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         this.list.remove(region);
 
         return ProcessResult.of(true, Text.of("Successfully removed Region from your state buffer!"));
-    }
-
-    @Override
-    public List<String> subtractSuggestions(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
-                .arguments(arguments)
-                .flagMapper(MAPPER)
-                .autoCloseQuotes(true)
-                .parse();
-        if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
-            if (parse.current.index == 0) {
-                String worldName = parse.flagmap.get("world");
-                World world = null;
-                if (source instanceof Player) world = ((Player) source).getWorld();
-                if (!worldName.isEmpty()) {
-                    Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
-                    if (optWorld.isPresent()) {
-                        world = optWorld.get();
-                    }
-                }
-                if (world == null) return ImmutableList.of();
-                final World finalWorld = world;
-                return this.list.stream()
-                        .filter(region -> region.getWorld().equals(finalWorld))
-                        .map(IFGObject::getName)
-                        .filter(new StartsWithPredicate(parse.current.token))
-                        .map(args -> parse.current.prefix + args)
-                        .collect(GuavaCollectors.toImmutableList());
-            }
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGKEY))
-            return ImmutableList.of("world").stream()
-                    .filter(new StartsWithPredicate(parse.current.token))
-                    .map(args -> parse.current.prefix + args)
-                    .collect(GuavaCollectors.toImmutableList());
-        else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGVALUE)) {
-            if (isIn(WORLD_ALIASES, parse.current.key))
-                return Sponge.getGame().getServer().getWorlds().stream()
-                        .map(World::getName)
-                        .filter(new StartsWithPredicate(parse.current.token))
-                        .map(args -> parse.current.prefix + args)
-                        .collect(GuavaCollectors.toImmutableList());
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
-            return ImmutableList.of(parse.current.prefix + " ");
-        return ImmutableList.of();
     }
 }

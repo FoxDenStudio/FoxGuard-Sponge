@@ -72,6 +72,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.HANDLERS_ALIASES;
@@ -82,16 +83,16 @@ public final class FoxGuardMain {
     /**
      * String object containing the current version of the plugin.
      */
-    public static final String PLUGIN_VERSION = "0.14.3-SNAPSHOT";//VERSION
+    public static final String PLUGIN_VERSION = "0.16.1-SNAPSHOT";//VERSION
 
     /**
      * FoxGuardMain instance object.
      */
-    private static FoxGuardMain instance;
+    private static FoxGuardMain instanceField;
 
 
     @Inject
-    private Logger logger;
+    private Logger loggerField;
     @Inject
     private Game game;
     @Inject
@@ -109,7 +110,7 @@ public final class FoxGuardMain {
      * @return The current instance of the FoxGuardMain object.
      */
     public static FoxGuardMain instance() {
-        return instance;
+        return instanceField;
     }
 
     //my uuid - f275f223-1643-4fac-9fb8-44aaf5b4b371
@@ -123,36 +124,36 @@ public final class FoxGuardMain {
 
     @Listener
     public void gameConstruct(GameConstructionEvent event) {
-        instance = this;
+        instanceField = this;
     }
 
     @Listener
     public void gamePreInit(GamePreInitializationEvent event) {
-        logger.info("Beginning FoxGuard initialization");
-        logger.info("Loading configs");
+        loggerField.info("Beginning FoxGuard initialization");
+        loggerField.info("Loading configs");
         new FGConfigManager();
-        logger.info("Saving configs");
+        loggerField.info("Saving configs");
         FGConfigManager.getInstance().save();
     }
 
     @Listener
     public void gameInit(GameInitializationEvent event) {
-        logger.info("Getting User Storage");
+        loggerField.info("Getting User Storage");
         userStorage = game.getServiceManager().provide(UserStorageService.class).get();
-        logger.info("Initializing FoxGuard Manager instance");
+        loggerField.info("Initializing FoxGuard Manager instance");
         FGManager.init();
 
-        logger.info("Registering commands");
+        loggerField.info("Registering commands");
         registerCommands();
-        logger.info("Registering event listeners");
+        loggerField.info("Registering event listeners");
         registerListeners();
-        logger.info("Setting default player permissions");
+        loggerField.info("Setting default player permissions");
         configurePermissions();
-        logger.info("Registering Regions state field");
+        loggerField.info("Registering Regions state field");
         FCStateManager.instance().registerStateFactory(new RegionsStateFieldFactory(), RegionsStateField.ID, RegionsStateField.ID, Aliases.REGIONS_ALIASES);
-        logger.info("Registering Handlers state field");
+        loggerField.info("Registering Handlers state field");
         FCStateManager.instance().registerStateFactory(new HandlersStateFieldFactory(), HandlersStateField.ID, HandlersStateField.ID, Aliases.HANDLERS_ALIASES);
-        logger.info("Starting MCStats metrics extension");
+        loggerField.info("Starting MCStats metrics extension");
         try {
             Metrics metrics = new Metrics(game, game.getPluginManager().fromInstance(this).get());
             metrics.start();
@@ -163,24 +164,24 @@ public final class FoxGuardMain {
 
     @Listener
     public void serverStarted(GameStartedServerEvent event) {
-        logger.info("Initializing Handlers database");
+        loggerField.info("Initializing Handlers database");
         FGStorageManager.getInstance().initHandlers();
-        logger.info("Loading Handlers");
+        loggerField.info("Loading Handlers");
         FGStorageManager.getInstance().loadHandlers();
         FGStorageManager.getInstance().loadGlobalHandler();
 
         if (FGConfigManager.getInstance().forceLoad()) {
-            logger.info("Resolving deferred objects");
+            loggerField.info("Resolving deferred objects");
             FGStorageManager.getInstance().resolveDeferredObjects();
         }
         loaded = true;
-        logger.info("Loading linkages");
+        loggerField.info("Loading linkages");
         FGStorageManager.getInstance().loadLinks();
-        logger.info("Saving Handlers");
+        loggerField.info("Saving Handlers");
         FGStorageManager.getInstance().writeHandlers();
-        logger.info("Saving World data");
+        loggerField.info("Saving World data");
         for (World world : game.getServer().getWorlds()) {
-            logger.info("Saving data for World: \"" + world.getName() + "\"");
+            loggerField.info("Saving data for World: \"" + world.getName() + "\"");
             FGStorageManager.getInstance().writeWorld(world);
         }
 
@@ -188,7 +189,7 @@ public final class FoxGuardMain {
 
     @Listener
     public void serverStopping(GameStoppingServerEvent event) {
-        logger.info("Saving Handlers");
+        loggerField.info("Saving Handlers");
         FGStorageManager.getInstance().writeHandlers();
     }
 
@@ -198,33 +199,33 @@ public final class FoxGuardMain {
             FoxGuardMain.instance().logger().info("Purging databases");
             FGStorageManager.getInstance().purgeDatabases();
         }
-        logger.info("Saving configs");
+        loggerField.info("Saving configs");
         FGConfigManager.getInstance().save();
     }
 
     @Listener
     public void worldUnload(UnloadWorldEvent event) {
-        logger.info("Saving data for World: \"" + event.getTargetWorld().getName() + "\"");
+        loggerField.info("Saving data for World: \"" + event.getTargetWorld().getName() + "\"");
         FGStorageManager.getInstance().writeWorld(event.getTargetWorld());
         FGManager.getInstance().unloadWorld(event.getTargetWorld());
     }
 
     @Listener
     public void worldLoad(LoadWorldEvent event) {
-        logger.info("Initializing Regions database for World: \"" + event.getTargetWorld().getName() + "\"");
+        loggerField.info("Initializing Regions database for World: \"" + event.getTargetWorld().getName() + "\"");
         FGStorageManager.getInstance().initWorld(event.getTargetWorld());
-        logger.info("Constructing Region list for World: \"" + event.getTargetWorld().getName() + "\"");
+        loggerField.info("Constructing Region list for World: \"" + event.getTargetWorld().getName() + "\"");
         FGManager.getInstance().createLists(event.getTargetWorld());
-        logger.info("Loading Regions for World: \"" + event.getTargetWorld().getName() + "\"");
+        loggerField.info("Loading Regions for World: \"" + event.getTargetWorld().getName() + "\"");
         FGStorageManager.getInstance().loadWorldRegions(event.getTargetWorld());
-        logger.info("Initializing Global Region for World: \"" + event.getTargetWorld().getName() + "\"");
+        loggerField.info("Initializing Global Region for World: \"" + event.getTargetWorld().getName() + "\"");
         FGManager.getInstance().initWorld(event.getTargetWorld());
         if (loaded) {
             if (FGConfigManager.getInstance().forceLoad()) {
-                logger.info("Resolving deferred objects for World: " + event.getTargetWorld().getName() + "\"");
+                loggerField.info("Resolving deferred objects for World: " + event.getTargetWorld().getName() + "\"");
                 FGStorageManager.getInstance().resolveDeferredObjects();
             }
-            logger.info("Loading links for World: \"" + event.getTargetWorld().getName() + "\"");
+            loggerField.info("Loading links for World: \"" + event.getTargetWorld().getName() + "\"");
             FGStorageManager.getInstance().loadWorldLinks(event.getTargetWorld());
         }
     }
@@ -276,7 +277,7 @@ public final class FoxGuardMain {
         fgDispatcher.register(new CommandEnableDisable(true), "enable", "activate", "engage", "on");
         fgDispatcher.register(new CommandEnableDisable(false), "disable", "deactivate", "disengage", "off");
         fgDispatcher.register(new CommandList(), "list", "ls");
-        fgDispatcher.register(new CommandHere(), "here", "current", "cur", "around");
+        fgDispatcher.register(new CommandHere(), "here", "around");
         fgDispatcher.register(new CommandDetail(), "detail", "det", "show");
         fgDispatcher.register(new CommandSave(), "save", "saveall", "save-all");
 
@@ -328,7 +329,7 @@ public final class FoxGuardMain {
      * @return A Logger instance for this plugin.
      */
     public Logger logger() {
-        return logger;
+        return loggerField;
     }
 
     /**

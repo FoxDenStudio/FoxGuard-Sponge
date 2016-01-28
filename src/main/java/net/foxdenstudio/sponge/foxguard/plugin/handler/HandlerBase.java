@@ -50,4 +50,14 @@ public abstract class HandlerBase extends FGObjectBase implements IHandler {
     public int compareTo(IHandler o) {
         return o.getPriority() - this.priority;
     }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + "{" +
+                "name='" + name + '\'' +
+                ", isEnabled=" + isEnabled +
+                ", priority=" + priority +
+                '}';
+    }
+
 }

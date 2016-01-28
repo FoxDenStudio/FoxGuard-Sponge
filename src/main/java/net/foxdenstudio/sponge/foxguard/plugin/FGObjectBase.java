@@ -55,4 +55,12 @@ public abstract class FGObjectBase implements IFGObject {
     public void setIsEnabled(boolean state) {
         this.isEnabled = state;
     }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + "{" +
+                "name='" + name + '\'' +
+                ", isEnabled=" + isEnabled +
+                '}';
+    }
 }

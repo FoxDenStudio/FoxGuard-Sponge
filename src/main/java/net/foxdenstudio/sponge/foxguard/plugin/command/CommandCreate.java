@@ -127,6 +127,8 @@ public class CommandCreate implements CommandCallable {
             int priority = 0;
             try {
                 priority = Integer.parseInt(parse.flagmap.get("priority"));
+                if (priority < Integer.MIN_VALUE / 2 + 1) priority = Integer.MIN_VALUE / 2 + 1;
+                else if (priority > Integer.MAX_VALUE / 2) priority = Integer.MAX_VALUE / 2;
             } catch (NumberFormatException ignored) {
             }
 
