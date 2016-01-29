@@ -122,10 +122,18 @@ public final class FGStorageManager {
                                                         metaSet.getString("TYPE").equalsIgnoreCase(handlerDataSet.getString("TYPE")) &&
                                                         metaSet.getInt("PRIORITY") == handlerDataSet.getInt("PRIORITY") &&
                                                         metaSet.getBoolean("ENABLED") == handlerDataSet.getBoolean("ENABLED")) {
-                                                    FGManager.getInstance().addHandler(
-                                                            FGFactoryManager.getInstance().createHandler(
-                                                                    source, handlerDataSet.getString("NAME"), handlerDataSet.getString("TYPE"),
-                                                                    handlerDataSet.getInt("PRIORITY"), handlerDataSet.getBoolean("ENABLED")));
+                                                    IHandler handler = FGFactoryManager.getInstance().createHandler(
+                                                            source,
+                                                            handlerDataSet.getString("NAME"),
+                                                            handlerDataSet.getString("TYPE"),
+                                                            handlerDataSet.getInt("PRIORITY"),
+                                                            handlerDataSet.getBoolean("ENABLED")
+                                                    );
+                                                    if (handler != null) {
+                                                        FoxGuardMain.instance().logger().info("Loaded handler \"" + handler.getName() +
+                                                                "\" of type \"" + handler.getLongTypeName() +"\"");
+                                                    }
+                                                    FGManager.getInstance().addHandler(handler);
                                                 } else if (FGConfigManager.getInstance().forceLoad()) {
                                                     FoxGuardMain.instance().logger().info("Mismatched database found. Attempting force load...");
                                                     if (metaSet.getString("CATEGORY").equalsIgnoreCase("region")) {
@@ -210,13 +218,16 @@ public final class FGStorageManager {
                                                         metaSet.getString("TYPE").equalsIgnoreCase(regionDataSet.getString("TYPE")) &&
                                                         metaSet.getString("WORLD").equals(world.getName()) &&
                                                         metaSet.getBoolean("ENABLED") == regionDataSet.getBoolean("ENABLED")) {
-                                                    FGManager.getInstance().addRegion(world,
-                                                            FGFactoryManager.getInstance().createRegion(
-                                                                    source,
-                                                                    regionDataSet.getString("NAME"), regionDataSet.getString("TYPE"),
-                                                                    regionDataSet.getBoolean("ENABLED")
-                                                            )
+                                                    IRegion region = FGFactoryManager.getInstance().createRegion(
+                                                            source,
+                                                            regionDataSet.getString("NAME"), regionDataSet.getString("TYPE"),
+                                                            regionDataSet.getBoolean("ENABLED")
                                                     );
+                                                    if (region != null) {
+                                                        FoxGuardMain.instance().logger().info("Loaded region \"" + region.getName() +
+                                                                "\" of type \"" + region.getLongTypeName() + "\"");
+                                                    }
+                                                    FGManager.getInstance().addRegion(world, region);
                                                 } else if (FGConfigManager.getInstance().forceLoad()) {
                                                     FoxGuardMain.instance().logger().info("Mismatched database found. Attempting force load...");
                                                     if (metaSet.getString("CATEGORY").equalsIgnoreCase("region")) {
@@ -642,6 +653,7 @@ public final class FGStorageManager {
     public synchronized void loadGlobalHandler() {
         Server server = Sponge.getGame().getServer();
         try {
+            FoxGuardMain.instance().logger().info("Loading global handler");
             FGManager.getInstance().getGlobalHandler().loadFromDatabase(FoxGuardMain.instance().getDataSource(
                     "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/foxguard/handlers/" + GlobalHandler.NAME
             ));

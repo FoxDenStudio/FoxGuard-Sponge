@@ -90,7 +90,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         } else if (parse.args[0].equalsIgnoreCase("remove")) {
             return remove(source, newArgs);
         }
-        return ProcessResult.of(false, Text.of("Not a valid"));
+        return ProcessResult.of(false, Text.of("Not a valid region state command!"));
     }
 
     @Override

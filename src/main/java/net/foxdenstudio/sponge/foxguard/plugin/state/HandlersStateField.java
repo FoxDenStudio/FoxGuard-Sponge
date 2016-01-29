@@ -73,7 +73,7 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
         } else if (parse.args[0].equalsIgnoreCase("remove")) {
             return remove(source, newArgs);
         }
-        return ProcessResult.of(false, Text.of("Not a valid"));
+        return ProcessResult.of(false, Text.of("Not a valid handler state command!"));
     }
 
     @Override
