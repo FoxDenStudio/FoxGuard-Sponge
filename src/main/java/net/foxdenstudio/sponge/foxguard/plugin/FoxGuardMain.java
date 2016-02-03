@@ -31,7 +31,6 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.CommandAbout;
 import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandDispatcher;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
-import net.foxdenstudio.sponge.foxguard.mcstats.Metrics;
 import net.foxdenstudio.sponge.foxguard.plugin.command.*;
 import net.foxdenstudio.sponge.foxguard.plugin.command.handlers.CommandPriority;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.BlockEventListener;
@@ -42,6 +41,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.factory.HandlersStateFieldFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.state.factory.RegionsStateFieldFactory;
+import net.minecrell.statslite.SpongeStatsLite;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.command.CommandCallable;
@@ -68,11 +68,9 @@ import org.spongepowered.api.world.World;
 
 import javax.sql.DataSource;
 import java.io.File;
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.HANDLERS_ALIASES;
@@ -100,6 +98,9 @@ public final class FoxGuardMain {
     @Inject
     @ConfigDir(sharedRoot = true)
     private File configDirectory;
+
+    @Inject
+    private SpongeStatsLite stats;
 
     private SqlService sql;
     private UserStorageService userStorage;
@@ -134,6 +135,9 @@ public final class FoxGuardMain {
         new FGConfigManager();
         loggerField.info("Saving configs");
         FGConfigManager.getInstance().save();
+
+        loggerField.info("Starting MCStats metrics extension");
+        this.stats.start();
     }
 
     @Listener
@@ -153,13 +157,6 @@ public final class FoxGuardMain {
         FCStateManager.instance().registerStateFactory(new RegionsStateFieldFactory(), RegionsStateField.ID, RegionsStateField.ID, Aliases.REGIONS_ALIASES);
         loggerField.info("Registering Handlers state field");
         FCStateManager.instance().registerStateFactory(new HandlersStateFieldFactory(), HandlersStateField.ID, HandlersStateField.ID, Aliases.HANDLERS_ALIASES);
-        loggerField.info("Starting MCStats metrics extension");
-        try {
-            Metrics metrics = new Metrics(game, game.getPluginManager().fromInstance(this).get());
-            metrics.start();
-        } catch (IOException e) {
-            // Failed to submit the stats :-(
-        }
     }
 
     @Listener

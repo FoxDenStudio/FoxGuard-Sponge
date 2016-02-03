@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    // id 'com.github.johnrengelman.shadow' version '1.2.2'
+    id 'com.github.johnrengelman.shadow' version '1.2.2'
 }
 
 group 'net.foxdenstudio.sponge.foxguard'
@@ -14,23 +14,30 @@ targetCompatibility = '1.8'
 repositories {
     mavenCentral()
     maven {
-        name 'Sponge maven repo'
-        url 'http://repo.spongepowered.org/maven'
+        name = 'sponge'
+        url = 'http://repo.spongepowered.org/maven'
+    }
+    maven {
+        name = 'minecrell-snapshots'
+        url = 'http://repo.minecrell.net/snapshots'
     }
 }
 
 dependencies {
     compile project(':FoxCore')
     compile "org.spongepowered:spongeapi:$spongeVersion"
-    // compile 'org.mcstats.sponge:metrics:R8-SNAPSHOT'
+    compile 'net.minecrell:statslite-sponge:0.1-SNAPSHOT'
     testCompile group: 'junit', name: 'junit', version: '4.11'
 }
 
-/*
 shadowJar {
     dependencies {
-        include(dependency("org.mcstats.sponge:metrics"))
+        include dependency('net.minecrell:statslite-sponge')
     }
-    relocate 'org.mcstats', 'net.foxdenstudio.foxguard.mcstats'
+
+    relocate 'net.minecrell.statslite', 'net.foxdenstudio.sponge.foxguard.statslite'
 }
-*/
+
+artifacts {
+    archives shadowJar
+}
