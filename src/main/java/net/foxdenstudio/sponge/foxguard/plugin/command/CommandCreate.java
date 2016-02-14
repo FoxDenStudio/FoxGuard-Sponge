@@ -116,7 +116,8 @@ public class CommandCreate implements CommandCallable {
             source.sendMessage(Text.of(TextColors.GREEN, "Region created successfully"));
             return CommandResult.success();
             //----------------------------------------------------------------------------------------------------------------------
-        } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
+        } else if (isIn(HANDLERS_ALIASES, parse.args[0]) || isIn(CONTROLLERS_ALIASES, parse.args[0])) {
+            boolean isController = isIn(CONTROLLERS_ALIASES, parse.args[0]);
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
             if (parse.args[1].matches("^.*[^0-9a-zA-Z_$].*$"))
                 throw new ArgumentParseException(Text.of("Name must be alphanumeric!"), parse.args[1], 1);
@@ -133,16 +134,24 @@ public class CommandCreate implements CommandCallable {
             }
 
             if (parse.args.length < 3) throw new CommandException(Text.of("Must specify a type!"));
-            IHandler newHandler = FGFactoryManager.getInstance().createHandler(
-                    parse.args[1], parse.args[2], priority,
-                    parse.args.length < 4 ? "" : parse.args[3],
-                    source);
+            IHandler newHandler;
+            if (isController) {
+                newHandler = FGFactoryManager.getInstance().createController(
+                        parse.args[1], parse.args[2], priority,
+                        parse.args.length < 4 ? "" : parse.args[3],
+                        source);
+            } else {
+                newHandler = FGFactoryManager.getInstance().createHandler(
+                        parse.args[1], parse.args[2], priority,
+                        parse.args.length < 4 ? "" : parse.args[3],
+                        source);
+            }
             if (newHandler == null)
-                throw new CommandException(Text.of("Failed to create Handler! Perhaps the type is invalid?"));
+                throw new CommandException(Text.of("Failed to create " + (isController ? "Controller" : "Handler") + "! Perhaps the type is invalid?"));
             boolean success = FGManager.getInstance().addHandler(newHandler);
             if (!success)
                 throw new ArgumentParseException(Text.of("That name is already taken!"), parse.args[1], 1);
-            source.sendMessage(Text.of(TextColors.GREEN, "Handler created successfully!"));
+            source.sendMessage(Text.of(TextColors.GREEN, (isController ? "Controller" : "Handler") + " created successfully!"));
             return CommandResult.success();
             //----------------------------------------------------------------------------------------------------------------------
         } else throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);
@@ -194,6 +203,8 @@ public class CommandCreate implements CommandCallable {
                 return FGFactoryManager.getInstance().regionSuggestions(source, parse.current.token, parse.args[2]);
             } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
                 return FGFactoryManager.getInstance().handlerSuggestions(source, parse.current.token, parse.args[2]);
+            } else if (isIn(CONTROLLERS_ALIASES, parse.args[0])) {
+                return FGFactoryManager.getInstance().controllerSuggestions(source, parse.current.token, parse.args[2]);
             }
         } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
             return ImmutableList.of(parse.current.prefix + " ");

@@ -28,8 +28,10 @@ package net.foxdenstudio.sponge.foxguard.plugin.command;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGHelper;
 import org.spongepowered.api.Sponge;
@@ -62,6 +64,8 @@ public class CommandDetail implements CommandCallable {
         map.put(key, value);
         if (isIn(WORLD_ALIASES, key) && !map.containsKey("world")) {
             map.put("world", value);
+        }else if (isIn(ALL_ALIASES, key) && !map.containsKey("all")) {
+            map.put("all", value);
         }
     };
 
@@ -71,7 +75,12 @@ public class CommandDetail implements CommandCallable {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).limit(2).flagMapper(MAPPER).parse();
+        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+                .arguments(arguments)
+                .limit(2)
+                .flagMapper(MAPPER)
+                .leaveFinalAsIs(true)
+                .parse();
         if (parse.args.length == 0) {
             source.sendMessage(Text.builder()
                     .append(Text.of(TextColors.GREEN, "Usage: "))
@@ -95,27 +104,25 @@ public class CommandDetail implements CommandCallable {
                 throw new CommandException(Text.of("No Region with name \"" + parse.args[1] + "\"!"));
             Text.Builder builder = Text.builder();
             builder.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
-            builder.append(Text.of(TextColors.GREEN, "------- General -------\n"));
-            builder.append(Text.of(TextColors.GOLD, "Name: "), Text.of(TextColors.RESET, region.getName() + "\n"));
-            builder.append(Text.of(TextColors.GOLD, "Type: "), Text.of(TextColors.RESET, region.getLongTypeName() + "\n"));
-            builder.append(Text.builder()
-                    .append(Text.of(TextColors.GOLD, "Enabled: "))
-                    .append(Text.of(TextColors.RESET, (region.isEnabled() ? "True" : "False") + "\n"))
-                    .onClick(TextActions.runCommand("/foxguard " + (region.isEnabled() ? "disable" : "enable") +
-                            " r --w:" + region.getWorld().getName() + " " + region.getName()))
-                    .onHover(TextActions.showText(Text.of("Click to " + (region.isEnabled() ? "Disable" : "Enable"))))
-                    .build());
-            builder.append(Text.of(TextColors.GOLD, "World: "), Text.of(TextColors.RESET, region.getWorld().getName() + "\n"));
-            builder.append(Text.of(TextColors.GREEN, "------- Details -------\n"));
-            builder.append(region.getDetails(parse.args.length < 3 ? "" : parse.args[2]));
-            builder.append(Text.of(TextColors.GREEN, "\n------- Linked Handlers -------"));
-            if (region.getHandlers().size() == 0)
-                builder.append(Text.of(TextStyles.ITALIC, "\nNo linked Handlers!"));
-            region.getHandlers().stream().forEach(handler -> builder.append(Text.of(FGHelper.getColorForHandler(handler),
-                    TextActions.runCommand("/foxguard detail handler " + handler.getName()),
-                    TextActions.showText(Text.of("View Details")),
-                    "\n" + handler.getShortTypeName() + " : " + handler.getName()
-            )));
+            if (parse.args.length <= 2 || parse.args[2].isEmpty() || parse.flagmap.containsKey("all")) {
+                builder.append(Text.of(TextColors.GREEN, "------- General -------\n"));
+                builder.append(Text.of(TextColors.GOLD, "Name: "), Text.of(TextColors.RESET, region.getName() + "\n"));
+                builder.append(Text.of(TextColors.GOLD, "Type: "), Text.of(TextColors.RESET, region.getLongTypeName() + "\n"));
+                builder.append(Text.builder()
+                        .append(Text.of(TextColors.GOLD, "Enabled: "))
+                        .append(Text.of(TextColors.RESET, (region.isEnabled() ? "True" : "False") + "\n"))
+                        .onClick(TextActions.runCommand("/foxguard " + (region.isEnabled() ? "disable" : "enable") +
+                                " r --w:" + region.getWorld().getName() + " " + region.getName()))
+                        .onHover(TextActions.showText(Text.of("Click to " + (region.isEnabled() ? "Disable" : "Enable"))))
+                        .build());
+                builder.append(Text.of(TextColors.GOLD, "World: "), Text.of(TextColors.RESET, region.getWorld().getName() + "\n"));
+                builder.append(Text.of(TextColors.GREEN, "------- Details -------\n"));
+                builder.append(region.details(source, parse.args.length < 3 ? "" : parse.args[2]));
+                outboundLinks(builder, region);
+            } else {
+                builder.append(Text.of(TextColors.GREEN, "------- Details for Region \"" + region.getName() + "\" in world \"" + region.getWorld().getName() + "\" -------\n"));
+                builder.append(region.details(source, parse.args.length < 3 ? "" : parse.args[2]));
+            }
             source.sendMessage(builder.build());
             return CommandResult.empty();
         } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
@@ -126,39 +133,65 @@ public class CommandDetail implements CommandCallable {
                 throw new CommandException(Text.of("No Handler with name \"" + parse.args[1] + "\"!"));
             Text.Builder builder = Text.builder();
             builder.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
-            builder.append(Text.of(TextColors.GREEN, "------- General -------\n"));
-            builder.append(Text.of(TextColors.GOLD, "Name: "), Text.of(TextColors.RESET, handler.getName() + "\n"));
-            builder.append(Text.of(TextColors.GOLD, "Type: "), Text.of(TextColors.RESET, handler.getLongTypeName() + "\n"));
-            builder.append(Text.builder()
-                    .append(Text.of(TextColors.GOLD, "Enabled: "))
-                    .append(Text.of(TextColors.RESET, (handler.isEnabled() ? "True" : "False") + "\n"))
-                    .onClick(TextActions.runCommand("/foxguard " + (handler.isEnabled() ? "disable" : "enable") + " handler " + handler.getName()))
-                    .onHover(TextActions.showText(Text.of("Click to " + (handler.isEnabled() ? "Disable" : "Enable"))))
-                    .build());
-            builder.append(Text.builder()
-                    .append(Text.of(TextColors.GOLD, "Priority: "))
-                    .append(Text.of(TextColors.RESET, handler.getPriority() + "\n"))
-                    .onClick(TextActions.suggestCommand("/foxguard handlers priority " + handler.getName() + " "))
-                    .onHover(TextActions.showText(Text.of("Click to Change Priority")))
-                    .build());
-            builder.append(Text.of(TextColors.GREEN, "------- Details -------\n"));
-            builder.append(handler.getDetails(parse.args.length < 3 ? "" : parse.args[2]));
-            builder.append(Text.of(TextColors.GREEN, "\n------- Linked Regions -------"));
-            List<IRegion> regionList = FGManager.getInstance().getRegionsList().stream()
-                    .filter(region -> region.getHandlers().contains(handler))
-                    .collect(GuavaCollectors.toImmutableList());
-            if (regionList.size() == 0)
-                builder.append(Text.of(TextStyles.ITALIC, "\nNo linked Regions!"));
-            regionList.stream().forEach(region -> builder.append(Text.of(FGHelper.getColorForRegion(region),
-                    TextActions.runCommand("/foxguard detail region " + region.getName()),
-                    TextActions.showText(Text.of("View Details")),
-                    "\n" + FGHelper.getRegionName(region, true)
-            )));
+            if (parse.args.length <= 2 || parse.args[2].isEmpty() || parse.flagmap.containsKey("all")) {
+                builder.append(Text.of(TextColors.GREEN, "------- General -------\n"));
+                builder.append(Text.of(TextColors.GOLD, "Name: "), Text.of(TextColors.RESET, handler.getName() + "\n"));
+                builder.append(Text.of(TextColors.GOLD, "Type: "), Text.of(TextColors.RESET, handler.getLongTypeName() + "\n"));
+                builder.append(Text.builder()
+                        .append(Text.of(TextColors.GOLD, "Enabled: "))
+                        .append(Text.of(TextColors.RESET, (handler.isEnabled() ? "True" : "False") + "\n"))
+                        .onClick(TextActions.runCommand("/foxguard " + (handler.isEnabled() ? "disable" : "enable") + " h " + handler.getName()))
+                        .onHover(TextActions.showText(Text.of("Click to " + (handler.isEnabled() ? "Disable" : "Enable"))))
+                        .build());
+                builder.append(Text.builder()
+                        .append(Text.of(TextColors.GOLD, "Priority: "))
+                        .append(Text.of(TextColors.RESET, handler.getPriority() + "\n"))
+                        .onClick(TextActions.suggestCommand("/foxguard prio " + handler.getName() + " "))
+                        .onHover(TextActions.showText(Text.of("Click to Change Priority")))
+                        .build());
+                builder.append(Text.of(TextColors.GREEN, "------- Details -------\n"));
+                builder.append(handler.details(source, parse.args.length < 3 ? "" : parse.args[2]));
+                builder.append(Text.of(TextColors.GREEN, "\n------- Inbound Links -------"));
+                List<IController> controllerList = FGManager.getInstance().getControllerList().stream()
+                        .filter(controller -> controller.getHandlers().contains(handler))
+                        .collect(GuavaCollectors.toImmutableList());
+                List<IRegion> regionList = FGManager.getInstance().getRegionList().stream()
+                        .filter(region -> region.getHandlers().contains(handler))
+                        .collect(GuavaCollectors.toImmutableList());
+                if (controllerList.size() == 0 && regionList.size() == 0)
+                    builder.append(Text.of(TextStyles.ITALIC, "\nNo inbound links!"));
+                controllerList.forEach(controller -> builder.append(Text.of(FGHelper.getColorForObject(controller),
+                        TextActions.runCommand("/foxguard det c " + controller.getName()),
+                        TextActions.showText(Text.of("View details for controller \"" + controller.getName() + "\"")))));
+
+                regionList.forEach(region -> builder.append(Text.of(FGHelper.getColorForObject(region),
+                        TextActions.runCommand("/foxguard detail region --w:" + region.getWorld() + " " + region.getName()),
+                        TextActions.showText(Text.of("View details for region \"" + region.getName() + "\"")),
+                        "\n" + FGHelper.getRegionName(region, true)
+                )));
+                if(handler instanceof IController){
+                    outboundLinks(builder, (IController) handler);
+                }
+            } else {
+                builder.append(Text.of(TextColors.GREEN, "------- Details for Handler \"" + handler.getName() + "\" -------\n"));
+                builder.append(handler.details(source, parse.args[2]));
+            }
             source.sendMessage(builder.build());
             return CommandResult.empty();
         } else {
             throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);
         }
+    }
+
+    private void outboundLinks(Text.Builder builder, ILinkable linkable){
+        builder.append(Text.of(TextColors.GREEN, "\n------- Outbound Links -------"));
+        if (linkable.getHandlers().size() == 0)
+            builder.append(Text.of(TextStyles.ITALIC, "\nNo outbound links!"));
+        linkable.getHandlers().stream().forEach(handler -> builder.append(Text.of(FGHelper.getColorForObject(handler),
+                TextActions.runCommand("/foxguard det h " + handler.getName()),
+                TextActions.showText(Text.of("View Details for " + (handler instanceof IController ? "controller" : "handler") + " \"" + handler.getName() + "\"")),
+                "\n" + handler.getShortTypeName() + " : " + handler.getName()
+        )));
     }
 
     @Override
@@ -189,7 +222,7 @@ public class CommandDetail implements CommandCallable {
                         }
                     }
                     if (world == null) return ImmutableList.of();
-                    return FGManager.getInstance().getRegionsList(world).stream()
+                    return FGManager.getInstance().getRegionList(world).stream()
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)

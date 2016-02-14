@@ -31,13 +31,9 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
-import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.command.source.ProxySource;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.text.Text;
@@ -57,7 +53,7 @@ import java.util.*;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
-public class PassiveHandler extends OwnableHandlerBase {
+public class PassiveHandler extends HandlerBase {
 
     private final Map<Flag, Tristate> map;
 
@@ -85,68 +81,9 @@ public class PassiveHandler extends OwnableHandlerBase {
 
     @Override
     public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
-        if (!source.hasPermission("foxguard.command.modify.objects.modify.handlers")) {
-            if (source instanceof ProxySource) source = ((ProxySource) source).getOriginalSource();
-            if (source instanceof Player && !this.ownerList.contains(source)) return ProcessResult.failure();
-        }
         AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).parse();
         if (parse.args.length > 0) {
-            if (isIn(OWNER_GROUP_ALIASES, parse.args[0])) {
-                if (parse.args.length > 1) {
-                    UserOperations op;
-                    if (parse.args[1].equalsIgnoreCase("add")) {
-                        op = UserOperations.ADD;
-                    } else if (parse.args[1].equalsIgnoreCase("remove")) {
-                        op = UserOperations.REMOVE;
-                    } else if (parse.args[1].equalsIgnoreCase("set")) {
-                        op = UserOperations.SET;
-                    } else {
-                        return ProcessResult.of(false, Text.of("Not a valid operation!"));
-                    }
-                    if (parse.args.length > 2) {
-                        int successes = 0;
-                        int failures = 0;
-                        List<String> names = new ArrayList<>();
-                        Collections.addAll(names, Arrays.copyOfRange(parse.args, 2, parse.args.length));
-                        List<User> argUsers = new ArrayList<>();
-                        for (String name : names) {
-                            Optional<User> optUser = FoxGuardMain.instance().getUserStorage().get(name);
-                            if (optUser.isPresent() && !FCHelper.isUserOnList(argUsers, optUser.get()))
-                                argUsers.add(optUser.get());
-                            else failures++;
-                        }
-                        switch (op) {
-                            case ADD:
-                                for (User user : argUsers) {
-                                    if (!FCHelper.isUserOnList(ownerList, user) && ownerList.add(user))
-                                        successes++;
-                                    else failures++;
-                                }
-                                break;
-                            case REMOVE:
-                                for (User user : argUsers) {
-                                    if (FCHelper.isUserOnList(ownerList, user)) {
-                                        ownerList.remove(user);
-                                        successes++;
-                                    } else failures++;
-                                }
-                                break;
-                            case SET:
-                                ownerList.clear();
-                                for (User user : argUsers) {
-                                    ownerList.add(user);
-                                    successes++;
-                                }
-                        }
-                        return ProcessResult.of(true, Text.of("Modified list with " + successes + " successes and " + failures + " failures."));
-                    } else {
-                        return ProcessResult.of(false, Text.of("Must specify one or more users!"));
-                    }
-                } else {
-                    return ProcessResult.of(false, Text.of("Must specify an operation!"));
-                }
-
-            } else if (isIn(SET_ALIASES, parse.args[0])) {
+            if (isIn(SET_ALIASES, parse.args[0])) {
                 if (parse.args.length > 1) {
                     Flag flag;
                     if (parse.args[1].equalsIgnoreCase("all")) {
@@ -201,17 +138,12 @@ public class PassiveHandler extends OwnableHandlerBase {
                 .parse();
         if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0) {
-                return ImmutableList.of("set", "owners").stream()
+                return ImmutableList.of("set").stream()
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             } else if (parse.current.index == 1) {
-                if (isIn(OWNER_GROUP_ALIASES, parse.args[0])) {
-                    return ImmutableList.of("add", "remove", "set").stream()
-                            .filter(new StartsWithPredicate(parse.current.token))
-                            .map(args -> parse.current.prefix + args)
-                            .collect(GuavaCollectors.toImmutableList());
-                } else if (isIn(SET_ALIASES, parse.args[0])) {
+                if (isIn(SET_ALIASES, parse.args[0])) {
                     return Arrays.stream(Flag.values())
                             .map(Flag::flagName)
                             .filter(new StartsWithPredicate(parse.current.token))
@@ -219,59 +151,11 @@ public class PassiveHandler extends OwnableHandlerBase {
                             .collect(GuavaCollectors.toImmutableList());
                 }
             } else if (parse.current.index == 2) {
-                if (isIn(OWNER_GROUP_ALIASES, parse.args[0])) {
-                    if (parse.args[1].equalsIgnoreCase("set")) {
-                        return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .map(Player::getName)
-                                .filter(new StartsWithPredicate(parse.current.token))
-                                .map(args -> parse.current.prefix + args)
-                                .collect(GuavaCollectors.toImmutableList());
-                    } else if (parse.args[1].equalsIgnoreCase("add")) {
-                        return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .filter(player -> !FCHelper.isUserOnList(this.ownerList, player))
-                                .map(Player::getName)
-                                .filter(new StartsWithPredicate(parse.current.token))
-                                .map(args -> parse.current.prefix + args)
-                                .collect(GuavaCollectors.toImmutableList());
-                    } else if (parse.args[1].equalsIgnoreCase("remove")) {
-                        return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .filter(player -> FCHelper.isUserOnList(this.ownerList, player))
-                                .map(Player::getName)
-                                .filter(new StartsWithPredicate(parse.current.token))
-                                .map(args -> parse.current.prefix + args)
-                                .collect(GuavaCollectors.toImmutableList());
-                    }
-                } else if (isIn(SET_ALIASES, parse.args[0])) {
+                if (isIn(SET_ALIASES, parse.args[0])) {
                     return ImmutableList.of("true", "false", "passthrough", "clear").stream()
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
-                }
-            } else if (parse.current.index > 2) {
-                if (isIn(OWNER_GROUP_ALIASES, parse.args[0])) {
-                    if (parse.args[1].equalsIgnoreCase("set")) {
-                        return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .map(Player::getName)
-                                .filter(new StartsWithPredicate(parse.current.token))
-                                .map(args -> parse.current.prefix + args)
-                                .collect(GuavaCollectors.toImmutableList());
-                    } else if (parse.args[1].equalsIgnoreCase("add")) {
-                        return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .filter(player -> !FCHelper.isUserOnList(this.ownerList, player))
-                                .map(Player::getName)
-                                .filter(alias -> !isIn(Arrays.copyOfRange(parse.args, 2, parse.args.length), alias))
-                                .filter(new StartsWithPredicate(parse.current.token))
-                                .map(args -> parse.current.prefix + args)
-                                .collect(GuavaCollectors.toImmutableList());
-                    } else if (parse.args[1].equalsIgnoreCase("remove")) {
-                        return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .filter(player -> FCHelper.isUserOnList(this.ownerList, player))
-                                .map(Player::getName)
-                                .filter(alias -> !isIn(Arrays.copyOfRange(parse.args, 2, parse.args.length), alias))
-                                .filter(new StartsWithPredicate(parse.current.token))
-                                .map(args -> parse.current.prefix + args)
-                                .collect(GuavaCollectors.toImmutableList());
-                    }
                 }
             }
         } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
@@ -280,11 +164,10 @@ public class PassiveHandler extends OwnableHandlerBase {
     }
 
     @Override
-    public Text getDetails(String arguments) {
-        Text.Builder builder = super.getDetails(arguments).toBuilder();
-        builder.append(Text.of("\n"));
+    public Text details(CommandSource source, String arguments) {
+        Text.Builder builder = Text.builder();
         builder.append(Text.of(TextColors.GOLD,
-                TextActions.suggestCommand("/foxguard modify handler " + this.name + " set "),
+                TextActions.suggestCommand("/foxguard md h " + this.name + " set "),
                 TextActions.showText(Text.of("Click to Set a Flag")),
                 "Passive Flags:\n"));
         for (Flag f : this.map.keySet()) {
@@ -292,7 +175,7 @@ public class PassiveHandler extends OwnableHandlerBase {
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FCHelper.readableTristateText(map.get(f)))
                             .append(Text.of("\n"))
-                            .onClick(TextActions.suggestCommand("/foxguard modify handler " + this.name + " set " + f.flagName() + " "))
+                            .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set " + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
                             .build()
             );
@@ -301,8 +184,12 @@ public class PassiveHandler extends OwnableHandlerBase {
     }
 
     @Override
+    public List<String> detailsSuggestions(CommandSource source, String arguments) {
+        return ImmutableList.of();
+    }
+
+    @Override
     public void writeToDatabase(DataSource dataSource) throws SQLException {
-        super.writeToDatabase(dataSource);
         try (Connection conn = dataSource.getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 statement.execute("CREATE TABLE IF NOT EXISTS FLAGMAP(KEY VARCHAR (256), VALUE VARCHAR (256));" +
@@ -317,16 +204,6 @@ public class PassiveHandler extends OwnableHandlerBase {
                 statement.executeBatch();
             }
         }
-    }
-
-    @Override
-    protected String getAddOwnerSuggestion() {
-        return "/foxguard modify handler " + this.getName() + " owners add ";
-    }
-
-    @Override
-    protected String getRemoveOwnerSuggestion(User user) {
-        return "/foxguard modify handler " + this.getName() + " owners remove " + user.getName();
     }
 
     @Override

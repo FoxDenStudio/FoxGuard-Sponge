@@ -206,7 +206,7 @@ public class CommandModify implements CommandCallable {
                         }
                     }
                     if (world == null) return ImmutableList.of();
-                    return FGManager.getInstance().getRegionsList(world).stream()
+                    return FGManager.getInstance().getRegionList(world).stream()
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)

@@ -33,7 +33,6 @@ import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IMembership;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
@@ -57,12 +56,13 @@ import java.util.*;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
-public class SimpleHandler extends OwnableHandlerBase implements IMembership {
+public class SimpleHandler extends HandlerBase {
 
     private final Map<Flag, Tristate> ownerPermissions;
     private final Map<Flag, Tristate> memberPermissions;
     private final Map<Flag, Tristate> defaultPermissions;
     private PassiveOptions passiveOption = PassiveOptions.PASSTHROUGH;
+    private List<User> ownerList = new ArrayList<>();
     private List<User> memberList = new ArrayList<>();
 
     public SimpleHandler(String name, int priority) {
@@ -410,22 +410,32 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
     }
 
     @Override
-    public Text getDetails(String arguments) {
-        Text.Builder builder = super.getDetails(arguments).toBuilder();
+    public Text details(CommandSource source, String arguments) {
+        Text.Builder builder = Text.builder();
+        builder.append(Text.of(TextColors.GOLD,
+                TextActions.suggestCommand("/foxguard md h " + this.getName() + " group owners add "),
+                TextActions.showText(Text.of("Click to Add a Player(s) to Owners")),
+                "Owners: "));
+        for (User u : ownerList) {
+            builder.append(Text.of(TextColors.RESET,
+                    TextActions.suggestCommand("/foxguard md h " + this.getName() + " group owners remove " + u.getName()),
+                    TextActions.showText(Text.of("Click to Remove Player \"" + u.getName() + "\" from Owners")),
+                    u.getName())).append(Text.of("  "));
+        }
         builder.append(Text.of("\n"));
         builder.append(Text.of(TextColors.GREEN,
-                TextActions.suggestCommand("/foxguard modify handler " + this.name + " group members add "),
+                TextActions.suggestCommand("/foxguard md h " + this.name + " group members add "),
                 TextActions.showText(Text.of("Click to Add a Player(s) to Members")),
                 "Members: "));
         for (User u : this.memberList) {
             builder.append(Text.of(TextColors.RESET,
-                    TextActions.suggestCommand("/foxguard modify handler " + this.name + " group members remove " + u.getName()),
+                    TextActions.suggestCommand("/foxguard md h " + this.name + " group members remove " + u.getName()),
                     TextActions.showText(Text.of("Click to Remove Player \"" + u.getName() + "\" from Members")),
                     u.getName())).append(Text.of("  "));
         }
         builder.append(Text.of("\n"));
         builder.append(Text.of(TextColors.GOLD,
-                TextActions.suggestCommand("/foxguard modify handler " + this.name + " set owners "),
+                TextActions.suggestCommand("/foxguard md h " + this.name + " set owners "),
                 TextActions.showText(Text.of("Click to Set a Flag")),
                 "Owner permissions:\n"));
         for (Flag f : this.ownerPermissions.keySet()) {
@@ -433,13 +443,13 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FCHelper.readableTristateText(ownerPermissions.get(f)))
                             .append(Text.of("\n"))
-                            .onClick(TextActions.suggestCommand("/foxguard modify handler " + this.name + " set owners " + f.flagName() + " "))
+                            .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set owners " + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
                             .build()
             );
         }
         builder.append(Text.of(TextColors.GREEN,
-                TextActions.suggestCommand("/foxguard modify handler " + this.name + " set members "),
+                TextActions.suggestCommand("/foxguard md h " + this.name + " set members "),
                 TextActions.showText(Text.of("Click to Set a Flag")),
                 "Member permissions:\n"));
         for (Flag f : this.memberPermissions.keySet()) {
@@ -447,13 +457,13 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FCHelper.readableTristateText(memberPermissions.get(f)))
                             .append(Text.of("\n"))
-                            .onClick(TextActions.suggestCommand("/foxguard modify handler " + this.name + " set members " + f.flagName() + " "))
+                            .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set members " + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
                             .build()
             );
         }
         builder.append(Text.of(TextColors.RED,
-                TextActions.suggestCommand("/foxguard modify handler " + this.name + " set default "),
+                TextActions.suggestCommand("/foxguard md h " + this.name + " set default "),
                 TextActions.showText(Text.of("Click to Set a Flag")),
                 "Default permissions:\n"));
         for (Flag f : this.defaultPermissions.keySet()) {
@@ -461,7 +471,7 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FCHelper.readableTristateText(defaultPermissions.get(f)))
                             .append(Text.of("\n"))
-                            .onClick(TextActions.suggestCommand("/foxguard modify handler " + this.name + " set default " + f.flagName() + " "))
+                            .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set default " + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
                             .build()
             );
@@ -469,16 +479,32 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
         builder.append(Text.builder()
                         .append(Text.of(TextColors.AQUA, "Passive setting: "))
                         .append(Text.of(TextColors.RESET, this.passiveOption.toString()))
-                        .onClick(TextActions.suggestCommand("/foxguard modify handler " + this.name + " passive "))
+                        .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " passive "))
                         .onHover(TextActions.showText(Text.of("Click to Change Passive Setting"))).build()
         );
         return builder.build();
     }
 
     @Override
+    public List<String> detailsSuggestions(CommandSource source, String arguments) {
+        return ImmutableList.of();
+    }
+
+    @Override
     public void writeToDatabase(DataSource dataSource) throws SQLException {
-        super.writeToDatabase(dataSource);
         try (Connection conn = dataSource.getConnection()) {
+            try (Statement statement = conn.createStatement()) {
+                statement.execute("CREATE TABLE IF NOT EXISTS OWNERS(NAMES VARCHAR(256), USERUUID UUID);" +
+                        "DELETE FROM OWNERS");
+            }
+            try (PreparedStatement insert = conn.prepareStatement("INSERT INTO OWNERS(NAMES, USERUUID) VALUES (?, ?)")) {
+                for (User owner : ownerList) {
+                    insert.setString(1, owner.getName());
+                    insert.setObject(2, owner.getUniqueId());
+                    insert.addBatch();
+                }
+                insert.executeBatch();
+            }
             try (Statement statement = conn.createStatement()) {
                 statement.execute("CREATE TABLE IF NOT EXISTS MEMBERS(NAMES VARCHAR(256), USERUUID UUID);" +
                         "DELETE FROM MEMBERS;");
@@ -528,32 +554,34 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
         }
     }
 
-    @Override
-    protected String getAddOwnerSuggestion() {
-        return "/foxguard modify handler " + this.getName() + " group owners add ";
+    public boolean removeOwner(User user) {
+        return ownerList.remove(user);
     }
 
-    @Override
-    protected String getRemoveOwnerSuggestion(User user) {
-        return "/foxguard modify handler " + this.getName() + " group owners remove " + user.getName();
+    public boolean addOwner(User user) {
+        return ownerList.add(user);
     }
 
-    @Override
+    public List<User> getOwners() {
+        return ImmutableList.copyOf(ownerList);
+    }
+
+    public void setOwners(List<User> owners) {
+        this.ownerList = owners;
+    }
+
     public List<User> getMembers() {
         return this.memberList;
     }
 
-    @Override
     public void setMembers(List<User> members) {
         this.memberList = members;
     }
 
-    @Override
     public boolean addMember(User player) {
         return memberList.add(player);
     }
 
-    @Override
     public boolean removeMember(User player) {
         return memberList.remove(player);
     }
@@ -587,5 +615,11 @@ public class SimpleHandler extends OwnableHandlerBase implements IMembership {
                     return "Awut...?";
             }
         }
+    }
+
+    public enum UserOperations {
+        ADD,
+        REMOVE,
+        SET
     }
 }

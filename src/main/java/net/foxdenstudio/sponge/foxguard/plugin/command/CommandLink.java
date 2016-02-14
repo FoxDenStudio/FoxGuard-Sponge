@@ -98,7 +98,7 @@ public class CommandLink implements CommandCallable {
             if (world == null) throw new CommandException(Text.of("Must specify a world!"));
             if (parse.args.length < 1) throw new CommandException(Text.of("Must specify items to link!"));
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a Handler!"));
-            boolean success = FGManager.getInstance().link(world, parse.args[0], parse.args[1]);
+            boolean success = FGManager.getInstance().linkRegion(world, parse.args[0], parse.args[1]);
             if (success) {
                 source.sendMessage(Text.of(TextColors.GREEN, "Successfully linked!"));
                 return CommandResult.success();

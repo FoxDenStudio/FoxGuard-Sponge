@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGHelper;
@@ -49,15 +50,16 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.WORLD_ALIASES;
-import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isIn;
+import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
 public class CommandList implements CommandCallable {
 
     private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
         map.put(key, value);
-        if (Aliases.isIn(Aliases.WORLD_ALIASES, key) && !map.containsKey("world")) {
+        if (Aliases.isIn(WORLD_ALIASES, key) && !map.containsKey("world")) {
             map.put("world", value);
+        } else if (Aliases.isIn(ALL_ALIASES, key) && !map.containsKey("all")) {
+            map.put("all", value);
         }
     };
 
@@ -75,19 +77,19 @@ public class CommandList implements CommandCallable {
                     .append(getUsage(source))
                     .build());
             return CommandResult.empty();
-        } else if (contains(Aliases.REGIONS_ALIASES, parse.args[0])) {
+        } else if (isIn(Aliases.REGIONS_ALIASES, parse.args[0])) {
             List<IRegion> regionList = new ArrayList<>();
             boolean allFlag = true;
             String worldName = parse.flagmap.get("world");
             if (!worldName.isEmpty()) {
                 Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
                 if (optWorld.isPresent()) {
-                    FGManager.getInstance().getRegionsList(optWorld.get()).forEach(regionList::add);
+                    FGManager.getInstance().getRegionList(optWorld.get()).forEach(regionList::add);
                     allFlag = false;
                 }
             }
             if (allFlag) {
-                FGManager.getInstance().getRegionsList().forEach(regionList::add);
+                FGManager.getInstance().getRegionList().forEach(regionList::add);
             }
 
             Text.Builder output = Text.builder()
@@ -96,29 +98,41 @@ public class CommandList implements CommandCallable {
             ListIterator<IRegion> regionListIterator = regionList.listIterator();
             while (regionListIterator.hasNext()) {
                 IRegion region = regionListIterator.next();
-                output.append(Text.of(FGHelper.getColorForRegion(region),
-                        TextActions.runCommand("/foxguard detail region --w:" + region.getWorld().getName() + " " + region.getName()),
+                output.append(Text.of(FGHelper.getColorForObject(region),
+                        TextActions.runCommand("/foxguard det r --w:" + region.getWorld().getName() + " " + region.getName()),
                         TextActions.showText(Text.of("View Details")),
                         FGHelper.getRegionName(region, allFlag)));
                 if (regionListIterator.hasNext()) output.append(Text.of("\n"));
             }
             source.sendMessage(output.build());
-        } else if (contains(Aliases.HANDLERS_ALIASES, parse.args[0])) {
-            List<IHandler> handlerList = FGManager.getInstance().getHandlerList();
 
-                    /*try {
-                        page = Integer.parseInt(parse.args[1]);
-                    } catch (NumberFormatException ignored) {
-                    }*/
 
+        } else if (isIn(Aliases.HANDLERS_ALIASES, parse.args[0])) {
+            boolean controllers = parse.flagmap.containsKey("all");
+            List<IHandler> handlerList = FGManager.getInstance().getHandlerList(controllers);
             Text.Builder output = Text.builder()
                     .append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"))
-                    .append(Text.of(TextColors.GREEN, "------- Handlers -------\n"));
+                    .append(Text.of(TextColors.GREEN, "------- Handlers " + (controllers ? "and Controllers " : "") + "-------\n"));
             ListIterator<IHandler> handlerListIterator = handlerList.listIterator();
             while (handlerListIterator.hasNext()) {
                 IHandler handler = handlerListIterator.next();
-                output.append(Text.of(FGHelper.getColorForHandler(handler),
-                        TextActions.runCommand("/foxguard detail handler " + handler.getName()),
+                output.append(Text.of(FGHelper.getColorForObject(handler),
+                        TextActions.runCommand("/foxguard det h " + handler.getName()),
+                        TextActions.showText(Text.of("View Details")),
+                        handler.getShortTypeName() + " : " + handler.getName()));
+                if (handlerListIterator.hasNext()) output.append(Text.of("\n"));
+            }
+            source.sendMessage(output.build());
+        } else if (isIn(Aliases.CONTROLLERS_ALIASES, parse.args[0])) {
+            List<IController> handlerList = FGManager.getInstance().getControllerList();
+            Text.Builder output = Text.builder()
+                    .append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"))
+                    .append(Text.of(TextColors.GREEN, "------- Controllers -------\n"));
+            ListIterator<IController> handlerListIterator = handlerList.listIterator();
+            while (handlerListIterator.hasNext()) {
+                IHandler handler = handlerListIterator.next();
+                output.append(Text.of(FGHelper.getColorForObject(handler),
+                        TextActions.runCommand("/foxguard det h " + handler.getName()),
                         TextActions.showText(Text.of("View Details")),
                         handler.getShortTypeName() + " : " + handler.getName()));
                 if (handlerListIterator.hasNext()) output.append(Text.of("\n"));
@@ -128,14 +142,6 @@ public class CommandList implements CommandCallable {
             throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);
         }
         return CommandResult.empty();
-    }
-
-
-    private boolean contains(String[] aliases, String input) {
-        for (String alias : aliases) {
-            if (alias.equalsIgnoreCase(input)) return true;
-        }
-        return false;
     }
 
     @Override

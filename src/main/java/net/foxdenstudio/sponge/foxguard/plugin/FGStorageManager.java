@@ -296,7 +296,7 @@ public final class FGStorageManager {
             try (Statement statement = conn.createStatement()) {
                 try (ResultSet linkSet = statement.executeQuery("SELECT  * FROM LINKAGES;")) {
                     while (linkSet.next()) {
-                        FGManager.getInstance().link(world, linkSet.getString("REGION"), linkSet.getString("HANDLER"));
+                        FGManager.getInstance().linkRegion(world, linkSet.getString("REGION"), linkSet.getString("HANDLER"));
                     }
                 }
             }
@@ -378,7 +378,7 @@ public final class FGStorageManager {
         try (Connection conn = FoxGuardMain.instance().getDataSource(dataBaseDir + "foxguard").getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 statement.addBatch("DELETE FROM REGIONS; DELETE FROM LINKAGES;");
-                for (IRegion region : FGManager.getInstance().getRegionsList(world)) {
+                for (IRegion region : FGManager.getInstance().getRegionList(world)) {
                     if (region.autoSave()) {
                         statement.addBatch("INSERT INTO REGIONS(NAME, TYPE, ENABLED) VALUES ('" +
                                 region.getName() + "', '" +
@@ -396,7 +396,7 @@ public final class FGStorageManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        FGManager.getInstance().getRegionsList(world).stream().filter(IFGObject::autoSave).forEach(region -> {
+        FGManager.getInstance().getRegionList(world).stream().filter(IFGObject::autoSave).forEach(region -> {
             try {
                 DataSource source = FoxGuardMain.instance().getDataSource(dataBaseDir + "regions/" + region.getName());
                 try (Connection conn = source.getConnection()) {
@@ -520,7 +520,7 @@ public final class FGStorageManager {
             try (Connection conn = FoxGuardMain.instance().getDataSource(dataBaseDir + "foxguard").getConnection()) {
                 try (Statement statement = conn.createStatement()) {
                     statement.addBatch("DELETE FROM REGIONS; DELETE FROM LINKAGES;");
-                    for (IRegion region : FGManager.getInstance().getRegionsList(world)) {
+                    for (IRegion region : FGManager.getInstance().getRegionList(world)) {
                         if (region.autoSave()) {
                             statement.addBatch("INSERT INTO REGIONS(NAME, TYPE, ENABLED) VALUES ('" +
                                     region.getName() + "', '" +

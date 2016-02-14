@@ -29,13 +29,14 @@ import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
 
 import javax.sql.DataSource;
 import java.util.List;
 
-public class GlobalRegion extends RegionBase {
+public class GlobalRegion extends RegionBase implements IGlobal {
 
     public static final String NAME = "_global";
 
@@ -64,8 +65,13 @@ public class GlobalRegion extends RegionBase {
     }
 
     @Override
-    public Text getDetails(String arguments) {
+    public Text details(CommandSource source, String arguments) {
         return Text.of("It's global. Nothing to see here. Now move along.");
+    }
+
+    @Override
+    public List<String> detailsSuggestions(CommandSource source, String arguments) {
+        return ImmutableList.of();
     }
 
     @Override
@@ -111,4 +117,8 @@ public class GlobalRegion extends RegionBase {
         return true;
     }
 
+    @Override
+    public boolean isInChunk(Vector3i chunk) {
+        return true;
+    }
 }

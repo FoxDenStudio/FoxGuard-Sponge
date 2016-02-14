@@ -79,14 +79,13 @@ public class FGHandlerFactory implements IHandlerFactory {
     }
 
     @Override
-    public IHandler createHandler(String name, String type, int priority, String arguments, CommandSource source) {
+    public IHandler create(String name, String type, int priority, String arguments, CommandSource source) {
         if (Aliases.isIn(simpleAliases, type)) {
             SimpleHandler handler = new SimpleHandler(name, priority);
             if (source instanceof Player) handler.addOwner((Player) source);
             return handler;
         } else if (Aliases.isIn(passiveAliases, type)) {
             PassiveHandler handler = new PassiveHandler(name, priority);
-            if (source instanceof Player) handler.addOwner((Player) source);
             return handler;
         } else if (Aliases.isIn(permissionAliases, type)) {
             return new PermissionHandler(name, priority);
@@ -94,7 +93,7 @@ public class FGHandlerFactory implements IHandlerFactory {
     }
 
     @Override
-    public IHandler createHandler(DataSource source, String name, String type, int priority, boolean isEnabled) throws SQLException {
+    public IHandler create(DataSource source, String name, String type, int priority, boolean isEnabled) throws SQLException {
         if (type.equalsIgnoreCase("simple")) {
             List<User> ownerList = new ArrayList<>();
             List<User> memberList = new ArrayList<>();
@@ -191,7 +190,6 @@ public class FGHandlerFactory implements IHandlerFactory {
                 }
             }
             PassiveHandler handler = new PassiveHandler(name, priority, flagMap);
-            handler.setOwners(ownerList);
             handler.setIsEnabled(isEnabled);
             return handler;
         } else if (type.equalsIgnoreCase("permission")) {

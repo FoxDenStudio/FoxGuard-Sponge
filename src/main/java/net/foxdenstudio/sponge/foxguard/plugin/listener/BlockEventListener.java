@@ -87,7 +87,7 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
                     GenericMath.floor(((double) loc.getX()) / 16.0),
                     GenericMath.floor(((double) loc.getY()) / 16.0),
                     GenericMath.floor(((double) loc.getZ()) / 16.0));
-            FGManager.getInstance().getRegionsList(world, chunk).stream()
+            FGManager.getInstance().getRegionList(world, chunk).stream()
                     .filter(region -> region.isInRegion(loc))
                     .filter(IFGObject::isEnabled)
                     .forEach(region -> region.getHandlers().stream()

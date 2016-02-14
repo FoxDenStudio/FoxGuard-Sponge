@@ -34,8 +34,8 @@ import java.sql.SQLException;
 
 interface IHandlerFactory extends IFGFactory {
 
-    IHandler createHandler(String name, String type, int priority, String arguments, CommandSource source);
+    IHandler create(String name, String type, int priority, String arguments, CommandSource source);
 
-    IHandler createHandler(DataSource source, String name, String type, int priority, boolean isEnabled) throws SQLException;
+    IHandler create(DataSource source, String name, String type, int priority, boolean isEnabled) throws SQLException;
 
 }

@@ -26,9 +26,10 @@
 package net.foxdenstudio.sponge.foxguard.plugin.util;
 
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
@@ -40,12 +41,11 @@ import java.util.List;
 
 public final class FGHelper {
 
-    public static TextColor getColorForRegion(IRegion region) {
-        return region instanceof GlobalRegion ? TextColors.YELLOW : (region.isEnabled() ? TextColors.RESET : TextColors.GRAY);
-    }
-
-    public static TextColor getColorForHandler(IHandler handler) {
-        return handler instanceof GlobalHandler ? TextColors.YELLOW : (handler.isEnabled() ? TextColors.RESET : TextColors.GRAY);
+    public static TextColor getColorForObject(IFGObject object) {
+        if (object instanceof IGlobal) return TextColors.YELLOW;
+        else if (!object.isEnabled()) return TextColors.GRAY;
+        else if (object instanceof IController) return TextColors.GREEN;
+        else return TextColors.WHITE;
     }
 
 

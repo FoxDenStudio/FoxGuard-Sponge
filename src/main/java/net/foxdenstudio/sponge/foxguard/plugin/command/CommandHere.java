@@ -120,7 +120,7 @@ public class CommandHere implements CommandCallable {
         }
         boolean flag = false;
         Text.Builder output = Text.builder();
-        List<IRegion> regionList = FGManager.getInstance().getRegionsList(world).stream()
+        List<IRegion> regionList = FGManager.getInstance().getRegionList(world).stream()
                 .filter(region -> region.isInRegion(x, y, z))
                 .collect(Collectors.toList());
         output.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
@@ -130,7 +130,7 @@ public class CommandHere implements CommandCallable {
             ListIterator<IRegion> regionListIterator = regionList.listIterator();
             while (regionListIterator.hasNext()) {
                 IRegion region = regionListIterator.next();
-                output.append(Text.of(FGHelper.getColorForRegion(region),
+                output.append(Text.of(FGHelper.getColorForObject(region),
                         TextActions.runCommand("/foxguard detail region --w:" + region.getWorld().getName() + " " + region.getName()),
                         TextActions.showText(Text.of("View Details")),
                         FGHelper.getRegionName(region, false)));
@@ -148,7 +148,7 @@ public class CommandHere implements CommandCallable {
             ListIterator<IHandler> handlerListIterator = handlerList.listIterator();
             while (handlerListIterator.hasNext()) {
                 IHandler handler = handlerListIterator.next();
-                output.append(Text.of(FGHelper.getColorForHandler(handler),
+                output.append(Text.of(FGHelper.getColorForObject(handler),
                         TextActions.runCommand("/foxguard detail handler " + handler.getName()),
                         TextActions.showText(Text.of("View Details")),
                         handler.getShortTypeName() + " : " + handler.getName()));

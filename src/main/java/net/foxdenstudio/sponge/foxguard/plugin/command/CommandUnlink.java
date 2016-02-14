@@ -85,14 +85,14 @@ public class CommandUnlink implements CommandCallable {
                     });
             FGHelper.getSelectedHandlers(source).stream()
                     .filter(handler -> !(handler instanceof GlobalHandler)).forEach(
-                    handler -> FGManager.getInstance().getRegionsList().stream().forEach(
+                    handler -> FGManager.getInstance().getRegionList().stream().forEach(
                             region -> count[0] += FGManager.getInstance().unlink(region, handler) ? 1 : 0));
             source.sendMessage(Text.of(TextColors.GREEN, "Successfully unlinked " + count[0] + "!"));
             FCStateManager.instance().getStateMap().get(source).flush(RegionsStateField.ID, HandlersStateField.ID);
             return CommandResult.builder().successCount(count[0]).build();
         } else if (args[0].equals("EVERYTHING")) {
             int[] count = {0};
-            FGManager.getInstance().getRegionsList().forEach(
+            FGManager.getInstance().getRegionList().forEach(
                     region -> {
                         List<IHandler> handlers = new ArrayList<>();
                         region.getHandlers().stream()

@@ -77,7 +77,7 @@ public class PermissionHandler extends HandlerBase {
     }
 
     @Override
-    public Text getDetails(String arguments) {
+    public Text details(CommandSource source, String arguments) {
         return Text.builder()
                 .append(Text.of(TextColors.GOLD, "Permission:\n"))
                 .append(Text.of(TextColors.RESET, "foxguard.handler."))
@@ -93,6 +93,11 @@ public class PermissionHandler extends HandlerBase {
                 .append(Text.of(TextColors.RED, "deny"))
                 .append(Text.of(TextColors.AQUA, ">")).build();
 
+    }
+
+    @Override
+    public List<String> detailsSuggestions(CommandSource source, String arguments) {
+        return ImmutableList.of();
     }
 
     @Override

@@ -74,7 +74,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         int index = 1;
         while (regionIterator.hasNext()) {
             IRegion region = regionIterator.next();
-            builder.append(Text.of(FGHelper.getColorForRegion(region),
+            builder.append(Text.of(FGHelper.getColorForObject(region),
                     (index++) + ": " + region.getShortTypeName() + " : " + region.getWorld().getName() + " : " + region.getName()));
             if (regionIterator.hasNext()) builder.append(Text.of("\n"));
         }
@@ -118,7 +118,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                 }
                 if (world == null) return ImmutableList.of();
                 if (parse.args[0].equals("add")) {
-                    return FGManager.getInstance().getRegionsList(world).stream()
+                    return FGManager.getInstance().getRegionList(world).stream()
                             .filter(region -> !this.list.contains(region))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))

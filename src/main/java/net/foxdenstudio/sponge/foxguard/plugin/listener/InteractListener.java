@@ -30,7 +30,6 @@ import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
-import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import org.spongepowered.api.entity.living.player.Player;
@@ -86,7 +85,7 @@ public class InteractListener implements EventListener<InteractEvent> {
                 GenericMath.floor(loc.getX() / 16.0),
                 GenericMath.floor(loc.getY() / 16.0),
                 GenericMath.floor(loc.getZ() / 16.0));
-        FGManager.getInstance().getRegionsList(world, chunk).stream()
+        FGManager.getInstance().getRegionList(world, chunk).stream()
                 .filter(region -> region.isInRegion(finalLoc))
                 .filter(IFGObject::isEnabled)
                 .forEach(region -> region.getHandlers().stream()

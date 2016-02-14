@@ -28,16 +28,19 @@ package net.foxdenstudio.sponge.foxguard.plugin;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
+import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateObjectEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.world.World;
 
 import java.util.ArrayList;
@@ -47,7 +50,7 @@ import java.util.Optional;
 
 public final class FGManager {
 
-    public static final String[] TYPES = {"region", "handler"};
+    public static final String[] TYPES = {"region", "handler", "controller"};
 
     private static FGManager instance;
     private final Map<World, List<IRegion>> regions;
@@ -130,22 +133,39 @@ public final class FGManager {
         return world.isPresent() ? this.getRegion(world.get(), regionName) : null;
     }
 
-    public List<IRegion> getRegionsList() {
+    public List<IRegion> getRegionList() {
         List<IRegion> list = new ArrayList<>();
         this.regions.forEach((world, tlist) -> tlist.forEach(list::add));
         return ImmutableList.copyOf(list);
     }
 
-    public List<IRegion> getRegionsList(World world) {
+    public List<IRegion> getRegionList(World world) {
         return ImmutableList.copyOf(this.regions.get(world));
     }
 
-    public List<IRegion> getRegionsList(World world, Vector3i chunk) {
+    public List<IRegion> getRegionList(World world, Vector3i chunk) {
         return ImmutableList.copyOf(this.regionCache.get(world).get(chunk));
     }
 
     public List<IHandler> getHandlerList() {
         return ImmutableList.copyOf(this.handlers);
+    }
+
+    public List<IHandler> getHandlerList(boolean includeControllers){
+        if(includeControllers){
+            return ImmutableList.copyOf(this.handlers);
+        } else {
+            return this.handlers.stream()
+                    .filter(handler -> !(handler instanceof IController))
+                    .collect(GuavaCollectors.toImmutableList());
+        }
+    }
+
+    public List<IController> getControllerList(){
+        return this.handlers.stream()
+                .filter(handler -> handler instanceof IController)
+                .map(handler -> ((IController)handler))
+                .collect(GuavaCollectors.toImmutableList());
     }
 
     public boolean addHandler(IHandler handler) {
@@ -172,6 +192,15 @@ public final class FGManager {
         for (IHandler handler : handlers) {
             if (handler.getName().equalsIgnoreCase(name)) {
                 return handler;
+            }
+        }
+        return null;
+    }
+
+    public IController getController(String name){
+        for (IHandler handler : handlers) {
+            if ((handler instanceof IController) && handler.getName().equalsIgnoreCase(name)) {
+                return (IController) handler;
             }
         }
         return null;
@@ -238,26 +267,26 @@ public final class FGManager {
         return true;
     }
 
-    public boolean link(Server server, String worldName, String regionName, String handlerName) {
+    public boolean linkRegion(Server server, String worldName, String regionName, String handlerName) {
         Optional<World> world = server.getWorld(worldName);
-        return world.isPresent() && this.link(world.get(), regionName, handlerName);
+        return world.isPresent() && this.linkRegion(world.get(), regionName, handlerName);
     }
 
-    public boolean link(World world, String regionName, String handlerName) {
+    public boolean linkRegion(World world, String regionName, String handlerName) {
         IRegion region = getRegion(world, regionName);
         IHandler handler = gethandler(handlerName);
         return this.link(region, handler);
     }
 
-    public boolean link(IRegion region, IHandler handler) {
-        if (region == null || handler == null || region.getHandlers().contains(handler)) return false;
+    public boolean link(ILinkable linkable, IHandler handler) {
+        if (linkable == null || handler == null || linkable.getHandlers().contains(handler)) return false;
         Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
             @Override
             public Cause getCause() {
                 return Cause.of(FoxGuardMain.instance());
             }
         });
-        return !(handler instanceof GlobalHandler && !(region instanceof GlobalRegion)) && region.addHandler(handler);
+        return !(handler instanceof GlobalHandler && !(linkable instanceof GlobalRegion)) && linkable.addHandler(handler);
     }
 
     public boolean unlink(Server server, String worldName, String regionName, String handlerName) {
@@ -271,15 +300,15 @@ public final class FGManager {
         return this.unlink(region, handler);
     }
 
-    public boolean unlink(IRegion region, IHandler handler) {
-        if (region == null || handler == null || !region.getHandlers().contains(handler)) return false;
+    public boolean unlink(ILinkable linkable, IHandler handler) {
+        if (linkable == null || handler == null || !linkable.getHandlers().contains(handler)) return false;
         Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
             @Override
             public Cause getCause() {
                 return Cause.of(FoxGuardMain.instance());
             }
         });
-        return !(handler instanceof GlobalHandler && region instanceof GlobalRegion) && region.removeHandler(handler);
+        return !(handler instanceof GlobalHandler && linkable instanceof GlobalRegion) && linkable.removeHandler(handler);
     }
 
     public boolean renameRegion(World world, String oldName, String newName) {
@@ -328,7 +357,7 @@ public final class FGManager {
 
     private List<IRegion> calculateRegionsForChunk(Vector3i chunk, World world) {
         List<IRegion> cache = new ArrayList<>();
-        this.getRegionsList(world).stream()
+        this.getRegionList(world).stream()
                 .filter(IFGObject::isEnabled)
                 .filter(region -> region.isInChunk(chunk))
                 .forEach(cache::add);

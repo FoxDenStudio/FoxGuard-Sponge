@@ -23,20 +23,19 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.object;
+package net.foxdenstudio.sponge.foxguard.plugin.state.factory;
 
-import org.spongepowered.api.entity.living.player.User;
+import net.foxdenstudio.sponge.foxcore.plugin.state.IStateField;
+import net.foxdenstudio.sponge.foxcore.plugin.state.SourceState;
+import net.foxdenstudio.sponge.foxcore.plugin.state.factory.IStateFieldFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.state.ControllersStateField;
+import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 
-import java.util.List;
+public class ControllersStateFieldFactory implements IStateFieldFactory {
 
-public interface IMembership {
-
-    List<User> getMembers();
-
-    void setMembers(List<User> members);
-
-    boolean addMember(User player);
-
-    boolean removeMember(User player);
+    @Override
+    public IStateField createStateField(SourceState sourceState) {
+        return new ControllersStateField();
+    }
 
 }

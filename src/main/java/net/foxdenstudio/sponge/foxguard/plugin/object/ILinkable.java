@@ -37,4 +37,6 @@ public interface ILinkable {
 
     boolean removeHandler(IHandler handler);
 
+    void clearHandlers();
+
 }

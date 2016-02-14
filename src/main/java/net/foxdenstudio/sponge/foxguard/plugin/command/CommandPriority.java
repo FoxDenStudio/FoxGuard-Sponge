@@ -23,7 +23,7 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.command.handlers;
+package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;

@@ -51,7 +51,7 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
             fromList = new ArrayList<>();
             final List<IHandler> temp = fromList;
             Vector3d from = event.getFromTransform().getPosition().add(0, 0.1, 0);
-            FGManager.getInstance().getRegionsList(world, new Vector3i(
+            FGManager.getInstance().getRegionList(world, new Vector3i(
                     GenericMath.floor(from.getX() / 16.0),
                     GenericMath.floor(from.getY() / 16.0),
                     GenericMath.floor(from.getZ() / 16.0))).stream()
@@ -62,7 +62,7 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
                             .filter(handler -> !temp.contains(handler))
                             .forEach(temp::add));
         }
-        FGManager.getInstance().getRegionsList(world, new Vector3i(
+        FGManager.getInstance().getRegionList(world, new Vector3i(
                 GenericMath.floor(to.getX() / 16.0),
                 GenericMath.floor(to.getY() / 16.0),
                 GenericMath.floor(to.getZ() / 16.0))).stream()

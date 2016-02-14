@@ -44,12 +44,15 @@ public final class FGFactoryManager {
     private static final FGFactoryManager ourInstance = new FGFactoryManager();
     private final List<IRegionFactory> regionFactories;
     private final List<IHandlerFactory> handlerFactories;
+    private final List<IHandlerFactory> controllerFactories;
 
     private FGFactoryManager() {
         regionFactories = new ArrayList<>();
         regionFactories.add(new FGRegionFactory());
         handlerFactories = new ArrayList<>();
         handlerFactories.add(new FGHandlerFactory());
+        controllerFactories = new ArrayList<>();
+        controllerFactories.add(new FGControllerFactory());
     }
 
     public static FGFactoryManager getInstance() {
@@ -59,7 +62,7 @@ public final class FGFactoryManager {
     public IRegion createRegion(String name, String type, String arguments, CommandSource source) throws CommandException {
         for (IRegionFactory rf : regionFactories) {
             if (isIn(rf.getAliases(), type)) {
-                IRegion region = rf.createRegion(name, type, arguments, source);
+                IRegion region = rf.create(name, type, arguments, source);
                 if (region != null) return region;
             }
         }
@@ -69,7 +72,7 @@ public final class FGFactoryManager {
     public IRegion createRegion(DataSource source, String name, String type, boolean isEnabled) throws SQLException {
         for (IRegionFactory rf : regionFactories) {
             if (isIn(rf.getTypes(), type)) {
-                IRegion region = rf.createRegion(source, name, type, isEnabled);
+                IRegion region = rf.create(source, name, type, isEnabled);
                 if (region != null) return region;
             }
         }
@@ -80,7 +83,7 @@ public final class FGFactoryManager {
     public IHandler createHandler(String name, String type, int priority, String args, CommandSource source) {
         for (IHandlerFactory hf : handlerFactories) {
             if (isIn(hf.getAliases(), type)) {
-                IHandler handler = hf.createHandler(name, type, priority, args, source);
+                IHandler handler = hf.create(name, type, priority, args, source);
                 if (handler != null) return handler;
             }
         }
@@ -90,7 +93,27 @@ public final class FGFactoryManager {
     public IHandler createHandler(DataSource source, String name, String type, int priority, boolean isEnabled) throws SQLException {
         for (IHandlerFactory hf : handlerFactories) {
             if (isIn(hf.getTypes(), type)) {
-                IHandler handler = hf.createHandler(source, name, type, priority, isEnabled);
+                IHandler handler = hf.create(source, name, type, priority, isEnabled);
+                if (handler != null) return handler;
+            }
+        }
+        return null;
+    }
+
+    public IHandler createController(String name, String type, int priority, String args, CommandSource source) {
+        for (IHandlerFactory hf : controllerFactories) {
+            if (isIn(hf.getAliases(), type)) {
+                IHandler handler = hf.create(name, type, priority, args, source);
+                if (handler != null) return handler;
+            }
+        }
+        return null;
+    }
+
+    public IHandler createController(DataSource source, String name, String type, int priority, boolean isEnabled) throws SQLException {
+        for (IHandlerFactory hf : controllerFactories) {
+            if (isIn(hf.getTypes(), type)) {
+                IHandler handler = hf.create(source, name, type, priority, isEnabled);
                 if (handler != null) return handler;
             }
         }
@@ -115,6 +138,15 @@ public final class FGFactoryManager {
         return ImmutableList.of();
     }
 
+    public List<String> controllerSuggestions(CommandSource source, String arguments, String type) throws CommandException {
+        for (IHandlerFactory hf : controllerFactories) {
+            if (isIn(hf.getTypes(), type)) {
+                return hf.createSuggestions(source, arguments, type);
+            }
+        }
+        return ImmutableList.of();
+    }
+
     public boolean registerRegionFactory(IRegionFactory factory) {
         if (regionFactories.contains(factory)) return false;
         regionFactories.add(factory);
@@ -127,12 +159,26 @@ public final class FGFactoryManager {
         return true;
     }
 
+    public boolean registerControllerFactory(IHandlerFactory factory){
+        if (controllerFactories.contains(factory)) return false;
+        controllerFactories.add(factory);
+        return true;
+    }
+
     public boolean unregister(IFGFactory factory) {
         if (factory instanceof IRegionFactory)
             return regionFactories.remove(factory);
         else if (factory instanceof IHandlerFactory)
             return handlerFactories.remove(factory);
         return false;
+    }
+
+    public List<String> getPrimaryRegionTypeAliases() {
+        List<String> aliases = new ArrayList<>();
+        for (IFGFactory factory : regionFactories) {
+            aliases.addAll(Arrays.asList(factory.getPrimaryAliases()));
+        }
+        return aliases;
     }
 
     public List<String> getPrimaryHandlerTypeAliases() {
@@ -143,9 +189,9 @@ public final class FGFactoryManager {
         return aliases;
     }
 
-    public List<String> getPrimaryRegionTypeAliases() {
+    public List<String> getPrimaryControllerTypeAliases() {
         List<String> aliases = new ArrayList<>();
-        for (IFGFactory factory : regionFactories) {
+        for (IFGFactory factory : controllerFactories) {
             aliases.addAll(Arrays.asList(factory.getPrimaryAliases()));
         }
         return aliases;

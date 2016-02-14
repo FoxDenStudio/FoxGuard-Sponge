@@ -262,7 +262,7 @@ public class CommandEnableDisable implements CommandCallable {
                         }
                     }
                     if (world == null) return ImmutableList.of();
-                    return FGManager.getInstance().getRegionsList(world).stream()
+                    return FGManager.getInstance().getRegionList(world).stream()
                             .filter(region -> region.isEnabled() != this.enableState && !(region instanceof GlobalRegion))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))

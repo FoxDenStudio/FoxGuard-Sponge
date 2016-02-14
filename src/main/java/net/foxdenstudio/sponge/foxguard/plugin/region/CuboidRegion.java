@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.region;
 
 import com.flowpowered.math.vector.Vector3i;
+import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxguard.plugin.region.util.BoundingBox3;
@@ -33,7 +34,6 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
@@ -42,10 +42,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-public class CuboidRegion extends OwnableRegionBase {
+public class CuboidRegion extends RegionBase {
 
     private final BoundingBox3 boundingBox;
 
@@ -91,16 +90,6 @@ public class CuboidRegion extends OwnableRegionBase {
             b = b.max(pos);
         }
         this.boundingBox = new BoundingBox3(a, b);
-    }
-
-    public CuboidRegion(String name, List<Vector3i> positions, String[] args, CommandSource source, User... owners) throws CommandException {
-        this(name, positions, args, source);
-        Collections.addAll(ownerList, owners);
-    }
-
-    public CuboidRegion(String name, List<Vector3i> positions, String[] args, CommandSource source, List<User> owners) throws CommandException {
-        this(name, positions, args, source);
-        this.ownerList = owners;
     }
 
     @Override
@@ -149,16 +138,20 @@ public class CuboidRegion extends OwnableRegionBase {
 
 
     @Override
-    public Text getDetails(String arguments) {
-        Text.Builder builder = super.getDetails(arguments).toBuilder();
-        builder.append(Text.of(TextColors.GREEN, "\nBounds: "));
+    public Text details(CommandSource source, String arguments) {
+        Text.Builder builder = Text.builder();
+        builder.append(Text.of(TextColors.GREEN, "Bounds: "));
         builder.append(Text.of(TextColors.RESET, boundingBox.toString()));
         return builder.build();
     }
 
     @Override
+    public List<String> detailsSuggestions(CommandSource source, String arguments) {
+        return ImmutableList.of();
+    }
+
+    @Override
     public void writeToDatabase(DataSource dataSource) throws SQLException {
-        super.writeToDatabase(dataSource);
         try (Connection conn = dataSource.getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 statement.execute("CREATE TABLE IF NOT EXISTS BOUNDS(X INTEGER, Y INTEGER, Z INTEGER);" +

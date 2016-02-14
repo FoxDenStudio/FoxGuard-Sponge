@@ -105,10 +105,14 @@ public interface IFGObject {
      * This allows specific queries in case there is more data stored than can reasonable displayed.
      * It is recommended to have click action wherever possible to ease the configuration of objects.
      *
+     *
+     * @param source
      * @param arguments The extra arguments from the {@link CommandDetail Detail} command. Object should still return something meaningful if this is empty.
      * @return A {@link Text} object that provides meaningful information about the object.
      */
-    Text getDetails(String arguments);
+    Text details(CommandSource source, String arguments);
+
+    List<String> detailsSuggestions(CommandSource source, String arguments);
 
     /**
      * Called when saving objects to a database. A datasource is given, which can be turned into a connection.

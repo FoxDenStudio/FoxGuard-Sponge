@@ -75,6 +75,11 @@ public abstract class RegionBase extends FGObjectBase implements IRegion {
     }
 
     @Override
+    public void clearHandlers() {
+        this.handlers.clear();
+    }
+
+    @Override
     public World getWorld() {
         return this.world;
     }

@@ -31,7 +31,7 @@ public abstract class HandlerBase extends FGObjectBase implements IHandler {
 
     int priority;
 
-    HandlerBase(String name, int priority) {
+    protected HandlerBase(String name, int priority) {
         super(name);
         setPriority(priority);
     }

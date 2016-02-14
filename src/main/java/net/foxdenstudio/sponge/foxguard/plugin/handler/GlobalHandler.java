@@ -32,6 +32,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.source.ProxySource;
@@ -53,7 +54,7 @@ import java.util.Map;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
-public class GlobalHandler extends HandlerBase {
+public class GlobalHandler extends HandlerBase implements IGlobal {
 
     public static final String NAME = "_global";
 
@@ -190,10 +191,10 @@ public class GlobalHandler extends HandlerBase {
     }
 
     @Override
-    public Text getDetails(String arguments) {
+    public Text details(CommandSource source, String arguments) {
         Text.Builder builder = Text.builder();
         builder.append(Text.of(TextColors.GOLD,
-                TextActions.suggestCommand("/foxguard modify handler " + NAME + " set "),
+                TextActions.suggestCommand("/foxguard md h " + NAME + " set "),
                 TextActions.showText(Text.of("Click to Set a Flag")),
                 "Global Flags:\n"));
 
@@ -202,12 +203,17 @@ public class GlobalHandler extends HandlerBase {
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FCHelper.readableTristateText(map.get(f)))
                             .append(Text.of("\n"))
-                            .onClick(TextActions.suggestCommand("/foxguard modify handler " + NAME + " set " + f.flagName() + " "))
+                            .onClick(TextActions.suggestCommand("/foxguard md h " + NAME + " set " + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
                             .build()
             );
         }
         return builder.build();
+    }
+
+    @Override
+    public List<String> detailsSuggestions(CommandSource source, String arguments) {
+        return ImmutableList.of();
     }
 
     @Override

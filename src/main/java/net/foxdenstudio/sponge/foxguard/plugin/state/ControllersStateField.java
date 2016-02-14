@@ -1,28 +1,3 @@
-/*
- * This file is part of FoxGuard, licensed under the MIT License (MIT).
- *
- * Copyright (c) gravityfox - https://gravityfox.net/
- * Copyright (c) contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-
 package net.foxdenstudio.sponge.foxguard.plugin.state;
 
 import com.google.common.collect.ImmutableList;
@@ -30,7 +5,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.state.ListStateFieldBase;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGHelper;
 import org.spongepowered.api.command.CommandException;
@@ -44,21 +19,21 @@ import org.spongepowered.api.util.StartsWithPredicate;
 import java.util.Iterator;
 import java.util.List;
 
-public class HandlersStateField extends ListStateFieldBase<IHandler> {
+public class ControllersStateField extends ListStateFieldBase<IController> {
 
-    public static final String ID = "handler";
+    public static final String ID = "controller";
 
-    public HandlersStateField() {
-        super("Handlers");
+    public ControllersStateField() {
+        super("Controllers");
     }
 
     @Override
     public Text currentState() {
         Text.Builder builder = Text.builder();
         int index = 1;
-        for (Iterator<IHandler> it = this.list.iterator(); it.hasNext(); ) {
-            IHandler handler = it.next();
-            builder.append(Text.of(FGHelper.getColorForObject(handler), "  " + (index++) + ": " + handler.getShortTypeName() + " : " + handler.getName()));
+        for (Iterator<IController> it = this.list.iterator(); it.hasNext(); ) {
+            IController controller = it.next();
+            builder.append(Text.of(FGHelper.getColorForObject(controller), "  " + (index++) + ": " + controller.getShortTypeName() + " : " + controller.getName()));
             if (it.hasNext()) builder.append(Text.of("\n"));
         }
         return builder.build();
@@ -73,7 +48,7 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
         } else if (parse.args[0].equalsIgnoreCase("remove")) {
             return remove(source, newArgs);
         }
-        return ProcessResult.of(false, Text.of("Not a valid handler state command!"));
+        return ProcessResult.of(false, Text.of("Not a valid controller state command!"));
     }
 
     @Override
@@ -113,14 +88,14 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
         AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).parse();
 
         if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name!"));
-        IHandler handler = FGManager.getInstance().gethandler(parse.args[0]);
-        if (handler == null)
-            throw new ArgumentParseException(Text.of("No Handlers with this name!"), parse.args[0], 1);
-        if (this.list.contains(handler))
-            throw new ArgumentParseException(Text.of("Handler is already in your state buffer!"), parse.args[0], 1);
-        this.list.add(handler);
+        IController controller = FGManager.getInstance().getController(parse.args[0]);
+        if (controller == null)
+            throw new ArgumentParseException(Text.of("No controllers with this name!"), parse.args[0], 1);
+        if (this.list.contains(controller))
+            throw new ArgumentParseException(Text.of("Controller is already in your state buffer!"), parse.args[0], 1);
+        this.list.add(controller);
 
-        return ProcessResult.of(true, Text.of("Successfully added Handler to your state buffer!"));
+        return ProcessResult.of(true, Text.of("Successfully added controller to your state buffer!"));
     }
 
     public ProcessResult remove(CommandSource source, String arguments) throws CommandException {
@@ -128,50 +103,50 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
 
         if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name or a number!"));
         if (parse.args.length == 1) {
-            IHandler handler;
+            IController controller;
             try {
                 int index = Integer.parseInt(parse.args[0]);
-                handler = this.list.get(index - 1);
+                controller = this.list.get(index - 1);
             } catch (NumberFormatException e) {
-                handler = FGManager.getInstance().gethandler(parse.args[0]);
+                controller = FGManager.getInstance().getController(parse.args[0]);
             } catch (IndexOutOfBoundsException e) {
                 throw new ArgumentParseException(Text.of("Index out of bounds! (1 - " + this.list.size()), parse.args[0], 1);
             }
-            if (handler == null)
-                throw new ArgumentParseException(Text.of("No Handlers with this name!"), parse.args[0], 1);
-            if (!this.list.contains(handler))
-                throw new ArgumentParseException(Text.of("Handler is not in your state buffer!"), parse.args[0], 1);
-            this.list.remove(handler);
-            return ProcessResult.of(true, Text.of("Successfully removed Handler from your state buffer!"));
+            if (controller == null)
+                throw new ArgumentParseException(Text.of("No controllers with this name!"), parse.args[0], 1);
+            if (!this.list.contains(controller))
+                throw new ArgumentParseException(Text.of("Controller is not in your state buffer!"), parse.args[0], 1);
+            this.list.remove(controller);
+            return ProcessResult.of(true, Text.of("Successfully removed controller from your state buffer!"));
         } else {
             int successes = 0, failures = 0;
             for (String arg : parse.args) {
-                IHandler handler;
+                IController controller;
                 try {
                     int index = Integer.parseInt(arg);
-                    handler = this.list.get(index - 1);
+                    controller = this.list.get(index - 1);
                 } catch (NumberFormatException e) {
-                    handler = FGManager.getInstance().gethandler(arg);
+                    controller = FGManager.getInstance().getController(arg);
                 } catch (IndexOutOfBoundsException e) {
                     failures++;
                     continue;
                 }
-                if (handler == null) {
+                if (controller == null) {
                     failures++;
                     continue;
                 }
-                if (!this.list.contains(handler)) {
+                if (!this.list.contains(controller)) {
                     failures++;
                     continue;
                 }
-                this.list.remove(handler);
+                this.list.remove(controller);
                 successes++;
             }
             if (successes > 0) {
-                return ProcessResult.of(true, Text.of(TextColors.GREEN, "Successfully removed handlers handlers from your state buffer with "
+                return ProcessResult.of(true, Text.of(TextColors.GREEN, "Successfully removed controllers from your state buffer with "
                         + successes + " successes" + (failures > 0 ? " and " + failures + " failures!" : "!")));
             } else {
-                return ProcessResult.of(false, Text.of(failures + " failures while trying to remove handlers from your state buffer. " +
+                return ProcessResult.of(false, Text.of(failures + " failures while trying to remove controllers from your state buffer. " +
                         "Check that their names or indices are valid."));
             }
         }

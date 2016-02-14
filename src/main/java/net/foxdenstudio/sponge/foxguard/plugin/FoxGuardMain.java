@@ -33,13 +33,15 @@ import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.mcstats.Metrics;
 import net.foxdenstudio.sponge.foxguard.plugin.command.*;
-import net.foxdenstudio.sponge.foxguard.plugin.command.handlers.CommandPriority;
+import net.foxdenstudio.sponge.foxguard.plugin.command.CommandPriority;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.BlockEventListener;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.InteractListener;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.PlayerMoveListener;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.SpawnEntityEventListener;
+import net.foxdenstudio.sponge.foxguard.plugin.state.ControllersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
+import net.foxdenstudio.sponge.foxguard.plugin.state.factory.ControllersStateFieldFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.state.factory.HandlersStateFieldFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.state.factory.RegionsStateFieldFactory;
 import org.slf4j.Logger;
@@ -72,10 +74,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
-
-import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.HANDLERS_ALIASES;
 
 @Plugin(id = "foxguard", name = "FoxGuard", version = FoxGuardMain.PLUGIN_VERSION, dependencies = "required-after:foxcore")
 public final class FoxGuardMain {
@@ -130,6 +129,7 @@ public final class FoxGuardMain {
     @Listener
     public void gamePreInit(GamePreInitializationEvent event) {
         loggerField.info("Beginning FoxGuard initialization");
+        loggerField.info("Version: " + PLUGIN_VERSION);
         loggerField.info("Loading configs");
         new FGConfigManager();
         loggerField.info("Saving configs");
@@ -140,7 +140,7 @@ public final class FoxGuardMain {
     public void gameInit(GameInitializationEvent event) {
         loggerField.info("Getting User Storage");
         userStorage = game.getServiceManager().provide(UserStorageService.class).get();
-        loggerField.info("Initializing FoxGuard Manager instance");
+        loggerField.info("Initializing FoxGuard manager instance");
         FGManager.init();
 
         loggerField.info("Registering commands");
@@ -149,10 +149,12 @@ public final class FoxGuardMain {
         registerListeners();
         loggerField.info("Setting default player permissions");
         configurePermissions();
-        loggerField.info("Registering Regions state field");
+        loggerField.info("Registering regions state field");
         FCStateManager.instance().registerStateFactory(new RegionsStateFieldFactory(), RegionsStateField.ID, RegionsStateField.ID, Aliases.REGIONS_ALIASES);
-        loggerField.info("Registering Handlers state field");
+        loggerField.info("Registering handlers state field");
         FCStateManager.instance().registerStateFactory(new HandlersStateFieldFactory(), HandlersStateField.ID, HandlersStateField.ID, Aliases.HANDLERS_ALIASES);
+        loggerField.info("Registering controllers state field");
+        FCStateManager.instance().registerStateFactory(new ControllersStateFieldFactory(), ControllersStateField.ID, ControllersStateField.ID, Aliases.CONTROLLERS_ALIASES);
         loggerField.info("Starting MCStats metrics extension");
         try {
             Metrics metrics = new Metrics(game, game.getPluginManager().fromInstance(this).get());
@@ -164,9 +166,9 @@ public final class FoxGuardMain {
 
     @Listener
     public void serverStarted(GameStartedServerEvent event) {
-        loggerField.info("Initializing Handlers database");
+        loggerField.info("Initializing handlers database");
         FGStorageManager.getInstance().initHandlers();
-        loggerField.info("Loading Handlers");
+        loggerField.info("Loading handlers");
         FGStorageManager.getInstance().loadHandlers();
         FGStorageManager.getInstance().loadGlobalHandler();
 
@@ -177,11 +179,11 @@ public final class FoxGuardMain {
         loaded = true;
         loggerField.info("Loading linkages");
         FGStorageManager.getInstance().loadLinks();
-        loggerField.info("Saving Handlers");
+        loggerField.info("Saving handlers");
         FGStorageManager.getInstance().writeHandlers();
-        loggerField.info("Saving World data");
+        loggerField.info("Saving world data");
         for (World world : game.getServer().getWorlds()) {
-            loggerField.info("Saving data for World: \"" + world.getName() + "\"");
+            loggerField.info("Saving data for world: \"" + world.getName() + "\"");
             FGStorageManager.getInstance().writeWorld(world);
         }
 
@@ -189,7 +191,7 @@ public final class FoxGuardMain {
 
     @Listener
     public void serverStopping(GameStoppingServerEvent event) {
-        loggerField.info("Saving Handlers");
+        loggerField.info("Saving handlers");
         FGStorageManager.getInstance().writeHandlers();
     }
 
@@ -205,27 +207,27 @@ public final class FoxGuardMain {
 
     @Listener
     public void worldUnload(UnloadWorldEvent event) {
-        loggerField.info("Saving data for World: \"" + event.getTargetWorld().getName() + "\"");
+        loggerField.info("Saving data for world: \"" + event.getTargetWorld().getName() + "\"");
         FGStorageManager.getInstance().writeWorld(event.getTargetWorld());
         FGManager.getInstance().unloadWorld(event.getTargetWorld());
     }
 
     @Listener
     public void worldLoad(LoadWorldEvent event) {
-        loggerField.info("Initializing Regions database for World: \"" + event.getTargetWorld().getName() + "\"");
+        loggerField.info("Initializing regions database for world: \"" + event.getTargetWorld().getName() + "\"");
         FGStorageManager.getInstance().initWorld(event.getTargetWorld());
-        loggerField.info("Constructing Region list for World: \"" + event.getTargetWorld().getName() + "\"");
+        loggerField.info("Constructing region list for world: \"" + event.getTargetWorld().getName() + "\"");
         FGManager.getInstance().createLists(event.getTargetWorld());
-        loggerField.info("Loading Regions for World: \"" + event.getTargetWorld().getName() + "\"");
+        loggerField.info("Loading regions for World: \"" + event.getTargetWorld().getName() + "\"");
         FGStorageManager.getInstance().loadWorldRegions(event.getTargetWorld());
-        loggerField.info("Initializing Global Region for World: \"" + event.getTargetWorld().getName() + "\"");
+        loggerField.info("Initializing global region for world: \"" + event.getTargetWorld().getName() + "\"");
         FGManager.getInstance().initWorld(event.getTargetWorld());
         if (loaded) {
             if (FGConfigManager.getInstance().forceLoad()) {
-                loggerField.info("Resolving deferred objects for World: " + event.getTargetWorld().getName() + "\"");
+                loggerField.info("Resolving deferred objects for world: " + event.getTargetWorld().getName() + "\"");
                 FGStorageManager.getInstance().resolveDeferredObjects();
             }
-            loggerField.info("Loading links for World: \"" + event.getTargetWorld().getName() + "\"");
+            loggerField.info("Loading links for world: \"" + event.getTargetWorld().getName() + "\"");
             FGStorageManager.getInstance().loadWorldLinks(event.getTargetWorld());
         }
     }
@@ -263,9 +265,6 @@ public final class FoxGuardMain {
     private void registerCommands() {
         FCCommandDispatcher fgDispatcher = new FCCommandDispatcher("/foxguard",
                 "FoxGuard commands for managing world protection. Use /help foxguard for subcommands.");
-        //FCCommandDispatcher fgRegionDispatcher = new FCCommandDispatcher("/foxguard regions");
-        FCCommandDispatcher fgHandlerDispatcher = new FCCommandDispatcher("/foxguard handlers",
-                "Commands spcifically meant for managing Handlers.");
 
         registerCommonCommands(fgDispatcher);
         fgDispatcher.register(new CommandCreate(), "create", "construct", "new", "make", "define", "mk", "cr");
@@ -281,9 +280,7 @@ public final class FoxGuardMain {
         fgDispatcher.register(new CommandDetail(), "detail", "det", "show");
         fgDispatcher.register(new CommandSave(), "save", "saveall", "save-all");
 
-        fgHandlerDispatcher.register(new CommandPriority(), "priority", "prio", "level", "rank");
-
-        fgDispatcher.register(fgHandlerDispatcher, HANDLERS_ALIASES);
+        fgDispatcher.register(new CommandPriority(), "priority", "prio", "level", "rank");
 
         game.getCommandManager().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
     }

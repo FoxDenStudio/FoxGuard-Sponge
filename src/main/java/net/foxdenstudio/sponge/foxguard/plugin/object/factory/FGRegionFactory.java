@@ -90,30 +90,21 @@ public class FGRegionFactory implements IRegionFactory {
 
     @SuppressWarnings("unchecked")
     @Override
-    public IRegion createRegion(String name, String type, String arguments, CommandSource source) throws CommandException {
+    public IRegion create(String name, String type, String arguments, CommandSource source) throws CommandException {
         AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
                 .arguments(arguments)
                 .parse();
         if (isIn(rectAliases, type)) {
-            if (source instanceof Player)
-                return new RectangularRegion(name, FCHelper.getPositions(source), parse.args, source, (Player) source);
-            else
                 return new RectangularRegion(name, FCHelper.getPositions(source), parse.args, source);
         } else if (isIn(cuboidAliases, type)) {
-            if (source instanceof Player)
-                return new CuboidRegion(name, FCHelper.getPositions(source), parse.args, source, (Player) source);
-            else
                 return new CuboidRegion(name, FCHelper.getPositions(source), parse.args, source);
         } else if (isIn(elevAliases, type)) {
-            if (source instanceof Player)
-                return new ElevationRegion(name, FCHelper.getPositions(source), parse.args, source, (Player) source);
-            else
                 return new ElevationRegion(name, FCHelper.getPositions(source), parse.args, source);
         } else return null;
     }
 
     @Override
-    public IRegion createRegion(DataSource source, String name, String type, boolean isEnabled) throws SQLException {
+    public IRegion create(DataSource source, String name, String type, boolean isEnabled) throws SQLException {
         if (type.equalsIgnoreCase("rectangular")) {
             Vector2i a, b;
             List<User> userList = new ArrayList<>();
@@ -135,7 +126,6 @@ public class FGRegionFactory implements IRegionFactory {
 
             }
             RectangularRegion region = new RectangularRegion(name, new BoundingBox2(a, b));
-            region.setOwners(userList);
             region.setIsEnabled(isEnabled);
             return region;
         } else if (type.equalsIgnoreCase("cuboid")) {
@@ -158,7 +148,6 @@ public class FGRegionFactory implements IRegionFactory {
                 }
             }
             CuboidRegion region = new CuboidRegion(name, new BoundingBox3(a, b));
-            region.setOwners(userList);
             region.setIsEnabled(isEnabled);
             return region;
         } else if (type.equalsIgnoreCase("elevation")) {
@@ -182,7 +171,6 @@ public class FGRegionFactory implements IRegionFactory {
 
             }
             ElevationRegion region = new ElevationRegion(name, lowerBound, upperBound);
-            region.setOwners(userList);
             region.setIsEnabled(isEnabled);
             return region;
         } else return null;
