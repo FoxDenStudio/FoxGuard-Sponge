@@ -548,7 +548,7 @@ public class Metrics {
         connection.setDoOutput(true);
 
         if (debug) {
-            FoxGuardMain.instance().logger().info("[Metrics] Prepared request for " + pluginName + " uncompressed=" + uncompressed.length + " compressed=" + compressed.length);
+            FoxGuardMain.instance().getLogger().info("[Metrics] Prepared request for " + pluginName + " uncompressed=" + uncompressed.length + " compressed=" + compressed.length);
         }
 
         // Write the data

@@ -56,7 +56,7 @@ public class PermissionHandler extends HandlerBase {
                 return EventResult.deny();
             else if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." + flag.flagName() + ".pass"))
                 return EventResult.pass();
-            flag = flag.getParent();
+            flag = flag.getParents().length > 0 ? flag.getParents()[0] : null;
         }
         return EventResult.pass();
     }

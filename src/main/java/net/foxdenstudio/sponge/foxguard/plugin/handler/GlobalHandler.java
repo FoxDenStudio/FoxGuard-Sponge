@@ -94,7 +94,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
     public EventResult handle(User user, Flag flag, Event event) {
         Flag temp = flag;
         while (temp != null && !map.containsKey(temp)) {
-            temp = temp.getParent();
+            temp = temp.getParents().length > 0 ? temp.getParents()[0] : null;
         }
         if (temp != null) return EventResult.of(map.get(temp));
         else return EventResult.of(map.get(flag));
@@ -198,7 +198,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
                 TextActions.showText(Text.of("Click to Set a Flag")),
                 "Global Flags:\n"));
 
-        for (Flag f : this.map.keySet()) {
+        for (Flag f : this.map.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FCHelper.readableTristateText(map.get(f)))

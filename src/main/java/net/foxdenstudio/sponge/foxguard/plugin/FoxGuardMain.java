@@ -91,7 +91,7 @@ public final class FoxGuardMain {
 
 
     @Inject
-    private Logger loggerField;
+    private Logger logger;
     @Inject
     private Game game;
     @Inject
@@ -128,62 +128,65 @@ public final class FoxGuardMain {
 
     @Listener
     public void gamePreInit(GamePreInitializationEvent event) {
-        loggerField.info("Beginning FoxGuard initialization");
-        loggerField.info("Version: " + PLUGIN_VERSION);
-        loggerField.info("Loading configs");
+        logger.info("Beginning FoxGuard initialization");
+        logger.info("Version: " + PLUGIN_VERSION);
+        logger.info("Loading configs");
         new FGConfigManager();
-        loggerField.info("Saving configs");
+        logger.info("Saving configs");
         FGConfigManager.getInstance().save();
     }
 
     @Listener
     public void gameInit(GameInitializationEvent event) {
-        loggerField.info("Getting User Storage");
+        logger.info("Getting User Storage");
         userStorage = game.getServiceManager().provide(UserStorageService.class).get();
-        loggerField.info("Initializing FoxGuard manager instance");
+        logger.info("Initializing FoxGuard manager instance");
         FGManager.init();
 
-        loggerField.info("Registering commands");
+        logger.info("Registering commands");
         registerCommands();
-        loggerField.info("Registering event listeners");
+        logger.info("Registering event listeners");
         registerListeners();
-        loggerField.info("Setting default player permissions");
+        logger.info("Setting default player permissions");
         configurePermissions();
-        loggerField.info("Registering regions state field");
+        logger.info("Registering regions state field");
         FCStateManager.instance().registerStateFactory(new RegionsStateFieldFactory(), RegionsStateField.ID, RegionsStateField.ID, Aliases.REGIONS_ALIASES);
-        loggerField.info("Registering handlers state field");
+        logger.info("Registering handlers state field");
         FCStateManager.instance().registerStateFactory(new HandlersStateFieldFactory(), HandlersStateField.ID, HandlersStateField.ID, Aliases.HANDLERS_ALIASES);
-        loggerField.info("Registering controllers state field");
+        logger.info("Registering controllers state field");
         FCStateManager.instance().registerStateFactory(new ControllersStateFieldFactory(), ControllersStateField.ID, ControllersStateField.ID, Aliases.CONTROLLERS_ALIASES);
-        loggerField.info("Starting MCStats metrics extension");
+        logger.info("Starting MCStats metrics extension");
         try {
             Metrics metrics = new Metrics(game, game.getPluginManager().fromInstance(this).get());
             metrics.start();
         } catch (IOException e) {
             // Failed to submit the stats :-(
         }
+        logger.debug("-------------------------------------------");
+        logger.debug(Flag.PLAYER_INTERACT_PRIMARY.getHiearchy().toString());
+        logger.debug("-------------------------------------------");
     }
 
     @Listener
     public void serverStarted(GameStartedServerEvent event) {
-        loggerField.info("Initializing handlers database");
+        logger.info("Initializing handlers database");
         FGStorageManager.getInstance().initHandlers();
-        loggerField.info("Loading handlers");
+        logger.info("Loading handlers");
         FGStorageManager.getInstance().loadHandlers();
         FGStorageManager.getInstance().loadGlobalHandler();
 
         if (FGConfigManager.getInstance().forceLoad()) {
-            loggerField.info("Resolving deferred objects");
+            logger.info("Resolving deferred objects");
             FGStorageManager.getInstance().resolveDeferredObjects();
         }
         loaded = true;
-        loggerField.info("Loading linkages");
+        logger.info("Loading linkages");
         FGStorageManager.getInstance().loadLinks();
-        loggerField.info("Saving handlers");
+        logger.info("Saving handlers");
         FGStorageManager.getInstance().writeHandlers();
-        loggerField.info("Saving world data");
+        logger.info("Saving world data");
         for (World world : game.getServer().getWorlds()) {
-            loggerField.info("Saving data for world: \"" + world.getName() + "\"");
+            logger.info("Saving data for world: \"" + world.getName() + "\"");
             FGStorageManager.getInstance().writeWorld(world);
         }
 
@@ -191,43 +194,43 @@ public final class FoxGuardMain {
 
     @Listener
     public void serverStopping(GameStoppingServerEvent event) {
-        loggerField.info("Saving handlers");
+        logger.info("Saving handlers");
         FGStorageManager.getInstance().writeHandlers();
     }
 
     @Listener
     public void serverStopped(GameStoppedServerEvent event) {
         if (FGConfigManager.getInstance().purgeDatabases()) {
-            FoxGuardMain.instance().logger().info("Purging databases");
+            FoxGuardMain.instance().getLogger().info("Purging databases");
             FGStorageManager.getInstance().purgeDatabases();
         }
-        loggerField.info("Saving configs");
+        logger.info("Saving configs");
         FGConfigManager.getInstance().save();
     }
 
     @Listener
     public void worldUnload(UnloadWorldEvent event) {
-        loggerField.info("Saving data for world: \"" + event.getTargetWorld().getName() + "\"");
+        logger.info("Saving data for world: \"" + event.getTargetWorld().getName() + "\"");
         FGStorageManager.getInstance().writeWorld(event.getTargetWorld());
         FGManager.getInstance().unloadWorld(event.getTargetWorld());
     }
 
     @Listener
     public void worldLoad(LoadWorldEvent event) {
-        loggerField.info("Initializing regions database for world: \"" + event.getTargetWorld().getName() + "\"");
+        logger.info("Initializing regions database for world: \"" + event.getTargetWorld().getName() + "\"");
         FGStorageManager.getInstance().initWorld(event.getTargetWorld());
-        loggerField.info("Constructing region list for world: \"" + event.getTargetWorld().getName() + "\"");
+        logger.info("Constructing region list for world: \"" + event.getTargetWorld().getName() + "\"");
         FGManager.getInstance().createLists(event.getTargetWorld());
-        loggerField.info("Loading regions for World: \"" + event.getTargetWorld().getName() + "\"");
+        logger.info("Loading regions for World: \"" + event.getTargetWorld().getName() + "\"");
         FGStorageManager.getInstance().loadWorldRegions(event.getTargetWorld());
-        loggerField.info("Initializing global region for world: \"" + event.getTargetWorld().getName() + "\"");
+        logger.info("Initializing global region for world: \"" + event.getTargetWorld().getName() + "\"");
         FGManager.getInstance().initWorld(event.getTargetWorld());
         if (loaded) {
             if (FGConfigManager.getInstance().forceLoad()) {
-                loggerField.info("Resolving deferred objects for world: " + event.getTargetWorld().getName() + "\"");
+                logger.info("Resolving deferred objects for world: " + event.getTargetWorld().getName() + "\"");
                 FGStorageManager.getInstance().resolveDeferredObjects();
             }
-            loggerField.info("Loading links for world: \"" + event.getTargetWorld().getName() + "\"");
+            logger.info("Loading links for world: \"" + event.getTargetWorld().getName() + "\"");
             FGStorageManager.getInstance().loadWorldLinks(event.getTargetWorld());
         }
     }
@@ -325,8 +328,8 @@ public final class FoxGuardMain {
     /**
      * @return A Logger instance for this plugin.
      */
-    public Logger logger() {
-        return loggerField;
+    public Logger getLogger() {
+        return logger;
     }
 
     /**

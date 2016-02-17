@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.util;
 
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
+import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
@@ -37,7 +38,9 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class FGHelper {
 
@@ -61,5 +64,14 @@ public final class FGHelper {
 
     public static String getRegionName(IRegion region, boolean dispWorld) {
         return region.getShortTypeName() + " : " + (dispWorld ? region.getWorld().getName() + " : " : "") + region.getName();
+    }
+
+    public static Flag nearestParent(Flag child, Set<Flag> set) {
+        for(Set<Flag> level : child.getHiearchy()){
+            Set<Flag> matches = new HashSet<>(set);
+            matches.retainAll(level);
+            //if(matches)
+        }
+        return null;
     }
 }

@@ -25,43 +25,49 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import org.spongepowered.api.util.Tristate;
+
+import java.util.*;
 
 public enum Flag {
 
-    ROOT(null, true, "root", "Everything"),
+    ROOT(true, "root", "Everything"),
 
-    BLOCK(ROOT, true, "block", "Blocks"),
-    BLOCK_CHANGE(BLOCK, true, "blockchange", "Change-Blocks"),
-    BLOCK_PLACE(BLOCK_CHANGE, true, "blockplace", "Place-Blocks"),
-    BLOCK_BREAK(BLOCK_CHANGE, true, "blockbreak", "Break-Blocks"),
-    BLOCK_MODIFY(BLOCK_CHANGE, true, "blockmodify", "Modify-Blocks"),
-    BLOCK_INTERACT(BLOCK, true, "blockclick", "Click-Blocks"),
-    BLOCK_INTERACT_PRIMARY(BLOCK_INTERACT, true, "blockattack", "Attack-Blocks"),
-    BLOCK_INTERACT_SECONDARY(BLOCK_INTERACT, true, "blockinteract", "Interact-Blocks"),
+    BLOCK(true, "block", "Blocks", ROOT),
+    BLOCK_CHANGE(true, "blockchange", "Change-Blocks", BLOCK),
+    BLOCK_PLACE(true, "blockplace", "Place-Blocks", BLOCK_CHANGE),
+    BLOCK_BREAK(true, "blockbreak", "Break-Blocks", BLOCK_CHANGE),
+    BLOCK_MODIFY(true, "blockmodify", "Modify-Blocks", BLOCK_CHANGE),
+    BLOCK_INTERACT(true, "blockclick", "Click-Blocks", BLOCK),
+    BLOCK_INTERACT_PRIMARY(true, "blockattack", "Attack-Blocks", BLOCK_INTERACT),
+    BLOCK_INTERACT_SECONDARY(true, "blockinteract", "Interact-Blocks", BLOCK_INTERACT),
 
-    ENTITY_INTERACT(ROOT, true, "entityclick", "Click-Entities"),
-    ENTITY_INTERACT_PRIMARY(ENTITY_INTERACT, true, "entityattack", "Attack-Entities"),
-    ENTITY_INTERACT_SECONDARY(ENTITY_INTERACT, true, "entityinteract", "Interact-Entities"),
-    PLAYER_INTERACT_PRIMARY(ENTITY_INTERACT_PRIMARY, true, "playerattack", "Attack-Player"),
+    ENTITY_INTERACT(true, "entityclick", "Click-Entities", ROOT),
+    ENTITY_INTERACT_PRIMARY(true, "entityattack", "Attack-Entities", ENTITY_INTERACT),
+    ENTITY_INTERACT_SECONDARY(true, "entityinteract", "Interact-Entities", ENTITY_INTERACT),
+    PLAYER_INTERACT_PRIMARY(true, "playerattack", "Attack-Player", ENTITY_INTERACT_PRIMARY),
 
-    SPAWN_MOB(ROOT, true, "spawnmob", "Spawn-Mobs"),
-    SPAWN_MOB_HOSTILE(SPAWN_MOB, true, "spawnmobhostile", "Spawn-Hostile-Mobs"),
-    SPAWN_MOB_PASSIVE(SPAWN_MOB, true, "spawnmobpassive", "Spawn-Passive-Mobs"),
+    SPAWN_MOB(true, "spawnmob", "Spawn-Mobs", ROOT),
+    SPAWN_MOB_HOSTILE(true, "spawnmobhostile", "Spawn-Hostile-Mobs", SPAWN_MOB),
+    SPAWN_MOB_PASSIVE(true, "spawnmobpassive", "Spawn-Passive-Mobs", SPAWN_MOB),
 
-    PLAYER_PASS(ROOT, true, "playerpass", "Player-Pass-Borders"),
-    PLAYER_ENTER(PLAYER_PASS, true, "playerenter", "Player-Enter"),
-    PLAYER_EXIT(PLAYER_PASS, true, "playerexit", "Player-Exit");
+    PLAYER_PASS(true, "playerpass", "Player-Pass-Borders", ROOT),
+    PLAYER_ENTER(true, "playerenter", "Player-Enter", PLAYER_PASS),
+    PLAYER_EXIT(true, "playerexit", "Player-Exit", PLAYER_PASS);
 
 
-    final String humanName;
-    final String flagName;
-    final boolean defaultValue;
+    private final String humanName;
+    private final String flagName;
+    private final boolean defaultValue;
+    private final Flag[] parents;
 
-    Flag parent = null;
+    private List<Set<Flag>> hiearchy;
 
-    Flag(Flag parent, boolean defaultValue, String flagName, String humanName) {
-        this.parent = parent;
+
+    Flag(boolean defaultValue, String flagName, String humanName, Flag... parents) {
+        this.parents = parents;
         this.defaultValue = defaultValue;
         this.flagName = flagName;
         this.humanName = humanName;
@@ -84,11 +90,27 @@ public enum Flag {
     }
 
     public boolean hasParent() {
-        return parent != null;
+        return parents.length != 0;
     }
 
-    public Flag getParent() {
-        return parent;
+    public Flag[] getParents() {
+        return parents;
+    }
+
+    public List<Set<Flag>> getHiearchy(){
+        if (hiearchy == null) {
+            List<Set<Flag>> list = new ArrayList<>();
+            Set<Flag> current = new LinkedHashSet<>();
+            current.add(this);
+            while (!current.isEmpty()){
+                Set<Flag> newSet = new HashSet<>();
+                current.forEach(flag -> Arrays.stream(flag.getParents()).forEach(newSet::add));
+                list.add(ImmutableSet.copyOf(current));
+                current = newSet;
+            }
+            hiearchy = ImmutableList.copyOf(list);
+        }
+        return hiearchy;
     }
 
     public Tristate resolve(Tristate input) {

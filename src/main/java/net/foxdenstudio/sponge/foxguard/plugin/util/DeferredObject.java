@@ -72,7 +72,7 @@ public class DeferredObject {
             if (handler == null) return null;
             handler.setIsEnabled(metaEnabled);
             FGManager.getInstance().addHandler(handler);
-            FoxGuardMain.instance().logger().info("Successfully force loaded Handler: " +
+            FoxGuardMain.instance().getLogger().info("Successfully force loaded Handler: " +
                     "(Name: " + name +
                     " Type: " + type +
                     " Priority: " + priority +
@@ -101,7 +101,7 @@ public class DeferredObject {
             if (region == null) return null;
             region.setIsEnabled(metaEnabled);
             FGManager.getInstance().addRegion(world, region);
-            FoxGuardMain.instance().logger().info("Successfully force loaded Region: " +
+            FoxGuardMain.instance().getLogger().info("Successfully force loaded Region: " +
                     "(Name: " + name +
                     " Type: " + type +
                     " World: " + world.getName() +

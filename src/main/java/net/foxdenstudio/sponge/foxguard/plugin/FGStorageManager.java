@@ -130,12 +130,12 @@ public final class FGStorageManager {
                                                             handlerDataSet.getBoolean("ENABLED")
                                                     );
                                                     if (handler != null) {
-                                                        FoxGuardMain.instance().logger().info("Loaded handler \"" + handler.getName() +
+                                                        FoxGuardMain.instance().getLogger().info("Loaded handler \"" + handler.getName() +
                                                                 "\" of type \"" + handler.getLongTypeName() +"\"");
                                                     }
                                                     FGManager.getInstance().addHandler(handler);
                                                 } else if (FGConfigManager.getInstance().forceLoad()) {
-                                                    FoxGuardMain.instance().logger().info("Mismatched database found. Attempting force load...");
+                                                    FoxGuardMain.instance().getLogger().info("Mismatched database found. Attempting force load...");
                                                     if (metaSet.getString("CATEGORY").equalsIgnoreCase("region")) {
                                                         DeferredObject deferredRegion = new DeferredObject();
                                                         deferredRegion.category = "region";
@@ -162,16 +162,16 @@ public final class FGStorageManager {
                                                         deferredHandler.metaEnabled = metaSet.getBoolean("ENABLED");
                                                         this.deferedObjects.add(deferredHandler);
                                                     } else {
-                                                        FoxGuardMain.instance().logger().warn("Found potentially corrupted database.");
+                                                        FoxGuardMain.instance().getLogger().warn("Found potentially corrupted database.");
                                                         markForDeletion(databaseDir);
                                                     }
                                                 } else {
-                                                    FoxGuardMain.instance().logger().warn("Found potentially corrupted database.");
+                                                    FoxGuardMain.instance().getLogger().warn("Found potentially corrupted database.");
                                                     markForDeletion(databaseDir);
                                                 }
                                             }
                                         } else {
-                                            FoxGuardMain.instance().logger().warn("Found potentially corrupted database.");
+                                            FoxGuardMain.instance().getLogger().warn("Found potentially corrupted database.");
                                             markForDeletion(databaseDir);
                                         }
                                     }
@@ -224,12 +224,12 @@ public final class FGStorageManager {
                                                             regionDataSet.getBoolean("ENABLED")
                                                     );
                                                     if (region != null) {
-                                                        FoxGuardMain.instance().logger().info("Loaded region \"" + region.getName() +
+                                                        FoxGuardMain.instance().getLogger().info("Loaded region \"" + region.getName() +
                                                                 "\" of type \"" + region.getLongTypeName() + "\"");
                                                     }
                                                     FGManager.getInstance().addRegion(world, region);
                                                 } else if (FGConfigManager.getInstance().forceLoad()) {
-                                                    FoxGuardMain.instance().logger().info("Mismatched database found. Attempting force load...");
+                                                    FoxGuardMain.instance().getLogger().info("Mismatched database found. Attempting force load...");
                                                     if (metaSet.getString("CATEGORY").equalsIgnoreCase("region")) {
                                                         DeferredObject deferredRegion = new DeferredObject();
                                                         deferredRegion.category = "region";
@@ -256,23 +256,23 @@ public final class FGStorageManager {
                                                         deferredHandler.metaEnabled = metaSet.getBoolean("ENABLED");
                                                         this.deferedObjects.add(deferredHandler);
                                                     } else {
-                                                        FoxGuardMain.instance().logger().warn("Found potentially corrupted database.");
+                                                        FoxGuardMain.instance().getLogger().warn("Found potentially corrupted database.");
                                                         markForDeletion(databaseDir);
                                                     }
                                                 } else {
-                                                    FoxGuardMain.instance().logger().warn("Found potentially corrupted database.");
+                                                    FoxGuardMain.instance().getLogger().warn("Found potentially corrupted database.");
                                                     markForDeletion(databaseDir);
                                                 }
                                             }
                                         } else {
-                                            FoxGuardMain.instance().logger().warn("Found potentially corrupted database.");
+                                            FoxGuardMain.instance().getLogger().warn("Found potentially corrupted database.");
                                             markForDeletion(databaseDir);
                                         }
                                     }
                                 }
                             }
                         } catch (SQLException e) {
-                            FoxGuardMain.instance().logger().error("Unable to load Region in world \"" + world.getName() + "\". Perhaps the database is corrupted?");
+                            FoxGuardMain.instance().getLogger().error("Unable to load Region in world \"" + world.getName() + "\". Perhaps the database is corrupted?");
                             e.printStackTrace();
                         }
                     }
@@ -362,7 +362,7 @@ public final class FGStorageManager {
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
-                FoxGuardMain.instance().logger().error("FAILED TO SAVE HANDLER \"" + handler.getName() + "\"!");
+                FoxGuardMain.instance().getLogger().error("FAILED TO SAVE HANDLER \"" + handler.getName() + "\"!");
             }
         });
     }
@@ -421,7 +421,7 @@ public final class FGStorageManager {
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
-                FoxGuardMain.instance().logger().error("FAILED TO SAVE REGION \"" + region.getName() + "\"!");
+                FoxGuardMain.instance().getLogger().error("FAILED TO SAVE REGION \"" + region.getName() + "\"!");
             }
         });
     }
@@ -467,7 +467,7 @@ public final class FGStorageManager {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            FoxGuardMain.instance().logger().error("FAILED TO UPDATE SAVE DATABASE FOR REGION \"" + region.getName() + "\"!");
+            FoxGuardMain.instance().getLogger().error("FAILED TO UPDATE SAVE DATABASE FOR REGION \"" + region.getName() + "\"!");
         }
         updateLists();
     }
@@ -502,7 +502,7 @@ public final class FGStorageManager {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            FoxGuardMain.instance().logger().error("FAILED TO UPDATE SAVE DATABASE FOR HANDLER \"" + handler.getName() + "\"!");
+            FoxGuardMain.instance().getLogger().error("FAILED TO UPDATE SAVE DATABASE FOR HANDLER \"" + handler.getName() + "\"!");
         }
         updateLists();
     }
@@ -560,7 +560,7 @@ public final class FGStorageManager {
 
     public synchronized void markForDeletion(String databaseDir) {
         if (FGConfigManager.getInstance().purgeDatabases()) {
-            FoxGuardMain.instance().logger().info("Clearing database " + databaseDir);
+            FoxGuardMain.instance().getLogger().info("Clearing database " + databaseDir);
             try (Connection conn = FoxGuardMain.instance().getDataSource(databaseDir).getConnection()) {
                 try (Statement statement = conn.createStatement()) {
                     statement.execute("DROP ALL OBJECTS;");
@@ -599,7 +599,7 @@ public final class FGStorageManager {
             e.printStackTrace();
         }
         if (markedForDeletion.contains(databaseDir)) {
-            FoxGuardMain.instance().logger().info("Unmarking " + databaseDir + " for deletion.");
+            FoxGuardMain.instance().getLogger().info("Unmarking " + databaseDir + " for deletion.");
             markedForDeletion.remove(databaseDir);
         }
     }
@@ -625,7 +625,7 @@ public final class FGStorageManager {
 
     public synchronized void purgeDatabases() {
         for (String databaseDir : markedForDeletion) {
-            FoxGuardMain.instance().logger().info("Deleting database " + databaseDir);
+            FoxGuardMain.instance().getLogger().info("Deleting database " + databaseDir);
             try (Connection conn = FoxGuardMain.instance().getDataSource(databaseDir).getConnection()) {
                 try (Statement statement = conn.createStatement()) {
                     statement.execute("DROP ALL OBJECTS DELETE FILES;");
@@ -642,9 +642,9 @@ public final class FGStorageManager {
             try {
                 IFGObject result = o.resolve();
                 if (result == null)
-                    FoxGuardMain.instance().logger().warn("Unable to resolve deferred object:\n" + o.toString());
+                    FoxGuardMain.instance().getLogger().warn("Unable to resolve deferred object:\n" + o.toString());
             } catch (SQLException e) {
-                FoxGuardMain.instance().logger().warn("Unable to resolve deferred object:\n" + o.toString());
+                FoxGuardMain.instance().getLogger().warn("Unable to resolve deferred object:\n" + o.toString());
                 e.printStackTrace();
             }
         }
@@ -653,7 +653,7 @@ public final class FGStorageManager {
     public synchronized void loadGlobalHandler() {
         Server server = Sponge.getGame().getServer();
         try {
-            FoxGuardMain.instance().logger().info("Loading global handler");
+            FoxGuardMain.instance().getLogger().info("Loading global handler");
             FGManager.getInstance().getGlobalHandler().loadFromDatabase(FoxGuardMain.instance().getDataSource(
                     "jdbc:h2:" + Sponge.getGame().getSavesDirectory().resolve(server.getDefaultWorldName()) + "/foxguard/handlers/" + GlobalHandler.NAME
             ));

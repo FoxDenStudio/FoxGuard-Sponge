@@ -38,7 +38,7 @@ class DebugHelper {
         for (Object o : event.getCause().all()) {
             sb.append(o).append("\n");
         }
-        FoxGuardMain.instance().logger().info(sb.toString());
+        FoxGuardMain.instance().getLogger().info(sb.toString());
     }
 
     public static void printBlockEvent(ChangeBlockEvent event) {
@@ -53,6 +53,6 @@ class DebugHelper {
         }
         sb.append("\n");
         event.getCause().getNamedCauses().forEach((k, v) -> sb.append(k).append("::").append(v).append("\n"));
-        FoxGuardMain.instance().logger().info(sb.toString());
+        FoxGuardMain.instance().getLogger().info(sb.toString());
     }
 }

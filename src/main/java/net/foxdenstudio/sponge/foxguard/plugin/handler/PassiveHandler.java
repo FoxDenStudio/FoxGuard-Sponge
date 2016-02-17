@@ -73,7 +73,7 @@ public class PassiveHandler extends HandlerBase {
         }
         Flag temp = flag;
         while (temp != null && !map.containsKey(temp)) {
-            temp = temp.getParent();
+            temp = temp.getParents().length > 0 ? temp.getParents()[0] : null;
         }
         if (temp != null) return EventResult.of(map.get(temp));
         else return EventResult.of(map.get(flag));
@@ -170,7 +170,7 @@ public class PassiveHandler extends HandlerBase {
                 TextActions.suggestCommand("/foxguard md h " + this.name + " set "),
                 TextActions.showText(Text.of("Click to Set a Flag")),
                 "Passive Flags:\n"));
-        for (Flag f : this.map.keySet()) {
+        for (Flag f : this.map.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FCHelper.readableTristateText(map.get(f)))

@@ -388,7 +388,7 @@ public class SimpleHandler extends HandlerBase {
     private Tristate getResult(Map<Flag, Tristate> map, Flag flag) {
         Flag temp = flag;
         while (temp != null && !map.containsKey(temp)) {
-            temp = temp.getParent();
+            temp = temp.getParents().length > 0 ? temp.getParents()[0] : null;
         }
         if (temp != null) return map.get(temp);
         else return map.get(flag);
@@ -438,7 +438,7 @@ public class SimpleHandler extends HandlerBase {
                 TextActions.suggestCommand("/foxguard md h " + this.name + " set owners "),
                 TextActions.showText(Text.of("Click to Set a Flag")),
                 "Owner permissions:\n"));
-        for (Flag f : this.ownerPermissions.keySet()) {
+        for (Flag f : this.ownerPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FCHelper.readableTristateText(ownerPermissions.get(f)))
@@ -452,7 +452,7 @@ public class SimpleHandler extends HandlerBase {
                 TextActions.suggestCommand("/foxguard md h " + this.name + " set members "),
                 TextActions.showText(Text.of("Click to Set a Flag")),
                 "Member permissions:\n"));
-        for (Flag f : this.memberPermissions.keySet()) {
+        for (Flag f : this.memberPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FCHelper.readableTristateText(memberPermissions.get(f)))
@@ -466,7 +466,7 @@ public class SimpleHandler extends HandlerBase {
                 TextActions.suggestCommand("/foxguard md h " + this.name + " set default "),
                 TextActions.showText(Text.of("Click to Set a Flag")),
                 "Default permissions:\n"));
-        for (Flag f : this.defaultPermissions.keySet()) {
+        for (Flag f : this.defaultPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FCHelper.readableTristateText(defaultPermissions.get(f)))
