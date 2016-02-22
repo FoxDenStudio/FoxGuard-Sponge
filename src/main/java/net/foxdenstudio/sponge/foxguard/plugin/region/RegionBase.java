@@ -47,16 +47,6 @@ public abstract class RegionBase extends FGObjectBase implements IRegion {
     }
 
     @Override
-    public boolean isInRegion(Vector3i vec) {
-        return this.isInRegion(vec.getX(), vec.getY(), vec.getZ());
-    }
-
-    @Override
-    public boolean isInRegion(Vector3d vec) {
-        return this.isInRegion(vec.getX(), vec.getY(), vec.getZ());
-    }
-
-    @Override
     public List<IHandler> getHandlers() {
         return ImmutableList.copyOf(this.handlers);
     }

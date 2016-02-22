@@ -121,7 +121,7 @@ public class CommandHere implements CommandCallable {
         boolean flag = false;
         Text.Builder output = Text.builder();
         List<IRegion> regionList = FGManager.getInstance().getRegionList(world).stream()
-                .filter(region -> region.isInRegion(x, y, z))
+                .filter(region -> region.contains(x, y, z))
                 .collect(Collectors.toList());
         output.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
         output.append(Text.of(TextColors.AQUA, "----- Position: (" + String.format("%.1f, %.1f, %.1f", x, y, z) + ") -----\n"));

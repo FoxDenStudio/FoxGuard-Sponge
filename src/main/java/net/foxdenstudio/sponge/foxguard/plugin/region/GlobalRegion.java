@@ -98,22 +98,22 @@ public class GlobalRegion extends RegionBase implements IGlobal {
         return ImmutableList.of();
     }
 
-    public boolean isInRegion(int x, int y, int z) {
+    public boolean contains(int x, int y, int z) {
         return true;
     }
 
     @Override
-    public boolean isInRegion(Vector3i vec) {
+    public boolean contains(Vector3i vec) {
         return true;
     }
 
     @Override
-    public boolean isInRegion(double x, double y, double z) {
+    public boolean contains(double x, double y, double z) {
         return true;
     }
 
     @Override
-    public boolean isInRegion(Vector3d vec) {
+    public boolean contains(Vector3d vec) {
         return true;
     }
 

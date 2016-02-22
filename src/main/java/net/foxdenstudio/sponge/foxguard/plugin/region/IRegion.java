@@ -27,19 +27,12 @@ package net.foxdenstudio.sponge.foxguard.plugin.region;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
+import net.foxdenstudio.sponge.foxcore.plugin.util.IBounded;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 import org.spongepowered.api.world.World;
 
-public interface IRegion extends IFGObject, ILinkable {
-
-    boolean isInRegion(int x, int y, int z);
-
-    boolean isInRegion(Vector3i vec);
-
-    boolean isInRegion(double x, double y, double z);
-
-    boolean isInRegion(Vector3d vec);
+public interface IRegion extends IFGObject, ILinkable, IBounded {
 
     World getWorld();
 

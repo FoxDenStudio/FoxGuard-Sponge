@@ -97,13 +97,13 @@ public class RectangularRegion extends RegionBase {
     }
 
     @Override
-    public boolean isInRegion(int x, int y, int z) {
+    public boolean contains(int x, int y, int z) {
         return boundingBox.contains(x, z);
     }
 
 
     @Override
-    public boolean isInRegion(double x, double y, double z) {
+    public boolean contains(double x, double y, double z) {
         return boundingBox.contains(x, z);
     }
 

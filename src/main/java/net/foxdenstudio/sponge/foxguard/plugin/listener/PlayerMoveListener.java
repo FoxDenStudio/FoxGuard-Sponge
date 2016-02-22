@@ -55,7 +55,7 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
                     GenericMath.floor(from.getX() / 16.0),
                     GenericMath.floor(from.getY() / 16.0),
                     GenericMath.floor(from.getZ() / 16.0))).stream()
-                    .filter(region -> region.isInRegion(from))
+                    .filter(region -> region.contains(from))
                     .filter(IFGObject::isEnabled)
                     .forEach(region -> region.getHandlers().stream()
                             .filter(IFGObject::isEnabled)
@@ -66,7 +66,7 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
                 GenericMath.floor(to.getX() / 16.0),
                 GenericMath.floor(to.getY() / 16.0),
                 GenericMath.floor(to.getZ() / 16.0))).stream()
-                .filter(region -> region.isInRegion(to))
+                .filter(region -> region.contains(to))
                 .filter(IFGObject::isEnabled)
                 .forEach(region -> region.getHandlers().stream()
                         .filter(IFGObject::isEnabled)

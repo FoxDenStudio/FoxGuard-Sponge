@@ -82,7 +82,7 @@ public class SpawnEntityEventListener implements EventListener<SpawnEntityEvent>
                     GenericMath.floor(loc.getY() / 16.0),
                     GenericMath.floor(loc.getZ() / 16.0));
             FGManager.getInstance().getRegionList(world, chunk).stream()
-                    .filter(region -> region.isInRegion(loc))
+                    .filter(region -> region.contains(loc))
                     .filter(IFGObject::isEnabled)
                     .forEach(region -> region.getHandlers().stream()
                             .filter(IFGObject::isEnabled)

@@ -86,7 +86,7 @@ public class InteractListener implements EventListener<InteractEvent> {
                 GenericMath.floor(loc.getY() / 16.0),
                 GenericMath.floor(loc.getZ() / 16.0));
         FGManager.getInstance().getRegionList(world, chunk).stream()
-                .filter(region -> region.isInRegion(finalLoc))
+                .filter(region -> region.contains(finalLoc))
                 .filter(IFGObject::isEnabled)
                 .forEach(region -> region.getHandlers().stream()
                         .filter(IFGObject::isEnabled)

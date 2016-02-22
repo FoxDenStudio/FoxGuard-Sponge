@@ -90,12 +90,12 @@ public class ElevationRegion extends RegionBase {
     }
 
     @Override
-    public boolean isInRegion(int x, int y, int z) {
+    public boolean contains(int x, int y, int z) {
         return y >= lowerBound && y <= upperBound;
     }
 
     @Override
-    public boolean isInRegion(double x, double y, double z) {
+    public boolean contains(double x, double y, double z) {
         return y >= lowerBound && y <= upperBound + 1;
     }
 
