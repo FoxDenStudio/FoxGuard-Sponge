@@ -33,6 +33,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
+import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
@@ -48,10 +49,7 @@ import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.*;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
@@ -621,5 +619,112 @@ public class SimpleHandler extends HandlerBase {
         ADD,
         REMOVE,
         SET
+    }
+
+    public static class Factory implements IHandlerFactory{
+
+        private static final String[] simpleAliases = {"simple", "simp"};
+
+        @Override
+        public IHandler create(String name, int priority, String arguments, CommandSource source) {
+            SimpleHandler handler = new SimpleHandler(name, priority);
+            if (source instanceof Player) handler.addOwner((Player) source);
+            return handler;
+        }
+
+        @Override
+        public IHandler create(DataSource source, String name, int priority, boolean isEnabled) throws SQLException {
+            List<User> ownerList = new ArrayList<>();
+            List<User> memberList = new ArrayList<>();
+            SimpleHandler.PassiveOptions po = SimpleHandler.PassiveOptions.DEFAULT;
+            CallbackHashMap<Flag, Tristate> ownerFlagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
+            CallbackHashMap<Flag, Tristate> memberFlagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
+            CallbackHashMap<Flag, Tristate> defaultFlagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
+            try (Connection conn = source.getConnection()) {
+                try (Statement statement = conn.createStatement()) {
+                    try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {
+                        while (ownerSet.next()) {
+                            Optional<User> user = FoxGuardMain.instance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
+                            if (user.isPresent() && !FCHelper.isUserOnList(ownerList, user.get()))
+                                ownerList.add(user.get());
+                        }
+                    }
+                    try (ResultSet memberSet = statement.executeQuery("SELECT * FROM MEMBERS")) {
+                        while (memberSet.next()) {
+                            Optional<User> user = FoxGuardMain.instance().getUserStorage().get((UUID) memberSet.getObject("USERUUID"));
+                            if (user.isPresent() && !FCHelper.isUserOnList(memberList, user.get()))
+                                memberList.add(user.get());
+                        }
+                    }
+                    try (ResultSet mapSet = statement.executeQuery("SELECT * FROM MAP")) {
+                        while (mapSet.next()) {
+                            String key = mapSet.getString("KEY");
+                            switch (key) {
+                                case "passive":
+                                    try {
+                                        po = SimpleHandler.PassiveOptions.valueOf(mapSet.getString("VALUE"));
+                                    } catch (IllegalArgumentException ignored) {
+                                        po = SimpleHandler.PassiveOptions.PASSTHROUGH;
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+                    try (ResultSet passiveMapEntrySet = statement.executeQuery("SELECT * FROM OWNERFLAGMAP")) {
+                        while (passiveMapEntrySet.next()) {
+                            try {
+                                ownerFlagMap.put(Flag.valueOf(passiveMapEntrySet.getString("KEY")),
+                                        Tristate.valueOf(passiveMapEntrySet.getString("VALUE")));
+                            } catch (IllegalArgumentException ignored) {
+                            }
+                        }
+                    }
+                    try (ResultSet passiveMapEntrySet = statement.executeQuery("SELECT * FROM MEMBERFLAGMAP")) {
+                        while (passiveMapEntrySet.next()) {
+                            try {
+                                memberFlagMap.put(Flag.valueOf(passiveMapEntrySet.getString("KEY")),
+                                        Tristate.valueOf(passiveMapEntrySet.getString("VALUE")));
+                            } catch (IllegalArgumentException ignored) {
+                            }
+                        }
+                    }
+                    try (ResultSet passiveMapEntrySet = statement.executeQuery("SELECT * FROM DEFAULTFLAGMAP")) {
+                        while (passiveMapEntrySet.next()) {
+                            try {
+                                defaultFlagMap.put(Flag.valueOf(passiveMapEntrySet.getString("KEY")),
+                                        Tristate.valueOf(passiveMapEntrySet.getString("VALUE")));
+                            } catch (IllegalArgumentException ignored) {
+                            }
+                        }
+                    }
+                }
+            }
+            SimpleHandler handler = new SimpleHandler(name, priority, ownerFlagMap, memberFlagMap, defaultFlagMap);
+            handler.setOwners(ownerList);
+            handler.setMembers(memberList);
+            handler.setPassiveOption(po);
+            handler.setIsEnabled(isEnabled);
+            return handler;
+        }
+
+        @Override
+        public String[] getAliases() {
+            return simpleAliases;
+        }
+
+        @Override
+        public String getType() {
+            return "simple";
+        }
+
+        @Override
+        public String getPrimaryAlias() {
+            return "simple";
+        }
+
+        @Override
+        public List<String> createSuggestions(CommandSource source, String arguments, String type) throws CommandException {
+            return ImmutableList.of();
+        }
     }
 }

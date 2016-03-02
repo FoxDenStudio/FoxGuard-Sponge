@@ -7,6 +7,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.util.HandlerWrapper;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
+import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.User;
@@ -183,6 +184,41 @@ public class MessageController extends ControllerBase {
             enabled.put(Tristate.FALSE, deny);
             enabled.put(Tristate.UNDEFINED, passthrough);
             enabled.put(Tristate.TRUE, allow);
+        }
+    }
+
+    public static class Factory implements IHandlerFactory{
+
+        private static final String[] messageAliases = {"message", "mess", "msg"};
+
+        @Override
+        public IHandler create(String name, int priority, String arguments, CommandSource source) {
+            return null;
+        }
+
+        @Override
+        public IHandler create(DataSource source, String name, int priority, boolean isEnabled) throws SQLException {
+            return null;
+        }
+
+        @Override
+        public String[] getAliases() {
+            return messageAliases;
+        }
+
+        @Override
+        public String getType() {
+            return "message";
+        }
+
+        @Override
+        public String getPrimaryAlias() {
+            return "message";
+        }
+
+        @Override
+        public List<String> createSuggestions(CommandSource source, String arguments, String type) throws CommandException {
+            return ImmutableList.of();
         }
     }
 }

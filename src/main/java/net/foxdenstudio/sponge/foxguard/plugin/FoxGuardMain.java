@@ -33,11 +33,18 @@ import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.mcstats.Metrics;
 import net.foxdenstudio.sponge.foxguard.plugin.command.*;
-import net.foxdenstudio.sponge.foxguard.plugin.command.CommandPriority;
+import net.foxdenstudio.sponge.foxguard.plugin.controller.MessageController;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.PassiveHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.PermissionHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.SimpleHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.BlockEventListener;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.InteractListener;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.PlayerMoveListener;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.SpawnEntityEventListener;
+import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
+import net.foxdenstudio.sponge.foxguard.plugin.region.CuboidRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.ElevationRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.RectangularRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.state.ControllersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
@@ -147,6 +154,8 @@ public final class FoxGuardMain {
         registerCommands();
         logger.info("Registering event listeners");
         registerListeners();
+        logger.info("Registering FoxGuard object factories");
+        registerFactories();
         logger.info("Setting default player permissions");
         configurePermissions();
         logger.info("Registering regions state field");
@@ -269,7 +278,7 @@ public final class FoxGuardMain {
         FCCommandDispatcher fgDispatcher = new FCCommandDispatcher("/foxguard",
                 "FoxGuard commands for managing world protection. Use /help foxguard for subcommands.");
 
-        registerCommonCommands(fgDispatcher);
+        registerCoreCommands(fgDispatcher);
         fgDispatcher.register(new CommandCreate(), "create", "construct", "new", "make", "define", "mk", "cr");
         fgDispatcher.register(new CommandDelete(), "delete", "del", "remove", "rem", "rm", "destroy");
         fgDispatcher.register(new CommandModify(), "modify", "mod", "change", "edit", "update", "md", "ch");
@@ -288,7 +297,7 @@ public final class FoxGuardMain {
         game.getCommandManager().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
     }
 
-    private void registerCommonCommands(FCCommandDispatcher dispatcher) {
+    private void registerCoreCommands(FCCommandDispatcher dispatcher) {
         Text.Builder builder = Text.builder();
         builder.append(Text.of(TextColors.GOLD, "FoxGuard World Protection Plugin\n"));
         builder.append(Text.of("Version: " + FoxGuardMain.PLUGIN_VERSION + "\n"));
@@ -301,6 +310,20 @@ public final class FoxGuardMain {
             if (callable instanceof CommandAbout) ((CommandAbout) callable).addText(builder.build());
             dispatcher.register(callable, mapping.getPrimaryAlias(), new ArrayList<>(secondary));
         }
+    }
+
+    private void registerFactories() {
+        FGFactoryManager manager = FGFactoryManager.getInstance();
+
+        manager.registerRegionFactory(new RectangularRegion.Factory());
+        manager.registerRegionFactory(new CuboidRegion.Factory());
+        manager.registerRegionFactory(new ElevationRegion.Factory());
+
+        manager.registerHandlerFactory(new SimpleHandler.Factory());
+        manager.registerHandlerFactory(new PassiveHandler.Factory());
+        manager.registerHandlerFactory(new PermissionHandler.Factory());
+
+        manager.registerControllerFactory(new MessageController.Factory());
     }
 
     /**

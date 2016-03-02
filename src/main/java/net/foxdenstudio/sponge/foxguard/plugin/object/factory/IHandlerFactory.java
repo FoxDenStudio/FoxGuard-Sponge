@@ -32,10 +32,10 @@ import org.spongepowered.api.command.CommandSource;
 import javax.sql.DataSource;
 import java.sql.SQLException;
 
-interface IHandlerFactory extends IFGFactory {
+public interface IHandlerFactory extends IFGFactory {
 
-    IHandler create(String name, String type, int priority, String arguments, CommandSource source);
+    IHandler create(String name, int priority, String arguments, CommandSource source);
 
-    IHandler create(DataSource source, String name, String type, int priority, boolean isEnabled) throws SQLException;
+    IHandler create(DataSource source, String name, int priority, boolean isEnabled) throws SQLException;
 
 }

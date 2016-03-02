@@ -26,19 +26,31 @@
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
+import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
+import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
+import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
+import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.Tristate;
 
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public class PermissionHandler extends HandlerBase {
 
@@ -113,6 +125,43 @@ public class PermissionHandler extends HandlerBase {
     @Override
     public List<String> modifySuggestions(CommandSource source, String arguments) {
         return ImmutableList.of();
+    }
+
+    public static class Factory implements IHandlerFactory {
+
+        private final String[] permissionAliases = {"permission", "permissions", "perm", "perms"};
+
+        @Override
+        public IHandler create(String name, int priority, String arguments, CommandSource source) {
+            return new PermissionHandler(name, priority);
+        }
+
+        @Override
+        public IHandler create(DataSource source, String name, int priority, boolean isEnabled) throws SQLException {
+            PermissionHandler handler = new PermissionHandler(name, priority);
+            handler.setIsEnabled(isEnabled);
+            return handler;
+        }
+
+        @Override
+        public String[] getAliases() {
+            return permissionAliases;
+        }
+
+        @Override
+        public String getType() {
+            return "permission";
+        }
+
+        @Override
+        public String getPrimaryAlias() {
+            return "permission";
+        }
+
+        @Override
+        public List<String> createSuggestions(CommandSource source, String arguments, String type) throws CommandException {
+            return ImmutableList.of();
+        }
     }
 
 }

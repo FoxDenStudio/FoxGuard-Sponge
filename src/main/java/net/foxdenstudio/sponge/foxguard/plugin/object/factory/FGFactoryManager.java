@@ -48,11 +48,8 @@ public final class FGFactoryManager {
 
     private FGFactoryManager() {
         regionFactories = new ArrayList<>();
-        regionFactories.add(new FGRegionFactory());
         handlerFactories = new ArrayList<>();
-        handlerFactories.add(new FGHandlerFactory());
         controllerFactories = new ArrayList<>();
-        controllerFactories.add(new FGControllerFactory());
     }
 
     public static FGFactoryManager getInstance() {
@@ -62,7 +59,7 @@ public final class FGFactoryManager {
     public IRegion createRegion(String name, String type, String arguments, CommandSource source) throws CommandException {
         for (IRegionFactory rf : regionFactories) {
             if (isIn(rf.getAliases(), type)) {
-                IRegion region = rf.create(name, type, arguments, source);
+                IRegion region = rf.create(name, arguments, source);
                 if (region != null) return region;
             }
         }
@@ -71,8 +68,8 @@ public final class FGFactoryManager {
 
     public IRegion createRegion(DataSource source, String name, String type, boolean isEnabled) throws SQLException {
         for (IRegionFactory rf : regionFactories) {
-            if (isIn(rf.getTypes(), type)) {
-                IRegion region = rf.create(source, name, type, isEnabled);
+            if (rf.getType().equalsIgnoreCase(type)) {
+                IRegion region = rf.create(source, name, isEnabled);
                 if (region != null) return region;
             }
         }
@@ -83,7 +80,7 @@ public final class FGFactoryManager {
     public IHandler createHandler(String name, String type, int priority, String args, CommandSource source) {
         for (IHandlerFactory hf : handlerFactories) {
             if (isIn(hf.getAliases(), type)) {
-                IHandler handler = hf.create(name, type, priority, args, source);
+                IHandler handler = hf.create(name, priority, args, source);
                 if (handler != null) return handler;
             }
         }
@@ -92,8 +89,8 @@ public final class FGFactoryManager {
 
     public IHandler createHandler(DataSource source, String name, String type, int priority, boolean isEnabled) throws SQLException {
         for (IHandlerFactory hf : handlerFactories) {
-            if (isIn(hf.getTypes(), type)) {
-                IHandler handler = hf.create(source, name, type, priority, isEnabled);
+            if (hf.getType().equalsIgnoreCase(type)) {
+                IHandler handler = hf.create(source, name, priority, isEnabled);
                 if (handler != null) return handler;
             }
         }
@@ -103,7 +100,7 @@ public final class FGFactoryManager {
     public IHandler createController(String name, String type, int priority, String args, CommandSource source) {
         for (IHandlerFactory hf : controllerFactories) {
             if (isIn(hf.getAliases(), type)) {
-                IHandler handler = hf.create(name, type, priority, args, source);
+                IHandler handler = hf.create(name, priority, args, source);
                 if (handler != null) return handler;
             }
         }
@@ -112,8 +109,8 @@ public final class FGFactoryManager {
 
     public IHandler createController(DataSource source, String name, String type, int priority, boolean isEnabled) throws SQLException {
         for (IHandlerFactory hf : controllerFactories) {
-            if (isIn(hf.getTypes(), type)) {
-                IHandler handler = hf.create(source, name, type, priority, isEnabled);
+            if (hf.getType().equalsIgnoreCase(type)) {
+                IHandler handler = hf.create(source, name, priority, isEnabled);
                 if (handler != null) return handler;
             }
         }
@@ -122,7 +119,7 @@ public final class FGFactoryManager {
 
     public List<String> regionSuggestions(CommandSource source, String arguments, String type) throws CommandException {
         for (IRegionFactory rf : regionFactories) {
-            if (isIn(rf.getTypes(), type)) {
+            if (rf.getType().equalsIgnoreCase(type)) {
                 return rf.createSuggestions(source, arguments, type);
             }
         }
@@ -131,7 +128,7 @@ public final class FGFactoryManager {
 
     public List<String> handlerSuggestions(CommandSource source, String arguments, String type) throws CommandException {
         for (IHandlerFactory hf : handlerFactories) {
-            if (isIn(hf.getTypes(), type)) {
+            if (hf.getType().equalsIgnoreCase(type)) {
                 return hf.createSuggestions(source, arguments, type);
             }
         }
@@ -140,7 +137,7 @@ public final class FGFactoryManager {
 
     public List<String> controllerSuggestions(CommandSource source, String arguments, String type) throws CommandException {
         for (IHandlerFactory hf : controllerFactories) {
-            if (isIn(hf.getTypes(), type)) {
+            if (hf.getType().equalsIgnoreCase(type)) {
                 return hf.createSuggestions(source, arguments, type);
             }
         }
@@ -159,7 +156,7 @@ public final class FGFactoryManager {
         return true;
     }
 
-    public boolean registerControllerFactory(IHandlerFactory factory){
+    public boolean registerControllerFactory(IHandlerFactory factory) {
         if (controllerFactories.contains(factory)) return false;
         controllerFactories.add(factory);
         return true;
@@ -176,7 +173,7 @@ public final class FGFactoryManager {
     public List<String> getPrimaryRegionTypeAliases() {
         List<String> aliases = new ArrayList<>();
         for (IFGFactory factory : regionFactories) {
-            aliases.addAll(Arrays.asList(factory.getPrimaryAliases()));
+            aliases.addAll(Arrays.asList(factory.getPrimaryAlias()));
         }
         return aliases;
     }
@@ -184,7 +181,7 @@ public final class FGFactoryManager {
     public List<String> getPrimaryHandlerTypeAliases() {
         List<String> aliases = new ArrayList<>();
         for (IFGFactory factory : handlerFactories) {
-            aliases.addAll(Arrays.asList(factory.getPrimaryAliases()));
+            aliases.addAll(Arrays.asList(factory.getPrimaryAlias()));
         }
         return aliases;
     }
@@ -192,7 +189,7 @@ public final class FGFactoryManager {
     public List<String> getPrimaryControllerTypeAliases() {
         List<String> aliases = new ArrayList<>();
         for (IFGFactory factory : controllerFactories) {
-            aliases.addAll(Arrays.asList(factory.getPrimaryAliases()));
+            aliases.addAll(Arrays.asList(factory.getPrimaryAlias()));
         }
         return aliases;
     }

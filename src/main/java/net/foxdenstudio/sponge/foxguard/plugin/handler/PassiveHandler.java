@@ -31,9 +31,12 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
+import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.text.Text;
@@ -45,10 +48,7 @@ import org.spongepowered.api.util.Tristate;
 
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.*;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
@@ -221,4 +221,62 @@ public class PassiveHandler extends HandlerBase {
         return "passive";
     }
 
+    public static class Factory implements IHandlerFactory {
+
+        private final String[] passiveAliases = {"passive", "pass"};
+
+        @Override
+        public IHandler create(String name, int priority, String arguments, CommandSource source) {
+            return new PassiveHandler(name, priority);
+        }
+
+        @Override
+        public IHandler create(DataSource source, String name, int priority, boolean isEnabled) throws SQLException {
+            List<User> ownerList = new ArrayList<>();
+            CallbackHashMap<Flag, Tristate> flagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
+            try (Connection conn = source.getConnection()) {
+                try (Statement statement = conn.createStatement()) {
+                    try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {
+                        while (ownerSet.next()) {
+                            Optional<User> user = FoxGuardMain.instance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
+                            if (user.isPresent() && !FCHelper.isUserOnList(ownerList, user.get()))
+                                ownerList.add(user.get());
+                        }
+                    }
+                    try (ResultSet passiveMapEntrySet = statement.executeQuery("SELECT * FROM FLAGMAP")) {
+                        while (passiveMapEntrySet.next()) {
+                            try {
+                                flagMap.put(Flag.valueOf(passiveMapEntrySet.getString("KEY")),
+                                        Tristate.valueOf(passiveMapEntrySet.getString("VALUE")));
+                            } catch (IllegalArgumentException ignored) {
+                            }
+                        }
+                    }
+                }
+            }
+            PassiveHandler handler = new PassiveHandler(name, priority, flagMap);
+            handler.setIsEnabled(isEnabled);
+            return handler;
+        }
+
+        @Override
+        public String[] getAliases() {
+            return passiveAliases;
+        }
+
+        @Override
+        public String getType() {
+            return "passive";
+        }
+
+        @Override
+        public String getPrimaryAlias() {
+            return "passive";
+        }
+
+        @Override
+        public List<String> createSuggestions(CommandSource source, String arguments, String type) throws CommandException {
+            return ImmutableList.of();
+        }
+    }
 }

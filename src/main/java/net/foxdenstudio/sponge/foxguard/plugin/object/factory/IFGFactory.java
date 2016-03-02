@@ -30,13 +30,13 @@ import org.spongepowered.api.command.CommandSource;
 
 import java.util.List;
 
-interface IFGFactory {
+public interface IFGFactory {
 
     String[] getAliases();
 
-    String[] getTypes();
+    String getType();
 
-    String[] getPrimaryAliases();
+    String getPrimaryAlias();
 
     List<String> createSuggestions(CommandSource source, String arguments, String type) throws CommandException;
 

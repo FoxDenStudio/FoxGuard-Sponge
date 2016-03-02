@@ -32,10 +32,10 @@ import org.spongepowered.api.command.CommandSource;
 import javax.sql.DataSource;
 import java.sql.SQLException;
 
-interface IRegionFactory extends IFGFactory {
+public interface IRegionFactory extends IFGFactory {
 
-    IRegion create(String name, String type, String arguments, CommandSource source) throws CommandException;
+    IRegion create(String name, String arguments, CommandSource source) throws CommandException;
 
-    IRegion create(DataSource source, String name, String type, boolean isEnabled) throws SQLException;
+    IRegion create(DataSource source, String name, boolean isEnabled) throws SQLException;
 
 }

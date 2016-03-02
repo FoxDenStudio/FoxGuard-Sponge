@@ -28,21 +28,28 @@ package net.foxdenstudio.sponge.foxguard.plugin.region;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.FCHelper;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
-import net.foxdenstudio.sponge.foxguard.plugin.region.util.BoundingBox3;
+import net.foxdenstudio.sponge.foxcore.plugin.util.BoundingBox3;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
+import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IRegionFactory;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public class CuboidRegion extends RegionBase {
 
@@ -165,5 +172,68 @@ public class CuboidRegion extends RegionBase {
     @Override
     public String toString() {
         return this.boundingBox.toString();
+    }
+
+    public static class Factory implements IRegionFactory {
+
+        private static final String[] cuboidAliases = {"box", "cube", "cuboid", "cuboidal", "rectangularprism", "rectangleprism", "rectprism"};
+
+        @Override
+        public IRegion create(String name, String arguments, CommandSource source) throws CommandException {
+            AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+                    .arguments(arguments)
+                    .parse();
+            return new CuboidRegion(name, FCHelper.getPositions(source), parse.args, source);
+        }
+
+        @Override
+        public IRegion create(DataSource source, String name, boolean isEnabled) throws SQLException {
+            Vector3i a, b;
+            List<User> userList = new ArrayList<>();
+            try (Connection conn = source.getConnection()) {
+                try (Statement statement = conn.createStatement()) {
+                    try (ResultSet boundSet = statement.executeQuery("SELECT * FROM BOUNDS")) {
+                        boundSet.next();
+                        a = new Vector3i(boundSet.getInt("X"), boundSet.getInt("Y"), boundSet.getInt("Z"));
+                        boundSet.next();
+                        b = new Vector3i(boundSet.getInt("X"), boundSet.getInt("Y"), boundSet.getInt("Z"));
+                    }
+                    try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {
+                        while (ownerSet.next()) {
+                            Optional<User> user = FoxGuardMain.instance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
+                            if (user.isPresent()) userList.add(user.get());
+                        }
+                    }
+                }
+            }
+            CuboidRegion region = new CuboidRegion(name, new BoundingBox3(a, b));
+            region.setIsEnabled(isEnabled);
+            return region;
+        }
+
+        @Override
+        public String[] getAliases() {
+            return cuboidAliases;
+        }
+
+        @Override
+        public String getType() {
+            return "cuboid";
+        }
+
+        @Override
+        public String getPrimaryAlias() {
+            return "cuboid";
+        }
+
+        @Override
+        public List<String> createSuggestions(CommandSource source, String arguments, String type) throws CommandException {
+            AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+                    .arguments(arguments)
+                    .excludeCurrent(true)
+                    .autoCloseQuotes(true)
+                    .parse();
+            return ImmutableList.of(parse.current.prefix + "~");
+        }
     }
 }
