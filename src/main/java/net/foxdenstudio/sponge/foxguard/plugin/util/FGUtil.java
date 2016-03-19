@@ -42,7 +42,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public final class FGHelper {
+public final class FGUtil {
 
     public static TextColor getColorForObject(IFGObject object) {
         if (object instanceof IGlobal) return TextColors.YELLOW;
@@ -68,9 +68,11 @@ public final class FGHelper {
 
     public static Flag nearestParent(Flag child, Set<Flag> set) {
         for(Set<Flag> level : child.getHiearchy()){
-            Set<Flag> matches = new HashSet<>(set);
-            matches.retainAll(level);
-            //if(matches)
+            for(Flag flag : level){
+                if(set.contains(flag)){
+                    return flag;
+                }
+            }
         }
         return null;
     }

@@ -27,6 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import org.spongepowered.api.util.Tristate;
 
 import java.util.*;
@@ -103,9 +104,9 @@ public enum Flag {
             Set<Flag> current = new LinkedHashSet<>();
             current.add(this);
             while (!current.isEmpty()){
-                Set<Flag> newSet = new HashSet<>();
-                current.forEach(flag -> Arrays.stream(flag.getParents()).forEach(newSet::add));
                 list.add(ImmutableSet.copyOf(current));
+                Set<Flag> newSet = new LinkedHashSet<>();
+                current.forEach(flag -> Arrays.stream(flag.getParents()).forEach(newSet::add));
                 current = newSet;
             }
             hiearchy = ImmutableList.copyOf(list);

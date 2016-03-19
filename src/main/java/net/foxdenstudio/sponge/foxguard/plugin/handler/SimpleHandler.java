@@ -27,13 +27,14 @@ package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.FCHelper;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
-import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
+import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
@@ -65,9 +66,9 @@ public class SimpleHandler extends HandlerBase {
 
     public SimpleHandler(String name, int priority) {
         this(name, priority,
-                new CallbackHashMap<>((o, m) -> Tristate.UNDEFINED),
-                new CallbackHashMap<>((o, m) -> Tristate.UNDEFINED),
-                new CallbackHashMap<>((o, m) -> Tristate.UNDEFINED));
+                new CacheMap<>((o, m) -> Tristate.UNDEFINED),
+                new CacheMap<>((o, m) -> Tristate.UNDEFINED),
+                new CacheMap<>((o, m) -> Tristate.UNDEFINED));
     }
 
     public SimpleHandler(String name, int priority,
@@ -86,7 +87,7 @@ public class SimpleHandler extends HandlerBase {
             if (source instanceof ProxySource) source = ((ProxySource) source).getOriginalSource();
             if (source instanceof Player && !this.ownerList.contains(source)) return ProcessResult.failure();
         }
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).parse();
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).parse();
         if (parse.args.length > 0) {
             if (isIn(GROUPS_ALIASES, parse.args[0])) {
                 if (parse.args.length > 1) {
@@ -246,12 +247,12 @@ public class SimpleHandler extends HandlerBase {
 
     @Override
     public List<String> modifySuggestions(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
                 .excludeCurrent(true)
                 .autoCloseQuotes(true)
                 .parse();
-        if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
+        if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0) {
                 return ImmutableList.of("set", "group", "passive").stream()
                         .filter(new StartsWithPredicate(parse.current.token))
@@ -354,7 +355,7 @@ public class SimpleHandler extends HandlerBase {
                     }
                 }
             }
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
             return ImmutableList.of(parse.current.prefix + " ");
         return ImmutableList.of();
     }
@@ -384,12 +385,7 @@ public class SimpleHandler extends HandlerBase {
     }
 
     private Tristate getResult(Map<Flag, Tristate> map, Flag flag) {
-        Flag temp = flag;
-        while (temp != null && !map.containsKey(temp)) {
-            temp = temp.getParents().length > 0 ? temp.getParents()[0] : null;
-        }
-        if (temp != null) return map.get(temp);
-        else return map.get(flag);
+        return map.get(FGUtil.nearestParent(flag, map.keySet()));
     }
 
     @Override
@@ -637,9 +633,9 @@ public class SimpleHandler extends HandlerBase {
             List<User> ownerList = new ArrayList<>();
             List<User> memberList = new ArrayList<>();
             SimpleHandler.PassiveOptions po = SimpleHandler.PassiveOptions.DEFAULT;
-            CallbackHashMap<Flag, Tristate> ownerFlagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
-            CallbackHashMap<Flag, Tristate> memberFlagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
-            CallbackHashMap<Flag, Tristate> defaultFlagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
+            CacheMap<Flag, Tristate> ownerFlagMap = new CacheMap<>((key, map) -> Tristate.UNDEFINED);
+            CacheMap<Flag, Tristate> memberFlagMap = new CacheMap<>((key, map) -> Tristate.UNDEFINED);
+            CacheMap<Flag, Tristate> defaultFlagMap = new CacheMap<>((key, map) -> Tristate.UNDEFINED);
             try (Connection conn = source.getConnection()) {
                 try (Statement statement = conn.createStatement()) {
                     try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {

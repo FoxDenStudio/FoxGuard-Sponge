@@ -25,13 +25,11 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.region;
 
-import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.FCHelper;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
-import net.foxdenstudio.sponge.foxcore.plugin.util.BoundingBox2;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IRegionFactory;
 import org.spongepowered.api.command.CommandException;
@@ -178,7 +176,7 @@ public class ElevationRegion extends RegionBase {
 
         @Override
         public IRegion create(String name, String arguments, CommandSource source) throws CommandException {
-            AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+            AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                     .arguments(arguments)
                     .parse();
             return new ElevationRegion(name, FCHelper.getPositions(source), parse.args, source);
@@ -227,7 +225,7 @@ public class ElevationRegion extends RegionBase {
 
         @Override
         public List<String> createSuggestions(CommandSource source, String arguments, String type) throws CommandException {
-            AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+            AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                     .arguments(arguments)
                     .excludeCurrent(true)
                     .autoCloseQuotes(true)

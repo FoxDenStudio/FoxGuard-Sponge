@@ -26,13 +26,13 @@
 package net.foxdenstudio.sponge.foxguard.plugin.state;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.state.ListStateFieldBase;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
-import net.foxdenstudio.sponge.foxguard.plugin.util.FGHelper;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
@@ -74,7 +74,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         int index = 1;
         while (regionIterator.hasNext()) {
             IRegion region = regionIterator.next();
-            builder.append(Text.of(FGHelper.getColorForObject(region),
+            builder.append(Text.of(FGUtil.getColorForObject(region),
                     (index++) + ": " + region.getShortTypeName() + " : " + region.getWorld().getName() + " : " + region.getName()));
             if (regionIterator.hasNext()) builder.append(Text.of("\n"));
         }
@@ -83,7 +83,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
 
     @Override
     public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).limit(1).parseLastFlags(false).parse();
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).limit(1).parseLastFlags(false).parse();
         String newArgs = parse.args.length > 1 ? parse.args[1] : "";
         if (parse.args.length == 0 || parse.args[0].equalsIgnoreCase("add")) {
             return add(source, newArgs);
@@ -95,13 +95,13 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
 
     @Override
     public List<String> modifySuggestions(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
                 .flagMapper(MAPPER)
                 .excludeCurrent(true)
                 .autoCloseQuotes(true)
                 .parse();
-        if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
+        if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0) {
                 return ImmutableList.of("add", "remove").stream()
                         .filter(new StartsWithPredicate(parse.current.token))
@@ -135,25 +135,25 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                 }
 
             }
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGKEY))
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY))
             return ImmutableList.of("world").stream()
                     .filter(new StartsWithPredicate(parse.current.token))
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());
-        else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGVALUE)) {
+        else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGVALUE)) {
             if (isIn(WORLD_ALIASES, parse.current.key))
                 return Sponge.getGame().getServer().getWorlds().stream()
                         .map(World::getName)
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
             return ImmutableList.of(parse.current.prefix + " ");
         return ImmutableList.of();
     }
 
     public ProcessResult add(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).parse();
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(MAPPER).parse();
 
         if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name!"));
         String worldName = parse.flagmap.get("world");
@@ -177,7 +177,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
     }
 
     public ProcessResult remove(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).parse();
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(MAPPER).parse();
 
         if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name or a number!"));
         String worldName = parse.flagmap.get("world");

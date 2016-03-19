@@ -1,7 +1,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.controller;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.util.HandlerWrapper;
@@ -121,7 +121,7 @@ public class MessageController extends ControllerBase {
 
     @Override
     public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments).parse();
 
         return ProcessResult.failure();

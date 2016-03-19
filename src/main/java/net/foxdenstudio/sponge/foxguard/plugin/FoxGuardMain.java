@@ -27,11 +27,11 @@ package net.foxdenstudio.sponge.foxguard.plugin;
 
 import com.google.inject.Inject;
 import net.foxdenstudio.sponge.foxcore.plugin.FoxCoreMain;
-import net.foxdenstudio.sponge.foxcore.plugin.command.CommandAbout;
-import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandDispatcher;
+import net.foxdenstudio.sponge.foxcore.plugin.command.*;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.plugin.command.*;
+import net.foxdenstudio.sponge.foxguard.plugin.command.CommandTest;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.MessageController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.PassiveHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.PermissionHandler;
@@ -60,11 +60,13 @@ import org.spongepowered.api.event.EventManager;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.action.InteractEvent;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
+import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.entity.DisplaceEntityEvent;
 import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.event.game.state.*;
 import org.spongepowered.api.event.world.LoadWorldEvent;
 import org.spongepowered.api.event.world.UnloadWorldEvent;
+import org.spongepowered.api.plugin.Dependency;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.service.permission.PermissionService;
 import org.spongepowered.api.service.permission.SubjectData;
@@ -82,13 +84,17 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-@Plugin(id = "foxguard", name = "FoxGuard", version = FoxGuardMain.PLUGIN_VERSION, dependencies = "required-after:foxcore")
+@Plugin(id = "foxguard", name = "FoxGuard", version = FoxGuardMain.PLUGIN_VERSION, dependencies = {
+        @Dependency(id = "foxcore")
+})
 public final class FoxGuardMain {
 
     /**
      * String object containing the current version of the plugin.
      */
     public static final String PLUGIN_VERSION = "0.16.1-SNAPSHOT";//VERSION
+
+    public static final Cause PLUGIN_CAUSE = Cause.builder().named("plugin", FoxGuardMain.instance()).build();
 
     /**
      * FoxGuardMain instance object.
@@ -116,6 +122,8 @@ public final class FoxGuardMain {
     private UserStorageService userStorage;
 
     private boolean loaded = false;
+
+    private FCCommandDispatcher fgDispatcher;
 
     /**
      * @return The current instance of the FoxGuardMain object.
@@ -277,7 +285,7 @@ public final class FoxGuardMain {
      * A private method that registers the list of commands, their aliases, and the command class.
      */
     private void registerCommands() {
-        FCCommandDispatcher fgDispatcher = new FCCommandDispatcher("/foxguard",
+        fgDispatcher = new FCCommandDispatcher("/foxguard",
                 "FoxGuard commands for managing world protection. Use /help foxguard for subcommands.");
 
         registerCoreCommands(fgDispatcher);
@@ -296,6 +304,8 @@ public final class FoxGuardMain {
 
         fgDispatcher.register(new CommandPriority(), "priority", "prio", "level", "rank");
 
+        fgDispatcher.register(new CommandTest(), "test");
+
         game.getCommandManager().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
     }
 
@@ -306,6 +316,7 @@ public final class FoxGuardMain {
         builder.append(Text.of("Author: gravityfox\n"));
 
         for (CommandMapping mapping : FoxCoreMain.instance().getFCDispatcher().getCommands()) {
+            if (mapping.getCallable() instanceof net.foxdenstudio.sponge.foxcore.plugin.command.CommandTest) continue;
             Set<String> secondary = new HashSet<>(mapping.getAllAliases());
             secondary.remove(mapping.getPrimaryAlias());
             CommandCallable callable = mapping.getCallable();

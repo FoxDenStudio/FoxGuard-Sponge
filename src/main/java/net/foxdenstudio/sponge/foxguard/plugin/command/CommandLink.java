@@ -26,13 +26,13 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
-import net.foxdenstudio.sponge.foxguard.plugin.util.FGHelper;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
@@ -67,19 +67,19 @@ public class CommandLink implements CommandCallable {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).flagMapper(mapper).parse();
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(mapper).parse();
 
         if (parse.args.length == 0) {
-            if (FGHelper.getSelectedRegions(source).size() == 0 &&
-                    FGHelper.getSelectedHandlers(source).size() == 0)
+            if (FGUtil.getSelectedRegions(source).size() == 0 &&
+                    FGUtil.getSelectedHandlers(source).size() == 0)
                 throw new CommandException(Text.of("You don't have any Regions or Handlers in your state buffer!"));
-            if (FGHelper.getSelectedRegions(source).size() == 0)
+            if (FGUtil.getSelectedRegions(source).size() == 0)
                 throw new CommandException(Text.of("You don't have any Regions in your state buffer!"));
-            if (FGHelper.getSelectedHandlers(source).size() == 0)
+            if (FGUtil.getSelectedHandlers(source).size() == 0)
                 throw new CommandException(Text.of("You don't have any Handlers in your state buffer!"));
             int[] successes = {0};
-            FGHelper.getSelectedRegions(source).stream().forEach(
-                    region -> FGHelper.getSelectedHandlers(source).stream()
+            FGUtil.getSelectedRegions(source).stream().forEach(
+                    region -> FGUtil.getSelectedHandlers(source).stream()
                             .filter(handler -> !(handler instanceof GlobalHandler))
                             .forEach(handler -> successes[0] += FGManager.getInstance().link(region, handler) ? 1 : 0));
             source.sendMessage(Text.of(TextColors.GREEN, "Successfully formed " + successes[0] + " links!"));

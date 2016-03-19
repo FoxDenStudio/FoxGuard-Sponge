@@ -26,14 +26,14 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
-import net.foxdenstudio.sponge.foxguard.plugin.util.FGHelper;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
@@ -75,7 +75,7 @@ public class CommandDetail implements CommandCallable {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
                 .limit(2)
                 .flagMapper(MAPPER)
@@ -160,14 +160,14 @@ public class CommandDetail implements CommandCallable {
                         .collect(GuavaCollectors.toImmutableList());
                 if (controllerList.size() == 0 && regionList.size() == 0)
                     builder.append(Text.of(TextStyles.ITALIC, "\nNo inbound links!"));
-                controllerList.forEach(controller -> builder.append(Text.of(FGHelper.getColorForObject(controller),
+                controllerList.forEach(controller -> builder.append(Text.of(FGUtil.getColorForObject(controller),
                         TextActions.runCommand("/foxguard det c " + controller.getName()),
                         TextActions.showText(Text.of("View details for controller \"" + controller.getName() + "\"")))));
 
-                regionList.forEach(region -> builder.append(Text.of(FGHelper.getColorForObject(region),
+                regionList.forEach(region -> builder.append(Text.of(FGUtil.getColorForObject(region),
                         TextActions.runCommand("/foxguard detail region --w:" + region.getWorld() + " " + region.getName()),
                         TextActions.showText(Text.of("View details for region \"" + region.getName() + "\"")),
-                        "\n" + FGHelper.getRegionName(region, true)
+                        "\n" + FGUtil.getRegionName(region, true)
                 )));
                 if(handler instanceof IController){
                     outboundLinks(builder, (IController) handler);
@@ -187,7 +187,7 @@ public class CommandDetail implements CommandCallable {
         builder.append(Text.of(TextColors.GREEN, "\n------- Outbound Links -------"));
         if (linkable.getHandlers().size() == 0)
             builder.append(Text.of(TextStyles.ITALIC, "\nNo outbound links!"));
-        linkable.getHandlers().stream().forEach(handler -> builder.append(Text.of(FGHelper.getColorForObject(handler),
+        linkable.getHandlers().stream().forEach(handler -> builder.append(Text.of(FGUtil.getColorForObject(handler),
                 TextActions.runCommand("/foxguard det h " + handler.getName()),
                 TextActions.showText(Text.of("View Details for " + (handler instanceof IController ? "controller" : "handler") + " \"" + handler.getName() + "\"")),
                 "\n" + handler.getShortTypeName() + " : " + handler.getName()
@@ -197,14 +197,14 @@ public class CommandDetail implements CommandCallable {
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) return ImmutableList.of();
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
                 .limit(2)
                 .flagMapper(MAPPER)
                 .excludeCurrent(true)
                 .autoCloseQuotes(true)
                 .parse();
-        if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
+        if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0)
                 return Arrays.asList(FGManager.TYPES).stream()
                         .filter(new StartsWithPredicate(parse.current.token))
@@ -235,19 +235,19 @@ public class CommandDetail implements CommandCallable {
                             .collect(GuavaCollectors.toImmutableList());
                 }
             }
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGKEY))
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY))
             return ImmutableList.of("world").stream()
                     .filter(new StartsWithPredicate(parse.current.token))
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());
-        else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGVALUE)) {
+        else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGVALUE)) {
             if (isIn(WORLD_ALIASES, parse.current.key))
                 return Sponge.getGame().getServer().getWorlds().stream()
                         .map(World::getName)
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
             return ImmutableList.of(parse.current.prefix + " ");
         return ImmutableList.of();
     }

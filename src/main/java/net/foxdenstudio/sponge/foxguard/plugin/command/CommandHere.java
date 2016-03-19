@@ -28,11 +28,11 @@ package net.foxdenstudio.sponge.foxguard.plugin.command;
 import com.flowpowered.math.vector.Vector3d;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.FCHelper;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
-import net.foxdenstudio.sponge.foxguard.plugin.util.FGHelper;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
@@ -73,7 +73,7 @@ public class CommandHere implements CommandCallable {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).parse();
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(MAPPER).parse();
 
         String worldName = parse.flagmap.get("world");
         World world = null;
@@ -130,10 +130,10 @@ public class CommandHere implements CommandCallable {
             ListIterator<IRegion> regionListIterator = regionList.listIterator();
             while (regionListIterator.hasNext()) {
                 IRegion region = regionListIterator.next();
-                output.append(Text.of(FGHelper.getColorForObject(region),
+                output.append(Text.of(FGUtil.getColorForObject(region),
                         TextActions.runCommand("/foxguard detail region --w:" + region.getWorld().getName() + " " + region.getName()),
                         TextActions.showText(Text.of("View Details")),
-                        FGHelper.getRegionName(region, false)));
+                        FGUtil.getRegionName(region, false)));
                 if (regionListIterator.hasNext()) output.append(Text.of("\n"));
             }
             flag = true;
@@ -148,7 +148,7 @@ public class CommandHere implements CommandCallable {
             ListIterator<IHandler> handlerListIterator = handlerList.listIterator();
             while (handlerListIterator.hasNext()) {
                 IHandler handler = handlerListIterator.next();
-                output.append(Text.of(FGHelper.getColorForObject(handler),
+                output.append(Text.of(FGUtil.getColorForObject(handler),
                         TextActions.runCommand("/foxguard detail handler " + handler.getName()),
                         TextActions.showText(Text.of("View Details")),
                         handler.getShortTypeName() + " : " + handler.getName()));
@@ -162,32 +162,32 @@ public class CommandHere implements CommandCallable {
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) return ImmutableList.of();
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
                 .flagMapper(MAPPER)
                 .excludeCurrent(true)
                 .autoCloseQuotes(true)
                 .parse();
-        if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT) && parse.current.index < 3 && parse.current.token.isEmpty()) {
+        if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT) && parse.current.index < 3 && parse.current.token.isEmpty()) {
             return ImmutableList.of(parse.current.prefix + "~");
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.SHORTFLAG)) {
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.SHORTFLAG)) {
             return ImmutableList.of("r", "h").stream()
                     .filter(flag -> !parse.flagmap.containsKey(flag))
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGKEY))
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY))
             return ImmutableList.of("world").stream()
                     .filter(new StartsWithPredicate(parse.current.token))
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());
-        else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGVALUE)) {
+        else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGVALUE)) {
             if (isIn(WORLD_ALIASES, parse.current.key))
                 return Sponge.getGame().getServer().getWorlds().stream()
                         .map(World::getName)
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
             return ImmutableList.of(parse.current.prefix + " ");
         return ImmutableList.of();
     }

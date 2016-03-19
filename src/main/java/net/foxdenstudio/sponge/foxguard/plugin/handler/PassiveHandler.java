@@ -27,16 +27,16 @@ package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.FCHelper;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
-import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
+import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.text.Text;
@@ -58,10 +58,10 @@ public class PassiveHandler extends HandlerBase {
     private final Map<Flag, Tristate> map;
 
     public PassiveHandler(String name, int priority) {
-        this(name, priority, new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED));
+        this(name, priority, new CacheMap<>((key, map) -> Tristate.UNDEFINED));
     }
 
-    public PassiveHandler(String name, int priority, CallbackHashMap<Flag, Tristate> map) {
+    public PassiveHandler(String name, int priority, CacheMap<Flag, Tristate> map) {
         super(name, priority);
         this.map = map;
     }
@@ -71,17 +71,12 @@ public class PassiveHandler extends HandlerBase {
         if (user != null) {
             return EventResult.pass();
         }
-        Flag temp = flag;
-        while (temp != null && !map.containsKey(temp)) {
-            temp = temp.getParents().length > 0 ? temp.getParents()[0] : null;
-        }
-        if (temp != null) return EventResult.of(map.get(temp));
-        else return EventResult.of(map.get(flag));
+        return EventResult.of(map.get(FGUtil.nearestParent(flag, map.keySet())));
     }
 
     @Override
     public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).parse();
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).parse();
         if (parse.args.length > 0) {
             if (isIn(SET_ALIASES, parse.args[0])) {
                 if (parse.args.length > 1) {
@@ -131,12 +126,12 @@ public class PassiveHandler extends HandlerBase {
 
     @Override
     public List<String> modifySuggestions(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
                 .excludeCurrent(true)
                 .autoCloseQuotes(true)
                 .parse();
-        if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
+        if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0) {
                 return ImmutableList.of("set").stream()
                         .filter(new StartsWithPredicate(parse.current.token))
@@ -158,7 +153,7 @@ public class PassiveHandler extends HandlerBase {
                             .collect(GuavaCollectors.toImmutableList());
                 }
             }
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
             return ImmutableList.of(parse.current.prefix + " ");
         return ImmutableList.of();
     }
@@ -233,7 +228,7 @@ public class PassiveHandler extends HandlerBase {
         @Override
         public IHandler create(DataSource source, String name, int priority, boolean isEnabled) throws SQLException {
             List<User> ownerList = new ArrayList<>();
-            CallbackHashMap<Flag, Tristate> flagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
+            CacheMap<Flag, Tristate> flagMap = new CacheMap<>((key, map) -> Tristate.UNDEFINED);
             try (Connection conn = source.getConnection()) {
                 try (Statement statement = conn.createStatement()) {
                     try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {

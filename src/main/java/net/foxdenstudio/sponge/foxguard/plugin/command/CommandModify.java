@@ -27,7 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.FCHelper;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
@@ -73,7 +73,7 @@ public class CommandModify implements CommandCallable {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
                 .limit(2)
                 .flagMapper(MAPPER)
@@ -110,7 +110,7 @@ public class CommandModify implements CommandCallable {
 
                     @Override
                     public Cause getCause() {
-                        return Cause.of(FoxGuardMain.instance());
+                        return FoxGuardMain.PLUGIN_CAUSE;
                     }
                 });
                 if (result.getMessage().isPresent()) {
@@ -148,7 +148,7 @@ public class CommandModify implements CommandCallable {
 
                     @Override
                     public Cause getCause() {
-                        return Cause.of(FoxGuardMain.instance());
+                        return FoxGuardMain.PLUGIN_CAUSE;
                     }
                 });
                 if (result.getMessage().isPresent()) {
@@ -180,7 +180,7 @@ public class CommandModify implements CommandCallable {
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) return ImmutableList.of();
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
                 .limit(2)
                 .flagMapper(MAPPER)
@@ -188,7 +188,7 @@ public class CommandModify implements CommandCallable {
                 .autoCloseQuotes(true)
                 .leaveFinalAsIs(true)
                 .parse();
-        if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
+        if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0)
                 return Arrays.asList(FGManager.TYPES).stream()
                         .filter(new StartsWithPredicate(parse.current.token))
@@ -219,19 +219,19 @@ public class CommandModify implements CommandCallable {
                             .collect(GuavaCollectors.toImmutableList());
                 }
             }
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGKEY))
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY))
             return ImmutableList.of("world").stream()
                     .filter(new StartsWithPredicate(parse.current.token))
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());
-        else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGVALUE)) {
+        else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGVALUE)) {
             if (isIn(WORLD_ALIASES, parse.current.key))
                 return Sponge.getGame().getServer().getWorlds().stream()
                         .map(World::getName)
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.FINAL)) {
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.FINAL)) {
             if (isIn(REGIONS_ALIASES, parse.args[0])) {
                 String worldName = parse.flagmap.get("world");
                 World world = null;
@@ -252,7 +252,7 @@ public class CommandModify implements CommandCallable {
                 if (handler == null) return ImmutableList.of();
                 return handler.modifySuggestions(source, parse.current.token);
             }
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
             return ImmutableList.of(parse.current.prefix + " ");
         return ImmutableList.of();
     }

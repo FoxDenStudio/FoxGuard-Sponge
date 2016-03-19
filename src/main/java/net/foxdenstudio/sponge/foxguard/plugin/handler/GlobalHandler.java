@@ -25,14 +25,17 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
+import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
+
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.FCHelper;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
-import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
+import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.source.ProxySource;
@@ -46,13 +49,12 @@ import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
 
-import javax.sql.DataSource;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
+import javax.sql.DataSource;
 
 public class GlobalHandler extends HandlerBase implements IGlobal {
 
@@ -62,7 +64,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
 
     public GlobalHandler() {
         super(NAME, Integer.MIN_VALUE / 2);
-        map = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
+        map = new CacheMap<>((key, map) -> Tristate.UNDEFINED);
     }
 
     @Override
@@ -92,13 +94,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
 
     @Override
     public EventResult handle(User user, Flag flag, Event event) {
-        Flag temp = flag;
-        while (temp != null && !map.containsKey(temp)) {
-            temp = temp.getParents().length > 0 ? temp.getParents()[0] : null;
-        }
-        if (temp != null) return EventResult.of(map.get(temp));
-        else return EventResult.of(map.get(flag));
-
+        return EventResult.of(map.get(FGUtil.nearestParent(flag, map.keySet())));
     }
 
     @Override
@@ -107,7 +103,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
             if (source instanceof ProxySource) source = ((ProxySource) source).getOriginalSource();
             if (source instanceof Player) return ProcessResult.failure();
         }
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).parse();
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).parse();
         if (parse.args.length > 0) {
             if (isIn(SET_ALIASES, parse.args[0])) {
                 if (parse.args.length > 1) {
@@ -124,10 +120,12 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
                         if (isIn(CLEAR_ALIASES, parse.args[2])) {
                             if (flag == null) {
                                 this.map.clear();
-                                return ProcessResult.of(true, Text.of("Successfully cleared flags!"));
+                                return ProcessResult.of(true, Text.of("Successfully cleared " +
+                                        "flags!"));
                             } else {
                                 this.map.remove(flag);
-                                return ProcessResult.of(true, Text.of("Successfully cleared flag!"));
+                                return ProcessResult.of(true, Text.of("Successfully cleared " +
+                                        "flag!"));
                             }
                         } else {
                             Tristate tristate = tristateFrom(parse.args[2]);
@@ -161,13 +159,14 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
     }
 
     @Override
-    public List<String> modifySuggestions(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+    public List<String> modifySuggestions(CommandSource source, String arguments) throws
+            CommandException {
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
                 .excludeCurrent(true)
                 .autoCloseQuotes(true)
                 .parse();
-        if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
+        if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0) {
                 return ImmutableList.of("set").stream()
                         .filter(new StartsWithPredicate(parse.current.token))
@@ -185,7 +184,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             }
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
             return ImmutableList.of(parse.current.prefix + " ");
         return ImmutableList.of();
     }
@@ -198,12 +197,14 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
                 TextActions.showText(Text.of("Click to Set a Flag")),
                 "Global Flags:\n"));
 
-        for (Flag f : this.map.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
+        for (Flag f : this.map.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList
+                ())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FCHelper.readableTristateText(map.get(f)))
                             .append(Text.of("\n"))
-                            .onClick(TextActions.suggestCommand("/foxguard md h " + NAME + " set " + f.flagName() + " "))
+                            .onClick(TextActions.suggestCommand("/foxguard md h " + NAME + " set " +
+                                    "" + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
                             .build()
             );
@@ -220,10 +221,12 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
     public void writeToDatabase(DataSource dataSource) throws SQLException {
         try (Connection conn = dataSource.getConnection()) {
             try (Statement statement = conn.createStatement()) {
-                statement.execute("CREATE TABLE IF NOT EXISTS FLAGMAP(KEY VARCHAR (256), VALUE VARCHAR (256));" +
+                statement.execute("CREATE TABLE IF NOT EXISTS FLAGMAP(KEY VARCHAR (256), VALUE " +
+                        "VARCHAR (256));" +
                         "DELETE FROM FLAGMAP;");
             }
-            try (PreparedStatement statement = conn.prepareStatement("INSERT INTO FLAGMAP(KEY, VALUE) VALUES (? , ?)")) {
+            try (PreparedStatement statement = conn.prepareStatement("INSERT INTO FLAGMAP(KEY, " +
+                    "VALUE) VALUES (? , ?)")) {
                 for (Map.Entry<Flag, Tristate> entry : map.entrySet()) {
                     statement.setString(1, entry.getKey().name());
                     statement.setString(2, entry.getValue().name());
@@ -236,9 +239,10 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
 
     public void loadFromDatabase(DataSource dataSource) throws SQLException {
         try (Connection conn = dataSource.getConnection()) {
-            CallbackHashMap<Flag, Tristate> flagMap = new CallbackHashMap<>((key, map) -> Tristate.UNDEFINED);
+            CacheMap<Flag, Tristate> flagMap = new CacheMap<>((key, map) -> Tristate.UNDEFINED);
             try (Statement statement = conn.createStatement()) {
-                statement.execute("CREATE TABLE IF NOT EXISTS FLAGMAP(KEY VARCHAR (256), VALUE VARCHAR (256));");
+                statement.execute("CREATE TABLE IF NOT EXISTS FLAGMAP(KEY VARCHAR (256), VALUE " +
+                        "VARCHAR (256));");
                 try (ResultSet mapEntrySet = statement.executeQuery("SELECT * FROM FLAGMAP")) {
                     while (mapEntrySet.next()) {
                         try {

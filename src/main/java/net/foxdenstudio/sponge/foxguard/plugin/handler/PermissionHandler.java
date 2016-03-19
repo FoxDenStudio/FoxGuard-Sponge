@@ -26,11 +26,8 @@
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.common.FCHelper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
-import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
-import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
 import org.spongepowered.api.command.CommandException;
@@ -39,18 +36,13 @@ import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.util.Tristate;
 
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.ResultSet;
+
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.Set;
 
 public class PermissionHandler extends HandlerBase {
 
@@ -61,7 +53,7 @@ public class PermissionHandler extends HandlerBase {
     @Override
     public EventResult handle(@Nullable User user, Flag flag, Event event) {
         if (user == null) return EventResult.pass();
-        while (flag != null) {
+        /*while (flag != null) {
             if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." + flag.flagName() + ".allow"))
                 return EventResult.allow();
             else if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." + flag.flagName() + ".deny"))
@@ -69,7 +61,22 @@ public class PermissionHandler extends HandlerBase {
             else if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." + flag.flagName() + ".pass"))
                 return EventResult.pass();
             flag = flag.getParents().length > 0 ? flag.getParents()[0] : null;
+        }*/
+
+        for (Set<Flag> level : flag.getHiearchy()) {
+            for (Flag f : level) {
+                if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." +
+                        f.flagName() + ".allow"))
+                    return EventResult.allow();
+                else if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." +
+                        f.flagName() + ".deny"))
+                    return EventResult.deny();
+                else if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." +
+                        f.flagName() + ".pass"))
+                    return EventResult.pass();
+            }
         }
+
         return EventResult.pass();
     }
 

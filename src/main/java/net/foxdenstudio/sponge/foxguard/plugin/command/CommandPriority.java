@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.util.FGHelper;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -61,7 +61,7 @@ public class CommandPriority implements CommandCallable {
             int successes = 0;
             int failures = 0;
             List<IHandler> handlers = new ArrayList<>();
-            FGHelper.getSelectedHandlers(source).stream().forEach(handlers::add);
+            FGUtil.getSelectedHandlers(source).stream().forEach(handlers::add);
             PriorityMachine machine = null;
             for (String arg : args) {
                 try {

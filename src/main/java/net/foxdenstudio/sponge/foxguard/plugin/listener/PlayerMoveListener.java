@@ -4,7 +4,7 @@ import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
+import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
@@ -33,7 +33,7 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
 
     private final LastWrapper EMPTY_LAST_WRAPPER = new LastWrapper(null, null);
 
-    private final Map<Player, LastWrapper> last = new CallbackHashMap<>((key, map) -> EMPTY_LAST_WRAPPER);
+    private final Map<Player, LastWrapper> last = new CacheMap<>((key, map) -> EMPTY_LAST_WRAPPER);
 
     @Override
     public void handle(DisplaceEntityEvent event) throws Exception {

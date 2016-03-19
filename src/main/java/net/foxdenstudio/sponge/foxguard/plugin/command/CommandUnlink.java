@@ -32,7 +32,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
-import net.foxdenstudio.sponge.foxguard.plugin.util.FGHelper;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -55,27 +55,27 @@ public class CommandUnlink implements CommandCallable {
         String[] args = {};
         if (!arguments.isEmpty()) args = arguments.split(" +", 2);
         if (args.length == 0) {
-            if (FGHelper.getSelectedRegions(source).size() == 0 &&
-                    FGHelper.getSelectedHandlers(source).size() == 0)
+            if (FGUtil.getSelectedRegions(source).size() == 0 &&
+                    FGUtil.getSelectedHandlers(source).size() == 0)
                 throw new CommandException(Text.of("You don't have any Regions or Handlers in your state buffer!"));
-            if (FGHelper.getSelectedRegions(source).size() == 0)
+            if (FGUtil.getSelectedRegions(source).size() == 0)
                 throw new CommandException(Text.of("You don't have any Regions in your state buffer!"));
-            if (FGHelper.getSelectedHandlers(source).size() == 0)
+            if (FGUtil.getSelectedHandlers(source).size() == 0)
                 throw new CommandException(Text.of("You don't have any Handlers in your state buffer!"));
             int[] count = {0};
-            FGHelper.getSelectedRegions(source).stream().forEach(
-                    region -> FGHelper.getSelectedHandlers(source).stream()
+            FGUtil.getSelectedRegions(source).stream().forEach(
+                    region -> FGUtil.getSelectedHandlers(source).stream()
                             .filter(handler -> !(handler instanceof GlobalHandler))
                             .forEach(handler -> count[0] += FGManager.getInstance().unlink(region, handler) ? 1 : 0));
             source.sendMessage(Text.of(TextColors.GREEN, "Successfully unlinked " + count[0] + "!"));
             FCStateManager.instance().getStateMap().get(source).flush(RegionsStateField.ID, HandlersStateField.ID);
             return CommandResult.builder().successCount(count[0]).build();
         } else if (args[0].equals("FULL")) {
-            if (FGHelper.getSelectedRegions(source).size() == 0 &&
-                    FGHelper.getSelectedHandlers(source).size() == 0)
+            if (FGUtil.getSelectedRegions(source).size() == 0 &&
+                    FGUtil.getSelectedHandlers(source).size() == 0)
                 throw new CommandException(Text.of("You don't have any Regions or Handlers in your state buffer!"));
             int[] count = {0};
-            FGHelper.getSelectedRegions(source).stream().forEach(
+            FGUtil.getSelectedRegions(source).stream().forEach(
                     region -> {
                         List<IHandler> handlers = new ArrayList<>();
                         region.getHandlers().stream()
@@ -83,7 +83,7 @@ public class CommandUnlink implements CommandCallable {
                                 .forEach(handlers::add);
                         handlers.stream().forEach(handler -> count[0] += FGManager.getInstance().unlink(region, handler) ? 1 : 0);
                     });
-            FGHelper.getSelectedHandlers(source).stream()
+            FGUtil.getSelectedHandlers(source).stream()
                     .filter(handler -> !(handler instanceof GlobalHandler)).forEach(
                     handler -> FGManager.getInstance().getRegionList().stream().forEach(
                             region -> count[0] += FGManager.getInstance().unlink(region, handler) ? 1 : 0));

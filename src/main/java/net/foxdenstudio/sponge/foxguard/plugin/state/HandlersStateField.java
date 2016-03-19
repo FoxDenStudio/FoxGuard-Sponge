@@ -26,13 +26,13 @@
 package net.foxdenstudio.sponge.foxguard.plugin.state;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.state.ListStateFieldBase;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
-import net.foxdenstudio.sponge.foxguard.plugin.util.FGHelper;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
@@ -58,7 +58,7 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
         int index = 1;
         for (Iterator<IHandler> it = this.list.iterator(); it.hasNext(); ) {
             IHandler handler = it.next();
-            builder.append(Text.of(FGHelper.getColorForObject(handler), "  " + (index++) + ": " + handler.getShortTypeName() + " : " + handler.getName()));
+            builder.append(Text.of(FGUtil.getColorForObject(handler), "  " + (index++) + ": " + handler.getShortTypeName() + " : " + handler.getName()));
             if (it.hasNext()) builder.append(Text.of("\n"));
         }
         return builder.build();
@@ -66,7 +66,7 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
 
     @Override
     public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).limit(1).parseLastFlags(false).parse();
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).limit(1).parseLastFlags(false).parse();
         String newArgs = parse.args.length > 1 ? parse.args[1] : "";
         if (parse.args.length == 0 || parse.args[0].equalsIgnoreCase("add")) {
             return add(source, newArgs);
@@ -78,12 +78,12 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
 
     @Override
     public List<String> modifySuggestions(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
                 .excludeCurrent(true)
                 .autoCloseQuotes(true)
                 .parse();
-        if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
+        if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0) {
                 return ImmutableList.of("add", "remove").stream()
                         .filter(new StartsWithPredicate(parse.current.token))
@@ -104,13 +104,13 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
                             .collect(GuavaCollectors.toImmutableList());
                 }
             }
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
             return ImmutableList.of(parse.current.prefix + " ");
         return ImmutableList.of();
     }
 
     public ProcessResult add(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).parse();
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).parse();
 
         if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name!"));
         IHandler handler = FGManager.getInstance().gethandler(parse.args[0]);
@@ -124,7 +124,7 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
     }
 
     public ProcessResult remove(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).parse();
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).parse();
 
         if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name or a number!"));
         if (parse.args.length == 1) {
@@ -178,17 +178,17 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
     }
 
     public List<String> removeSuggestions(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
                 .autoCloseQuotes(true)
                 .parse();
-        if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
+        if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0)
                 return this.list.stream()
                         .map(IFGObject::getName)
                         .filter(new StartsWithPredicate(parse.current.token))
                         .collect(GuavaCollectors.toImmutableList());
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
             return ImmutableList.of(parse.current.prefix + " ");
         return ImmutableList.of();
     }

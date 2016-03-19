@@ -26,7 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParse;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
@@ -38,7 +38,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
-import net.foxdenstudio.sponge.foxguard.plugin.util.FGHelper;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
@@ -74,15 +74,16 @@ public class CommandEnableDisable implements CommandCallable {
         this.enableState = enableState;
     }
 
+    @SuppressWarnings("Convert2Lambda")
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder().arguments(arguments).flagMapper(MAPPER).parse();
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(MAPPER).parse();
         if (parse.args.length == 0) {
-            if (FGHelper.getSelectedRegions(source).isEmpty() && FGHelper.getSelectedHandlers(source).isEmpty()) {
+            if (FGUtil.getSelectedRegions(source).isEmpty() && FGUtil.getSelectedHandlers(source).isEmpty()) {
                 source.sendMessage(Text.builder()
                         .append(Text.of(TextColors.GREEN, "Usage: "))
                         .append(getUsage(source))
@@ -90,8 +91,8 @@ public class CommandEnableDisable implements CommandCallable {
                 return CommandResult.empty();
             } else {
                 List<IFGObject> objects = new ArrayList<>();
-                FGHelper.getSelectedRegions(source).stream().forEach(objects::add);
-                FGHelper.getSelectedHandlers(source).stream().forEach(objects::add);
+                FGUtil.getSelectedRegions(source).stream().forEach(objects::add);
+                FGUtil.getSelectedHandlers(source).stream().forEach(objects::add);
                 int successes = 0;
                 int failures = 0;
                 for (IFGObject object : objects) {
@@ -107,7 +108,7 @@ public class CommandEnableDisable implements CommandCallable {
                     Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
                         @Override
                         public Cause getCause() {
-                            return Cause.of(FoxGuardMain.instance());
+                            return FoxGuardMain.PLUGIN_CAUSE;
                         }
                     });
                     source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " object!"));
@@ -116,7 +117,7 @@ public class CommandEnableDisable implements CommandCallable {
                     Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
                         @Override
                         public Cause getCause() {
-                            return Cause.of(FoxGuardMain.instance());
+                            return FoxGuardMain.PLUGIN_CAUSE;
                         }
                     });
                     source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " objects with "
@@ -142,7 +143,7 @@ public class CommandEnableDisable implements CommandCallable {
             int successes = 0;
             int failures = 0;
             List<IRegion> regions = new ArrayList<>();
-            FGHelper.getSelectedRegions(source).stream().forEach(regions::add);
+            FGUtil.getSelectedRegions(source).stream().forEach(regions::add);
             if (parse.args.length > 1) {
                 for (String name : Arrays.copyOfRange(parse.args, 1, parse.args.length)) {
                     IRegion region = FGManager.getInstance().getRegion(world, name);
@@ -165,7 +166,7 @@ public class CommandEnableDisable implements CommandCallable {
                 Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
                     @Override
                     public Cause getCause() {
-                        return Cause.of(FoxGuardMain.instance());
+                        return FoxGuardMain.PLUGIN_CAUSE;
                     }
                 });
                 source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " region!"));
@@ -174,7 +175,7 @@ public class CommandEnableDisable implements CommandCallable {
                 Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
                     @Override
                     public Cause getCause() {
-                        return Cause.of(FoxGuardMain.instance());
+                        return FoxGuardMain.PLUGIN_CAUSE;
                     }
                 });
                 source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " regions with "
@@ -191,7 +192,7 @@ public class CommandEnableDisable implements CommandCallable {
             int successes = 0;
             int failures = 0;
             List<IHandler> handlers = new ArrayList<>();
-            FGHelper.getSelectedHandlers(source).stream().forEach(handlers::add);
+            FGUtil.getSelectedHandlers(source).stream().forEach(handlers::add);
             for (String name : Arrays.copyOfRange(parse.args, 1, parse.args.length)) {
                 IHandler handler = FGManager.getInstance().gethandler(name);
                 if (handler == null) failures++;
@@ -212,7 +213,7 @@ public class CommandEnableDisable implements CommandCallable {
                 Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
                     @Override
                     public Cause getCause() {
-                        return Cause.of(FoxGuardMain.instance());
+                        return FoxGuardMain.PLUGIN_CAUSE;
                     }
                 });
                 source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handler!"));
@@ -221,7 +222,7 @@ public class CommandEnableDisable implements CommandCallable {
                 Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
                     @Override
                     public Cause getCause() {
-                        return Cause.of(FoxGuardMain.instance());
+                        return FoxGuardMain.PLUGIN_CAUSE;
                     }
                 });
                 source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handlers with "
@@ -238,13 +239,13 @@ public class CommandEnableDisable implements CommandCallable {
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) return ImmutableList.of();
-        AdvCmdParse.ParseResult parse = AdvCmdParse.builder()
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
                 .flagMapper(MAPPER)
                 .excludeCurrent(true)
                 .autoCloseQuotes(true)
                 .parse();
-        if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.ARGUMENT)) {
+        if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0)
                 return Arrays.asList(FGManager.TYPES).stream()
                         .filter(new StartsWithPredicate(parse.current.token))
@@ -279,19 +280,19 @@ public class CommandEnableDisable implements CommandCallable {
                             .collect(GuavaCollectors.toImmutableList());
                 }
             }
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGKEY))
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY))
             return ImmutableList.of("world").stream()
                     .filter(new StartsWithPredicate(parse.current.token))
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());
-        else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.LONGFLAGVALUE)) {
+        else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGVALUE)) {
             if (isIn(WORLD_ALIASES, parse.current.key))
                 return Sponge.getGame().getServer().getWorlds().stream()
                         .map(World::getName)
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
-        } else if (parse.current.type.equals(AdvCmdParse.CurrentElement.ElementType.COMPLETE))
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
             return ImmutableList.of(parse.current.prefix + " ");
         return ImmutableList.of();
     }

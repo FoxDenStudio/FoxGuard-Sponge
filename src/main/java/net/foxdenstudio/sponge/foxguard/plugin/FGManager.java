@@ -27,7 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin;
 
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.plugin.util.CallbackHashMap;
+import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateObjectEvent;
@@ -61,14 +61,14 @@ public final class FGManager {
 
     private FGManager() {
         instance = this;
-        regions = new CallbackHashMap<>((key, map) -> new ArrayList<>());
+        regions = new CacheMap<>((key, map) -> new ArrayList<>());
         handlers = new ArrayList<>();
         globalHandler = new GlobalHandler();
         this.addHandler(globalHandler);
 
-        regionCache = new CallbackHashMap<>((world, map1) -> {
+        regionCache = new CacheMap<>((world, map1) -> {
             if (world instanceof World) {
-                Map<Vector3i, List<IRegion>> worldCache = new CallbackHashMap<>((chunk, map2) -> {
+                Map<Vector3i, List<IRegion>> worldCache = new CacheMap<>((chunk, map2) -> {
                     if (chunk instanceof Vector3i) {
                         List<IRegion> cachedRegions = this.calculateRegionsForChunk((Vector3i) chunk, (World) world);
                         map2.put((Vector3i) chunk, cachedRegions);
@@ -107,7 +107,7 @@ public final class FGManager {
 
             @Override
             public Cause getCause() {
-                return Cause.of(FoxGuardMain.instance());
+                return FoxGuardMain.PLUGIN_CAUSE;
             }
         });
         FGStorageManager.getInstance().unmarkForDeletion(region);
@@ -180,7 +180,7 @@ public final class FGManager {
 
             @Override
             public Cause getCause() {
-                return Cause.of(FoxGuardMain.instance());
+                return FoxGuardMain.PLUGIN_CAUSE;
             }
         });
         FGStorageManager.getInstance().unmarkForDeletion(handler);
@@ -228,7 +228,7 @@ public final class FGManager {
 
             @Override
             public Cause getCause() {
-                return Cause.of(FoxGuardMain.instance());
+                return FoxGuardMain.PLUGIN_CAUSE;
             }
         });
         FGStorageManager.getInstance().markForDeletion(handler);
@@ -258,7 +258,7 @@ public final class FGManager {
 
             @Override
             public Cause getCause() {
-                return Cause.of(FoxGuardMain.instance());
+                return FoxGuardMain.PLUGIN_CAUSE;
             }
         });
         FGStorageManager.getInstance().markForDeletion(region);
@@ -283,7 +283,7 @@ public final class FGManager {
         Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
             @Override
             public Cause getCause() {
-                return Cause.of(FoxGuardMain.instance());
+                return FoxGuardMain.PLUGIN_CAUSE;
             }
         });
         return !(handler instanceof GlobalHandler && !(linkable instanceof GlobalRegion)) && linkable.addHandler(handler);
@@ -305,7 +305,7 @@ public final class FGManager {
         Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
             @Override
             public Cause getCause() {
-                return Cause.of(FoxGuardMain.instance());
+                return FoxGuardMain.PLUGIN_CAUSE;
             }
         });
         return !(handler instanceof GlobalHandler && linkable instanceof GlobalRegion) && linkable.removeHandler(handler);
