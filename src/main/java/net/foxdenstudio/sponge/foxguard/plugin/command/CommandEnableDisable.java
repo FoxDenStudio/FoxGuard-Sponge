@@ -108,7 +108,7 @@ public class CommandEnableDisable implements CommandCallable {
                     Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
                         @Override
                         public Cause getCause() {
-                            return FoxGuardMain.PLUGIN_CAUSE;
+                            return FoxGuardMain.getCause();
                         }
                     });
                     source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " object!"));
@@ -117,7 +117,7 @@ public class CommandEnableDisable implements CommandCallable {
                     Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
                         @Override
                         public Cause getCause() {
-                            return FoxGuardMain.PLUGIN_CAUSE;
+                            return FoxGuardMain.getCause();
                         }
                     });
                     source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " objects with "
@@ -166,7 +166,7 @@ public class CommandEnableDisable implements CommandCallable {
                 Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
                     @Override
                     public Cause getCause() {
-                        return FoxGuardMain.PLUGIN_CAUSE;
+                        return FoxGuardMain.getCause();
                     }
                 });
                 source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " region!"));
@@ -175,7 +175,7 @@ public class CommandEnableDisable implements CommandCallable {
                 Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
                     @Override
                     public Cause getCause() {
-                        return FoxGuardMain.PLUGIN_CAUSE;
+                        return FoxGuardMain.getCause();
                     }
                 });
                 source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " regions with "
@@ -213,7 +213,7 @@ public class CommandEnableDisable implements CommandCallable {
                 Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
                     @Override
                     public Cause getCause() {
-                        return FoxGuardMain.PLUGIN_CAUSE;
+                        return FoxGuardMain.getCause();
                     }
                 });
                 source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handler!"));
@@ -222,7 +222,7 @@ public class CommandEnableDisable implements CommandCallable {
                 Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
                     @Override
                     public Cause getCause() {
-                        return FoxGuardMain.PLUGIN_CAUSE;
+                        return FoxGuardMain.getCause();
                     }
                 });
                 source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handlers with "

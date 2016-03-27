@@ -63,7 +63,7 @@ public class PermissionHandler extends HandlerBase {
             flag = flag.getParents().length > 0 ? flag.getParents()[0] : null;
         }*/
 
-        for (Set<Flag> level : flag.getHiearchy()) {
+        for (Set<Flag> level : flag.getHierarchy()) {
             for (Flag f : level) {
                 if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." +
                         f.flagName() + ".allow"))

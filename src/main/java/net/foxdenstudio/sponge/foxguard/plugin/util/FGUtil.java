@@ -38,7 +38,6 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -67,13 +66,13 @@ public final class FGUtil {
     }
 
     public static Flag nearestParent(Flag child, Set<Flag> set) {
-        for(Set<Flag> level : child.getHiearchy()){
+        for(Set<Flag> level : child.getHierarchy()){
             for(Flag flag : level){
                 if(set.contains(flag)){
                     return flag;
                 }
             }
         }
-        return null;
+        return child;
     }
 }

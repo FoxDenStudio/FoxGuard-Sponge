@@ -94,7 +94,7 @@ public final class FoxGuardMain {
      */
     public static final String PLUGIN_VERSION = "0.16.1-SNAPSHOT";//VERSION
 
-    public static final Cause PLUGIN_CAUSE = Cause.builder().named("plugin", FoxGuardMain.instance()).build();
+    public final Cause pluginCause = Cause.builder().named("plugin", this).build();
 
     /**
      * FoxGuardMain instance object.
@@ -181,9 +181,6 @@ public final class FoxGuardMain {
         logger.info("Registering controllers state field");
         FCStateManager.instance().registerStateFactory(new ControllersStateFieldFactory(), ControllersStateField.ID, ControllersStateField.ID, Aliases.CONTROLLERS_ALIASES);
         logger.info("Starting MCStats metrics extension");
-        logger.debug("-------------------------------------------");
-        logger.debug(Flag.PLAYER_INTERACT_PRIMARY.getHiearchy().toString());
-        logger.debug("-------------------------------------------");
     }
 
     @Listener
@@ -391,5 +388,9 @@ public final class FoxGuardMain {
      */
     public boolean isLoaded() {
         return loaded;
+    }
+
+    public static Cause getCause() {
+        return instance().pluginCause;
     }
 }

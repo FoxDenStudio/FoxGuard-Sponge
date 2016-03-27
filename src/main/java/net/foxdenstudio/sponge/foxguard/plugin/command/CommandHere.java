@@ -27,7 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.common.FCHelper;
+import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
@@ -101,17 +101,17 @@ public class CommandHere implements CommandCallable {
             if (pPos == null)
                 pPos = Vector3d.ZERO;
             try {
-                x = FCHelper.parseCoordinate(pPos.getX(), parse.args[0]);
+                x = FCUtil.parseCoordinate(pPos.getX(), parse.args[0]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(Text.of("Unable to parse \"" + parse.args[0] + "\"!"), e, parse.args[0], 0);
             }
             try {
-                y = FCHelper.parseCoordinate(pPos.getY(), parse.args[1]);
+                y = FCUtil.parseCoordinate(pPos.getY(), parse.args[1]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(Text.of("Unable to parse \"" + parse.args[1] + "\"!"), e, parse.args[1], 1);
             }
             try {
-                z = FCHelper.parseCoordinate(pPos.getZ(), parse.args[2]);
+                z = FCUtil.parseCoordinate(pPos.getZ(), parse.args[2]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(Text.of("Unable to parse \"" + parse.args[2] + "\"!"), e, parse.args[2], 2);
             }

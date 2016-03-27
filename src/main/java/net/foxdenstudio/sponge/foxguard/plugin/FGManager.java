@@ -25,6 +25,8 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin;
 
+import com.flowpowered.math.GenericMath;
+import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
@@ -107,7 +109,7 @@ public final class FGManager {
 
             @Override
             public Cause getCause() {
-                return FoxGuardMain.PLUGIN_CAUSE;
+                return FoxGuardMain.getCause();
             }
         });
         FGStorageManager.getInstance().unmarkForDeletion(region);
@@ -147,12 +149,52 @@ public final class FGManager {
         return ImmutableList.copyOf(this.regionCache.get(world).get(chunk));
     }
 
+    public List<IRegion> getRegionListAtPos(World world, Vector3d pos) {
+        return getRegionListAtPos(world, pos, false);
+    }
+
+    public List<IRegion> getRegionListAtPos(World world, Vector3d pos, boolean includeDisabled) {
+        Vector3i chunk = new Vector3i(
+                GenericMath.floor(pos.getX() / 16.0),
+                GenericMath.floor(pos.getY() / 16.0),
+                GenericMath.floor(pos.getZ() / 16.0));
+        if (includeDisabled)
+            return this.regionCache.get(world).get(chunk).stream()
+                    .filter(region -> region.contains(pos))
+                    .collect(GuavaCollectors.toImmutableList());
+        else
+            return this.regionCache.get(world).get(chunk).stream()
+                    .filter(IFGObject::isEnabled)
+                    .filter(region -> region.contains(pos))
+                    .collect(GuavaCollectors.toImmutableList());
+    }
+
+    public List<IRegion> getRegionListAtPos(World world, Vector3i pos) {
+        return getRegionListAtPos(world, pos, false);
+    }
+
+    public List<IRegion> getRegionListAtPos(World world, Vector3i pos, boolean includeDisabled) {
+        Vector3i chunk = new Vector3i(
+                GenericMath.floor(pos.getX() / 16.0),
+                GenericMath.floor(pos.getY() / 16.0),
+                GenericMath.floor(pos.getZ() / 16.0));
+        if (includeDisabled)
+            return this.regionCache.get(world).get(chunk).stream()
+                    .filter(region -> region.contains(pos))
+                    .collect(GuavaCollectors.toImmutableList());
+        else
+            return this.regionCache.get(world).get(chunk).stream()
+                    .filter(IFGObject::isEnabled)
+                    .filter(region -> region.contains(pos))
+                    .collect(GuavaCollectors.toImmutableList());
+    }
+
     public List<IHandler> getHandlerList() {
         return ImmutableList.copyOf(this.handlers);
     }
 
-    public List<IHandler> getHandlerList(boolean includeControllers){
-        if(includeControllers){
+    public List<IHandler> getHandlerList(boolean includeControllers) {
+        if (includeControllers) {
             return ImmutableList.copyOf(this.handlers);
         } else {
             return this.handlers.stream()
@@ -161,10 +203,10 @@ public final class FGManager {
         }
     }
 
-    public List<IController> getControllerList(){
+    public List<IController> getControllerList() {
         return this.handlers.stream()
                 .filter(handler -> handler instanceof IController)
-                .map(handler -> ((IController)handler))
+                .map(handler -> ((IController) handler))
                 .collect(GuavaCollectors.toImmutableList());
     }
 
@@ -180,7 +222,7 @@ public final class FGManager {
 
             @Override
             public Cause getCause() {
-                return FoxGuardMain.PLUGIN_CAUSE;
+                return FoxGuardMain.getCause();
             }
         });
         FGStorageManager.getInstance().unmarkForDeletion(handler);
@@ -197,7 +239,7 @@ public final class FGManager {
         return null;
     }
 
-    public IController getController(String name){
+    public IController getController(String name) {
         for (IHandler handler : handlers) {
             if ((handler instanceof IController) && handler.getName().equalsIgnoreCase(name)) {
                 return (IController) handler;
@@ -228,7 +270,7 @@ public final class FGManager {
 
             @Override
             public Cause getCause() {
-                return FoxGuardMain.PLUGIN_CAUSE;
+                return FoxGuardMain.getCause();
             }
         });
         FGStorageManager.getInstance().markForDeletion(handler);
@@ -258,7 +300,7 @@ public final class FGManager {
 
             @Override
             public Cause getCause() {
-                return FoxGuardMain.PLUGIN_CAUSE;
+                return FoxGuardMain.getCause();
             }
         });
         FGStorageManager.getInstance().markForDeletion(region);
@@ -283,7 +325,7 @@ public final class FGManager {
         Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
             @Override
             public Cause getCause() {
-                return FoxGuardMain.PLUGIN_CAUSE;
+                return FoxGuardMain.getCause();
             }
         });
         return !(handler instanceof GlobalHandler && !(linkable instanceof GlobalRegion)) && linkable.addHandler(handler);
@@ -305,7 +347,7 @@ public final class FGManager {
         Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
             @Override
             public Cause getCause() {
-                return FoxGuardMain.PLUGIN_CAUSE;
+                return FoxGuardMain.getCause();
             }
         });
         return !(handler instanceof GlobalHandler && linkable instanceof GlobalRegion) && linkable.removeHandler(handler);

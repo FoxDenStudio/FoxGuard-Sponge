@@ -28,7 +28,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.region;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.common.FCHelper;
+import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.BoundingBox2;
@@ -69,14 +69,14 @@ public class RectangularRegion extends RegionBase {
         for (int i = 0; i < args.length - 1; i += 2) {
             int x, z;
             try {
-                x = (int) FCHelper.parseCoordinate(source instanceof Player ?
+                x = (int) FCUtil.parseCoordinate(source instanceof Player ?
                         ((Player) source).getLocation().getBlockX() : 0, args[i]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(
                         Text.of("Unable to parse \"" + args[i] + "\"!"), e, args[i], i);
             }
             try {
-                z = (int) FCHelper.parseCoordinate(source instanceof Player ?
+                z = (int) FCUtil.parseCoordinate(source instanceof Player ?
                         ((Player) source).getLocation().getBlockZ() : 0, args[i + 1]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(
@@ -175,7 +175,7 @@ public class RectangularRegion extends RegionBase {
             AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                     .arguments(arguments)
                     .parse();
-            return new RectangularRegion(name, FCHelper.getPositions(source), parse.args, source);
+            return new RectangularRegion(name, FCUtil.getPositions(source), parse.args, source);
         }
 
         @Override
@@ -190,14 +190,7 @@ public class RectangularRegion extends RegionBase {
                         boundSet.next();
                         b = new Vector2i(boundSet.getInt("X"), boundSet.getInt("Z"));
                     }
-                    try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {
-                        while (ownerSet.next()) {
-                            Optional<User> user = FoxGuardMain.instance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
-                            if (user.isPresent()) userList.add(user.get());
-                        }
-                    }
                 }
-
             }
             RectangularRegion region = new RectangularRegion(name, new BoundingBox2(a, b));
             region.setIsEnabled(isEnabled);

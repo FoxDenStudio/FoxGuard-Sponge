@@ -99,22 +99,6 @@ public class CommandTest implements CommandCallable {
     }*/
 
     @Override
-    public List<String> getSuggestions(CommandSource source, String arguments) throws
-            CommandException {
-        if (!testPermission(source)) return ImmutableList.of();
-        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
-                .arguments(arguments)
-                .excludeCurrent(true)
-                .autoCloseQuotes(true)
-                .parse();
-        return Arrays.stream(Flag.values())
-                .map(Flag::flagName)
-                .filter(new StartsWithPredicate(parse.current.token))
-                .map(args -> parse.current.prefix + args)
-                .collect(GuavaCollectors.toImmutableList());
-    }
-
-    @Override
     public boolean testPermission(CommandSource source) {
         return source.hasPermission("foxcore.command.debug.test");
     }
@@ -134,7 +118,6 @@ public class CommandTest implements CommandCallable {
         return Text.of("test [mystery args]...");
     }
 
-
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {
@@ -148,7 +131,7 @@ public class CommandTest implements CommandCallable {
             builder.append(Text.of(TextColors.GOLD, "\n-----------------------------\n"));
             Flag flag = Flag.flagFrom(parse.args[0]);
             if (flag != null) {
-                for (Set<Flag> level : flag.getHiearchy()) {
+                for (Set<Flag> level : flag.getHierarchy()) {
                     for(Flag f : level){
                         builder.append(Text.of(f.flagName() + " "));
                     }
@@ -159,6 +142,23 @@ public class CommandTest implements CommandCallable {
         }
 
         return CommandResult.empty();
+    }
+
+
+    @Override
+    public List<String> getSuggestions(CommandSource source, String arguments) throws
+            CommandException {
+        if (!testPermission(source)) return ImmutableList.of();
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
+                .arguments(arguments)
+                .excludeCurrent(true)
+                .autoCloseQuotes(true)
+                .parse();
+        return Arrays.stream(Flag.values())
+                .map(Flag::flagName)
+                .filter(new StartsWithPredicate(parse.current.token))
+                .map(args -> parse.current.prefix + args)
+                .collect(GuavaCollectors.toImmutableList());
     }
 
     /*@Override

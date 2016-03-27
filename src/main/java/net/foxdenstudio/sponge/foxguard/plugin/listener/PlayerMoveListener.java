@@ -55,8 +55,8 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
                     GenericMath.floor(from.getX() / 16.0),
                     GenericMath.floor(from.getY() / 16.0),
                     GenericMath.floor(from.getZ() / 16.0))).stream()
-                    .filter(region -> region.contains(from))
                     .filter(IFGObject::isEnabled)
+                    .filter(region -> region.contains(from))
                     .forEach(region -> region.getHandlers().stream()
                             .filter(IFGObject::isEnabled)
                             .filter(handler -> !temp.contains(handler))
@@ -165,6 +165,11 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
         @Listener
         public void onJoin(ClientConnectionEvent.Join event) {
             last.put(event.getTargetEntity(), new LastWrapper(null, event.getTargetEntity().getTransform().getPosition()));
+        }
+
+        @Listener
+        public void onPlayerChangeWorld(){
+
         }
 
         @Listener

@@ -27,7 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.region;
 
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.common.FCHelper;
+import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.BoundingBox3;
@@ -68,21 +68,21 @@ public class CuboidRegion extends RegionBase {
         for (int i = 0; i < args.length - 2; i += 3) {
             int x, y, z;
             try {
-                x = (int) FCHelper.parseCoordinate(source instanceof Player ?
+                x = (int) FCUtil.parseCoordinate(source instanceof Player ?
                         ((Player) source).getLocation().getBlockX() : 0, args[i]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(
                         Text.of("Unable to parse \"" + args[i] + "\"!"), e, args[i], i);
             }
             try {
-                y = (int) FCHelper.parseCoordinate(source instanceof Player ?
+                y = (int) FCUtil.parseCoordinate(source instanceof Player ?
                         ((Player) source).getLocation().getBlockY() : 0, args[i + 1]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(
                         Text.of("Unable to parse \"" + args[i + 1] + "\"!"), e, args[i + 1], i + 1);
             }
             try {
-                z = (int) FCHelper.parseCoordinate(source instanceof Player ?
+                z = (int) FCUtil.parseCoordinate(source instanceof Player ?
                         ((Player) source).getLocation().getBlockZ() : 0, args[i + 2]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(
@@ -183,7 +183,7 @@ public class CuboidRegion extends RegionBase {
             AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                     .arguments(arguments)
                     .parse();
-            return new CuboidRegion(name, FCHelper.getPositions(source), parse.args, source);
+            return new CuboidRegion(name, FCUtil.getPositions(source), parse.args, source);
         }
 
         @Override
@@ -197,12 +197,6 @@ public class CuboidRegion extends RegionBase {
                         a = new Vector3i(boundSet.getInt("X"), boundSet.getInt("Y"), boundSet.getInt("Z"));
                         boundSet.next();
                         b = new Vector3i(boundSet.getInt("X"), boundSet.getInt("Y"), boundSet.getInt("Z"));
-                    }
-                    try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {
-                        while (ownerSet.next()) {
-                            Optional<User> user = FoxGuardMain.instance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
-                            if (user.isPresent()) userList.add(user.get());
-                        }
                     }
                 }
             }

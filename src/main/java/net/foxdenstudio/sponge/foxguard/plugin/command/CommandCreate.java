@@ -200,11 +200,20 @@ public class CommandCreate implements CommandCallable {
                         .collect(GuavaCollectors.toImmutableList());
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.FINAL)) {
             if (isIn(REGIONS_ALIASES, parse.args[0])) {
-                return FGFactoryManager.getInstance().regionSuggestions(source, parse.current.token, parse.args[2]);
+                return FGFactoryManager.getInstance().regionSuggestions(source, parse.current.token, parse.args[2])
+                        .stream()
+                        .map(args -> parse.current.prefix + args)
+                        .collect(GuavaCollectors.toImmutableList());
             } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
-                return FGFactoryManager.getInstance().handlerSuggestions(source, parse.current.token, parse.args[2]);
+                return FGFactoryManager.getInstance().handlerSuggestions(source, parse.current.token, parse.args[2])
+                        .stream()
+                        .map(args -> parse.current.prefix + args)
+                        .collect(GuavaCollectors.toImmutableList());
             } else if (isIn(CONTROLLERS_ALIASES, parse.args[0])) {
-                return FGFactoryManager.getInstance().controllerSuggestions(source, parse.current.token, parse.args[2]);
+                return FGFactoryManager.getInstance().controllerSuggestions(source, parse.current.token, parse.args[2])
+                        .stream()
+                        .map(args -> parse.current.prefix + args)
+                        .collect(GuavaCollectors.toImmutableList());
             }
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
             return ImmutableList.of(parse.current.prefix + " ");

@@ -28,7 +28,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.handler;
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.common.FCHelper;
+import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
@@ -201,7 +201,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
                 ())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
-                            .append(FCHelper.readableTristateText(map.get(f)))
+                            .append(FCUtil.readableTristateText(map.get(f)))
                             .append(Text.of("\n"))
                             .onClick(TextActions.suggestCommand("/foxguard md h " + NAME + " set " +
                                     "" + f.flagName() + " "))

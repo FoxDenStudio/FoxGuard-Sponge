@@ -26,7 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.common.FCHelper;
+import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
@@ -60,6 +60,11 @@ public class SimpleHandler extends HandlerBase {
     private final Map<Flag, Tristate> ownerPermissions;
     private final Map<Flag, Tristate> memberPermissions;
     private final Map<Flag, Tristate> defaultPermissions;
+
+    private final Map<Flag, Tristate> ownerPermCache;
+    private final Map<Flag, Tristate> memberPermCache;
+    private final Map<Flag, Tristate> defaultPermCache;
+
     private PassiveOptions passiveOption = PassiveOptions.PASSTHROUGH;
     private List<User> ownerList = new ArrayList<>();
     private List<User> memberList = new ArrayList<>();
@@ -79,6 +84,28 @@ public class SimpleHandler extends HandlerBase {
         this.ownerPermissions = ownerPermissions;
         this.memberPermissions = memberPermissions;
         this.defaultPermissions = defaultPermissions;
+
+        this.ownerPermCache = new CacheMap<>((o, m) -> {
+            if (o instanceof Flag) {
+                Tristate state = ownerPermissions.get(FGUtil.nearestParent((Flag) o, ownerPermissions.keySet()));
+                m.put((Flag) o, state);
+                return state;
+            } else return Tristate.UNDEFINED;
+        });
+        this.memberPermCache = new CacheMap<>((o, m) -> {
+            if (o instanceof Flag) {
+                Tristate state = memberPermissions.get(FGUtil.nearestParent((Flag) o, memberPermissions.keySet()));
+                m.put((Flag) o, state);
+                return state;
+            } else return Tristate.UNDEFINED;
+        });
+        this.defaultPermCache = new CacheMap<>((o, m) -> {
+            if (o instanceof Flag) {
+                Tristate state = defaultPermissions.get(FGUtil.nearestParent((Flag) o, defaultPermissions.keySet()));
+                m.put((Flag) o, state);
+                return state;
+            } else return Tristate.UNDEFINED;
+        });
     }
 
     @Override
@@ -118,21 +145,21 @@ public class SimpleHandler extends HandlerBase {
                             List<User> argUsers = new ArrayList<>();
                             for (String name : names) {
                                 Optional<User> optUser = FoxGuardMain.instance().getUserStorage().get(name);
-                                if (optUser.isPresent() && !FCHelper.isUserOnList(argUsers, optUser.get()))
+                                if (optUser.isPresent() && !FCUtil.isUserOnList(argUsers, optUser.get()))
                                     argUsers.add(optUser.get());
                                 else failures++;
                             }
                             switch (op) {
                                 case ADD:
                                     for (User user : argUsers) {
-                                        if (!FCHelper.isUserOnList(list, user) && list.add(user))
+                                        if (!FCUtil.isUserOnList(list, user) && list.add(user))
                                             successes++;
                                         else failures++;
                                     }
                                     break;
                                 case REMOVE:
                                     for (User user : argUsers) {
-                                        if (FCHelper.isUserOnList(list, user)) {
+                                        if (FCUtil.isUserOnList(list, user)) {
                                             list.remove(user);
                                             successes++;
                                         } else failures++;
@@ -185,9 +212,11 @@ public class SimpleHandler extends HandlerBase {
                         if (isIn(CLEAR_ALIASES, parse.args[3])) {
                             if (flag == null) {
                                 map.clear();
+                                clearCache();
                                 return ProcessResult.of(true, Text.of("Successfully cleared flags!"));
                             } else {
                                 map.remove(flag);
+                                clearCache();
                                 return ProcessResult.of(true, Text.of("Successfully cleared flag!"));
                             }
                         } else {
@@ -199,9 +228,11 @@ public class SimpleHandler extends HandlerBase {
                                 for (Flag thatExist : Flag.values()) {
                                     map.put(thatExist, tristate);
                                 }
+                                clearCache();
                                 return ProcessResult.of(true, Text.of("Successfully set flags!"));
                             } else {
                                 map.put(flag, tristate);
+                                clearCache();
                                 return ProcessResult.of(true, Text.of("Successfully set flag!"));
                             }
                         }
@@ -301,14 +332,14 @@ public class SimpleHandler extends HandlerBase {
                                 .collect(GuavaCollectors.toImmutableList());
                     } else if (parse.args[2].equalsIgnoreCase("add")) {
                         return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .filter(player -> !FCHelper.isUserOnList(list, player))
+                                .filter(player -> !FCUtil.isUserOnList(list, player))
                                 .map(Player::getName)
                                 .filter(new StartsWithPredicate(parse.current.token))
                                 .map(args -> parse.current.prefix + args)
                                 .collect(GuavaCollectors.toImmutableList());
                     } else if (parse.args[2].equalsIgnoreCase("remove")) {
                         return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .filter(player -> FCHelper.isUserOnList(list, player))
+                                .filter(player -> FCUtil.isUserOnList(list, player))
                                 .map(Player::getName)
                                 .filter(new StartsWithPredicate(parse.current.token))
                                 .map(args -> parse.current.prefix + args)
@@ -338,7 +369,7 @@ public class SimpleHandler extends HandlerBase {
                                 .collect(GuavaCollectors.toImmutableList());
                     } else if (parse.args[2].equalsIgnoreCase("add")) {
                         return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .filter(player -> !FCHelper.isUserOnList(list, player))
+                                .filter(player -> !FCUtil.isUserOnList(list, player))
                                 .map(Player::getName)
                                 .filter(alias -> !isIn(Arrays.copyOfRange(parse.args, 2, parse.args.length), alias))
                                 .filter(new StartsWithPredicate(parse.current.token))
@@ -346,7 +377,7 @@ public class SimpleHandler extends HandlerBase {
                                 .collect(GuavaCollectors.toImmutableList());
                     } else if (parse.args[2].equalsIgnoreCase("remove")) {
                         return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .filter(player -> FCHelper.isUserOnList(list, player))
+                                .filter(player -> FCUtil.isUserOnList(list, player))
                                 .map(Player::getName)
                                 .filter(alias -> !isIn(Arrays.copyOfRange(parse.args, 2, parse.args.length), alias))
                                 .filter(new StartsWithPredicate(parse.current.token))
@@ -365,11 +396,11 @@ public class SimpleHandler extends HandlerBase {
         if (user == null) {
             switch (this.passiveOption) {
                 case OWNER:
-                    return EventResult.of(getResult(this.ownerPermissions, flag));
+                    return EventResult.of(this.ownerPermCache.get(flag));
                 case MEMBER:
-                    return EventResult.of(getResult(this.memberPermissions, flag));
+                    return EventResult.of(this.memberPermCache.get(flag));
                 case DEFAULT:
-                    return EventResult.of(getResult(this.defaultPermissions, flag));
+                    return EventResult.of(this.defaultPermCache.get(flag));
                 case ALLOW:
                     return EventResult.allow();
                 case DENY:
@@ -378,14 +409,17 @@ public class SimpleHandler extends HandlerBase {
                     return EventResult.pass();
             }
         }
-        if (FCHelper.isUserOnList(this.ownerList, user)) return EventResult.of(getResult(this.ownerPermissions, flag));
-        else if (FCHelper.isUserOnList(this.memberList, user))
-            return EventResult.of(getResult(this.memberPermissions, flag));
-        else return EventResult.of(getResult(this.defaultPermissions, flag));
+        if (FCUtil.isUserOnList(this.ownerList, user))
+            return EventResult.of(this.ownerPermCache.get(flag));
+        else if (FCUtil.isUserOnList(this.memberList, user))
+            return EventResult.of(this.memberPermCache.get(flag));
+        else return EventResult.of(this.defaultPermCache.get(flag));
     }
 
-    private Tristate getResult(Map<Flag, Tristate> map, Flag flag) {
-        return map.get(FGUtil.nearestParent(flag, map.keySet()));
+    private void clearCache() {
+        this.ownerPermCache.clear();
+        this.memberPermCache.clear();
+        this.defaultPermCache.clear();
     }
 
     @Override
@@ -435,7 +469,7 @@ public class SimpleHandler extends HandlerBase {
         for (Flag f : this.ownerPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
-                            .append(FCHelper.readableTristateText(ownerPermissions.get(f)))
+                            .append(FCUtil.readableTristateText(ownerPermissions.get(f)))
                             .append(Text.of("\n"))
                             .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set owners " + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
@@ -449,7 +483,7 @@ public class SimpleHandler extends HandlerBase {
         for (Flag f : this.memberPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
-                            .append(FCHelper.readableTristateText(memberPermissions.get(f)))
+                            .append(FCUtil.readableTristateText(memberPermissions.get(f)))
                             .append(Text.of("\n"))
                             .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set members " + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
@@ -463,7 +497,7 @@ public class SimpleHandler extends HandlerBase {
         for (Flag f : this.defaultPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
-                            .append(FCHelper.readableTristateText(defaultPermissions.get(f)))
+                            .append(FCUtil.readableTristateText(defaultPermissions.get(f)))
                             .append(Text.of("\n"))
                             .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set default " + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
@@ -471,10 +505,10 @@ public class SimpleHandler extends HandlerBase {
             );
         }
         builder.append(Text.builder()
-                        .append(Text.of(TextColors.AQUA, "Passive setting: "))
-                        .append(Text.of(TextColors.RESET, this.passiveOption.toString()))
-                        .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " passive "))
-                        .onHover(TextActions.showText(Text.of("Click to Change Passive Setting"))).build()
+                .append(Text.of(TextColors.AQUA, "Passive setting: "))
+                .append(Text.of(TextColors.RESET, this.passiveOption.toString()))
+                .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " passive "))
+                .onHover(TextActions.showText(Text.of("Click to Change Passive Setting"))).build()
         );
         return builder.build();
     }
@@ -617,7 +651,7 @@ public class SimpleHandler extends HandlerBase {
         SET
     }
 
-    public static class Factory implements IHandlerFactory{
+    public static class Factory implements IHandlerFactory {
 
         private static final String[] simpleAliases = {"simple", "simp"};
 
@@ -641,14 +675,14 @@ public class SimpleHandler extends HandlerBase {
                     try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {
                         while (ownerSet.next()) {
                             Optional<User> user = FoxGuardMain.instance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
-                            if (user.isPresent() && !FCHelper.isUserOnList(ownerList, user.get()))
+                            if (user.isPresent() && !FCUtil.isUserOnList(ownerList, user.get()))
                                 ownerList.add(user.get());
                         }
                     }
                     try (ResultSet memberSet = statement.executeQuery("SELECT * FROM MEMBERS")) {
                         while (memberSet.next()) {
                             Optional<User> user = FoxGuardMain.instance().getUserStorage().get((UUID) memberSet.getObject("USERUUID"));
-                            if (user.isPresent() && !FCHelper.isUserOnList(memberList, user.get()))
+                            if (user.isPresent() && !FCUtil.isUserOnList(memberList, user.get()))
                                 memberList.add(user.get());
                         }
                     }

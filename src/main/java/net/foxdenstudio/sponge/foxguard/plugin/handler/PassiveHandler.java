@@ -26,7 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.common.FCHelper;
+import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
@@ -56,6 +56,7 @@ import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 public class PassiveHandler extends HandlerBase {
 
     private final Map<Flag, Tristate> map;
+    private final Map<Flag, Tristate> mapCache;
 
     public PassiveHandler(String name, int priority) {
         this(name, priority, new CacheMap<>((key, map) -> Tristate.UNDEFINED));
@@ -64,6 +65,13 @@ public class PassiveHandler extends HandlerBase {
     public PassiveHandler(String name, int priority, CacheMap<Flag, Tristate> map) {
         super(name, priority);
         this.map = map;
+        this.mapCache = new CacheMap<>((o, m) -> {
+            if (o instanceof Flag) {
+                Tristate state = map.get(FGUtil.nearestParent((Flag) o, map.keySet()));
+                m.put((Flag) o, state);
+                return state;
+            } else return Tristate.UNDEFINED;
+        });
     }
 
     @Override
@@ -71,7 +79,7 @@ public class PassiveHandler extends HandlerBase {
         if (user != null) {
             return EventResult.pass();
         }
-        return EventResult.of(map.get(FGUtil.nearestParent(flag, map.keySet())));
+        return EventResult.of(mapCache.get(flag));
     }
 
     @Override
@@ -92,9 +100,11 @@ public class PassiveHandler extends HandlerBase {
                     if (isIn(CLEAR_ALIASES, parse.args[2])) {
                         if (flag == null) {
                             this.map.clear();
+                            this.mapCache.clear();
                             return ProcessResult.of(true, Text.of("Successfully cleared flags!"));
                         } else {
                             this.map.remove(flag);
+                            this.mapCache.clear();
                             return ProcessResult.of(true, Text.of("Successfully cleared flag!"));
                         }
                     } else {
@@ -106,9 +116,11 @@ public class PassiveHandler extends HandlerBase {
                             for (Flag thatExist : Flag.values()) {
                                 this.map.put(thatExist, tristate);
                             }
+                            this.mapCache.clear();
                             return ProcessResult.of(true, Text.of("Successfully set flags!"));
                         } else {
                             this.map.put(flag, tristate);
+                            this.mapCache.clear();
                             return ProcessResult.of(true, Text.of("Successfully set flag!"));
                         }
 
@@ -168,7 +180,7 @@ public class PassiveHandler extends HandlerBase {
         for (Flag f : this.map.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
-                            .append(FCHelper.readableTristateText(map.get(f)))
+                            .append(FCUtil.readableTristateText(map.get(f)))
                             .append(Text.of("\n"))
                             .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set " + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
@@ -234,7 +246,7 @@ public class PassiveHandler extends HandlerBase {
                     try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {
                         while (ownerSet.next()) {
                             Optional<User> user = FoxGuardMain.instance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
-                            if (user.isPresent() && !FCHelper.isUserOnList(ownerList, user.get()))
+                            if (user.isPresent() && !FCUtil.isUserOnList(ownerList, user.get()))
                                 ownerList.add(user.get());
                         }
                     }

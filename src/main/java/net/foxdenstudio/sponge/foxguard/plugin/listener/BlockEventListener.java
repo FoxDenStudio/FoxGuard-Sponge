@@ -84,12 +84,12 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
         for (Transaction<BlockSnapshot> trans : event.getTransactions()) {
             Vector3i loc = trans.getOriginal().getLocation().get().getBlockPosition();
             Vector3i chunk = new Vector3i(
-                    GenericMath.floor(((double) loc.getX()) / 16.0),
-                    GenericMath.floor(((double) loc.getY()) / 16.0),
-                    GenericMath.floor(((double) loc.getZ()) / 16.0));
+                    GenericMath.floor((loc.getX()) / 16.0),
+                    GenericMath.floor((loc.getY()) / 16.0),
+                    GenericMath.floor((loc.getZ()) / 16.0));
             FGManager.getInstance().getRegionList(world, chunk).stream()
-                    .filter(region -> region.contains(loc))
                     .filter(IFGObject::isEnabled)
+                    .filter(region -> region.contains(loc))
                     .forEach(region -> region.getHandlers().stream()
                             .filter(IFGObject::isEnabled)
                             .filter(handler -> !handlerList.contains(handler))

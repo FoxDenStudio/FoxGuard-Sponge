@@ -26,7 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.common.FCHelper;
+import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
@@ -110,11 +110,11 @@ public class CommandModify implements CommandCallable {
 
                     @Override
                     public Cause getCause() {
-                        return FoxGuardMain.PLUGIN_CAUSE;
+                        return FoxGuardMain.getCause();
                     }
                 });
                 if (result.getMessage().isPresent()) {
-                    if (!FCHelper.hasColor(result.getMessage().get())) {
+                    if (!FCUtil.hasColor(result.getMessage().get())) {
                         source.sendMessage(result.getMessage().get().toBuilder().color(TextColors.GREEN).build());
                     } else {
                         source.sendMessage(result.getMessage().get());
@@ -124,7 +124,7 @@ public class CommandModify implements CommandCallable {
                 }
             } else {
                 if (result.getMessage().isPresent()) {
-                    if (!FCHelper.hasColor(result.getMessage().get())) {
+                    if (!FCUtil.hasColor(result.getMessage().get())) {
                         source.sendMessage(result.getMessage().get().toBuilder().color(TextColors.RED).build());
                     } else {
                         source.sendMessage(result.getMessage().get());
@@ -148,11 +148,11 @@ public class CommandModify implements CommandCallable {
 
                     @Override
                     public Cause getCause() {
-                        return FoxGuardMain.PLUGIN_CAUSE;
+                        return FoxGuardMain.getCause();
                     }
                 });
                 if (result.getMessage().isPresent()) {
-                    if (!FCHelper.hasColor(result.getMessage().get())) {
+                    if (!FCUtil.hasColor(result.getMessage().get())) {
                         source.sendMessage(result.getMessage().get().toBuilder().color(TextColors.GREEN).build());
                     } else {
                         source.sendMessage(result.getMessage().get());
@@ -162,7 +162,7 @@ public class CommandModify implements CommandCallable {
                 }
             } else {
                 if (result.getMessage().isPresent()) {
-                    if (!FCHelper.hasColor(result.getMessage().get())) {
+                    if (!FCUtil.hasColor(result.getMessage().get())) {
                         source.sendMessage(result.getMessage().get().toBuilder().color(TextColors.RED).build());
                     } else {
                         source.sendMessage(result.getMessage().get());
@@ -245,12 +245,16 @@ public class CommandModify implements CommandCallable {
                 if (world == null) return ImmutableList.of();
                 IRegion region = FGManager.getInstance().getRegion(world, parse.args[1]);
                 if (region == null) return ImmutableList.of();
-                return region.modifySuggestions(source, parse.current.token);
+                return region.modifySuggestions(source, parse.current.token).stream()
+                        .map(args -> parse.current.prefix + args)
+                        .collect(GuavaCollectors.toImmutableList());
             } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
                 if (parse.args.length < 2) return ImmutableList.of();
                 IHandler handler = FGManager.getInstance().gethandler(parse.args[1]);
                 if (handler == null) return ImmutableList.of();
-                return handler.modifySuggestions(source, parse.current.token);
+                return handler.modifySuggestions(source, parse.current.token).stream()
+                        .map(args -> parse.current.prefix + args)
+                        .collect(GuavaCollectors.toImmutableList());
             }
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
             return ImmutableList.of(parse.current.prefix + " ");

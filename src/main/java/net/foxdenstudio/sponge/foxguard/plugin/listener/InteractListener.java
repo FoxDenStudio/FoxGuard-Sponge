@@ -71,7 +71,11 @@ public class InteractListener implements EventListener<InteractEvent> {
                 typeFlag = Flag.ENTITY_INTERACT_PRIMARY;
                 if (((InteractEntityEvent.Primary) event).getTargetEntity() instanceof Player)
                     typeFlag = Flag.PLAYER_INTERACT_PRIMARY;
-            } else if (event instanceof InteractEntityEvent.Secondary) typeFlag = Flag.ENTITY_INTERACT_SECONDARY;
+            } else if (event instanceof InteractEntityEvent.Secondary) {
+                typeFlag = Flag.ENTITY_INTERACT_SECONDARY;
+                if (((InteractEntityEvent.Secondary) event).getTargetEntity() instanceof Player)
+                    typeFlag = Flag.PLAYER_INTERACT_SECONDARY;
+            }
         } else if (event instanceof InteractBlockEvent) {
             world = ((InteractBlockEvent) event).getTargetBlock().getLocation().get().getExtent();
             loc = ((InteractBlockEvent) event).getTargetBlock().getPosition().toDouble();
@@ -86,8 +90,8 @@ public class InteractListener implements EventListener<InteractEvent> {
                 GenericMath.floor(loc.getY() / 16.0),
                 GenericMath.floor(loc.getZ() / 16.0));
         FGManager.getInstance().getRegionList(world, chunk).stream()
-                .filter(region -> region.contains(finalLoc))
                 .filter(IFGObject::isEnabled)
+                .filter(region -> region.contains(finalLoc))
                 .forEach(region -> region.getHandlers().stream()
                         .filter(IFGObject::isEnabled)
                         .filter(handler -> !handlerList.contains(handler))

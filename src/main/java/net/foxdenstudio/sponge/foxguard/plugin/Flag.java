@@ -27,7 +27,6 @@ package net.foxdenstudio.sponge.foxguard.plugin;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import org.spongepowered.api.util.Tristate;
 
 import java.util.*;
@@ -36,19 +35,27 @@ public enum Flag {
 
     ROOT(true, "root", "Everything"),
 
+    INTERACT(true, "click", "Click", ROOT),
+    INTERACT_PRIMARY(true, "attack", "Attack", INTERACT),
+    INTERACT_SECONDARY(true, "interact", "Interact", INTERACT),
+
     BLOCK(true, "block", "Blocks", ROOT),
     BLOCK_CHANGE(true, "blockchange", "Change-Blocks", BLOCK),
     BLOCK_PLACE(true, "blockplace", "Place-Blocks", BLOCK_CHANGE),
     BLOCK_BREAK(true, "blockbreak", "Break-Blocks", BLOCK_CHANGE),
     BLOCK_MODIFY(true, "blockmodify", "Modify-Blocks", BLOCK_CHANGE),
-    BLOCK_INTERACT(true, "blockclick", "Click-Blocks", BLOCK),
-    BLOCK_INTERACT_PRIMARY(true, "blockattack", "Attack-Blocks", BLOCK_INTERACT),
-    BLOCK_INTERACT_SECONDARY(true, "blockinteract", "Interact-Blocks", BLOCK_INTERACT),
 
-    ENTITY_INTERACT(true, "entityclick", "Click-Entities", ROOT),
-    ENTITY_INTERACT_PRIMARY(true, "entityattack", "Attack-Entities", ENTITY_INTERACT),
-    ENTITY_INTERACT_SECONDARY(true, "entityinteract", "Interact-Entities", ENTITY_INTERACT),
-    PLAYER_INTERACT_PRIMARY(true, "playerattack", "Attack-Player", ENTITY_INTERACT_PRIMARY),
+    BLOCK_INTERACT(true, "blockclick", "Click-Blocks", INTERACT),
+    BLOCK_INTERACT_PRIMARY(true, "blockattack", "Attack-Blocks", BLOCK_INTERACT, INTERACT_PRIMARY),
+    BLOCK_INTERACT_SECONDARY(true, "blockinteract", "Interact-Blocks", BLOCK_INTERACT, INTERACT_SECONDARY),
+
+    ENTITY_INTERACT(true, "entityclick", "Click-Entities", INTERACT),
+    ENTITY_INTERACT_PRIMARY(true, "entityattack", "Attack-Entities", ENTITY_INTERACT, INTERACT_PRIMARY),
+    ENTITY_INTERACT_SECONDARY(true, "entityinteract", "Interact-Entities", ENTITY_INTERACT, INTERACT_SECONDARY),
+
+    PLAYER_INTERACT(true, "playerclick", "Click-Players", ENTITY_INTERACT),
+    PLAYER_INTERACT_PRIMARY(true, "playerattack", "Attack-Players", PLAYER_INTERACT, ENTITY_INTERACT_PRIMARY),
+    PLAYER_INTERACT_SECONDARY(true, "playerinteract", "Interact-Players", PLAYER_INTERACT, ENTITY_INTERACT_SECONDARY),
 
     SPAWN_MOB(true, "spawnmob", "Spawn-Mobs", ROOT),
     SPAWN_MOB_HOSTILE(true, "spawnmobhostile", "Spawn-Hostile-Mobs", SPAWN_MOB),
@@ -64,7 +71,7 @@ public enum Flag {
     private final boolean defaultValue;
     private final Flag[] parents;
 
-    private List<Set<Flag>> hiearchy;
+    private List<Set<Flag>> hierarchy;
 
 
     Flag(boolean defaultValue, String flagName, String humanName, Flag... parents) {
@@ -98,8 +105,8 @@ public enum Flag {
         return parents;
     }
 
-    public List<Set<Flag>> getHiearchy(){
-        if (hiearchy == null) {
+    public List<Set<Flag>> getHierarchy(){
+        if (hierarchy == null) {
             List<Set<Flag>> list = new ArrayList<>();
             Set<Flag> current = new LinkedHashSet<>();
             current.add(this);
@@ -109,9 +116,9 @@ public enum Flag {
                 current.forEach(flag -> Arrays.stream(flag.getParents()).forEach(newSet::add));
                 current = newSet;
             }
-            hiearchy = ImmutableList.copyOf(list);
+            hierarchy = ImmutableList.copyOf(list);
         }
-        return hiearchy;
+        return hierarchy;
     }
 
     public Tristate resolve(Tristate input) {

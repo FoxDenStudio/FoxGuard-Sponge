@@ -27,7 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.region;
 
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.common.FCHelper;
+import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
@@ -68,7 +68,7 @@ public class ElevationRegion extends RegionBase {
         for (String arg : args) {
             int y;
             try {
-                y = (int) FCHelper.parseCoordinate(source instanceof Player ?
+                y = (int) FCUtil.parseCoordinate(source instanceof Player ?
                         ((Player) source).getLocation().getBlockY() : 0, arg);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(
@@ -179,7 +179,7 @@ public class ElevationRegion extends RegionBase {
             AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                     .arguments(arguments)
                     .parse();
-            return new ElevationRegion(name, FCHelper.getPositions(source), parse.args, source);
+            return new ElevationRegion(name, FCUtil.getPositions(source), parse.args, source);
         }
 
         @Override
@@ -193,12 +193,6 @@ public class ElevationRegion extends RegionBase {
                         lowerBound = boundSet.getInt("Y");
                         boundSet.next();
                         upperBound = boundSet.getInt("Y");
-                    }
-                    try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {
-                        while (ownerSet.next()) {
-                            Optional<User> user = FoxGuardMain.instance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
-                            if (user.isPresent()) userList.add(user.get());
-                        }
                     }
                 }
 
