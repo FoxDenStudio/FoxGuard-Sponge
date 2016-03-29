@@ -108,7 +108,7 @@ public class CommandCreate implements CommandCallable {
                     parse.args.length < 4 ? "" : parse.args[3],
                     source);
             if (newRegion == null)
-                throw new CommandException(Text.of("Failed to create Region! Perhaps the type is invalid?"));
+                throw new CommandException(Text.of("Failed to create region! Perhaps the type is invalid?"));
             boolean success = FGManager.getInstance().addRegion(world, newRegion);
             if (!success)
                 throw new ArgumentParseException(Text.of("That name is already taken!"), parse.args[1], 1);
@@ -147,7 +147,7 @@ public class CommandCreate implements CommandCallable {
                         source);
             }
             if (newHandler == null)
-                throw new CommandException(Text.of("Failed to create " + (isController ? "Controller" : "Handler") + "! Perhaps the type is invalid?"));
+                throw new CommandException(Text.of("Failed to create " + (isController ? "controller" : "handler") + "! Perhaps the type is invalid?"));
             boolean success = FGManager.getInstance().addHandler(newHandler);
             if (!success)
                 throw new ArgumentParseException(Text.of("That name is already taken!"), parse.args[1], 1);

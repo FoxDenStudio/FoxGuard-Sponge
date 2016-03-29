@@ -126,7 +126,7 @@ public class PermissionHandler extends HandlerBase {
 
     @Override
     public ProcessResult modify(CommandSource source, String arguments) {
-        return ProcessResult.of(false, Text.of(TextColors.WHITE, "Permission Handlers have no configurable parameters!"));
+        return ProcessResult.of(false, Text.of(TextColors.WHITE, "PermissionHandlers have no configurable parameters!"));
     }
 
     @Override

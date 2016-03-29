@@ -115,12 +115,12 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
         if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name!"));
         IHandler handler = FGManager.getInstance().gethandler(parse.args[0]);
         if (handler == null)
-            throw new ArgumentParseException(Text.of("No Handlers with this name!"), parse.args[0], 1);
+            throw new ArgumentParseException(Text.of("No handlers with this name!"), parse.args[0], 1);
         if (this.list.contains(handler))
             throw new ArgumentParseException(Text.of("Handler is already in your state buffer!"), parse.args[0], 1);
         this.list.add(handler);
 
-        return ProcessResult.of(true, Text.of("Successfully added Handler to your state buffer!"));
+        return ProcessResult.of(true, Text.of("Successfully added handler to your state buffer!"));
     }
 
     public ProcessResult remove(CommandSource source, String arguments) throws CommandException {
@@ -138,11 +138,11 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
                 throw new ArgumentParseException(Text.of("Index out of bounds! (1 - " + this.list.size()), parse.args[0], 1);
             }
             if (handler == null)
-                throw new ArgumentParseException(Text.of("No Handlers with this name!"), parse.args[0], 1);
+                throw new ArgumentParseException(Text.of("No handlers with this name!"), parse.args[0], 1);
             if (!this.list.contains(handler))
                 throw new ArgumentParseException(Text.of("Handler is not in your state buffer!"), parse.args[0], 1);
             this.list.remove(handler);
-            return ProcessResult.of(true, Text.of("Successfully removed Handler from your state buffer!"));
+            return ProcessResult.of(true, Text.of("Successfully removed handler from your state buffer!"));
         } else {
             int successes = 0, failures = 0;
             for (String arg : parse.args) {

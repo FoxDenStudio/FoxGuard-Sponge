@@ -168,12 +168,12 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         if (world == null) throw new CommandException(Text.of("Must specify a world!"));
         IRegion region = FGManager.getInstance().getRegion(world, parse.args[0]);
         if (region == null)
-            throw new CommandException(Text.of("No Regions with the name\"" + parse.args[0] + "\"!"));
+            throw new CommandException(Text.of("No regions with the name\"" + parse.args[0] + "\"!"));
         if (this.list.contains(region))
             throw new CommandException(Text.of("Region is already in your state buffer!"));
         this.list.add(region);
 
-        return ProcessResult.of(true, Text.of("Successfully added Region to your state buffer!"));
+        return ProcessResult.of(true, Text.of("Successfully added region to your state buffer!"));
     }
 
     public ProcessResult remove(CommandSource source, String arguments) throws CommandException {
@@ -201,11 +201,11 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                     + this.list.size()));
         }
         if (region == null)
-            throw new CommandException(Text.of("No Regions with the name\"" + parse.args[0] + "\"!"));
+            throw new CommandException(Text.of("No regions with the name\"" + parse.args[0] + "\"!"));
         if (!this.list.contains(region))
             throw new CommandException(Text.of("Region is not in your state buffer!"));
         this.list.remove(region);
 
-        return ProcessResult.of(true, Text.of("Successfully removed Region from your state buffer!"));
+        return ProcessResult.of(true, Text.of("Successfully removed region from your state buffer!"));
     }
 }

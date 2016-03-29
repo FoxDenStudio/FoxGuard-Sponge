@@ -25,6 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin;
 
+import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
@@ -43,10 +44,11 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings({"SqlNoDataSourceInspection", "SqlResolve"})
 public final class FGStorageManager {
     private static FGStorageManager instance;
     private final List<String> markedForDeletion = new ArrayList<>();
-    private final List<DeferredObject> deferedObjects = new ArrayList<>();
+    private final List<DeferredObject> deferredObjects = new ArrayList<>();
 
     public static FGStorageManager getInstance() {
         if (instance == null) {
@@ -65,7 +67,8 @@ public final class FGStorageManager {
                                 "NAME VARCHAR(256), " +
                                 "TYPE VARCHAR(256)," +
                                 "PRIORITY INTEGER," +
-                                "ENABLED BOOLEAN);");
+                                "ENABLED BOOLEAN," +
+                                "CONTROLLER BOOLEAN);");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -117,26 +120,43 @@ public final class FGStorageManager {
                                         if (metaTables.getInt(1) != 0) {
                                             try (ResultSet metaSet = metaStatement.executeQuery("SELECT * FROM FOXGUARD_META.METADATA;")) {
                                                 metaSet.first();
-                                                if (metaSet.getString("CATEGORY").equalsIgnoreCase("handler") &&
+                                                String cat = metaSet.getString("CATEGORY");
+                                                if ((cat.equalsIgnoreCase("handler") && !handlerDataSet.getBoolean("CONTROLLER")
+                                                        || cat.equalsIgnoreCase("controller") && handlerDataSet.getBoolean("CONTROLLER")) &&
                                                         metaSet.getString("NAME").equalsIgnoreCase(handlerDataSet.getString("NAME")) &&
                                                         metaSet.getString("TYPE").equalsIgnoreCase(handlerDataSet.getString("TYPE")) &&
                                                         metaSet.getInt("PRIORITY") == handlerDataSet.getInt("PRIORITY") &&
                                                         metaSet.getBoolean("ENABLED") == handlerDataSet.getBoolean("ENABLED")) {
-                                                    IHandler handler = FGFactoryManager.getInstance().createHandler(
-                                                            source,
-                                                            handlerDataSet.getString("NAME"),
-                                                            handlerDataSet.getString("TYPE"),
-                                                            handlerDataSet.getInt("PRIORITY"),
-                                                            handlerDataSet.getBoolean("ENABLED")
-                                                    );
-                                                    if (handler != null) {
-                                                        FoxGuardMain.instance().getLogger().info("Loaded handler \"" + handler.getName() +
-                                                                "\" of type \"" + handler.getLongTypeName() +"\"");
+                                                    if (cat.equalsIgnoreCase("controller")) {
+                                                        IController controller = FGFactoryManager.getInstance().createController(
+                                                                source,
+                                                                handlerDataSet.getString("NAME"),
+                                                                handlerDataSet.getString("TYPE"),
+                                                                handlerDataSet.getInt("PRIORITY"),
+                                                                handlerDataSet.getBoolean("ENABLED")
+                                                        );
+                                                        if (controller != null) {
+                                                            FoxGuardMain.instance().getLogger().info("Loaded controller \"" + controller.getName() +
+                                                                    "\" of type \"" + controller.getLongTypeName() + "\"");
+                                                        }
+                                                        FGManager.getInstance().addHandler(controller);
+                                                    } else {
+                                                        IHandler handler = FGFactoryManager.getInstance().createHandler(
+                                                                source,
+                                                                handlerDataSet.getString("NAME"),
+                                                                handlerDataSet.getString("TYPE"),
+                                                                handlerDataSet.getInt("PRIORITY"),
+                                                                handlerDataSet.getBoolean("ENABLED")
+                                                        );
+                                                        if (handler != null) {
+                                                            FoxGuardMain.instance().getLogger().info("Loaded handler \"" + handler.getName() +
+                                                                    "\" of type \"" + handler.getLongTypeName() + "\"");
+                                                        }
+                                                        FGManager.getInstance().addHandler(handler);
                                                     }
-                                                    FGManager.getInstance().addHandler(handler);
                                                 } else if (FGConfigManager.getInstance().forceLoad()) {
                                                     FoxGuardMain.instance().getLogger().info("Mismatched database found. Attempting force load...");
-                                                    if (metaSet.getString("CATEGORY").equalsIgnoreCase("region")) {
+                                                    if (cat.equalsIgnoreCase("region")) {
                                                         DeferredObject deferredRegion = new DeferredObject();
                                                         deferredRegion.category = "region";
                                                         deferredRegion.dataSource = source;
@@ -148,10 +168,10 @@ public final class FGStorageManager {
                                                         deferredRegion.metaWorld = metaSet.getString("WORLD");
                                                         deferredRegion.listEnabled = handlerDataSet.getBoolean("ENABLED");
                                                         deferredRegion.metaEnabled = metaSet.getBoolean("ENABLED");
-                                                        this.deferedObjects.add(deferredRegion);
-                                                    } else if (metaSet.getString("CATEGORY").equalsIgnoreCase("handler")) {
+                                                        this.deferredObjects.add(deferredRegion);
+                                                    } else if (cat.equalsIgnoreCase("handler") || cat.equalsIgnoreCase("controller")) {
                                                         DeferredObject deferredHandler = new DeferredObject();
-                                                        deferredHandler.category = "handler";
+                                                        deferredHandler.category = cat;
                                                         deferredHandler.dataSource = source;
                                                         deferredHandler.databaseDir = databaseDir;
                                                         deferredHandler.listName = handlerDataSet.getString("NAME");
@@ -160,7 +180,7 @@ public final class FGStorageManager {
                                                         deferredHandler.priority = metaSet.getInt("PRIORITY");
                                                         deferredHandler.listEnabled = handlerDataSet.getBoolean("ENABLED");
                                                         deferredHandler.metaEnabled = metaSet.getBoolean("ENABLED");
-                                                        this.deferedObjects.add(deferredHandler);
+                                                        this.deferredObjects.add(deferredHandler);
                                                     } else {
                                                         FoxGuardMain.instance().getLogger().warn("Found potentially corrupted database.");
                                                         markForDeletion(databaseDir);
@@ -242,7 +262,7 @@ public final class FGStorageManager {
                                                         deferredRegion.metaWorld = metaSet.getString("WORLD");
                                                         deferredRegion.listEnabled = regionDataSet.getBoolean("ENABLED");
                                                         deferredRegion.metaEnabled = metaSet.getBoolean("ENABLED");
-                                                        this.deferedObjects.add(deferredRegion);
+                                                        this.deferredObjects.add(deferredRegion);
                                                     } else if (metaSet.getString("CATEGORY").equalsIgnoreCase("handler")) {
                                                         DeferredObject deferredHandler = new DeferredObject();
                                                         deferredHandler.category = "handler";
@@ -254,7 +274,7 @@ public final class FGStorageManager {
                                                         deferredHandler.priority = metaSet.getInt("PRIORITY");
                                                         deferredHandler.listEnabled = regionDataSet.getBoolean("ENABLED");
                                                         deferredHandler.metaEnabled = metaSet.getBoolean("ENABLED");
-                                                        this.deferedObjects.add(deferredHandler);
+                                                        this.deferredObjects.add(deferredHandler);
                                                     } else {
                                                         FoxGuardMain.instance().getLogger().warn("Found potentially corrupted database.");
                                                         markForDeletion(databaseDir);
@@ -272,7 +292,7 @@ public final class FGStorageManager {
                                 }
                             }
                         } catch (SQLException e) {
-                            FoxGuardMain.instance().getLogger().error("Unable to load Region in world \"" + world.getName() + "\". Perhaps the database is corrupted?");
+                            FoxGuardMain.instance().getLogger().error("Unable to load region in world \"" + world.getName() + "\". Perhaps the database is corrupted?");
                             e.printStackTrace();
                         }
                     }
@@ -319,14 +339,16 @@ public final class FGStorageManager {
                                 "NAME VARCHAR(256), " +
                                 "TYPE VARCHAR(256)," +
                                 "PRIORITY INTEGER," +
-                                "ENABLED BOOLEAN);");
+                                "ENABLED BOOLEAN," +
+                                "CONTROLLER BOOLEAN);");
                 for (IHandler handler : FGManager.getInstance().getHandlerList()) {
                     if (handler.autoSave()) {
-                        statement.addBatch("INSERT INTO HANDLERS(NAME, TYPE, PRIORITY, ENABLED) VALUES ('" +
+                        statement.addBatch("INSERT INTO HANDLERS(NAME, TYPE, PRIORITY, ENABLED, CONTROLLER) VALUES ('" +
                                 handler.getName() + "', '" +
                                 handler.getUniqueTypeString() + "', " +
                                 handler.getPriority() + ", " +
-                                (handler.isEnabled() ? "TRUE" : "FALSE") + ");");
+                                (handler.isEnabled() ? "TRUE" : "FALSE") + ", " +
+                                (handler instanceof IController ? "TRUE" : "FALSE") + ");");
                     }
                 }
                 statement.executeBatch();
@@ -351,8 +373,8 @@ public final class FGStorageManager {
                                 "ENABLED BOOLEAN);");
                         statement.addBatch("DELETE FROM FOXGUARD_META.METADATA");
                         handler.writeToDatabase(source);
-                        statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, PRIORITY, ENABLED) VALUES (" +
-                                "'handler', '" +
+                        statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, PRIORITY, ENABLED) VALUES ('" +
+                                (handler instanceof IController ? "controller" : "handler") + "', '" +
                                 handler.getName() + "', '" +
                                 handler.getUniqueTypeString() + "', " +
                                 handler.getPriority() + ", " +
@@ -362,7 +384,8 @@ public final class FGStorageManager {
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
-                FoxGuardMain.instance().getLogger().error("FAILED TO SAVE HANDLER \"" + handler.getName() + "\"!");
+                FoxGuardMain.instance().getLogger().error("FAILED TO SAVE " +
+                        (handler instanceof IController ? "CONTROLLER" : "HANDLER") + " \"" + handler.getName() + "\"!");
             }
         });
     }
@@ -491,8 +514,8 @@ public final class FGStorageManager {
                             "ENABLED BOOLEAN);");
                     statement.addBatch("DELETE FROM FOXGUARD_META.METADATA");
                     handler.writeToDatabase(source);
-                    statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, PRIORITY, ENABLED) VALUES (" +
-                            "'handler', '" +
+                    statement.addBatch("INSERT INTO FOXGUARD_META.METADATA(CATEGORY, NAME, TYPE, PRIORITY, ENABLED) VALUES ('" +
+                            (handler instanceof IController ? "controller" : "handler") + "', '" +
                             handler.getName() + "', '" +
                             handler.getUniqueTypeString() + "', " +
                             handler.getPriority() + ", " +
@@ -502,7 +525,8 @@ public final class FGStorageManager {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            FoxGuardMain.instance().getLogger().error("FAILED TO UPDATE SAVE DATABASE FOR HANDLER \"" + handler.getName() + "\"!");
+            FoxGuardMain.instance().getLogger().error("FAILED TO UPDATE SAVE DATABASE FOR " +
+                    (handler instanceof IController ? "CONTROLLER" : "HANDLER") + " \"" + handler.getName() + "\"!");
         }
         updateLists();
     }
@@ -544,11 +568,12 @@ public final class FGStorageManager {
                 statement.addBatch("DELETE FROM HANDLERS;");
                 for (IHandler handler : FGManager.getInstance().getHandlerList()) {
                     if (handler.autoSave()) {
-                        statement.addBatch("INSERT INTO HANDLERS(NAME, TYPE, PRIORITY, ENABLED) VALUES ('" +
+                        statement.addBatch("INSERT INTO HANDLERS(NAME, TYPE, PRIORITY, ENABLED, CONTROLLER) VALUES ('" +
                                 handler.getName() + "', '" +
                                 handler.getUniqueTypeString() + "', " +
                                 handler.getPriority() + ", " +
-                                (handler.isEnabled() ? "TRUE" : "FALSE") + ");");
+                                (handler.isEnabled() ? "TRUE" : "FALSE") + ", " +
+                                (handler instanceof IController ? "TRUE" : "FALSE") + ");");
                     }
                 }
                 statement.executeBatch();
@@ -638,7 +663,7 @@ public final class FGStorageManager {
     }
 
     public synchronized void resolveDeferredObjects() {
-        for (DeferredObject o : deferedObjects) {
+        for (DeferredObject o : deferredObjects) {
             try {
                 IFGObject result = o.resolve();
                 if (result == null)

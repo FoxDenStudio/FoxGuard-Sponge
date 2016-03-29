@@ -57,11 +57,11 @@ public class CommandUnlink implements CommandCallable {
         if (args.length == 0) {
             if (FGUtil.getSelectedRegions(source).size() == 0 &&
                     FGUtil.getSelectedHandlers(source).size() == 0)
-                throw new CommandException(Text.of("You don't have any Regions or Handlers in your state buffer!"));
+                throw new CommandException(Text.of("You don't have any regions or handlers in your state buffer!"));
             if (FGUtil.getSelectedRegions(source).size() == 0)
-                throw new CommandException(Text.of("You don't have any Regions in your state buffer!"));
+                throw new CommandException(Text.of("You don't have any regions in your state buffer!"));
             if (FGUtil.getSelectedHandlers(source).size() == 0)
-                throw new CommandException(Text.of("You don't have any Handlers in your state buffer!"));
+                throw new CommandException(Text.of("You don't have any handlers in your state buffer!"));
             int[] count = {0};
             FGUtil.getSelectedRegions(source).stream().forEach(
                     region -> FGUtil.getSelectedHandlers(source).stream()
@@ -73,7 +73,7 @@ public class CommandUnlink implements CommandCallable {
         } else if (args[0].equals("FULL")) {
             if (FGUtil.getSelectedRegions(source).size() == 0 &&
                     FGUtil.getSelectedHandlers(source).size() == 0)
-                throw new CommandException(Text.of("You don't have any Regions or Handlers in your state buffer!"));
+                throw new CommandException(Text.of("You don't have any regions or handlers in your state buffer!"));
             int[] count = {0};
             FGUtil.getSelectedRegions(source).stream().forEach(
                     region -> {

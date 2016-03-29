@@ -333,7 +333,7 @@ public final class FoxGuardMain {
         manager.registerHandlerFactory(new PassiveHandler.Factory());
         manager.registerHandlerFactory(new PermissionHandler.Factory());
 
-        manager.registerControllerFactory(new MessageController.Factory());
+        //manager.registerControllerFactory(new MessageController.Factory());
     }
 
     /**

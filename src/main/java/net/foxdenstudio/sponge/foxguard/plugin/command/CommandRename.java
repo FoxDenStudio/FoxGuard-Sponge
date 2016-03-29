@@ -88,9 +88,9 @@ public class CommandRename implements CommandCallable {
             }
             if (world == null) throw new CommandException(Text.of("You must specify a world!"));
             if (parse.args[1].equalsIgnoreCase(GlobalRegion.NAME))
-                throw new CommandException(Text.of("You may not rename the global Region!"));
+                throw new CommandException(Text.of("You may not rename the global region!"));
             if (FGManager.getInstance().getRegion(world, parse.args[1]) == null)
-                throw new CommandException(Text.of("No Region exists with the name \"" + parse.args[1] + "\"!"));
+                throw new CommandException(Text.of("No region exists with the name \"" + parse.args[1] + "\"!"));
             if (parse.args.length < 3) throw new CommandException(Text.of("Must specify a new name!"));
             if (parse.args[2].matches("^.*[^0-9a-zA-Z_$].*$"))
                 throw new ArgumentParseException(Text.of("New name (\"" + parse.args[2] + "\") must be alphanumeric!"), parse.args[2], 1);
@@ -103,9 +103,9 @@ public class CommandRename implements CommandCallable {
         } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("You must specify a name!"));
             if (parse.args[1].equalsIgnoreCase(GlobalHandler.NAME))
-                throw new CommandException(Text.of("You may not rename the global Handler!"));
+                throw new CommandException(Text.of("You may not rename the global handler!"));
             if (FGManager.getInstance().gethandler(parse.args[1]) == null)
-                throw new CommandException(Text.of("No Handler exists with the name \"" + parse.args[1] + "\"!"));
+                throw new CommandException(Text.of("No handler exists with the name \"" + parse.args[1] + "\"!"));
             if (parse.args.length < 3) throw new CommandException(Text.of("Must specify a new name!"));
             if (parse.args[2].matches("^.*[^0-9a-zA-Z_$].*$"))
                 throw new ArgumentParseException(Text.of("New name (\"" + parse.args[2] + "\") must be alphanumeric!"), parse.args[2], 1);

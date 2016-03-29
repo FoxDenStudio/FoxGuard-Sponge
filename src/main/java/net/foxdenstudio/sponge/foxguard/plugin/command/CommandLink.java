@@ -72,11 +72,11 @@ public class CommandLink implements CommandCallable {
         if (parse.args.length == 0) {
             if (FGUtil.getSelectedRegions(source).size() == 0 &&
                     FGUtil.getSelectedHandlers(source).size() == 0)
-                throw new CommandException(Text.of("You don't have any Regions or Handlers in your state buffer!"));
+                throw new CommandException(Text.of("You don't have any regions or handlers in your state buffer!"));
             if (FGUtil.getSelectedRegions(source).size() == 0)
-                throw new CommandException(Text.of("You don't have any Regions in your state buffer!"));
+                throw new CommandException(Text.of("You don't have any regions in your state buffer!"));
             if (FGUtil.getSelectedHandlers(source).size() == 0)
-                throw new CommandException(Text.of("You don't have any Handlers in your state buffer!"));
+                throw new CommandException(Text.of("You don't have any handlers in your state buffer!"));
             int[] successes = {0};
             FGUtil.getSelectedRegions(source).stream().forEach(
                     region -> FGUtil.getSelectedHandlers(source).stream()
@@ -97,7 +97,7 @@ public class CommandLink implements CommandCallable {
             }
             if (world == null) throw new CommandException(Text.of("Must specify a world!"));
             if (parse.args.length < 1) throw new CommandException(Text.of("Must specify items to link!"));
-            if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a Handler!"));
+            if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a handler!"));
             boolean success = FGManager.getInstance().linkRegion(world, parse.args[0], parse.args[1]);
             if (success) {
                 source.sendMessage(Text.of(TextColors.GREEN, "Successfully linked!"));

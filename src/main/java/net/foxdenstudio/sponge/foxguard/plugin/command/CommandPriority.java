@@ -86,7 +86,7 @@ public class CommandPriority implements CommandCallable {
                     successes++;
                 }
             }
-            if (handlers.size() < 1) throw new CommandException(Text.of("You must specify at least one Handler!"));
+            if (handlers.size() < 1) throw new CommandException(Text.of("You must specify at least one handler!"));
             source.sendMessage(Text.of(TextColors.GREEN, "Successfully changed priorities with "
                     + successes + " successes and " + failures + " failures!"));
             return CommandResult.builder().successCount(successes).build();
@@ -105,15 +105,15 @@ public class CommandPriority implements CommandCallable {
 
     @Override
     public Optional<? extends Text> getShortDescription(CommandSource source) {
-        return Optional.of(Text.of("Sets or changes the priority of one or more Handlers."));
+        return Optional.of(Text.of("Sets or changes the priority of one or more handlers."));
     }
 
     @Override
     public Optional<? extends Text> getHelp(CommandSource source) {
-        return Optional.of(Text.of("This command will modify the priorities of all Handlers currently in your state buffer.\n" +
-                "This command takes a minimum of one parameter, which is the priority that all Handlers will be set to.\n" +
-                "Prefixing this value with a tilde (\" ~ \") instead increments or decrements the priority of each Handler by that value.\n" +
-                "Any arguments after the priority are understood to be additional Handler names not already in your state buffer."));
+        return Optional.of(Text.of("This command will modify the priorities of all handlers currently in your state buffer.\n" +
+                "This command takes a minimum of one parameter, which is the priority that all handlers will be set to.\n" +
+                "Prefixing this value with a tilde (\" ~ \") instead increments or decrements the priority of each handler by that value.\n" +
+                "Any arguments after the priority are understood to be additional handler names not already in your state buffer."));
     }
 
     @Override

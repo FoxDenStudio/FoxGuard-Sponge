@@ -98,7 +98,7 @@ public class CommandModify implements CommandCallable {
             if (world == null) throw new CommandException(Text.of("Must specify a world!"));
             IRegion region = FGManager.getInstance().getRegion(world, parse.args[1]);
             if (region == null)
-                throw new CommandException(Text.of("No Region with name \"" + parse.args[1] + "\"!"));
+                throw new CommandException(Text.of("No region with name \"" + parse.args[1] + "\"!"));
             ProcessResult result = region.modify(source, parse.args.length < 3 ? "" : parse.args[2]);
             if (result.isSuccess()) {
                 FGManager.getInstance().clearCache(world);
@@ -120,7 +120,7 @@ public class CommandModify implements CommandCallable {
                         source.sendMessage(result.getMessage().get());
                     }
                 } else {
-                    source.sendMessage(Text.of(TextColors.GREEN, "Successfully modified Region!"));
+                    source.sendMessage(Text.of(TextColors.GREEN, "Successfully modified region!"));
                 }
             } else {
                 if (result.getMessage().isPresent()) {
@@ -130,14 +130,14 @@ public class CommandModify implements CommandCallable {
                         source.sendMessage(result.getMessage().get());
                     }
                 } else {
-                    source.sendMessage(Text.of(TextColors.RED, "Modification Failed for Region!"));
+                    source.sendMessage(Text.of(TextColors.RED, "Modification Failed for region!"));
                 }
             }
         } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
             IHandler handler = FGManager.getInstance().gethandler(parse.args[1]);
             if (handler == null)
-                throw new CommandException(Text.of("No Handler with name \"" + parse.args[1] + "\"!"));
+                throw new CommandException(Text.of("No handler with name \"" + parse.args[1] + "\"!"));
             ProcessResult result = handler.modify(source, parse.args.length < 3 ? "" : parse.args[2]);
             if (result.isSuccess()) {
                 Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
@@ -158,7 +158,7 @@ public class CommandModify implements CommandCallable {
                         source.sendMessage(result.getMessage().get());
                     }
                 } else {
-                    source.sendMessage(Text.of(TextColors.GREEN, "Successfully modified Handler!"));
+                    source.sendMessage(Text.of(TextColors.GREEN, "Successfully modified handler!"));
                 }
             } else {
                 if (result.getMessage().isPresent()) {
@@ -168,7 +168,7 @@ public class CommandModify implements CommandCallable {
                         source.sendMessage(result.getMessage().get());
                     }
                 } else {
-                    source.sendMessage(Text.of(TextColors.RED, "Modification Failed for Handler!"));
+                    source.sendMessage(Text.of(TextColors.RED, "Modification Failed for handler!"));
                 }
             }
         } else {

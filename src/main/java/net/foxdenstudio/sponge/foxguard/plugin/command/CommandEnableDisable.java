@@ -153,7 +153,7 @@ public class CommandEnableDisable implements CommandCallable {
                     }
                 }
             }
-            if (regions.isEmpty()) throw new CommandException(Text.of("Must specify at least one Region!"));
+            if (regions.isEmpty()) throw new CommandException(Text.of("Must specify at least one region!"));
             for (IRegion region : regions) {
                 if (region instanceof GlobalRegion || region.isEnabled() == this.enableState) failures++;
                 else {
@@ -200,7 +200,7 @@ public class CommandEnableDisable implements CommandCallable {
                     handlers.add(handler);
                 }
             }
-            if (handlers.isEmpty()) throw new CommandException(Text.of("Must specify at least one Handler!"));
+            if (handlers.isEmpty()) throw new CommandException(Text.of("Must specify at least one handler!"));
             for (IHandler handler : handlers) {
                 if (handler instanceof GlobalHandler || handler.isEnabled() == this.enableState) failures++;
                 else {

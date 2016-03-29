@@ -94,7 +94,7 @@ public class CommandList implements CommandCallable {
 
             Text.Builder output = Text.builder()
                     .append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"))
-                    .append(Text.of(TextColors.GREEN, "------- Regions" + (allFlag ? "" : (" for world: \"" + worldName + "\"")) + " -------\n"));
+                    .append(Text.of(TextColors.GREEN, "------- Regions" + (allFlag ? "" : (" for World: \"" + worldName + "\"")) + " -------\n"));
             ListIterator<IRegion> regionListIterator = regionList.listIterator();
             while (regionListIterator.hasNext()) {
                 IRegion region = regionListIterator.next();

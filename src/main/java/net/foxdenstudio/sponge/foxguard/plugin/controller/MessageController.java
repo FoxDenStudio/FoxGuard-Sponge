@@ -75,6 +75,11 @@ public class MessageController extends ControllerBase {
     }
 
     @Override
+    public int maxLinks() {
+        return -1;
+    }
+
+    @Override
     public void writeToDatabase(DataSource dataSource) throws SQLException {
 
     }

@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.object.factory;
 
 import com.google.common.collect.ImmutableList;
+import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import org.spongepowered.api.command.CommandException;
@@ -44,7 +45,7 @@ public final class FGFactoryManager {
     private static final FGFactoryManager ourInstance = new FGFactoryManager();
     private final List<IRegionFactory> regionFactories;
     private final List<IHandlerFactory> handlerFactories;
-    private final List<IHandlerFactory> controllerFactories;
+    private final List<IControllerFactory> controllerFactories;
 
     private FGFactoryManager() {
         regionFactories = new ArrayList<>();
@@ -97,21 +98,21 @@ public final class FGFactoryManager {
         return null;
     }
 
-    public IHandler createController(String name, String type, int priority, String args, CommandSource source) {
-        for (IHandlerFactory hf : controllerFactories) {
-            if (isIn(hf.getAliases(), type)) {
-                IHandler handler = hf.create(name, priority, args, source);
-                if (handler != null) return handler;
+    public IController createController(String name, String type, int priority, String args, CommandSource source) {
+        for (IControllerFactory cf : controllerFactories) {
+            if (isIn(cf.getAliases(), type)) {
+                IController controller = cf.create(name, priority, args, source);
+                if (controller != null) return controller;
             }
         }
         return null;
     }
 
-    public IHandler createController(DataSource source, String name, String type, int priority, boolean isEnabled) throws SQLException {
-        for (IHandlerFactory hf : controllerFactories) {
-            if (hf.getType().equalsIgnoreCase(type)) {
-                IHandler handler = hf.create(source, name, priority, isEnabled);
-                if (handler != null) return handler;
+    public IController createController(DataSource source, String name, String type, int priority, boolean isEnabled) throws SQLException {
+        for (IControllerFactory cf : controllerFactories) {
+            if (cf.getType().equalsIgnoreCase(type)) {
+                IController controller = cf.create(source, name, priority, isEnabled);
+                if (controller != null) return controller;
             }
         }
         return null;
@@ -156,7 +157,7 @@ public final class FGFactoryManager {
         return true;
     }
 
-    public boolean registerControllerFactory(IHandlerFactory factory) {
+    public boolean registerControllerFactory(IControllerFactory factory) {
         if (controllerFactories.contains(factory)) return false;
         controllerFactories.add(factory);
         return true;

@@ -101,7 +101,7 @@ public class CommandDetail implements CommandCallable {
             if (world == null) throw new CommandException(Text.of("Must specify a world!"));
             IRegion region = FGManager.getInstance().getRegion(world, parse.args[1]);
             if (region == null)
-                throw new CommandException(Text.of("No Region with name \"" + parse.args[1] + "\"!"));
+                throw new CommandException(Text.of("No region with name \"" + parse.args[1] + "\"!"));
             Text.Builder builder = Text.builder();
             builder.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
             if (parse.args.length <= 2 || parse.args[2].isEmpty() || parse.flagmap.containsKey("all")) {
@@ -120,7 +120,7 @@ public class CommandDetail implements CommandCallable {
                 builder.append(region.details(source, parse.args.length < 3 ? "" : parse.args[2]));
                 outboundLinks(builder, region);
             } else {
-                builder.append(Text.of(TextColors.GREEN, "------- Details for Region \"" + region.getName() + "\" in world \"" + region.getWorld().getName() + "\" -------\n"));
+                builder.append(Text.of(TextColors.GREEN, "------- Details for Region \"" + region.getName() + "\" in World \"" + region.getWorld().getName() + "\" -------\n"));
                 builder.append(region.details(source, parse.args.length < 3 ? "" : parse.args[2]));
             }
             source.sendMessage(builder.build());
@@ -130,7 +130,7 @@ public class CommandDetail implements CommandCallable {
 
             IHandler handler = FGManager.getInstance().gethandler(parse.args[1]);
             if (handler == null)
-                throw new CommandException(Text.of("No Handler with name \"" + parse.args[1] + "\"!"));
+                throw new CommandException(Text.of("No gandler with name \"" + parse.args[1] + "\"!"));
             Text.Builder builder = Text.builder();
             builder.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
             if (parse.args.length <= 2 || parse.args[2].isEmpty() || parse.flagmap.containsKey("all")) {

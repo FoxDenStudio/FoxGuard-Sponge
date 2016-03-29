@@ -98,8 +98,8 @@ public final class FGConfigManager {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        root.getNode("storage", "forceLoad").setComment("Enables force loading of Region and Handler databases. Default: false\n" +
-                "This allows loading of Regions and Handlers whose metadata don't match saved records.\n" +
+        root.getNode("storage", "forceLoad").setComment("Enables force loading of region and handler databases. Default: false\n" +
+                "This allows loading of regions and handlers whose metadata don't match saved records.\n" +
                 "This usually occurs when a database file is replaced with another of the same name, but the internal metadata doesn't match.\n" +
                 "FoxGuard will attempt to resolve these errors, however there is no guarantee that it will work or even behave at all.\n" +
                 "MAY CAUSE UNPREDICTABLE RESULTS! USE WITH CAUTION!!! It is recommended to use the \"import\" feature instead.")

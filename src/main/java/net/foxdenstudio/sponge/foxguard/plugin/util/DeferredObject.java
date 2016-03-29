@@ -54,7 +54,8 @@ public class DeferredObject {
     public int priority = 0;
 
     public IFGObject resolve() throws SQLException {
-        if (category.equalsIgnoreCase("handler")) {
+        if (category.equalsIgnoreCase("handler") || category.equalsIgnoreCase("controller")) {
+            boolean isController = category.equalsIgnoreCase("controller");
             String name;
             if (FGManager.getInstance().gethandler(metaName) == null)
                 name = metaName;
@@ -67,12 +68,16 @@ public class DeferredObject {
                 }
                 name = metaName + x;
             }
-            IHandler handler = FGFactoryManager.getInstance().createHandler(dataSource, name, type, priority, metaEnabled);
+            IHandler handler;
+            if (isController)
+                handler = FGFactoryManager.getInstance().createController(dataSource, name, type, priority, metaEnabled);
+            else
+                handler = FGFactoryManager.getInstance().createHandler(dataSource, name, type, priority, metaEnabled);
             FGStorageManager.getInstance().markForDeletion(databaseDir);
             if (handler == null) return null;
             handler.setIsEnabled(metaEnabled);
             FGManager.getInstance().addHandler(handler);
-            FoxGuardMain.instance().getLogger().info("Successfully force loaded Handler: " +
+            FoxGuardMain.instance().getLogger().info("Successfully force loaded " + (isController ? "controller" : "handler") + ": " +
                     "(Name: " + name +
                     " Type: " + type +
                     " Priority: " + priority +
@@ -101,7 +106,7 @@ public class DeferredObject {
             if (region == null) return null;
             region.setIsEnabled(metaEnabled);
             FGManager.getInstance().addRegion(world, region);
-            FoxGuardMain.instance().getLogger().info("Successfully force loaded Region: " +
+            FoxGuardMain.instance().getLogger().info("Successfully force loaded region: " +
                     "(Name: " + name +
                     " Type: " + type +
                     " World: " + world.getName() +
