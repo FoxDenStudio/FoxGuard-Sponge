@@ -23,34 +23,32 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.region;
+package net.foxdenstudio.sponge.foxguard.plugin.region.world;
 
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
-import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
-import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IRegionFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IWorldRegionFactory;
+import ninja.leaping.configurate.ConfigurationOptions;
+import ninja.leaping.configurate.commented.CommentedConfigurationNode;
+import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
+import ninja.leaping.configurate.loader.ConfigurationLoader;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
-public class ElevationRegion extends RegionBase {
+public class ElevationRegion extends WorldRegionBase {
 
     private int upperBound;
     private int lowerBound;
@@ -128,14 +126,26 @@ public class ElevationRegion extends RegionBase {
     }
 
     @Override
-    public void writeToDatabase(DataSource dataSource) throws SQLException {
-        try (Connection conn = dataSource.getConnection()) {
-            try (Statement statement = conn.createStatement()) {
-                statement.execute("CREATE TABLE IF NOT EXISTS BOUNDS(Y INTEGER);" +
-                        "DELETE FROM BOUNDS;" +
-                        "INSERT INTO BOUNDS(Y) VALUES (" + lowerBound + ");" +
-                        "INSERT INTO BOUNDS(Y) VALUES (" + upperBound + ");");
+    public void save(Path directory) {
+        Path boundsFile = directory.resolve("bounds.cfg");
+        CommentedConfigurationNode root;
+        ConfigurationLoader<CommentedConfigurationNode> loader =
+                HoconConfigurationLoader.builder().setPath(boundsFile).build();
+        if (Files.exists(boundsFile)) {
+            try {
+                root = loader.load();
+            } catch (IOException e) {
+                root = loader.createEmptyNode(ConfigurationOptions.defaults());
             }
+        } else {
+            root = loader.createEmptyNode(ConfigurationOptions.defaults());
+        }
+        root.getNode("lower").setValue(lowerBound);
+        root.getNode("upper").setValue(upperBound);
+        try {
+            loader.save(root);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -170,12 +180,12 @@ public class ElevationRegion extends RegionBase {
         return "elevation";
     }
 
-    public static class Factory implements IRegionFactory {
+    public static class Factory implements IWorldRegionFactory {
 
         private static final String[] elevAliases = {"elevation", "elev", "height", "y", "vertical", "vert", "level", "updown"};
 
         @Override
-        public IRegion create(String name, String arguments, CommandSource source) throws CommandException {
+        public IWorldRegion create(String name, String arguments, CommandSource source) throws CommandException {
             AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                     .arguments(arguments)
                     .parse();
@@ -183,23 +193,23 @@ public class ElevationRegion extends RegionBase {
         }
 
         @Override
-        public IRegion create(DataSource source, String name, boolean isEnabled) throws SQLException {
-            int lowerBound, upperBound;
-            List<User> userList = new ArrayList<>();
-            try (Connection conn = source.getConnection()) {
-                try (Statement statement = conn.createStatement()) {
-                    try (ResultSet boundSet = statement.executeQuery("SELECT * FROM BOUNDS")) {
-                        boundSet.next();
-                        lowerBound = boundSet.getInt("Y");
-                        boundSet.next();
-                        upperBound = boundSet.getInt("Y");
-                    }
+        public IWorldRegion create(Path directory, String name, boolean isEnabled) {
+            Path boundsFile = directory.resolve("bounds.cfg");
+            CommentedConfigurationNode root;
+            ConfigurationLoader<CommentedConfigurationNode> loader =
+                    HoconConfigurationLoader.builder().setPath(boundsFile).build();
+            if (Files.exists(boundsFile)) {
+                try {
+                    root = loader.load();
+                } catch (IOException e) {
+                    root = loader.createEmptyNode(ConfigurationOptions.defaults());
                 }
-
+            } else {
+                root = loader.createEmptyNode(ConfigurationOptions.defaults());
             }
-            ElevationRegion region = new ElevationRegion(name, lowerBound, upperBound);
-            region.setIsEnabled(isEnabled);
-            return region;
+            int lower = root.getNode("lower").getInt(0);
+            int upper = root.getNode("upper").getInt(0);
+            return new ElevationRegion(name, lower, upper);
         }
 
         @Override

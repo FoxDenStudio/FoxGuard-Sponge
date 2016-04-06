@@ -30,6 +30,8 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
@@ -86,24 +88,38 @@ public class CommandLink implements CommandCallable {
             FCStateManager.instance().getStateMap().get(source).flush(RegionsStateField.ID, HandlersStateField.ID);
             return CommandResult.builder().successCount(successes[0]).build();
         } else {
-            String worldName = parse.flagmap.get("world");
-            World world = null;
-            if (source instanceof Player) world = ((Player) source).getWorld();
-            if (!worldName.isEmpty()) {
-                Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
-                if (optWorld.isPresent()) {
-                    world = optWorld.get();
-                }
-            }
-            if (world == null) throw new CommandException(Text.of("Must specify a world!"));
             if (parse.args.length < 1) throw new CommandException(Text.of("Must specify items to link!"));
+            IRegion region = FGManager.getInstance().getRegion(parse.args[0]);
+            World world = null;
+            if (region == null) {
+                String worldName = parse.flagmap.get("world");
+                if (source instanceof Player) world = ((Player) source).getWorld();
+                if (!worldName.isEmpty()) {
+                    Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
+                    if (optWorld.isPresent()) {
+                        world = optWorld.get();
+                    } else {
+                        if (world == null)
+                            throw new CommandException(Text.of("No world exists with name \"" + worldName + "\"!"));
+                    }
+                }
+                if (world == null) throw new CommandException(Text.of("Must specify a world!"));
+                region = FGManager.getInstance().getWorldRegion(world, parse.args[0]);
+            }
+            if (region == null)
+                throw new CommandException(Text.of("No region with name \"" + parse.args[0] + "\" in world \"" + world.getName() + "\"!"));
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a handler!"));
-            boolean success = FGManager.getInstance().linkRegion(world, parse.args[0], parse.args[1]);
+            IHandler handler = FGManager.getInstance().gethandler(parse.args[1]);
+            if (handler == null)
+                throw new CommandException(Text.of("No handler with name \"" + parse.args[0] + "\"!"));
+            if (region.getHandlers().contains(handler))
+                throw new CommandException(Text.of("Already linked!"));
+            boolean success = FGManager.getInstance().link(region, handler);
             if (success) {
                 source.sendMessage(Text.of(TextColors.GREEN, "Successfully linked!"));
                 return CommandResult.success();
             } else {
-                source.sendMessage(Text.of(TextColors.RED, "There was an error linking. Check their names and also make sure they haven't already been linked."));
+                source.sendMessage(Text.of(TextColors.RED, "There was an error while trying to link."));
                 return CommandResult.empty();
             }
         }

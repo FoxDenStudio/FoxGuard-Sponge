@@ -54,12 +54,16 @@ import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
 public class CommandList implements CommandCallable {
 
+    private static final String[] SUPER_ALIASES = {"super", "sup", "s"};
+
     private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
         map.put(key, value);
         if (Aliases.isIn(WORLD_ALIASES, key) && !map.containsKey("world")) {
             map.put("world", value);
         } else if (Aliases.isIn(ALL_ALIASES, key) && !map.containsKey("all")) {
             map.put("all", value);
+        } else if (isIn(SUPER_ALIASES, key) && !map.containsKey("super")) {
+            map.put("super", value);
         }
     };
 
@@ -84,12 +88,12 @@ public class CommandList implements CommandCallable {
             if (!worldName.isEmpty()) {
                 Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
                 if (optWorld.isPresent()) {
-                    FGManager.getInstance().getRegionList(optWorld.get()).forEach(regionList::add);
+                    FGManager.getInstance().getWorldRegions(optWorld.get()).forEach(regionList::add);
                     allFlag = false;
                 }
             }
             if (allFlag) {
-                FGManager.getInstance().getRegionList().forEach(regionList::add);
+                FGManager.getInstance().getAllRegions().forEach(regionList::add);
             }
 
             Text.Builder output = Text.builder()
@@ -99,7 +103,7 @@ public class CommandList implements CommandCallable {
             while (regionListIterator.hasNext()) {
                 IRegion region = regionListIterator.next();
                 output.append(Text.of(FGUtil.getColorForObject(region),
-                        TextActions.runCommand("/foxguard det r --w:" + region.getWorld().getName() + " " + region.getName()),
+                        TextActions.runCommand("/foxguard det r " + FGUtil.genWorldFlag(region) + region.getName()),
                         TextActions.showText(Text.of("View Details")),
                         FGUtil.getRegionName(region, allFlag)));
                 if (regionListIterator.hasNext()) output.append(Text.of("\n"));
@@ -109,33 +113,33 @@ public class CommandList implements CommandCallable {
 
         } else if (isIn(Aliases.HANDLERS_ALIASES, parse.args[0])) {
             boolean controllers = parse.flagmap.containsKey("all");
-            List<IHandler> handlerList = FGManager.getInstance().getHandlerList(controllers);
+            Set<IHandler> handlers = FGManager.getInstance().getHandlers(controllers);
             Text.Builder output = Text.builder()
                     .append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"))
                     .append(Text.of(TextColors.GREEN, "------- Handlers " + (controllers ? "and Controllers " : "") + "-------\n"));
-            ListIterator<IHandler> handlerListIterator = handlerList.listIterator();
-            while (handlerListIterator.hasNext()) {
-                IHandler handler = handlerListIterator.next();
+            Iterator<IHandler> handlerIterator = handlers.iterator();
+            while (handlerIterator.hasNext()) {
+                IHandler handler = handlerIterator.next();
                 output.append(Text.of(FGUtil.getColorForObject(handler),
                         TextActions.runCommand("/foxguard det h " + handler.getName()),
                         TextActions.showText(Text.of("View Details")),
                         handler.getShortTypeName() + " : " + handler.getName()));
-                if (handlerListIterator.hasNext()) output.append(Text.of("\n"));
+                if (handlerIterator.hasNext()) output.append(Text.of("\n"));
             }
             source.sendMessage(output.build());
         } else if (isIn(Aliases.CONTROLLERS_ALIASES, parse.args[0])) {
-            List<IController> handlerList = FGManager.getInstance().getControllerList();
+            Set<IController> controllers = FGManager.getInstance().getControllers();
             Text.Builder output = Text.builder()
                     .append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"))
                     .append(Text.of(TextColors.GREEN, "------- Controllers -------\n"));
-            ListIterator<IController> handlerListIterator = handlerList.listIterator();
-            while (handlerListIterator.hasNext()) {
-                IHandler handler = handlerListIterator.next();
-                output.append(Text.of(FGUtil.getColorForObject(handler),
-                        TextActions.runCommand("/foxguard det h " + handler.getName()),
+            Iterator<IController> controllerIterator = controllers.iterator();
+            while (controllerIterator.hasNext()) {
+                IController controller = controllerIterator.next();
+                output.append(Text.of(FGUtil.getColorForObject(controller),
+                        TextActions.runCommand("/foxguard det h " + controller.getName()),
                         TextActions.showText(Text.of("View Details")),
-                        handler.getShortTypeName() + " : " + handler.getName()));
-                if (handlerListIterator.hasNext()) output.append(Text.of("\n"));
+                        controller.getShortTypeName() + " : " + controller.getName()));
+                if (controllerIterator.hasNext()) output.append(Text.of("\n"));
             }
             source.sendMessage(output.build());
         } else {

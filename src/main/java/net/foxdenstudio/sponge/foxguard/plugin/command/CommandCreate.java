@@ -44,6 +44,7 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
+import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
 import java.util.Arrays;
@@ -84,7 +85,8 @@ public class CommandCreate implements CommandCallable {
                     .build());
             return CommandResult.empty();
             //----------------------------------------------------------------------------------------------------------------------
-        } else if (isIn(REGIONS_ALIASES, parse.args[0])) {
+        } else if (isIn(REGIONS_ALIASES, parse.args[0]) || isIn(WORLDREGIONS_ALIASES, parse.args[0])) {
+            boolean isWorldRegion = isIn(WORLDREGIONS_ALIASES, parse.args[0]);
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
             String worldName = parse.flagmap.get("world");
             World world = null;
@@ -93,27 +95,45 @@ public class CommandCreate implements CommandCallable {
                 Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
                 if (optWorld.isPresent()) {
                     world = optWorld.get();
+                } else {
+                    if (world == null)
+                        throw new CommandException(Text.of("No world exists with name \"" + worldName + "\"!"));
                 }
             }
-            if (world == null) throw new CommandException(Text.of("Must specify a world!"));
+            if (isWorldRegion && world == null) throw new CommandException(Text.of("Must specify a world!"));
             if (parse.args[1].matches("^.*[^0-9a-zA-Z_$].*$"))
                 throw new ArgumentParseException(Text.of("Name must be alphanumeric!"), parse.args[1], 1);
-            if (parse.args[1].matches("^[^a-zA-Z_$].*$"))
+            if (parse.args[1].matches("^[0-9].*$"))
                 throw new ArgumentParseException(Text.of("Name can't start with a number!"), parse.args[1], 1);
-            if (parse.args[1].equalsIgnoreCase("all") || parse.args[1].equalsIgnoreCase("state"))
+            if (!FGManager.getInstance().isNameValid(parse.args[1]))
                 throw new CommandException(Text.of("You may not use \"" + parse.args[1] + "\" as a name!"));
+            if (isWorldRegion) {
+                if (!FGManager.getInstance().isWorldRegionNameAvailable(parse.args[1], world))
+                    throw new ArgumentParseException(Text.of("That name is already taken!"), parse.args[1], 1);
+            } else {
+                if (!FGManager.getInstance().isRegionNameAvailable(parse.args[1]))
+                    throw new ArgumentParseException(Text.of("That name is already taken!"), parse.args[1], 1);
+            }
             if (parse.args.length < 3) throw new CommandException(Text.of("Must specify a type!"));
-            IRegion newRegion = FGFactoryManager.getInstance().createRegion(
-                    parse.args[1], parse.args[2],
-                    parse.args.length < 4 ? "" : parse.args[3],
-                    source);
+            IRegion newRegion;
+            if (isWorldRegion) {
+                newRegion = FGFactoryManager.getInstance().createWorldRegion(
+                        parse.args[1], parse.args[2],
+                        parse.args.length < 4 ? "" : parse.args[3],
+                        source);
+            } else {
+                newRegion = FGFactoryManager.getInstance().createRegion(
+                        parse.args[1], parse.args[2],
+                        parse.args.length < 4 ? "" : parse.args[3],
+                        source);
+            }
             if (newRegion == null)
                 throw new CommandException(Text.of("Failed to create region! Perhaps the type is invalid?"));
-            boolean success = FGManager.getInstance().addRegion(world, newRegion);
+            boolean success = FGManager.getInstance().addRegion(newRegion, world);
             if (!success)
-                throw new ArgumentParseException(Text.of("That name is already taken!"), parse.args[1], 1);
+                throw new CommandException(Text.of("There was an error trying to create the " + (isWorldRegion ? "World" : "") + "Region!"));
             FCStateManager.instance().getStateMap().get(source).flush(PositionsStateField.ID);
-            source.sendMessage(Text.of(TextColors.GREEN, "Region created successfully"));
+            source.sendMessage(Text.of(TextColors.GREEN, (isWorldRegion ? "Worldr" : "R") + "egion created successfully"));
             return CommandResult.success();
             //----------------------------------------------------------------------------------------------------------------------
         } else if (isIn(HANDLERS_ALIASES, parse.args[0]) || isIn(CONTROLLERS_ALIASES, parse.args[0])) {
@@ -121,9 +141,9 @@ public class CommandCreate implements CommandCallable {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
             if (parse.args[1].matches("^.*[^0-9a-zA-Z_$].*$"))
                 throw new ArgumentParseException(Text.of("Name must be alphanumeric!"), parse.args[1], 1);
-            if (parse.args[1].matches("^[^a-zA-Z_$].*$"))
+            if (parse.args[1].matches("^[0-9].*$"))
                 throw new ArgumentParseException(Text.of("Name can't start with a number!"), parse.args[1], 1);
-            if (isIn(RESERVED, parse.args[1]))
+            if (!FGManager.getInstance().isNameValid(parse.args[1]))
                 throw new CommandException(Text.of("You may not use \"" + parse.args[1] + "\" as a name!"));
             int priority = 0;
             try {
@@ -173,14 +193,59 @@ public class CommandCreate implements CommandCallable {
                 return Arrays.asList(FGManager.TYPES).stream()
                         .filter(new StartsWithPredicate(parse.current.token))
                         .collect(GuavaCollectors.toImmutableList());
-            else if (parse.current.index == 2) {
+            else if (parse.current.index == 1) {
+                Tristate available = null;
                 if (isIn(REGIONS_ALIASES, parse.args[0])) {
-                    return FGFactoryManager.getInstance().getPrimaryRegionTypeAliases().stream()
+                    available = Tristate.fromBoolean(FGManager.getInstance().isRegionNameAvailable(parse.current.token));
+                } else if (isIn(WORLDREGIONS_ALIASES, parse.args[0])) {
+                    String worldName = parse.flagmap.get("world");
+                    World world = null;
+                    if (source instanceof Player) world = ((Player) source).getWorld();
+                    if (!worldName.isEmpty()) {
+                        Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
+                        if (optWorld.isPresent()) {
+                            world = optWorld.get();
+                        }
+                    }
+                    if (world == null) {
+                        available = FGManager.getInstance().isWorldRegionNameAvailable(parse.current.token);
+                    } else {
+                        available = Tristate.fromBoolean(FGManager.getInstance().isWorldRegionNameAvailable(parse.current.token, world));
+                    }
+                } else if (isIn(HANDLERS_ALIASES, parse.args[0]) || isIn(CONTROLLERS_ALIASES, parse.args[0])) {
+                    available = Tristate.fromBoolean(FGManager.getInstance().gethandler(parse.current.token) == null);
+                }
+                if (available != null) {
+                    switch (available) {
+                        case TRUE:
+                            source.sendMessage(Text.of(TextColors.GREEN, "Name is available!"));
+                            break;
+                        case FALSE:
+                            source.sendMessage(Text.of(TextColors.RED, "Name is already taken!"));
+                            break;
+                        case UNDEFINED:
+                            source.sendMessage(Text.of(TextColors.YELLOW, "Name might be available. Must specify a world to confirm."));
+
+                    }
+                }
+            } else if (parse.current.index == 2) {
+                if (isIn(REGIONS_ALIASES, parse.args[0])) {
+                    return FGFactoryManager.getInstance().getPrimaryWorldRegionTypeAliases().stream()
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                } else if (isIn(WORLDREGIONS_ALIASES, parse.args[0])) {
+                    return FGFactoryManager.getInstance().getPrimaryWorldRegionTypeAliases().stream()
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
                     return FGFactoryManager.getInstance().getPrimaryHandlerTypeAliases().stream()
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                } else if (isIn(CONTROLLERS_ALIASES, parse.args[0])) {
+                    return FGFactoryManager.getInstance().getPrimaryControllerTypeAliases().stream()
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
@@ -200,7 +265,7 @@ public class CommandCreate implements CommandCallable {
                         .collect(GuavaCollectors.toImmutableList());
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.FINAL)) {
             if (isIn(REGIONS_ALIASES, parse.args[0])) {
-                return FGFactoryManager.getInstance().regionSuggestions(source, parse.current.token, parse.args[2])
+                return FGFactoryManager.getInstance().worldRegionSuggestions(source, parse.current.token, parse.args[2])
                         .stream()
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());

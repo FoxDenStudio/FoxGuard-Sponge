@@ -23,18 +23,18 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.state.factory;
+package net.foxdenstudio.sponge.foxguard.plugin.object.factory;
 
-import net.foxdenstudio.sponge.foxcore.plugin.state.IStateField;
-import net.foxdenstudio.sponge.foxcore.plugin.state.SourceState;
-import net.foxdenstudio.sponge.foxcore.plugin.state.factory.IStateFieldFactory;
-import net.foxdenstudio.sponge.foxguard.plugin.state.ControllersStateField;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
+import org.spongepowered.api.command.CommandException;
+import org.spongepowered.api.command.CommandSource;
 
-public class ControllersStateFieldFactory implements IStateFieldFactory {
+import java.nio.file.Path;
 
-    @Override
-    public IStateField createStateField(SourceState sourceState) {
-        return new ControllersStateField();
-    }
+public interface IWorldRegionFactory extends IRegionFactory {
+
+    IWorldRegion create(String name, String arguments, CommandSource source) throws CommandException;
+
+    IWorldRegion create(Path directory, String name, boolean isEnabled);
 
 }

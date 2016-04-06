@@ -27,12 +27,11 @@ package net.foxdenstudio.sponge.foxguard.plugin;
 
 import com.google.inject.Inject;
 import net.foxdenstudio.sponge.foxcore.plugin.FoxCoreMain;
-import net.foxdenstudio.sponge.foxcore.plugin.command.*;
+import net.foxdenstudio.sponge.foxcore.plugin.command.CommandAbout;
+import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandDispatcher;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.plugin.command.*;
-import net.foxdenstudio.sponge.foxguard.plugin.command.CommandTest;
-import net.foxdenstudio.sponge.foxguard.plugin.controller.MessageController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.PassiveHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.PermissionHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.SimpleHandler;
@@ -41,9 +40,9 @@ import net.foxdenstudio.sponge.foxguard.plugin.listener.InteractListener;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.PlayerMoveListener;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.SpawnEntityEventListener;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
-import net.foxdenstudio.sponge.foxguard.plugin.region.CuboidRegion;
-import net.foxdenstudio.sponge.foxguard.plugin.region.ElevationRegion;
-import net.foxdenstudio.sponge.foxguard.plugin.region.RectangularRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.CuboidRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.ElevationRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.RectangularRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.state.ControllersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
@@ -75,10 +74,10 @@ import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
-import org.spongepowered.api.world.World;
 
 import javax.sql.DataSource;
 import java.io.File;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -113,7 +112,7 @@ public final class FoxGuardMain {
 
     @Inject
     @ConfigDir(sharedRoot = true)
-    private File configDirectory;
+    private Path configDirectory;
 
     @Inject
     private SpongeStatsLite stats;
@@ -133,13 +132,6 @@ public final class FoxGuardMain {
     }
 
     //my uuid - f275f223-1643-4fac-9fb8-44aaf5b4b371
-
-    /**
-     * Used to create a new ReadWriteLock. Depending on config option, will either load a real one, or a "spoof" one.
-     *
-     * @return A ReadWriteLock Object that can be used.
-     */
-
 
     @Listener
     public void gameConstruct(GameConstructionEvent event) {
@@ -185,41 +177,27 @@ public final class FoxGuardMain {
 
     @Listener
     public void serverStarted(GameStartedServerEvent event) {
-        logger.info("Initializing handlers database");
-        FGStorageManager.getInstance().initHandlers();
+        logger.info("Loading regions");
+        FGStorageManager.getInstance().loadRegions();
+        logger.info("Loading global handler");
+        FGStorageManager.getInstance().loadGlobalHandler();
         logger.info("Loading handlers");
         FGStorageManager.getInstance().loadHandlers();
-        FGStorageManager.getInstance().loadGlobalHandler();
-
-        if (FGConfigManager.getInstance().forceLoad()) {
-            logger.info("Resolving deferred objects");
-            FGStorageManager.getInstance().resolveDeferredObjects();
-        }
-        loaded = true;
         logger.info("Loading linkages");
         FGStorageManager.getInstance().loadLinks();
-        logger.info("Saving handlers");
-        FGStorageManager.getInstance().writeHandlers();
-        logger.info("Saving world data");
-        for (World world : game.getServer().getWorlds()) {
-            logger.info("Saving data for world: \"" + world.getName() + "\"");
-            FGStorageManager.getInstance().writeWorld(world);
-        }
-
+        loaded = true;
     }
 
     @Listener
     public void serverStopping(GameStoppingServerEvent event) {
+        logger.info("Saving regions");
+        FGStorageManager.getInstance().saveRegions();
         logger.info("Saving handlers");
-        FGStorageManager.getInstance().writeHandlers();
+        FGStorageManager.getInstance().saveHandlers();
     }
 
     @Listener
     public void serverStopped(GameStoppedServerEvent event) {
-        if (FGConfigManager.getInstance().purgeDatabases()) {
-            FoxGuardMain.instance().getLogger().info("Purging databases");
-            FGStorageManager.getInstance().purgeDatabases();
-        }
         logger.info("Saving configs");
         FGConfigManager.getInstance().save();
     }
@@ -227,27 +205,19 @@ public final class FoxGuardMain {
     @Listener
     public void worldUnload(UnloadWorldEvent event) {
         logger.info("Saving data for world: \"" + event.getTargetWorld().getName() + "\"");
-        FGStorageManager.getInstance().writeWorld(event.getTargetWorld());
+        FGStorageManager.getInstance().saveWorldRegions(event.getTargetWorld());
         FGManager.getInstance().unloadWorld(event.getTargetWorld());
     }
 
     @Listener
     public void worldLoad(LoadWorldEvent event) {
-        logger.info("Initializing regions database for world: \"" + event.getTargetWorld().getName() + "\"");
-        FGStorageManager.getInstance().initWorld(event.getTargetWorld());
-        logger.info("Constructing region list for world: \"" + event.getTargetWorld().getName() + "\"");
-        FGManager.getInstance().createLists(event.getTargetWorld());
-        logger.info("Loading regions for World: \"" + event.getTargetWorld().getName() + "\"");
-        FGStorageManager.getInstance().loadWorldRegions(event.getTargetWorld());
-        logger.info("Initializing global region for world: \"" + event.getTargetWorld().getName() + "\"");
+        logger.info("Initializing global worldregion for world: \"" + event.getTargetWorld().getName() + "\"");
         FGManager.getInstance().initWorld(event.getTargetWorld());
-        if (loaded) {
-            if (FGConfigManager.getInstance().forceLoad()) {
-                logger.info("Resolving deferred objects for world: " + event.getTargetWorld().getName() + "\"");
-                FGStorageManager.getInstance().resolveDeferredObjects();
-            }
-            logger.info("Loading links for world: \"" + event.getTargetWorld().getName() + "\"");
-            FGStorageManager.getInstance().loadWorldLinks(event.getTargetWorld());
+        logger.info("Loading worldregions for world: \"" + event.getTargetWorld().getName() + "\"");
+        FGStorageManager.getInstance().loadWorldRegions(event.getTargetWorld());
+        if(loaded){
+            logger.info("Loading links for world : \"" + event.getTargetWorld().getName() + "\"");
+            FGStorageManager.getInstance().loadWorldRegionLinks(event.getTargetWorld());
         }
     }
 
@@ -325,9 +295,9 @@ public final class FoxGuardMain {
     private void registerFactories() {
         FGFactoryManager manager = FGFactoryManager.getInstance();
 
-        manager.registerRegionFactory(new RectangularRegion.Factory());
-        manager.registerRegionFactory(new CuboidRegion.Factory());
-        manager.registerRegionFactory(new ElevationRegion.Factory());
+        manager.registerWorldRegionFactory(new RectangularRegion.Factory());
+        manager.registerWorldRegionFactory(new CuboidRegion.Factory());
+        manager.registerWorldRegionFactory(new ElevationRegion.Factory());
 
         manager.registerHandlerFactory(new SimpleHandler.Factory());
         manager.registerHandlerFactory(new PassiveHandler.Factory());
@@ -377,7 +347,7 @@ public final class FoxGuardMain {
     /**
      * @return A File object corresponding to the config of the plugin.
      */
-    public File getConfigDirectory() {
+    public Path getConfigDirectory() {
         return configDirectory;
     }
 

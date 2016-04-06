@@ -23,7 +23,7 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.region;
+package net.foxdenstudio.sponge.foxguard.plugin.region.world;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
@@ -33,14 +33,14 @@ import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
 
-import javax.sql.DataSource;
+import java.nio.file.Path;
 import java.util.List;
 
-public class GlobalRegion extends RegionBase implements IGlobal {
+public class GlobalWorldRegion extends WorldRegionBase implements IGlobal {
 
     public static final String NAME = "_global";
 
-    public GlobalRegion() {
+    public GlobalWorldRegion() {
         super(NAME);
     }
 
@@ -75,7 +75,8 @@ public class GlobalRegion extends RegionBase implements IGlobal {
     }
 
     @Override
-    public void writeToDatabase(DataSource dataSource) {
+    public void save(Path directory) {
+
     }
 
     @Override

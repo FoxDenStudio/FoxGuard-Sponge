@@ -2,6 +2,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.controller;
 
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import org.spongepowered.api.command.CommandException;
@@ -12,13 +13,10 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.Tristate;
 
 import javax.annotation.Nullable;
-import javax.sql.DataSource;
-import java.sql.SQLException;
+import java.nio.file.Path;
 import java.util.List;
 
-import static org.spongepowered.api.util.Tristate.FALSE;
-import static org.spongepowered.api.util.Tristate.TRUE;
-import static org.spongepowered.api.util.Tristate.UNDEFINED;
+import static org.spongepowered.api.util.Tristate.*;
 
 /**
  * Created by Fox on 3/27/2016.
@@ -30,7 +28,7 @@ public class LogicController extends ControllerBase {
     }
 
     @Override
-    public void configureLinks(DataSource dataSource) {
+    public void loadLinks(Path directory) {
 
     }
 
@@ -40,7 +38,7 @@ public class LogicController extends ControllerBase {
     }
 
     @Override
-    public EventResult handle(@Nullable User user, Flag flag, Event event) {
+    public EventResult handle(@Nullable User user, IFlag flag, Event event) {
         return null;
     }
 
@@ -70,9 +68,10 @@ public class LogicController extends ControllerBase {
     }
 
     @Override
-    public void writeToDatabase(DataSource dataSource) throws SQLException {
+    public void save(Path directory) {
 
     }
+
 
     @Override
     public ProcessResult modify(CommandSource source, String arguments) throws CommandException {

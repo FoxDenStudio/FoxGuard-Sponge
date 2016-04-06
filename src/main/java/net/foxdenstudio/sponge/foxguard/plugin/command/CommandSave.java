@@ -27,14 +27,12 @@ package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.world.World;
 
 import java.util.List;
 import java.util.Optional;
@@ -47,10 +45,11 @@ public class CommandSave implements CommandCallable {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        FGStorageManager.getInstance().writeHandlers();
-        for (World world : Sponge.getGame().getServer().getWorlds()) {
+        FGStorageManager.getInstance().saveHandlers();
+        FGStorageManager.getInstance().saveRegions();
+        /*for (World world : Sponge.getGame().getServer().getWorlds()) {
             FGStorageManager.getInstance().writeWorld(world);
-        }
+        }*/
         source.sendMessage(Text.of(TextColors.GREEN, "Successfully saved!"));
         return CommandResult.success();
     }

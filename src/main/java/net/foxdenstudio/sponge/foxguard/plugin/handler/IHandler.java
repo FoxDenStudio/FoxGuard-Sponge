@@ -25,7 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
-import net.foxdenstudio.sponge.foxguard.plugin.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import org.spongepowered.api.entity.living.player.User;
@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
 
 public interface IHandler extends IFGObject, Comparable<IHandler> {
 
-    EventResult handle(@Nullable User user, Flag flag, Event event);
+    EventResult handle(@Nullable User user, IFlag flag, Event event);
 
     int getPriority();
 

@@ -32,6 +32,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCallable;
@@ -82,6 +83,9 @@ public class CommandHere implements CommandCallable {
             Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
             if (optWorld.isPresent()) {
                 world = optWorld.get();
+            } else {
+                if (world == null)
+                    throw new CommandException(Text.of("No world exists with name \"" + worldName + "\"!"));
             }
         }
         if (world == null) throw new CommandException(Text.of("Must specify a world!"));
@@ -120,8 +124,9 @@ public class CommandHere implements CommandCallable {
         }
         boolean flag = false;
         Text.Builder output = Text.builder();
-        List<IRegion> regionList = FGManager.getInstance().getRegionList(world).stream()
-                .filter(region -> region.contains(x, y, z))
+        final World finalWorld = world;
+        List<IRegion> regionList = FGManager.getInstance().getAllRegions(world).stream()
+                .filter(region -> region.contains(x, y, z, finalWorld))
                 .collect(Collectors.toList());
         output.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
         output.append(Text.of(TextColors.AQUA, "----- Position: (" + String.format("%.1f, %.1f, %.1f", x, y, z) + ") -----\n"));
@@ -131,7 +136,7 @@ public class CommandHere implements CommandCallable {
             while (regionListIterator.hasNext()) {
                 IRegion region = regionListIterator.next();
                 output.append(Text.of(FGUtil.getColorForObject(region),
-                        TextActions.runCommand("/foxguard detail region --w:" + region.getWorld().getName() + " " + region.getName()),
+                        TextActions.runCommand("/foxguard detail region" + (region instanceof IWorldRegion ? (" --w:" + ((IWorldRegion) region).getWorld().getName() + " ") : "") + region.getName()),
                         TextActions.showText(Text.of("View Details")),
                         FGUtil.getRegionName(region, false)));
                 if (regionListIterator.hasNext()) output.append(Text.of("\n"));

@@ -34,8 +34,9 @@ import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
-import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.GlobalWorldRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
@@ -96,7 +97,7 @@ public class CommandEnableDisable implements CommandCallable {
                 int successes = 0;
                 int failures = 0;
                 for (IFGObject object : objects) {
-                    if (object instanceof GlobalRegion || object instanceof GlobalHandler || object.isEnabled() == this.enableState)
+                    if (object instanceof GlobalWorldRegion || object instanceof GlobalHandler || object.isEnabled() == this.enableState)
                         failures++;
                     else {
                         object.setIsEnabled(this.enableState);
@@ -146,7 +147,7 @@ public class CommandEnableDisable implements CommandCallable {
             FGUtil.getSelectedRegions(source).stream().forEach(regions::add);
             if (parse.args.length > 1) {
                 for (String name : Arrays.copyOfRange(parse.args, 1, parse.args.length)) {
-                    IRegion region = FGManager.getInstance().getRegion(world, name);
+                    IWorldRegion region = FGManager.getInstance().getWorldRegion(world, name);
                     if (region == null) failures++;
                     else {
                         regions.add(region);
@@ -155,7 +156,7 @@ public class CommandEnableDisable implements CommandCallable {
             }
             if (regions.isEmpty()) throw new CommandException(Text.of("Must specify at least one region!"));
             for (IRegion region : regions) {
-                if (region instanceof GlobalRegion || region.isEnabled() == this.enableState) failures++;
+                if (region instanceof GlobalWorldRegion || region.isEnabled() == this.enableState) failures++;
                 else {
                     region.setIsEnabled(this.enableState);
                     successes++;
@@ -262,16 +263,22 @@ public class CommandEnableDisable implements CommandCallable {
                             world = optWorld.get();
                         }
                     }
-                    if (world == null) return ImmutableList.of();
-                    return FGManager.getInstance().getRegionList(world).stream()
-                            .filter(region -> region.isEnabled() != this.enableState && !(region instanceof GlobalRegion))
+                    if (world == null) return FGManager.getInstance().getRegions().stream()
+                            .filter(region -> region.isEnabled() != this.enableState && !(region instanceof GlobalWorldRegion))
+                            .map(IFGObject::getName)
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .filter(alias -> !isIn(parse.args, alias))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                    return FGManager.getInstance().getAllRegions(world).stream()
+                            .filter(region -> region.isEnabled() != this.enableState && !(region instanceof GlobalWorldRegion))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .filter(alias -> !isIn(parse.args, alias))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
-                    return FGManager.getInstance().getHandlerList().stream()
+                    return FGManager.getInstance().getHandlers().stream()
                             .filter(handler -> handler.isEnabled() != this.enableState && !(handler instanceof GlobalHandler))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))

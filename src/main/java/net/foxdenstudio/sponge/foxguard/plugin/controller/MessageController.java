@@ -3,7 +3,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.controller;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
-import net.foxdenstudio.sponge.foxguard.plugin.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.util.HandlerWrapper;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
@@ -16,8 +16,7 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.Tristate;
 
 import javax.annotation.Nullable;
-import javax.sql.DataSource;
-import java.sql.SQLException;
+import java.nio.file.Path;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -27,18 +26,18 @@ public class MessageController extends ControllerBase {
 
     private HandlerWrapper slot;
     private Map<String, Text> messages;
-    private Map<Flag, Config> configs;
+    private Map<IFlag, Config> configs;
 
 
     public MessageController(String name, int priority) {
         super(name, priority);
         slot = HandlerWrapper.PASSTHROUGH;
         messages = new HashMap<>();
-        configs = new EnumMap<>(Flag.class);
+        configs = new HashMap<>();
     }
 
     @Override
-    public EventResult handle(@Nullable User user, Flag flag, Event event) {
+    public EventResult handle(@Nullable User user, IFlag flag, Event event) {
         if (configs.containsKey(flag)) {
             Config c = configs.get(flag);
             if (messages.containsKey(c.messageID)) {
@@ -70,7 +69,12 @@ public class MessageController extends ControllerBase {
     }
 
     @Override
-    public void configureLinks(DataSource dataSource) {
+    public void save(Path directory) {
+
+    }
+
+    @Override
+    public void loadLinks(Path directory) {
 
     }
 
@@ -79,10 +83,6 @@ public class MessageController extends ControllerBase {
         return -1;
     }
 
-    @Override
-    public void writeToDatabase(DataSource dataSource) throws SQLException {
-
-    }
 
     @Override
     public boolean addHandler(IHandler handler) {
@@ -94,7 +94,7 @@ public class MessageController extends ControllerBase {
 
     @Override
     public boolean removeHandler(IHandler handler) {
-        if(slot != null && slot.handler == handler) slot = HandlerWrapper.PASSTHROUGH;
+        if (slot != null && slot.handler == handler) slot = HandlerWrapper.PASSTHROUGH;
         return super.removeHandler(handler);
     }
 
@@ -153,11 +153,11 @@ public class MessageController extends ControllerBase {
         this.messages = messages;
     }
 
-    public Map<Flag, Config> getConfigs() {
+    public Map<IFlag, Config> getConfigs() {
         return configs;
     }
 
-    public void setConfigs(Map<Flag, Config> configs) {
+    public void setConfigs(Map<IFlag, Config> configs) {
         this.configs = configs;
     }
 
@@ -192,7 +192,7 @@ public class MessageController extends ControllerBase {
         }
     }
 
-    public static class Factory implements IHandlerFactory{
+    public static class Factory implements IHandlerFactory {
 
         private static final String[] messageAliases = {"message", "mess", "msg"};
 
@@ -202,7 +202,7 @@ public class MessageController extends ControllerBase {
         }
 
         @Override
-        public IHandler create(DataSource source, String name, int priority, boolean isEnabled) throws SQLException {
+        public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
             return null;
         }
 

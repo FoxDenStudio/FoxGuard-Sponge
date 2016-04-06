@@ -26,15 +26,26 @@
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
+import net.foxdenstudio.sponge.foxguard.plugin.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
+import ninja.leaping.configurate.ConfigurationNode;
+import ninja.leaping.configurate.ConfigurationOptions;
+import ninja.leaping.configurate.commented.CommentedConfigurationNode;
+import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
+import ninja.leaping.configurate.loader.ConfigurationLoader;
+import org.mapdb.Atomic;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+import org.mapdb.Serializer;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
@@ -49,25 +60,26 @@ import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
 
-import javax.sql.DataSource;
-import java.sql.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
 public class SimpleHandler extends HandlerBase {
 
-    private final Map<Flag, Tristate> ownerPermissions;
-    private final Map<Flag, Tristate> memberPermissions;
-    private final Map<Flag, Tristate> defaultPermissions;
+    private final Map<IFlag, Tristate> ownerPermissions;
+    private final Map<IFlag, Tristate> memberPermissions;
+    private final Map<IFlag, Tristate> defaultPermissions;
 
-    private final Map<Flag, Tristate> ownerPermCache;
-    private final Map<Flag, Tristate> memberPermCache;
-    private final Map<Flag, Tristate> defaultPermCache;
+    private final Map<IFlag, Tristate> ownerPermCache;
+    private final Map<IFlag, Tristate> memberPermCache;
+    private final Map<IFlag, Tristate> defaultPermCache;
 
     private PassiveOptions passiveOption = PassiveOptions.PASSTHROUGH;
-    private List<User> ownerList = new ArrayList<>();
-    private List<User> memberList = new ArrayList<>();
+    private Set<User> owners = new HashSet<>();
+    private Set<User> members = new HashSet<>();
 
     public SimpleHandler(String name, int priority) {
         this(name, priority,
@@ -77,9 +89,9 @@ public class SimpleHandler extends HandlerBase {
     }
 
     public SimpleHandler(String name, int priority,
-                         Map<Flag, Tristate> ownerPermissions,
-                         Map<Flag, Tristate> memberPermissions,
-                         Map<Flag, Tristate> defaultPermissions) {
+                         Map<IFlag, Tristate> ownerPermissions,
+                         Map<IFlag, Tristate> memberPermissions,
+                         Map<IFlag, Tristate> defaultPermissions) {
         super(name, priority);
         this.ownerPermissions = ownerPermissions;
         this.memberPermissions = memberPermissions;
@@ -112,17 +124,17 @@ public class SimpleHandler extends HandlerBase {
     public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
         if (!source.hasPermission("foxguard.command.modify.objects.modify.handlers")) {
             if (source instanceof ProxySource) source = ((ProxySource) source).getOriginalSource();
-            if (source instanceof Player && !this.ownerList.contains(source)) return ProcessResult.failure();
+            if (source instanceof Player && !this.owners.contains(source)) return ProcessResult.failure();
         }
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).parse();
         if (parse.args.length > 0) {
             if (isIn(GROUPS_ALIASES, parse.args[0])) {
                 if (parse.args.length > 1) {
-                    List<User> list;
+                    Set<User> set;
                     if (isIn(OWNER_GROUP_ALIASES, parse.args[1])) {
-                        list = this.ownerList;
+                        set = this.owners;
                     } else if (isIn(MEMBER_GROUP_ALIASES, parse.args[1])) {
-                        list = this.memberList;
+                        set = this.members;
                     } else {
                         return ProcessResult.of(false, Text.of(TextColors.RED, "Not a valid group!"));
                     }
@@ -145,30 +157,30 @@ public class SimpleHandler extends HandlerBase {
                             List<User> argUsers = new ArrayList<>();
                             for (String name : names) {
                                 Optional<User> optUser = FoxGuardMain.instance().getUserStorage().get(name);
-                                if (optUser.isPresent() && !FCUtil.isUserOnList(argUsers, optUser.get()))
+                                if (optUser.isPresent() && !FCUtil.isUserInCollection(argUsers, optUser.get()))
                                     argUsers.add(optUser.get());
                                 else failures++;
                             }
                             switch (op) {
                                 case ADD:
                                     for (User user : argUsers) {
-                                        if (!FCUtil.isUserOnList(list, user) && list.add(user))
+                                        if (!FCUtil.isUserInCollection(set, user) && set.add(user))
                                             successes++;
                                         else failures++;
                                     }
                                     break;
                                 case REMOVE:
                                     for (User user : argUsers) {
-                                        if (FCUtil.isUserOnList(list, user)) {
-                                            list.remove(user);
+                                        if (FCUtil.isUserInCollection(set, user)) {
+                                            set.remove(user);
                                             successes++;
                                         } else failures++;
                                     }
                                     break;
                                 case SET:
-                                    list.clear();
+                                    set.clear();
                                     for (User user : argUsers) {
-                                        list.add(user);
+                                        set.add(user);
                                         successes++;
                                     }
                             }
@@ -183,7 +195,7 @@ public class SimpleHandler extends HandlerBase {
                     return ProcessResult.of(false, Text.of("Must specify a group!"));
                 }
             } else if (isIn(SET_ALIASES, parse.args[0])) {
-                Map<Flag, Tristate> map;
+                Map<IFlag, Tristate> map;
                 if (parse.args.length > 1) {
                     if (isIn(OWNER_GROUP_ALIASES, parse.args[1])) {
                         map = ownerPermissions;
@@ -199,7 +211,7 @@ public class SimpleHandler extends HandlerBase {
                     return ProcessResult.of(false, Text.of("Must specify a group!"));
                 }
                 if (parse.args.length > 2) {
-                    Flag flag;
+                    IFlag flag;
                     if (parse.args[2].equalsIgnoreCase("all")) {
                         flag = null;
                     } else {
@@ -316,11 +328,11 @@ public class SimpleHandler extends HandlerBase {
                 }
             } else if (parse.current.index == 3) {
                 if (isIn(GROUPS_ALIASES, parse.args[0])) {
-                    List<User> list;
+                    Set<User> set;
                     if (isIn(OWNER_GROUP_ALIASES, parse.args[1])) {
-                        list = this.ownerList;
+                        set = this.owners;
                     } else if (isIn(MEMBER_GROUP_ALIASES, parse.args[1])) {
-                        list = this.memberList;
+                        set = this.members;
                     } else {
                         return ImmutableList.of();
                     }
@@ -332,14 +344,14 @@ public class SimpleHandler extends HandlerBase {
                                 .collect(GuavaCollectors.toImmutableList());
                     } else if (parse.args[2].equalsIgnoreCase("add")) {
                         return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .filter(player -> !FCUtil.isUserOnList(list, player))
+                                .filter(player -> !FCUtil.isUserInCollection(set, player))
                                 .map(Player::getName)
                                 .filter(new StartsWithPredicate(parse.current.token))
                                 .map(args -> parse.current.prefix + args)
                                 .collect(GuavaCollectors.toImmutableList());
                     } else if (parse.args[2].equalsIgnoreCase("remove")) {
                         return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .filter(player -> FCUtil.isUserOnList(list, player))
+                                .filter(player -> FCUtil.isUserInCollection(set, player))
                                 .map(Player::getName)
                                 .filter(new StartsWithPredicate(parse.current.token))
                                 .map(args -> parse.current.prefix + args)
@@ -353,11 +365,11 @@ public class SimpleHandler extends HandlerBase {
                 }
             } else if (parse.current.index > 3) {
                 if (isIn(GROUPS_ALIASES, parse.args[0])) {
-                    List<User> list;
+                    Set<User> set;
                     if (isIn(OWNER_GROUP_ALIASES, parse.args[1])) {
-                        list = this.ownerList;
+                        set = this.owners;
                     } else if (isIn(MEMBER_GROUP_ALIASES, parse.args[1])) {
-                        list = this.memberList;
+                        set = this.members;
                     } else {
                         return ImmutableList.of();
                     }
@@ -369,7 +381,7 @@ public class SimpleHandler extends HandlerBase {
                                 .collect(GuavaCollectors.toImmutableList());
                     } else if (parse.args[2].equalsIgnoreCase("add")) {
                         return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .filter(player -> !FCUtil.isUserOnList(list, player))
+                                .filter(player -> !FCUtil.isUserInCollection(set, player))
                                 .map(Player::getName)
                                 .filter(alias -> !isIn(Arrays.copyOfRange(parse.args, 2, parse.args.length), alias))
                                 .filter(new StartsWithPredicate(parse.current.token))
@@ -377,7 +389,7 @@ public class SimpleHandler extends HandlerBase {
                                 .collect(GuavaCollectors.toImmutableList());
                     } else if (parse.args[2].equalsIgnoreCase("remove")) {
                         return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .filter(player -> FCUtil.isUserOnList(list, player))
+                                .filter(player -> FCUtil.isUserInCollection(set, player))
                                 .map(Player::getName)
                                 .filter(alias -> !isIn(Arrays.copyOfRange(parse.args, 2, parse.args.length), alias))
                                 .filter(new StartsWithPredicate(parse.current.token))
@@ -392,7 +404,7 @@ public class SimpleHandler extends HandlerBase {
     }
 
     @Override
-    public EventResult handle(User user, Flag flag, Event event) {
+    public EventResult handle(User user, IFlag flag, Event event) {
         if (user == null) {
             switch (this.passiveOption) {
                 case OWNER:
@@ -409,9 +421,9 @@ public class SimpleHandler extends HandlerBase {
                     return EventResult.pass();
             }
         }
-        if (FCUtil.isUserOnList(this.ownerList, user))
+        if (FCUtil.isUserInCollection(this.owners, user))
             return EventResult.of(this.ownerPermCache.get(flag));
-        else if (FCUtil.isUserOnList(this.memberList, user))
+        else if (FCUtil.isUserInCollection(this.members, user))
             return EventResult.of(this.memberPermCache.get(flag));
         else return EventResult.of(this.defaultPermCache.get(flag));
     }
@@ -444,7 +456,7 @@ public class SimpleHandler extends HandlerBase {
                 TextActions.suggestCommand("/foxguard md h " + this.getName() + " group owners add "),
                 TextActions.showText(Text.of("Click to Add a Player(s) to Owners")),
                 "Owners: "));
-        for (User u : ownerList) {
+        for (User u : owners) {
             builder.append(Text.of(TextColors.RESET,
                     TextActions.suggestCommand("/foxguard md h " + this.getName() + " group owners remove " + u.getName()),
                     TextActions.showText(Text.of("Click to Remove Player \"" + u.getName() + "\" from Owners")),
@@ -455,7 +467,7 @@ public class SimpleHandler extends HandlerBase {
                 TextActions.suggestCommand("/foxguard md h " + this.name + " group members add "),
                 TextActions.showText(Text.of("Click to Add a Player(s) to Members")),
                 "Members: "));
-        for (User u : this.memberList) {
+        for (User u : this.members) {
             builder.append(Text.of(TextColors.RESET,
                     TextActions.suggestCommand("/foxguard md h " + this.name + " group members remove " + u.getName()),
                     TextActions.showText(Text.of("Click to Remove Player \"" + u.getName() + "\" from Members")),
@@ -466,7 +478,7 @@ public class SimpleHandler extends HandlerBase {
                 TextActions.suggestCommand("/foxguard md h " + this.name + " set owners "),
                 TextActions.showText(Text.of("Click to Set a Flag")),
                 "Owner permissions:\n"));
-        for (Flag f : this.ownerPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
+        for (IFlag f : this.ownerPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FCUtil.readableTristateText(ownerPermissions.get(f)))
@@ -480,7 +492,7 @@ public class SimpleHandler extends HandlerBase {
                 TextActions.suggestCommand("/foxguard md h " + this.name + " set members "),
                 TextActions.showText(Text.of("Click to Set a Flag")),
                 "Member permissions:\n"));
-        for (Flag f : this.memberPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
+        for (IFlag f : this.memberPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FCUtil.readableTristateText(memberPermissions.get(f)))
@@ -494,7 +506,7 @@ public class SimpleHandler extends HandlerBase {
                 TextActions.suggestCommand("/foxguard md h " + this.name + " set default "),
                 TextActions.showText(Text.of("Click to Set a Flag")),
                 "Default permissions:\n"));
-        for (Flag f : this.defaultPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
+        for (IFlag f : this.defaultPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FCUtil.readableTristateText(defaultPermissions.get(f)))
@@ -519,99 +531,92 @@ public class SimpleHandler extends HandlerBase {
     }
 
     @Override
-    public void writeToDatabase(DataSource dataSource) throws SQLException {
-        try (Connection conn = dataSource.getConnection()) {
-            try (Statement statement = conn.createStatement()) {
-                statement.execute("CREATE TABLE IF NOT EXISTS OWNERS(NAMES VARCHAR(256), USERUUID UUID);" +
-                        "DELETE FROM OWNERS");
+    public void save(Path directory) {
+        try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.db").normalize().toString()).make()) {
+            Map<String, String> ownerStorageFlagMap = flagMapDB.hashMap("owners", Serializer.STRING, Serializer.STRING).make();
+            ownerStorageFlagMap.clear();
+            for (Map.Entry<IFlag, Tristate> entry : ownerPermissions.entrySet()) {
+                ownerStorageFlagMap.put(entry.getKey().flagName(), entry.getValue().name());
             }
-            try (PreparedStatement insert = conn.prepareStatement("INSERT INTO OWNERS(NAMES, USERUUID) VALUES (?, ?)")) {
-                for (User owner : ownerList) {
-                    insert.setString(1, owner.getName());
-                    insert.setObject(2, owner.getUniqueId());
-                    insert.addBatch();
-                }
-                insert.executeBatch();
+            Map<String, String> memberStorageFlagMap = flagMapDB.hashMap("members", Serializer.STRING, Serializer.STRING).make();
+            memberStorageFlagMap.clear();
+            for (Map.Entry<IFlag, Tristate> entry : memberPermissions.entrySet()) {
+                memberStorageFlagMap.put(entry.getKey().flagName(), entry.getValue().name());
             }
-            try (Statement statement = conn.createStatement()) {
-                statement.execute("CREATE TABLE IF NOT EXISTS MEMBERS(NAMES VARCHAR(256), USERUUID UUID);" +
-                        "DELETE FROM MEMBERS;");
-                try (PreparedStatement insert = conn.prepareStatement("INSERT INTO MEMBERS(NAMES, USERUUID) VALUES (?, ?)")) {
-                    for (User member : memberList) {
-                        insert.setString(1, member.getName());
-                        insert.setObject(2, member.getUniqueId());
-                        insert.addBatch();
-                    }
-                    insert.executeBatch();
-                }
-                statement.execute("CREATE TABLE IF NOT EXISTS MAP(KEY VARCHAR (256), VALUE VARCHAR (256));" +
-                        "DELETE FROM MAP;");
-                statement.execute("INSERT INTO MAP(KEY, VALUE) VALUES ('passive', '" + this.passiveOption.name() + "')");
-
-                statement.execute("CREATE TABLE IF NOT EXISTS OWNERFLAGMAP(KEY VARCHAR (256), VALUE VARCHAR (256));" +
-                        "DELETE FROM OWNERFLAGMAP;");
-                statement.execute("CREATE TABLE IF NOT EXISTS MEMBERFLAGMAP(KEY VARCHAR (256), VALUE VARCHAR (256));" +
-                        "DELETE FROM MEMBERFLAGMAP;");
-                statement.execute("CREATE TABLE IF NOT EXISTS DEFAULTFLAGMAP(KEY VARCHAR (256), VALUE VARCHAR (256));" +
-                        "DELETE FROM DEFAULTFLAGMAP;");
+            Map<String, String> defaultStorageFlagMap = flagMapDB.hashMap("default", Serializer.STRING, Serializer.STRING).make();
+            defaultStorageFlagMap.clear();
+            for (Map.Entry<IFlag, Tristate> entry : defaultPermissions.entrySet()) {
+                defaultStorageFlagMap.put(entry.getKey().flagName(), entry.getValue().name());
             }
-            try (PreparedStatement statement = conn.prepareStatement("INSERT INTO OWNERFLAGMAP(KEY, VALUE) VALUES (? , ?)")) {
-                for (Map.Entry<Flag, Tristate> entry : ownerPermissions.entrySet()) {
-                    statement.setString(1, entry.getKey().name());
-                    statement.setString(2, entry.getValue().name());
-                    statement.addBatch();
-                }
-                statement.executeBatch();
+            Atomic.String passiveOptionString = flagMapDB.atomicString("passive").make();
+            passiveOptionString.set(passiveOption.name());
+        }
+        Path usersFile = directory.resolve("users.cfg");
+        CommentedConfigurationNode root;
+        ConfigurationLoader<CommentedConfigurationNode> loader =
+                HoconConfigurationLoader.builder().setPath(usersFile).build();
+        if (Files.exists(usersFile)) {
+            try {
+                root = loader.load();
+            } catch (IOException e) {
+                root = loader.createEmptyNode(ConfigurationOptions.defaults());
             }
-            try (PreparedStatement statement = conn.prepareStatement("INSERT INTO MEMBERFLAGMAP(KEY, VALUE) VALUES (? , ?)")) {
-                for (Map.Entry<Flag, Tristate> entry : memberPermissions.entrySet()) {
-                    statement.setString(1, entry.getKey().name());
-                    statement.setString(2, entry.getValue().name());
-                    statement.addBatch();
-                }
-                statement.executeBatch();
-            }
-            try (PreparedStatement statement = conn.prepareStatement("INSERT INTO DEFAULTFLAGMAP(KEY, VALUE) VALUES (? , ?)")) {
-                for (Map.Entry<Flag, Tristate> entry : defaultPermissions.entrySet()) {
-                    statement.setString(1, entry.getKey().name());
-                    statement.setString(2, entry.getValue().name());
-                    statement.addBatch();
-                }
-                statement.executeBatch();
-            }
+        } else {
+            root = loader.createEmptyNode(ConfigurationOptions.defaults());
+        }
+        List<CommentedConfigurationNode> ownerNodes = new ArrayList<>();
+        for (User user : owners) {
+            CommentedConfigurationNode node = loader.createEmptyNode(ConfigurationOptions.defaults());
+            node.getNode("username").setValue(user.getName());
+            node.getNode("uuid").setValue(user.getUniqueId().toString());
+            ownerNodes.add(node);
+        }
+        root.getNode("owners").setValue(ownerNodes);
+        List<CommentedConfigurationNode> memberNodes = new ArrayList<>();
+        for (User user : members) {
+            CommentedConfigurationNode node = loader.createEmptyNode(ConfigurationOptions.defaults());
+            node.getNode("username").setValue(user.getName());
+            node.getNode("uuid").setValue(user.getUniqueId());
+            memberNodes.add(node);
+        }
+        root.getNode("members").setValue(memberNodes);
+        try {
+            loader.save(root);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     public boolean removeOwner(User user) {
-        return ownerList.remove(user);
+        return owners.remove(user);
     }
 
     public boolean addOwner(User user) {
-        return ownerList.add(user);
+        return owners.add(user);
     }
 
-    public List<User> getOwners() {
-        return ImmutableList.copyOf(ownerList);
+    public Set<User> getOwners() {
+        return ImmutableSet.copyOf(owners);
     }
 
-    public void setOwners(List<User> owners) {
-        this.ownerList = owners;
+    public void setOwners(Set<User> owners) {
+        this.owners = owners;
     }
 
-    public List<User> getMembers() {
-        return this.memberList;
+    public Set<User> getMembers() {
+        return ImmutableSet.copyOf(members);
     }
 
-    public void setMembers(List<User> members) {
-        this.memberList = members;
+    public void setMembers(Set<User> members) {
+        this.members = members;
     }
 
     public boolean addMember(User player) {
-        return memberList.add(player);
+        return members.add(player);
     }
 
     public boolean removeMember(User player) {
-        return memberList.remove(player);
+        return members.remove(player);
     }
 
     public PassiveOptions getPassiveOption() {
@@ -663,77 +668,84 @@ public class SimpleHandler extends HandlerBase {
         }
 
         @Override
-        public IHandler create(DataSource source, String name, int priority, boolean isEnabled) throws SQLException {
-            List<User> ownerList = new ArrayList<>();
-            List<User> memberList = new ArrayList<>();
-            SimpleHandler.PassiveOptions po = SimpleHandler.PassiveOptions.DEFAULT;
-            CacheMap<Flag, Tristate> ownerFlagMap = new CacheMap<>((key, map) -> Tristate.UNDEFINED);
-            CacheMap<Flag, Tristate> memberFlagMap = new CacheMap<>((key, map) -> Tristate.UNDEFINED);
-            CacheMap<Flag, Tristate> defaultFlagMap = new CacheMap<>((key, map) -> Tristate.UNDEFINED);
-            try (Connection conn = source.getConnection()) {
-                try (Statement statement = conn.createStatement()) {
-                    try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {
-                        while (ownerSet.next()) {
-                            Optional<User> user = FoxGuardMain.instance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
-                            if (user.isPresent() && !FCUtil.isUserOnList(ownerList, user.get()))
-                                ownerList.add(user.get());
-                        }
-                    }
-                    try (ResultSet memberSet = statement.executeQuery("SELECT * FROM MEMBERS")) {
-                        while (memberSet.next()) {
-                            Optional<User> user = FoxGuardMain.instance().getUserStorage().get((UUID) memberSet.getObject("USERUUID"));
-                            if (user.isPresent() && !FCUtil.isUserOnList(memberList, user.get()))
-                                memberList.add(user.get());
-                        }
-                    }
-                    try (ResultSet mapSet = statement.executeQuery("SELECT * FROM MAP")) {
-                        while (mapSet.next()) {
-                            String key = mapSet.getString("KEY");
-                            switch (key) {
-                                case "passive":
-                                    try {
-                                        po = SimpleHandler.PassiveOptions.valueOf(mapSet.getString("VALUE"));
-                                    } catch (IllegalArgumentException ignored) {
-                                        po = SimpleHandler.PassiveOptions.PASSTHROUGH;
-                                    }
-                                    break;
-                            }
-                        }
-                    }
-                    try (ResultSet passiveMapEntrySet = statement.executeQuery("SELECT * FROM OWNERFLAGMAP")) {
-                        while (passiveMapEntrySet.next()) {
-                            try {
-                                ownerFlagMap.put(Flag.valueOf(passiveMapEntrySet.getString("KEY")),
-                                        Tristate.valueOf(passiveMapEntrySet.getString("VALUE")));
-                            } catch (IllegalArgumentException ignored) {
-                            }
-                        }
-                    }
-                    try (ResultSet passiveMapEntrySet = statement.executeQuery("SELECT * FROM MEMBERFLAGMAP")) {
-                        while (passiveMapEntrySet.next()) {
-                            try {
-                                memberFlagMap.put(Flag.valueOf(passiveMapEntrySet.getString("KEY")),
-                                        Tristate.valueOf(passiveMapEntrySet.getString("VALUE")));
-                            } catch (IllegalArgumentException ignored) {
-                            }
-                        }
-                    }
-                    try (ResultSet passiveMapEntrySet = statement.executeQuery("SELECT * FROM DEFAULTFLAGMAP")) {
-                        while (passiveMapEntrySet.next()) {
-                            try {
-                                defaultFlagMap.put(Flag.valueOf(passiveMapEntrySet.getString("KEY")),
-                                        Tristate.valueOf(passiveMapEntrySet.getString("VALUE")));
-                            } catch (IllegalArgumentException ignored) {
-                            }
+        public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
+            Map<IFlag, Tristate> ownerPermissions = new CacheMap<>((k, m) -> Tristate.UNDEFINED);
+            Map<IFlag, Tristate> memberPermissions = new CacheMap<>((k, m) -> Tristate.UNDEFINED);
+            Map<IFlag, Tristate> defaultPermissions = new CacheMap<>((k, m) -> Tristate.UNDEFINED);
+            PassiveOptions option = PassiveOptions.PASSTHROUGH;
+            try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.db").normalize().toString()).make()) {
+                Map<String, String> ownerStorageFlagMap = flagMapDB.hashMap("owners", Serializer.STRING, Serializer.STRING).make();
+                for (Map.Entry<String, String> entry : ownerStorageFlagMap.entrySet()) {
+                    IFlag flag = Flag.flagFrom(entry.getKey());
+                    if (flag != null) {
+                        Tristate state = Tristate.valueOf(entry.getValue());
+                        if (state != null) {
+                            ownerPermissions.put(flag, state);
                         }
                     }
                 }
+                Map<String, String> memberStorageFlagMap = flagMapDB.hashMap("members", Serializer.STRING, Serializer.STRING).make();
+                for (Map.Entry<String, String> entry : memberStorageFlagMap.entrySet()) {
+                    IFlag flag = Flag.flagFrom(entry.getKey());
+                    if (flag != null) {
+                        Tristate state = Tristate.valueOf(entry.getValue());
+                        if (state != null) {
+                            memberPermissions.put(flag, state);
+                        }
+                    }
+                }
+                Map<String, String> defaultStorageFlagMap = flagMapDB.hashMap("default", Serializer.STRING, Serializer.STRING).make();
+                for (Map.Entry<String, String> entry : defaultStorageFlagMap.entrySet()) {
+                    IFlag flag = Flag.flagFrom(entry.getKey());
+                    if (flag != null) {
+                        Tristate state = Tristate.valueOf(entry.getValue());
+                        if (state != null) {
+                            defaultPermissions.put(flag, state);
+                        }
+                    }
+                }
+                Atomic.String passiveOptionString = flagMapDB.atomicString("passive").make();
+                try {
+                    PassiveOptions po = PassiveOptions.valueOf(passiveOptionString.get());
+                    if (po != null) option = po;
+                } catch (IllegalArgumentException ignored) {
+                }
             }
-            SimpleHandler handler = new SimpleHandler(name, priority, ownerFlagMap, memberFlagMap, defaultFlagMap);
-            handler.setOwners(ownerList);
-            handler.setMembers(memberList);
-            handler.setPassiveOption(po);
-            handler.setIsEnabled(isEnabled);
+            Path usersFile = directory.resolve("users.cfg");
+            CommentedConfigurationNode root;
+            ConfigurationLoader<CommentedConfigurationNode> loader =
+                    HoconConfigurationLoader.builder().setPath(usersFile).build();
+            if (Files.exists(usersFile)) {
+                try {
+                    root = loader.load();
+                } catch (IOException e) {
+                    root = loader.createEmptyNode(ConfigurationOptions.defaults());
+                }
+            } else {
+                root = loader.createEmptyNode(ConfigurationOptions.defaults());
+            }
+            List<Optional<User>> owners = root.getNode("owners").getList(o -> {
+                if (o instanceof HashMap) {
+                    HashMap map = (HashMap) o;
+                    String uuidString = (String) map.get("uuid");
+                    if (!uuidString.isEmpty()) {
+                        return FoxGuardMain.instance().getUserStorage().get(UUID.fromString(uuidString));
+                    } else return Optional.empty();
+                } else return Optional.empty();
+            });
+            List<Optional<User>> members = root.getNode("members").getList(o -> {
+                if (o instanceof HashMap) {
+                    HashMap map = (HashMap) o;
+                    String uuidString = (String) map.get("uuid");
+                    if (!uuidString.isEmpty()) {
+                        return FoxGuardMain.instance().getUserStorage().get(UUID.fromString(uuidString));
+                    } else return Optional.empty();
+                } else return Optional.empty();
+            });
+            SimpleHandler handler = new SimpleHandler(name, priority, ownerPermissions, memberPermissions, defaultPermissions);
+            owners.stream().filter(Optional::isPresent).forEach(userOptional -> handler.addOwner(userOptional.get()));
+            members.stream().filter(Optional::isPresent).forEach(userOptional -> handler.addMember(userOptional.get()));
+            handler.setPassiveOption(option);
             return handler;
         }
 

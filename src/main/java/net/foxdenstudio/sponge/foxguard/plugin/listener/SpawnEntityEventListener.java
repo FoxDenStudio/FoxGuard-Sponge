@@ -36,7 +36,6 @@ import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.Creature;
 import org.spongepowered.api.entity.living.Hostile;
 import org.spongepowered.api.entity.living.monster.Blaze;
-import org.spongepowered.api.entity.living.monster.Creeper;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
@@ -72,7 +71,7 @@ public class SpawnEntityEventListener implements EventListener<SpawnEntityEvent>
 
         Flag typeFlag = null;
         Entity oneEntity = event.getEntities().get(0);
-        if(oneEntity instanceof Blaze) System.out.println(event.getCause());
+        if (oneEntity instanceof Blaze) System.out.println(event.getCause());
         if (oneEntity instanceof Creature) typeFlag = Flag.SPAWN_MOB_PASSIVE;
         if (oneEntity instanceof Hostile) typeFlag = Flag.SPAWN_MOB_HOSTILE;
         if (typeFlag == null) return;
@@ -86,9 +85,9 @@ public class SpawnEntityEventListener implements EventListener<SpawnEntityEvent>
                     GenericMath.floor(loc.getX() / 16.0),
                     GenericMath.floor(loc.getY() / 16.0),
                     GenericMath.floor(loc.getZ() / 16.0));
-            FGManager.getInstance().getRegionList(world, chunk).stream()
+            FGManager.getInstance().getAllRegions(world, chunk).stream()
                     .filter(IFGObject::isEnabled)
-                    .filter(region -> region.contains(loc))
+                    .filter(region -> region.contains(loc, world))
                     .forEach(region -> region.getHandlers().stream()
                             .filter(IFGObject::isEnabled)
                             .filter(handler -> !handlerList.contains(handler))

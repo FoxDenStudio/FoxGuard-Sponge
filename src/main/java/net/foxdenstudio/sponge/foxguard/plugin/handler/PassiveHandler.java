@@ -31,10 +31,13 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
-import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
+import net.foxdenstudio.sponge.foxguard.plugin.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+import org.mapdb.Serializer;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.User;
@@ -47,22 +50,23 @@ import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
 
 import javax.annotation.Nullable;
-import javax.sql.DataSource;
-import java.sql.*;
-import java.util.*;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
 public class PassiveHandler extends HandlerBase {
 
-    private final Map<Flag, Tristate> map;
-    private final Map<Flag, Tristate> mapCache;
+    private final CacheMap<IFlag, Tristate> map;
+    private final CacheMap<IFlag, Tristate> mapCache;
 
     public PassiveHandler(String name, int priority) {
         this(name, priority, new CacheMap<>((key, map) -> Tristate.UNDEFINED));
     }
 
-    public PassiveHandler(String name, int priority, CacheMap<Flag, Tristate> map) {
+    public PassiveHandler(String name, int priority, CacheMap<IFlag, Tristate> map) {
         super(name, priority);
         this.map = map;
         this.mapCache = new CacheMap<>((o, m) -> {
@@ -75,7 +79,7 @@ public class PassiveHandler extends HandlerBase {
     }
 
     @Override
-    public EventResult handle(@Nullable User user, Flag flag, Event event) {
+    public EventResult handle(@Nullable User user, IFlag flag, Event event) {
         if (user != null) {
             return EventResult.pass();
         }
@@ -88,7 +92,7 @@ public class PassiveHandler extends HandlerBase {
         if (parse.args.length > 0) {
             if (isIn(SET_ALIASES, parse.args[0])) {
                 if (parse.args.length > 1) {
-                    Flag flag;
+                    IFlag flag;
                     if (parse.args[1].equalsIgnoreCase("all")) {
                         flag = null;
                     } else {
@@ -177,7 +181,7 @@ public class PassiveHandler extends HandlerBase {
                 TextActions.suggestCommand("/foxguard md h " + this.name + " set "),
                 TextActions.showText(Text.of("Click to Set a Flag")),
                 "Passive Flags:\n"));
-        for (Flag f : this.map.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
+        for (IFlag f : this.map.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FCUtil.readableTristateText(map.get(f)))
@@ -196,22 +200,16 @@ public class PassiveHandler extends HandlerBase {
     }
 
     @Override
-    public void writeToDatabase(DataSource dataSource) throws SQLException {
-        try (Connection conn = dataSource.getConnection()) {
-            try (Statement statement = conn.createStatement()) {
-                statement.execute("CREATE TABLE IF NOT EXISTS FLAGMAP(KEY VARCHAR (256), VALUE VARCHAR (256));" +
-                        "DELETE FROM FLAGMAP;");
-            }
-            try (PreparedStatement statement = conn.prepareStatement("INSERT INTO FLAGMAP(KEY, VALUE) VALUES (? , ?)")) {
-                for (Map.Entry<Flag, Tristate> entry : map.entrySet()) {
-                    statement.setString(1, entry.getKey().name());
-                    statement.setString(2, entry.getValue().name());
-                    statement.addBatch();
-                }
-                statement.executeBatch();
+    public void save(Path directory) {
+        try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.db").normalize().toString()).make()) {
+            Map<String, String> storageFlagMap = flagMapDB.hashMap("flags", Serializer.STRING, Serializer.STRING).make();
+            storageFlagMap.clear();
+            for (Map.Entry<IFlag, Tristate> entry : map.entrySet()) {
+                storageFlagMap.put(entry.getKey().flagName(), entry.getValue().name());
             }
         }
     }
+
 
     @Override
     public String getShortTypeName() {
@@ -238,32 +236,15 @@ public class PassiveHandler extends HandlerBase {
         }
 
         @Override
-        public IHandler create(DataSource source, String name, int priority, boolean isEnabled) throws SQLException {
-            List<User> ownerList = new ArrayList<>();
-            CacheMap<Flag, Tristate> flagMap = new CacheMap<>((key, map) -> Tristate.UNDEFINED);
-            try (Connection conn = source.getConnection()) {
-                try (Statement statement = conn.createStatement()) {
-                    try (ResultSet ownerSet = statement.executeQuery("SELECT * FROM OWNERS")) {
-                        while (ownerSet.next()) {
-                            Optional<User> user = FoxGuardMain.instance().getUserStorage().get((UUID) ownerSet.getObject("USERUUID"));
-                            if (user.isPresent() && !FCUtil.isUserOnList(ownerList, user.get()))
-                                ownerList.add(user.get());
-                        }
-                    }
-                    try (ResultSet passiveMapEntrySet = statement.executeQuery("SELECT * FROM FLAGMAP")) {
-                        while (passiveMapEntrySet.next()) {
-                            try {
-                                flagMap.put(Flag.valueOf(passiveMapEntrySet.getString("KEY")),
-                                        Tristate.valueOf(passiveMapEntrySet.getString("VALUE")));
-                            } catch (IllegalArgumentException ignored) {
-                            }
-                        }
-                    }
+        public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
+            try(DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.db").normalize().toString()).make()) {
+                Map<String, String> storageFlagMap = flagMapDB.hashMap("flags", Serializer.STRING, Serializer.STRING).make();
+                CacheMap<IFlag, Tristate> map = new CacheMap<>((k, m) -> Tristate.UNDEFINED);
+                for (Map.Entry<String, String> entry : storageFlagMap.entrySet()) {
+                    map.put(Flag.flagFrom(entry.getKey()), Tristate.valueOf(entry.getValue()));
                 }
+                return new PassiveHandler(name, priority, map);
             }
-            PassiveHandler handler = new PassiveHandler(name, priority, flagMap);
-            handler.setIsEnabled(isEnabled);
-            return handler;
         }
 
         @Override

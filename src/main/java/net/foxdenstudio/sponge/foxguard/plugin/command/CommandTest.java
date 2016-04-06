@@ -29,6 +29,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.command;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.IFlag;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -129,10 +130,10 @@ public class CommandTest implements CommandCallable {
         if (parse.args.length > 0) {
             Text.Builder builder = Text.builder();
             builder.append(Text.of(TextColors.GOLD, "\n-----------------------------\n"));
-            Flag flag = Flag.flagFrom(parse.args[0]);
+            IFlag flag = Flag.flagFrom(parse.args[0]);
             if (flag != null) {
-                for (Set<Flag> level : flag.getHierarchy()) {
-                    for(Flag f : level){
+                for (Set<IFlag> level : flag.getHierarchy()) {
+                    for (IFlag f : level) {
                         builder.append(Text.of(f.flagName() + " "));
                     }
                     builder.append(Text.of("\n"));

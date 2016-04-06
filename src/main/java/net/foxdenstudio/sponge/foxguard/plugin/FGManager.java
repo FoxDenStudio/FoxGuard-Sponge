@@ -28,7 +28,7 @@ package net.foxdenstudio.sponge.foxguard.plugin;
 import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
@@ -37,50 +37,50 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
-import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
-import org.spongepowered.api.Server;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.GlobalWorldRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.util.RegionCache;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.util.GuavaCollectors;
+import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 
 public final class FGManager {
 
-    public static final String[] TYPES = {"region", "handler", "controller"};
+    public static final String[] ILLEGAL_NAMES = {"con", "prn", "aux", "nul", "com0", "com1", "com2", "com3", "com4",
+            "com5", "com6", "com7", "com8", "com9", "lpt0", "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9",
+            "all", "state", "full", "everything"};
+    public static final String[] TYPES = {"region", "worldregion", "handler", "controller"};
 
     private static FGManager instance;
-    private final Map<World, List<IRegion>> regions;
-    private final List<IHandler> handlers;
+    private final Map<World, Set<IWorldRegion>> worldRegions;
+    private final Set<IRegion> regions;
+    private final Set<IHandler> handlers;
     private final GlobalHandler globalHandler;
 
-    private final Map<World, Map<Vector3i, List<IRegion>>> regionCache;
+    private final RegionCache regionCache;
 
     private FGManager() {
         instance = this;
-        regions = new CacheMap<>((key, map) -> new ArrayList<>());
-        handlers = new ArrayList<>();
-        globalHandler = new GlobalHandler();
-        this.addHandler(globalHandler);
-
-        regionCache = new CacheMap<>((world, map1) -> {
-            if (world instanceof World) {
-                Map<Vector3i, List<IRegion>> worldCache = new CacheMap<>((chunk, map2) -> {
-                    if (chunk instanceof Vector3i) {
-                        List<IRegion> cachedRegions = this.calculateRegionsForChunk((Vector3i) chunk, (World) world);
-                        map2.put((Vector3i) chunk, cachedRegions);
-                        return cachedRegions;
-                    } else return null;
-                });
-                map1.put((World) world, worldCache);
-                return worldCache;
-            } else return null;
+        worldRegions = new CacheMap<>((key, map) -> {
+            if (key instanceof World) {
+                Set<IWorldRegion> set = new HashSet<>();
+                map.put((World) key, set);
+                return set;
+            } else return new HashSet<>();
         });
+        regions = new HashSet<>();
+        handlers = new HashSet<>();
+        globalHandler = new GlobalHandler();
+        handlers.add(globalHandler);
+
+        this.regionCache = new RegionCache(regions, worldRegions);
     }
 
     public static synchronized void init() {
@@ -95,12 +95,47 @@ public final class FGManager {
         return handlers.contains(handler);
     }
 
-    public boolean addRegion(World world, IRegion region, boolean update) {
-        if (region == null) return false;
-        if (region.getWorld() != null || getRegion(world, region.getName()) != null) return false;
+    public boolean isRegionNameAvailable(String name) {
+        if (getRegion(name) != null) return false;
+        for (World world : worldRegions.keySet()) {
+            if (getWorldRegion(world, name) != null) return false;
+        }
+        return true;
+    }
+
+    public boolean isWorldRegionNameAvailable(String name, World world) {
+        if (getWorldRegion(world, name) != null || getRegion(name) != null) return false;
+        else return true;
+    }
+
+    public Tristate isWorldRegionNameAvailable(String name) {
+        Tristate available = null;
+        for (World world : worldRegions.keySet()) {
+            if (getWorldRegion(world, name) == null) {
+                if (available == null) {
+                    available = Tristate.TRUE;
+                } else if (available == Tristate.FALSE) {
+                    available = Tristate.UNDEFINED;
+                }
+            } else {
+                if (available == null) {
+                    available = Tristate.FALSE;
+                } else if (available == Tristate.TRUE) {
+                    available = Tristate.UNDEFINED;
+                }
+            }
+        }
+        return available;
+    }
+
+    public boolean addWorldRegion(World world, IWorldRegion region) {
+        if (region == null || region.getWorld() != null ||
+                !isWorldRegionNameAvailable(region.getName(), world) || !isNameValid(region.getName()))
+            return false;
         region.setWorld(world);
-        this.regions.get(world).add(region);
-        this.regionCache.get(world).clear();
+        this.worldRegions.get(world).add(region);
+        this.regionCache.markDirty(region, RegionCache.DirtyType.ADDED);
+        FGStorageManager.getInstance().addObject(region);
         Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
             @Override
             public IFGObject getTarget() {
@@ -112,17 +147,38 @@ public final class FGManager {
                 return FoxGuardMain.getCause();
             }
         });
-        FGStorageManager.getInstance().unmarkForDeletion(region);
-        if (update) FGStorageManager.getInstance().updateRegion(region);
         return true;
     }
 
-    public boolean addRegion(World world, IRegion region) {
-        return addRegion(world, region, true);
+    public boolean addRegion(IRegion region) {
+        if (region == null || !isRegionNameAvailable(region.getName()) || !isNameValid(region.getName())) return false;
+        this.regions.add(region);
+        this.regionCache.markDirty(region, RegionCache.DirtyType.ADDED);
+        FGStorageManager.getInstance().addObject(region);
+        Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
+            @Override
+            public IFGObject getTarget() {
+                return region;
+            }
+
+            @Override
+            public Cause getCause() {
+                return FoxGuardMain.getCause();
+            }
+        });
+//        FGStorageManager.getInstance().unmarkForDeletion(region);
+//        if (update) FGStorageManager.getInstance().updateRegion(region);
+        return true;
     }
 
-    public IRegion getRegion(World world, String name) {
-        for (IRegion region : this.regions.get(world)) {
+    public boolean addRegion(IRegion region, World world) {
+        if (region instanceof IWorldRegion) {
+            return world != null && addWorldRegion(world, (IWorldRegion) region);
+        } else return addRegion(region);
+    }
+
+    public IWorldRegion getWorldRegion(World world, String name) {
+        for (IWorldRegion region : this.worldRegions.get(world)) {
             if (region.getName().equalsIgnoreCase(name)) {
                 return region;
             }
@@ -130,90 +186,98 @@ public final class FGManager {
         return null;
     }
 
-    private IRegion getRegion(Server server, String worldName, String regionName) {
-        Optional<World> world = server.getWorld(worldName);
-        return world.isPresent() ? this.getRegion(world.get(), regionName) : null;
+    public IRegion getRegion(String name) {
+        for (IRegion region : this.regions) {
+            if (region.getName().equalsIgnoreCase(name)) {
+                return region;
+            }
+        }
+        return null;
     }
 
-    public List<IRegion> getRegionList() {
-        List<IRegion> list = new ArrayList<>();
-        this.regions.forEach((world, tlist) -> tlist.forEach(list::add));
-        return ImmutableList.copyOf(list);
+    public IRegion getRegionFromWorld(World world, String name) {
+        IRegion region = getWorldRegion(world, name);
+        if (region == null) {
+            return getRegion(name);
+        } else return region;
     }
 
-    public List<IRegion> getRegionList(World world) {
-        return ImmutableList.copyOf(this.regions.get(world));
+    public Set<IRegion> getRegions() {
+        return ImmutableSet.copyOf(this.regions);
     }
 
-    public List<IRegion> getRegionList(World world, Vector3i chunk) {
-        return ImmutableList.copyOf(this.regionCache.get(world).get(chunk));
+    public Set<IRegion> getAllRegions() {
+        Set<IRegion> set = new HashSet<>();
+        this.worldRegions.forEach((world, tset) -> tset.forEach(set::add));
+        this.regions.forEach(set::add);
+        return ImmutableSet.copyOf(set);
     }
 
-    public List<IRegion> getRegionListAtPos(World world, Vector3d pos) {
-        return getRegionListAtPos(world, pos, false);
+    public Set<IWorldRegion> getWorldRegions(World world) {
+        return ImmutableSet.copyOf(this.worldRegions.get(world));
     }
 
-    public List<IRegion> getRegionListAtPos(World world, Vector3d pos, boolean includeDisabled) {
+    public Set<IRegion> getAllRegions(World world) {
+        Set<IRegion> set = new HashSet<>();
+        this.worldRegions.get(world).forEach(set::add);
+        this.regions.forEach(set::add);
+        return ImmutableSet.copyOf(set);
+    }
+
+    public Set<IRegion> getAllRegions(World world, Vector3i chunk) {
+        return getAllRegions(world, chunk, false);
+    }
+
+    public Set<IRegion> getAllRegions(World world, Vector3i chunk, boolean includeDisabled) {
+        return ImmutableSet.copyOf(this.regionCache.getData(world, chunk).getRegions(includeDisabled));
+    }
+
+    public Set<IRegion> getRegionsAtPos(World world, Vector3d pos) {
+        return getRegionsAtPos(world, pos, false);
+    }
+
+    public Set<IRegion> getRegionsAtPos(World world, Vector3d pos, boolean includeDisabled) {
         Vector3i chunk = new Vector3i(
                 GenericMath.floor(pos.getX() / 16.0),
                 GenericMath.floor(pos.getY() / 16.0),
                 GenericMath.floor(pos.getZ() / 16.0));
-        if (includeDisabled)
-            return this.regionCache.get(world).get(chunk).stream()
-                    .filter(region -> region.contains(pos))
-                    .collect(GuavaCollectors.toImmutableList());
-        else
-            return this.regionCache.get(world).get(chunk).stream()
-                    .filter(IFGObject::isEnabled)
-                    .filter(region -> region.contains(pos))
-                    .collect(GuavaCollectors.toImmutableList());
+        return this.regionCache.getData(world, chunk).getRegions(includeDisabled);
     }
 
-    public List<IRegion> getRegionListAtPos(World world, Vector3i pos) {
-        return getRegionListAtPos(world, pos, false);
+    public Set<IRegion> getRegionsAtPos(World world, Vector3i pos) {
+        return getRegionsAtPos(world, pos, false);
     }
 
-    public List<IRegion> getRegionListAtPos(World world, Vector3i pos, boolean includeDisabled) {
-        Vector3i chunk = new Vector3i(
-                GenericMath.floor(pos.getX() / 16.0),
-                GenericMath.floor(pos.getY() / 16.0),
-                GenericMath.floor(pos.getZ() / 16.0));
-        if (includeDisabled)
-            return this.regionCache.get(world).get(chunk).stream()
-                    .filter(region -> region.contains(pos))
-                    .collect(GuavaCollectors.toImmutableList());
-        else
-            return this.regionCache.get(world).get(chunk).stream()
-                    .filter(IFGObject::isEnabled)
-                    .filter(region -> region.contains(pos))
-                    .collect(GuavaCollectors.toImmutableList());
+    public Set<IRegion> getRegionsAtPos(World world, Vector3i pos, boolean includeDisabled) {
+        return getRegionsAtPos(world, pos.toDouble(), includeDisabled);
     }
 
-    public List<IHandler> getHandlerList() {
-        return ImmutableList.copyOf(this.handlers);
+    public Set<IHandler> getHandlers() {
+        return ImmutableSet.copyOf(this.handlers);
     }
 
-    public List<IHandler> getHandlerList(boolean includeControllers) {
+    public Set<IHandler> getHandlers(boolean includeControllers) {
         if (includeControllers) {
-            return ImmutableList.copyOf(this.handlers);
+            return ImmutableSet.copyOf(this.handlers);
         } else {
             return this.handlers.stream()
                     .filter(handler -> !(handler instanceof IController))
-                    .collect(GuavaCollectors.toImmutableList());
+                    .collect(GuavaCollectors.toImmutableSet());
         }
     }
 
-    public List<IController> getControllerList() {
+    public Set<IController> getControllers() {
         return this.handlers.stream()
                 .filter(handler -> handler instanceof IController)
                 .map(handler -> ((IController) handler))
-                .collect(GuavaCollectors.toImmutableList());
+                .collect(GuavaCollectors.toImmutableSet());
     }
 
     public boolean addHandler(IHandler handler) {
         if (handler == null) return false;
         if (gethandler(handler.getName()) != null) return false;
         handlers.add(handler);
+        FGStorageManager.getInstance().addObject(handler);
         Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
             @Override
             public IFGObject getTarget() {
@@ -225,8 +289,6 @@ public final class FGManager {
                 return FoxGuardMain.getCause();
             }
         });
-        FGStorageManager.getInstance().unmarkForDeletion(handler);
-        FGStorageManager.getInstance().updateHandler(handler);
         return true;
     }
 
@@ -248,14 +310,10 @@ public final class FGManager {
         return null;
     }
 
-    public boolean removeHandler(String name) {
-        return this.removeHandler(gethandler(name));
-    }
-
-    private boolean removeHandler(IHandler handler) {
+    public boolean removeHandler(IHandler handler) {
         if (handler == null || handler instanceof GlobalHandler) return false;
-        this.regions.forEach((world, list) -> {
-            list.stream()
+        this.worldRegions.forEach((world, set) -> {
+            set.stream()
                     .filter(region -> region.getHandlers().contains(handler))
                     .forEach(region -> region.removeHandler(handler));
         });
@@ -273,51 +331,67 @@ public final class FGManager {
                 return FoxGuardMain.getCause();
             }
         });
-        FGStorageManager.getInstance().markForDeletion(handler);
+//        FGStorageManager.getInstance().markForDeletion(handler);
         handlers.remove(handler);
         return true;
     }
 
-    public boolean removeRegion(World world, String name) {
-        return this.removeRegion(world, getRegion(world, name));
-    }
+    public boolean removeRegion(IRegion region) {
+        if (region instanceof IWorldRegion) {
+            return removeWorldRegion((IWorldRegion) region);
+        } else {
+            if (region == null) return false;
+            if (!this.regions.contains(region)) return false;
+            this.regions.remove(region);
+            Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
+                @Override
+                public IFGObject getTarget() {
+                    return region;
+                }
 
-    public void removeRegion(IRegion region) {
-        if (region.getWorld() != null) removeRegion(region.getWorld(), region);
-        else this.regions.keySet().forEach((world) -> this.removeRegion(world, region));
-    }
-
-    private boolean removeRegion(World world, IRegion region) {
-        if (region == null || region instanceof GlobalRegion) return false;
-        if (!this.regions.get(world).contains(region)) {
-            return false;
+                @Override
+                public Cause getCause() {
+                    return FoxGuardMain.getCause();
+                }
+            });
+            this.regionCache.markDirty(region, RegionCache.DirtyType.REMOVED);
+            return true;
         }
-        Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
-            @Override
-            public IFGObject getTarget() {
-                return region;
-            }
-
-            @Override
-            public Cause getCause() {
-                return FoxGuardMain.getCause();
-            }
-        });
-        FGStorageManager.getInstance().markForDeletion(region);
-        this.regions.get(world).remove(region);
-        this.regionCache.get(world).clear();
-        return true;
     }
 
-    public boolean linkRegion(Server server, String worldName, String regionName, String handlerName) {
-        Optional<World> world = server.getWorld(worldName);
-        return world.isPresent() && this.linkRegion(world.get(), regionName, handlerName);
-    }
+    public boolean removeWorldRegion(IWorldRegion region) {
+        if (region == null || region instanceof GlobalWorldRegion) return false;
+        boolean removed = false;
+        if (region.getWorld() != null) {
+            if (!this.worldRegions.get(region.getWorld()).contains(region)) {
+                return false;
+            }
+            this.worldRegions.get(region.getWorld()).remove(region);
+            removed = true;
+        } else {
+            for (Set<IWorldRegion> set : this.worldRegions.values()) {
+                if (set.contains(region)) {
+                    set.remove(region);
+                    removed = true;
+                }
+            }
+        }
+        if (removed) {
+            Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
+                @Override
+                public IFGObject getTarget() {
+                    return region;
+                }
 
-    public boolean linkRegion(World world, String regionName, String handlerName) {
-        IRegion region = getRegion(world, regionName);
-        IHandler handler = gethandler(handlerName);
-        return this.link(region, handler);
+                @Override
+                public Cause getCause() {
+                    return FoxGuardMain.getCause();
+                }
+            });
+//        FGStorageManager.getInstance().markForDeletion(region);
+            this.regionCache.markDirty(region, RegionCache.DirtyType.REMOVED);
+        }
+        return removed;
     }
 
     public boolean link(ILinkable linkable, IHandler handler) {
@@ -328,18 +402,7 @@ public final class FGManager {
                 return FoxGuardMain.getCause();
             }
         });
-        return !(handler instanceof GlobalHandler && !(linkable instanceof GlobalRegion)) && linkable.addHandler(handler);
-    }
-
-    public boolean unlink(Server server, String worldName, String regionName, String handlerName) {
-        Optional<World> world = server.getWorld(worldName);
-        return world.isPresent() && this.unlink(world.get(), regionName, handlerName);
-    }
-
-    private boolean unlink(World world, String regionName, String handlerName) {
-        IRegion region = getRegion(world, regionName);
-        IHandler handler = gethandler(handlerName);
-        return this.unlink(region, handler);
+        return !(handler instanceof GlobalHandler && !(linkable instanceof GlobalWorldRegion)) && linkable.addHandler(handler);
     }
 
     public boolean unlink(ILinkable linkable, IHandler handler) {
@@ -350,63 +413,48 @@ public final class FGManager {
                 return FoxGuardMain.getCause();
             }
         });
-        return !(handler instanceof GlobalHandler && linkable instanceof GlobalRegion) && linkable.removeHandler(handler);
+        return !(handler instanceof GlobalHandler && linkable instanceof GlobalWorldRegion) && linkable.removeHandler(handler);
     }
 
-    public boolean renameRegion(World world, String oldName, String newName) {
-        return this.rename(this.getRegion(world, oldName), newName);
-    }
-
-    public boolean renameRegion(Server server, String worldName, String oldName, String newName) {
-        return this.rename(this.getRegion(server, worldName, oldName), newName);
-    }
-
-    private boolean rename(IFGObject object, String newName) {
-        if (object instanceof IRegion) {
-            IRegion region = (IRegion) object;
-            if (this.getRegion(region.getWorld(), newName) != null) return false;
+    public boolean rename(IFGObject object, String newName) {
+        if (object instanceof IWorldRegion) {
+            IWorldRegion region = (IWorldRegion) object;
+            if (this.getWorldRegion(region.getWorld(), newName) != null) return false;
         } else if (object instanceof IHandler) {
             if (this.gethandler(newName) != null) return false;
         }
-        FGStorageManager.getInstance().markForDeletion(object);
+//        FGStorageManager.getInstance().markForDeletion(object);
         object.setName(newName);
-        FGStorageManager.getInstance().unmarkForDeletion(object);
-        FGStorageManager.getInstance().update(object);
+//        FGStorageManager.getInstance().unmarkForDeletion(object);
+//        FGStorageManager.getInstance().update(object);
         return true;
     }
 
-    public boolean renameHandler(String oldName, String newName) {
-        return this.rename(this.gethandler(oldName), newName);
-    }
-
-    public void createLists(World world) {
-        regions.put(world, new ArrayList<>());
-    }
-
     public void initWorld(World world) {
-        GlobalRegion gr = new GlobalRegion();
+        GlobalWorldRegion gr = new GlobalWorldRegion();
         gr.addHandler(this.globalHandler);
-        addRegion(world, gr, false);
+        gr.setWorld(world);
+        this.worldRegions.get(world).add(gr);
+        this.regionCache.markDirty(gr, RegionCache.DirtyType.ADDED);
     }
 
     public void unloadWorld(World world) {
-        this.regions.remove(world);
+        this.worldRegions.remove(world);
     }
 
     public GlobalHandler getGlobalHandler() {
         return globalHandler;
     }
 
-    private List<IRegion> calculateRegionsForChunk(Vector3i chunk, World world) {
-        List<IRegion> cache = new ArrayList<>();
-        this.getRegionList(world).stream()
-                .filter(IFGObject::isEnabled)
-                .filter(region -> region.isInChunk(chunk))
-                .forEach(cache::add);
-        return cache;
+    public boolean isNameValid(String name) {
+        if (name.matches("^.*[ :\\.=;\"\'\\\\/\\{\\}\\(\\)\\[\\]<>#@\\|\\?\\*].*$")) return false;
+        for (String s : ILLEGAL_NAMES) {
+            if (name.equalsIgnoreCase(s)) return false;
+        }
+        return true;
     }
 
-    public void clearCache(World world) {
-        this.regionCache.get(world).clear();
+    public void markDirty(IRegion region, RegionCache.DirtyType type) {
+        regionCache.markDirty(region, type);
     }
 }

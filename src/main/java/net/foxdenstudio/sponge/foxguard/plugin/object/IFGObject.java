@@ -28,17 +28,16 @@ package net.foxdenstudio.sponge.foxguard.plugin.object;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxguard.plugin.command.CommandDetail;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
 
-import javax.sql.DataSource;
-import java.sql.SQLException;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
- * Interface for all FoxGuard Objects. Inherited by {@link IRegion Regions}
+ * Interface for all FoxGuard Objects. Inherited by {@link IWorldRegion Regions}
  * and {@link IHandler Handlers}.
  * Essentially the core of the code, this is the most used interface.
  */
@@ -105,7 +104,6 @@ public interface IFGObject {
      * This allows specific queries in case there is more data stored than can reasonable displayed.
      * It is recommended to have click action wherever possible to ease the configuration of objects.
      *
-     *
      * @param source
      * @param arguments The extra arguments from the {@link CommandDetail Detail} command. Object should still return something meaningful if this is empty.
      * @return A {@link Text} object that provides meaningful information about the object.
@@ -115,22 +113,25 @@ public interface IFGObject {
     List<String> detailsSuggestions(CommandSource source, String arguments);
 
     /**
-     * Called when saving objects to a database. A datasource is given, which can be turned into a connection.
-     * This is an empty database if nothing has been saved previously, otherwise it is the database as it was the previous save.
-     * This method should fail gracefully from database inconsistencies. Throwing an {@link SQLException} will cause the metadata for the object to not be written.
-     * Subsequently the
+     * Called when the object is being saved.
+     * It is completely up to the object how it wants to save itself.
+     * The only requirement is that it stays within its own directory and is able to load itself later.
      *
-     * @param dataSource The datasource for the database specific to this object.
-     * @throws SQLException Thrown due to database errors.
+     * @param directory The directory for this object to save to.
      */
-    void writeToDatabase(DataSource dataSource) throws SQLException;
+    void save(Path directory);
 
     /**
-     * Specifies whether FoxGuard should attempt to save this object into SQL.
-     * Set to false if a separate storage mechanism will be used. Defaults to true.
-     * Objects that return false must be responsible for storing and loading EVERYTHING data.
-     * The only time this should be false is if another plugin is hooking into FoxGuard
-     * using a delegate object. In that case the object is just a transient API accessor and should not be saved.
+     * Specifies whether FoxGuard should try saving this object.
+     * This simply involves saving the object to a list, creating a metadata file,
+     * and then calling {@link IFGObject#save(Path)}
+     * <p>
+     * This should be set to false only when an object already employs some other method of persistence.
+     * This will often be the case if another plugin is hooking into FoxGuard and using an object as a kind of API accessor.
+     * These object are either transient, or have their own methods of persistence.
+     * <p>
+     * When set to false, FoxGuard will not mark this object to be loaded on restart,
+     * which means the object must be re-added by some other means, or not at all.
      *
      * @return Whether FoxGuard should autosave this object.
      */

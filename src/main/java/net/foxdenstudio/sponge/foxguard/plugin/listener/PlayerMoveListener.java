@@ -51,22 +51,22 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
             fromList = new ArrayList<>();
             final List<IHandler> temp = fromList;
             Vector3d from = event.getFromTransform().getPosition().add(0, 0.1, 0);
-            FGManager.getInstance().getRegionList(world, new Vector3i(
+            FGManager.getInstance().getAllRegions(world, new Vector3i(
                     GenericMath.floor(from.getX() / 16.0),
                     GenericMath.floor(from.getY() / 16.0),
                     GenericMath.floor(from.getZ() / 16.0))).stream()
                     .filter(IFGObject::isEnabled)
-                    .filter(region -> region.contains(from))
+                    .filter(region -> region.contains(from, world))
                     .forEach(region -> region.getHandlers().stream()
                             .filter(IFGObject::isEnabled)
                             .filter(handler -> !temp.contains(handler))
                             .forEach(temp::add));
         }
-        FGManager.getInstance().getRegionList(world, new Vector3i(
+        FGManager.getInstance().getAllRegions(world, new Vector3i(
                 GenericMath.floor(to.getX() / 16.0),
                 GenericMath.floor(to.getY() / 16.0),
                 GenericMath.floor(to.getZ() / 16.0))).stream()
-                .filter(region -> region.contains(to))
+                .filter(region -> region.contains(to, world))
                 .filter(IFGObject::isEnabled)
                 .forEach(region -> region.getHandlers().stream()
                         .filter(IFGObject::isEnabled)
@@ -167,10 +167,10 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
             last.put(event.getTargetEntity(), new LastWrapper(null, event.getTargetEntity().getTransform().getPosition()));
         }
 
-        @Listener
-        public void onPlayerChangeWorld(){
+        /*@Listener
+        public void onPlayerChangeWorld() {
 
-        }
+        }*/
 
         @Listener
         public void onChange(FGUpdateEvent event) {

@@ -27,7 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
-import net.foxdenstudio.sponge.foxguard.plugin.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
 import org.spongepowered.api.command.CommandException;
@@ -38,9 +38,7 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
 import javax.annotation.Nullable;
-import javax.sql.DataSource;
-
-import java.sql.SQLException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
@@ -51,7 +49,7 @@ public class PermissionHandler extends HandlerBase {
     }
 
     @Override
-    public EventResult handle(@Nullable User user, Flag flag, Event event) {
+    public EventResult handle(@Nullable User user, IFlag flag, Event event) {
         if (user == null) return EventResult.pass();
         /*while (flag != null) {
             if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." + flag.flagName() + ".allow"))
@@ -63,8 +61,8 @@ public class PermissionHandler extends HandlerBase {
             flag = flag.getParents().length > 0 ? flag.getParents()[0] : null;
         }*/
 
-        for (Set<Flag> level : flag.getHierarchy()) {
-            for (Flag f : level) {
+        for (Set<IFlag> level : flag.getHierarchy()) {
+            for (IFlag f : level) {
                 if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." +
                         f.flagName() + ".allow"))
                     return EventResult.allow();
@@ -120,9 +118,10 @@ public class PermissionHandler extends HandlerBase {
     }
 
     @Override
-    public void writeToDatabase(DataSource dataSource) throws SQLException {
+    public void save(Path directory) {
 
     }
+
 
     @Override
     public ProcessResult modify(CommandSource source, String arguments) {
@@ -144,7 +143,7 @@ public class PermissionHandler extends HandlerBase {
         }
 
         @Override
-        public IHandler create(DataSource source, String name, int priority, boolean isEnabled) throws SQLException {
+        public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
             PermissionHandler handler = new PermissionHandler(name, priority);
             handler.setIsEnabled(isEnabled);
             return handler;

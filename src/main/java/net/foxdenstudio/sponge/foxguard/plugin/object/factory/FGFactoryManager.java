@@ -29,11 +29,11 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 
-import javax.sql.DataSource;
-import java.sql.SQLException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -44,11 +44,13 @@ public final class FGFactoryManager {
 
     private static final FGFactoryManager ourInstance = new FGFactoryManager();
     private final List<IRegionFactory> regionFactories;
+    private final List<IWorldRegionFactory> worldRegionFactories;
     private final List<IHandlerFactory> handlerFactories;
     private final List<IControllerFactory> controllerFactories;
 
     private FGFactoryManager() {
         regionFactories = new ArrayList<>();
+        worldRegionFactories = new ArrayList<>();
         handlerFactories = new ArrayList<>();
         controllerFactories = new ArrayList<>();
     }
@@ -67,10 +69,30 @@ public final class FGFactoryManager {
         return null;
     }
 
-    public IRegion createRegion(DataSource source, String name, String type, boolean isEnabled) throws SQLException {
+    public IRegion createRegion(Path directory, String name, String type, boolean isEnabled) {
         for (IRegionFactory rf : regionFactories) {
             if (rf.getType().equalsIgnoreCase(type)) {
-                IRegion region = rf.create(source, name, isEnabled);
+                IRegion region = rf.create(directory, name, isEnabled);
+                if (region != null) return region;
+            }
+        }
+        return null;
+    }
+
+    public IWorldRegion createWorldRegion(String name, String type, String arguments, CommandSource source) throws CommandException {
+        for (IWorldRegionFactory wrf : worldRegionFactories) {
+            if (isIn(wrf.getAliases(), type)) {
+                IWorldRegion region = wrf.create(name, arguments, source);
+                if (region != null) return region;
+            }
+        }
+        return null;
+    }
+
+    public IWorldRegion createWorldRegion(Path directory, String name, String type, boolean isEnabled) {
+        for (IWorldRegionFactory wrf : worldRegionFactories) {
+            if (wrf.getType().equalsIgnoreCase(type)) {
+                IWorldRegion region = wrf.create(directory, name, isEnabled);
                 if (region != null) return region;
             }
         }
@@ -78,7 +100,7 @@ public final class FGFactoryManager {
     }
 
 
-    public IHandler createHandler(String name, String type, int priority, String args, CommandSource source) {
+    public IHandler createHandler(String name, String type, int priority, String args, CommandSource source) throws CommandException {
         for (IHandlerFactory hf : handlerFactories) {
             if (isIn(hf.getAliases(), type)) {
                 IHandler handler = hf.create(name, priority, args, source);
@@ -88,17 +110,17 @@ public final class FGFactoryManager {
         return null;
     }
 
-    public IHandler createHandler(DataSource source, String name, String type, int priority, boolean isEnabled) throws SQLException {
+    public IHandler createHandler(Path directory, String name, String type, int priority, boolean isEnabled) {
         for (IHandlerFactory hf : handlerFactories) {
             if (hf.getType().equalsIgnoreCase(type)) {
-                IHandler handler = hf.create(source, name, priority, isEnabled);
+                IHandler handler = hf.create(directory, name, priority, isEnabled);
                 if (handler != null) return handler;
             }
         }
         return null;
     }
 
-    public IController createController(String name, String type, int priority, String args, CommandSource source) {
+    public IController createController(String name, String type, int priority, String args, CommandSource source) throws CommandException {
         for (IControllerFactory cf : controllerFactories) {
             if (isIn(cf.getAliases(), type)) {
                 IController controller = cf.create(name, priority, args, source);
@@ -108,10 +130,10 @@ public final class FGFactoryManager {
         return null;
     }
 
-    public IController createController(DataSource source, String name, String type, int priority, boolean isEnabled) throws SQLException {
+    public IController createController(Path directory, String name, String type, int priority, boolean isEnabled) {
         for (IControllerFactory cf : controllerFactories) {
             if (cf.getType().equalsIgnoreCase(type)) {
-                IController controller = cf.create(source, name, priority, isEnabled);
+                IController controller = cf.create(directory, name, priority, isEnabled);
                 if (controller != null) return controller;
             }
         }
@@ -127,6 +149,15 @@ public final class FGFactoryManager {
         return ImmutableList.of();
     }
 
+    public List<String> worldRegionSuggestions(CommandSource source, String arguments, String type) throws CommandException {
+        for (IWorldRegionFactory wrf : worldRegionFactories) {
+            if (wrf.getType().equalsIgnoreCase(type)) {
+                return wrf.createSuggestions(source, arguments, type);
+            }
+        }
+        return ImmutableList.of();
+    }
+
     public List<String> handlerSuggestions(CommandSource source, String arguments, String type) throws CommandException {
         for (IHandlerFactory hf : handlerFactories) {
             if (hf.getType().equalsIgnoreCase(type)) {
@@ -137,9 +168,9 @@ public final class FGFactoryManager {
     }
 
     public List<String> controllerSuggestions(CommandSource source, String arguments, String type) throws CommandException {
-        for (IHandlerFactory hf : controllerFactories) {
-            if (hf.getType().equalsIgnoreCase(type)) {
-                return hf.createSuggestions(source, arguments, type);
+        for (IControllerFactory cf : controllerFactories) {
+            if (cf.getType().equalsIgnoreCase(type)) {
+                return cf.createSuggestions(source, arguments, type);
             }
         }
         return ImmutableList.of();
@@ -148,6 +179,12 @@ public final class FGFactoryManager {
     public boolean registerRegionFactory(IRegionFactory factory) {
         if (regionFactories.contains(factory)) return false;
         regionFactories.add(factory);
+        return true;
+    }
+
+    public boolean registerWorldRegionFactory(IWorldRegionFactory factory) {
+        if (worldRegionFactories.contains(factory)) return false;
+        worldRegionFactories.add(factory);
         return true;
     }
 
@@ -164,16 +201,29 @@ public final class FGFactoryManager {
     }
 
     public boolean unregister(IFGFactory factory) {
-        if (factory instanceof IRegionFactory)
-            return regionFactories.remove(factory);
-        else if (factory instanceof IHandlerFactory)
-            return handlerFactories.remove(factory);
+        if (factory instanceof IRegionFactory) {
+            if (factory instanceof IWorldRegionFactory)
+                return worldRegionFactories.remove(factory);
+            else return regionFactories.remove(factory);
+        } else if (factory instanceof IHandlerFactory) {
+            if (factory instanceof IControllerFactory)
+                return controllerFactories.remove(factory);
+            else return handlerFactories.remove(factory);
+        }
         return false;
     }
 
     public List<String> getPrimaryRegionTypeAliases() {
         List<String> aliases = new ArrayList<>();
         for (IFGFactory factory : regionFactories) {
+            aliases.addAll(Arrays.asList(factory.getPrimaryAlias()));
+        }
+        return aliases;
+    }
+
+    public List<String> getPrimaryWorldRegionTypeAliases() {
+        List<String> aliases = new ArrayList<>();
+        for (IFGFactory factory : worldRegionFactories) {
             aliases.addAll(Arrays.asList(factory.getPrimaryAlias()));
         }
         return aliases;

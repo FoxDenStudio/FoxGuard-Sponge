@@ -1,11 +1,10 @@
 package net.foxdenstudio.sponge.foxguard.plugin.object.factory;
 
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 
-import javax.sql.DataSource;
-import java.sql.SQLException;
+import java.nio.file.Path;
 
 /**
  * Created by Fox on 3/27/2016.
@@ -13,8 +12,8 @@ import java.sql.SQLException;
 public interface IControllerFactory extends IHandlerFactory {
 
     @Override
-    IController create(String name, int priority, String arguments, CommandSource source);
+    IController create(String name, int priority, String arguments, CommandSource source) throws CommandException;
 
     @Override
-    IController create(DataSource source, String name, int priority, boolean isEnabled) throws SQLException;
+    IController create(Path directory, String name, int priority, boolean isEnabled);
 }

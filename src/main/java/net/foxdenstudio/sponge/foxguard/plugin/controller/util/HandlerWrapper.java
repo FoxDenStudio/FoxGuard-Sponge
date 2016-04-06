@@ -1,6 +1,6 @@
 package net.foxdenstudio.sponge.foxguard.plugin.controller.util;
 
-import net.foxdenstudio.sponge.foxguard.plugin.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import org.spongepowered.api.entity.living.player.User;
@@ -33,8 +33,8 @@ public class HandlerWrapper {
         this(Type.CONSTANT, state, null);
     }
 
-    public EventResult handle(@Nullable User user, Flag flag, Event event){
-        if(type == Type.WRAPPER){
+    public EventResult handle(@Nullable User user, IFlag flag, Event event) {
+        if (type == Type.WRAPPER) {
             return handler.handle(user, flag, event);
         } else {
             return EventResult.of(tristate);

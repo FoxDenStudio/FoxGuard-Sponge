@@ -1,6 +1,5 @@
-package net.foxdenstudio.sponge.foxguard.plugin.region;
+package net.foxdenstudio.sponge.foxguard.plugin.region.world;
 
-import com.flowpowered.math.vector.Vector2d;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
@@ -11,16 +10,13 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
  * Created by Fox on 3/28/2016.
  */
-public class EllipticalRegion extends RegionBase {
+public class EllipticalRegion extends WorldRegionBase {
 
     private final BoundingBox2 boundingBox;
     private final double centerX, centerY, width, height;
@@ -84,16 +80,10 @@ public class EllipticalRegion extends RegionBase {
     }
 
     @Override
-    public void writeToDatabase(DataSource dataSource) throws SQLException {
-        try (Connection conn = dataSource.getConnection()) {
-            try (Statement statement = conn.createStatement()) {
-                statement.execute("CREATE TABLE IF NOT EXISTS BOUNDS(X DOUBLE, Z DOUBLE);" +
-                        "DELETE FROM BOUNDS;" +
-                        "INSERT INTO BOUNDS(X, Z) VALUES (" + boundingBox.a.getX() + ", " + boundingBox.a.getY() + ");" +
-                        "INSERT INTO BOUNDS(X, Z) VALUES (" + boundingBox.b.getX() + ", " + boundingBox.b.getY() + ");");
-            }
-        }
+    public void save(Path directory) {
+
     }
+
 
     @Override
     public ProcessResult modify(CommandSource source, String arguments) throws CommandException {

@@ -30,8 +30,9 @@ import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -39,9 +40,10 @@ public final class FGConfigManager {
 
     private static FGConfigManager instance;
 
-
-    private boolean forceLoad;
-    private boolean purgeDatabases;
+    private boolean cleanupFiles;
+    private boolean saveWorldRegionsInWorldFolders;
+    private boolean saveInWorldFolder;
+    private boolean useConfigFolder;
 
     private Map<Module, Boolean> modules = new EnumMap<>(Module.class);
 
@@ -56,12 +58,12 @@ public final class FGConfigManager {
     }
 
     private void load() {
-        File configFile = new File(
-                FoxGuardMain.instance().getConfigDirectory().getPath() + "/foxguard.cfg");
+        Path configFile =
+                FoxGuardMain.instance().getConfigDirectory().resolve("foxguard.cfg");
         CommentedConfigurationNode root;
         ConfigurationLoader<CommentedConfigurationNode> loader =
-                HoconConfigurationLoader.builder().setFile(configFile).build();
-        if (configFile.exists()) {
+                HoconConfigurationLoader.builder().setPath(configFile).build();
+        if (Files.exists(configFile)) {
             try {
                 root = loader.load();
             } catch (IOException e) {
@@ -72,8 +74,10 @@ public final class FGConfigManager {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        forceLoad = root.getNode("storage", "forceLoad").getBoolean(false);
-        purgeDatabases = root.getNode("storage", "purgeDatabases").getBoolean(true);
+        cleanupFiles = root.getNode("storage", "cleanupFiles").getBoolean(true);
+        saveInWorldFolder = root.getNode("storage", "saveInWorldFolder").getBoolean(true);
+        saveWorldRegionsInWorldFolders = root.getNode("storage", "saveWorldRegionsInWorldFolders").getBoolean(true);
+        useConfigFolder = root.getNode("storage", "useConfigFolder").getBoolean(false);
         for (Module m : Module.values()) {
             this.modules.put(m, root.getNode("module", m.name).getBoolean(true));
         }
@@ -82,12 +86,12 @@ public final class FGConfigManager {
     }
 
     public void save() {
-        File configFile = new File(
-                FoxGuardMain.instance().getConfigDirectory().getPath() + "/foxguard.cfg");
+        Path configFile =
+                FoxGuardMain.instance().getConfigDirectory().resolve("foxguard.cfg");
         CommentedConfigurationNode root;
         ConfigurationLoader<CommentedConfigurationNode> loader =
-                HoconConfigurationLoader.builder().setFile(configFile).build();
-        if (configFile.exists()) {
+                HoconConfigurationLoader.builder().setPath(configFile).build();
+        if (Files.exists(configFile)) {
             try {
                 root = loader.load();
             } catch (IOException e) {
@@ -98,21 +102,25 @@ public final class FGConfigManager {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        root.getNode("storage", "forceLoad").setComment("Enables force loading of region and handler databases. Default: false\n" +
-                "This allows loading of regions and handlers whose metadata don't match saved records.\n" +
-                "This usually occurs when a database file is replaced with another of the same name, but the internal metadata doesn't match.\n" +
-                "FoxGuard will attempt to resolve these errors, however there is no guarantee that it will work or even behave at all.\n" +
-                "MAY CAUSE UNPREDICTABLE RESULTS! USE WITH CAUTION!!! It is recommended to use the \"import\" feature instead.")
-                .setValue(forceLoad);
-
-        root.getNode("storage", "purgeDatabases").setComment("Sets whether to aggressively delete databases that appear corrupted or are no longer used. Default: true\n" +
-                "This is meant to keep the database store clean and free of clutter. It also improves load times.\n" +
-                "The caveat is that corrupted databases are deleted without warning. This normally isn't an issue, even in server crashes.\n" +
+        root.getNode("storage", "cleanupFiles").setComment("Sets whether to aggressively delete files that are no longer used. Default: true\n" +
+                "This is meant to keep the file store clean and free of clutter. It also improves load times.\n" +
+                "The caveat is that objects that fail to load are deleted without warning. This normally isn't an issue, even in server crashes.\n" +
                 "However, modifying databases and moving the files around can trigger the cleanup.\n" +
                 "If force loading is off or the plugin simply fails to load the database, it would just be discarded.\n" +
                 "Setting this option to false will prevent databases from being deleted.\n" +
                 "However, they will still be overwritten if a new database is made with the same name.")
-                .setValue(purgeDatabases);
+                .setValue(cleanupFiles);
+
+        root.getNode("storage", "saveInWorldFolder").setComment("Whether or not FoxGuard should save object information in the world folder.\n" +
+                "This includes super-regions, handlers, and controllers, but does not include world-regions.")
+                .setValue(saveInWorldFolder);
+
+        root.getNode("storage", "saveWorldRegionsInWorldFolders").setComment("Whether or not FoxGuard should save world-region information in the world folder.\n" +
+                "In this case, the files are kept with their corresponding world/dimension.\n" +
+                "This makes it easier to copy and paste world data without causing de-synchronization between the world data and FoxGuard Data.")
+                .setValue(saveWorldRegionsInWorldFolders);
+        root.getNode("storage", "useConfigFolder").setComment("Whether or not to place the foxguard folder inside the config folder.\n" +
+                "Only applies if files are not kept inside the world folder.").setValue(useConfigFolder);
 
         for (Module m : Module.values()) {
             root.getNode("module", m.name).setValue(this.modules.get(m));
@@ -127,12 +135,21 @@ public final class FGConfigManager {
         }
     }
 
-    public boolean forceLoad() {
-        return forceLoad;
+
+    public boolean cleanupFiles() {
+        return cleanupFiles;
     }
 
-    public boolean purgeDatabases() {
-        return purgeDatabases;
+    public boolean saveWorldRegionsInWorldFolders() {
+        return saveWorldRegionsInWorldFolders;
+    }
+
+    public boolean saveInWorldFolder() {
+        return saveInWorldFolder;
+    }
+
+    public boolean useConfigFolder() {
+        return useConfigFolder;
     }
 
     public Map<Module, Boolean> getModules() {

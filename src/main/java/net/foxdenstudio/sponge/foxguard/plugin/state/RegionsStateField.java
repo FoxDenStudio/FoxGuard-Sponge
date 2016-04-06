@@ -32,6 +32,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.state.ListStateFieldBase;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
@@ -74,8 +75,13 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         int index = 1;
         while (regionIterator.hasNext()) {
             IRegion region = regionIterator.next();
-            builder.append(Text.of(FGUtil.getColorForObject(region),
-                    (index++) + ": " + region.getShortTypeName() + " : " + region.getWorld().getName() + " : " + region.getName()));
+            if (region instanceof IWorldRegion) {
+                builder.append(Text.of(FGUtil.getColorForObject(region),
+                        (index++) + ": " + region.getShortTypeName() + " : " + ((IWorldRegion) region).getWorld().getName() + " : " + region.getName()));
+            } else {
+                builder.append(Text.of(FGUtil.getColorForObject(region),
+                        (index++) + ": " + region.getShortTypeName() + " : " + region.getName()));
+            }
             if (regionIterator.hasNext()) builder.append(Text.of("\n"));
         }
         return builder.build();
@@ -118,7 +124,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                 }
                 if (world == null) return ImmutableList.of();
                 if (parse.args[0].equals("add")) {
-                    return FGManager.getInstance().getRegionList(world).stream()
+                    return FGManager.getInstance().getAllRegions(world).stream()
                             .filter(region -> !this.list.contains(region))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
@@ -127,7 +133,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                 } else if (parse.args[0].equals("remove")) {
                     final World finalWorld = world;
                     return this.list.stream()
-                            .filter(region -> region.getWorld().equals(finalWorld))
+                            .filter(region -> !(region instanceof IWorldRegion) || ((IWorldRegion) region).getWorld().equals(finalWorld))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
@@ -156,17 +162,22 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(MAPPER).parse();
 
         if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name!"));
-        String worldName = parse.flagmap.get("world");
-        World world = null;
-        if (source instanceof Player) world = ((Player) source).getWorld();
-        if (!worldName.isEmpty()) {
-            Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
-            if (optWorld.isPresent()) {
-                world = optWorld.get();
+        IRegion region = null;
+        if (!parse.flagmap.keySet().contains("world"))
+            region = FGManager.getInstance().getRegion(parse.args[0]);
+        if (region == null) {
+            String worldName = parse.flagmap.get("world");
+            World world = null;
+            if (source instanceof Player) world = ((Player) source).getWorld();
+            if (!worldName.isEmpty()) {
+                Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
+                if (optWorld.isPresent()) {
+                    world = optWorld.get();
+                }
             }
+            if (world == null) throw new CommandException(Text.of("Must specify a world!"));
+            region = FGManager.getInstance().getWorldRegion(world, parse.args[0]);
         }
-        if (world == null) throw new CommandException(Text.of("Must specify a world!"));
-        IRegion region = FGManager.getInstance().getRegion(world, parse.args[0]);
         if (region == null)
             throw new CommandException(Text.of("No regions with the name\"" + parse.args[0] + "\"!"));
         if (this.list.contains(region))
@@ -180,26 +191,39 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(MAPPER).parse();
 
         if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name or a number!"));
-        String worldName = parse.flagmap.get("world");
-        World world = null;
-        if (source instanceof Player) world = ((Player) source).getWorld();
-        if (!worldName.isEmpty()) {
-            Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
-            if (optWorld.isPresent()) {
-                world = optWorld.get();
-            }
-        }
-        IRegion region;
+        IRegion region = null;
+
         try {
             int index = Integer.parseInt(parse.args[0]);
             region = this.list.get(index - 1);
         } catch (NumberFormatException e) {
-            if (world == null) throw new CommandException(Text.of("Must specify a world!"));
-            region = FGManager.getInstance().getRegion(world, parse.args[0]);
+            int matchCount = 0;
+            if (!parse.flagmap.keySet().contains("world")) {
+                for (IRegion r : this.list) {
+                    if (r.getName().equalsIgnoreCase(parse.args[0])) {
+                        region = r;
+                        matchCount++;
+                    }
+                }
+            }
+            if (matchCount != 1) {
+                String worldName = parse.flagmap.get("world");
+                World world = null;
+                if (source instanceof Player) world = ((Player) source).getWorld();
+                if (!worldName.isEmpty()) {
+                    Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
+                    if (optWorld.isPresent()) {
+                        world = optWorld.get();
+                    }
+                }
+                if (world == null) throw new CommandException(Text.of("Must specify a world!"));
+                region = FGManager.getInstance().getWorldRegion(world, parse.args[0]);
+            }
         } catch (IndexOutOfBoundsException e) {
             throw new CommandException(Text.of("Index " + parse.args[0] + " out of bounds! (1 - "
                     + this.list.size()));
         }
+
         if (region == null)
             throw new CommandException(Text.of("No regions with the name\"" + parse.args[0] + "\"!"));
         if (!this.list.contains(region))

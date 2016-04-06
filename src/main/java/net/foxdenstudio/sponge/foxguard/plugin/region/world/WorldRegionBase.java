@@ -23,21 +23,23 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.region;
+package net.foxdenstudio.sponge.foxguard.plugin.region.world;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGObjectBase;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import org.spongepowered.api.world.World;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class RegionBase extends FGObjectBase implements IRegion {
+public abstract class WorldRegionBase extends FGObjectBase implements IWorldRegion {
 
     private final List<IHandler> handlers;
+    private World world;
 
-    RegionBase(String name) {
+    WorldRegionBase(String name) {
         super(name);
         this.handlers = new ArrayList<>();
     }
@@ -65,5 +67,16 @@ public abstract class RegionBase extends FGObjectBase implements IRegion {
         this.handlers.clear();
     }
 
+    @Override
+    public World getWorld() {
+        return this.world;
+    }
+
+    @Override
+    public void setWorld(World world) {
+        if (this.world == null) {
+            this.world = world;
+        }
+    }
 
 }

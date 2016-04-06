@@ -25,17 +25,19 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
-import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
-
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+import org.mapdb.Serializer;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.source.ProxySource;
@@ -49,22 +51,30 @@ import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
 
-import java.sql.*;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import javax.sql.DataSource;
+import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
 public class GlobalHandler extends HandlerBase implements IGlobal {
 
     public static final String NAME = "_global";
 
-    private Map<Flag, Tristate> map;
+    private final Map<IFlag, Tristate> map;
+    private final CacheMap<IFlag, Tristate> mapCache;
 
     public GlobalHandler() {
         super(NAME, Integer.MIN_VALUE / 2);
-        map = new CacheMap<>((key, map) -> Tristate.UNDEFINED);
+        this.map = new CacheMap<>((key, map) -> Tristate.UNDEFINED);
+        this.mapCache = new CacheMap<>((o, m) -> {
+            if (o instanceof Flag) {
+                Tristate state = map.get(FGUtil.nearestParent((Flag) o, map.keySet()));
+                m.put((Flag) o, state);
+                return state;
+            } else return Tristate.UNDEFINED;
+        });
     }
 
     @Override
@@ -93,8 +103,8 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
     }
 
     @Override
-    public EventResult handle(User user, Flag flag, Event event) {
-        return EventResult.of(map.get(FGUtil.nearestParent(flag, map.keySet())));
+    public EventResult handle(User user, IFlag flag, Event event) {
+        return EventResult.of(mapCache.get(flag));
     }
 
     @Override
@@ -107,7 +117,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
         if (parse.args.length > 0) {
             if (isIn(SET_ALIASES, parse.args[0])) {
                 if (parse.args.length > 1) {
-                    Flag flag;
+                    IFlag flag;
                     if (parse.args[1].equalsIgnoreCase("all")) {
                         flag = null;
                     } else {
@@ -120,10 +130,12 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
                         if (isIn(CLEAR_ALIASES, parse.args[2])) {
                             if (flag == null) {
                                 this.map.clear();
+                                this.mapCache.clear();
                                 return ProcessResult.of(true, Text.of("Successfully cleared " +
                                         "flags!"));
                             } else {
                                 this.map.remove(flag);
+                                this.mapCache.clear();
                                 return ProcessResult.of(true, Text.of("Successfully cleared " +
                                         "flag!"));
                             }
@@ -136,9 +148,11 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
                                 for (Flag thatExist : Flag.values()) {
                                     this.map.put(thatExist, tristate);
                                 }
+                                this.mapCache.clear();
                                 return ProcessResult.of(true, Text.of("Successfully set flags!"));
                             } else {
                                 this.map.put(flag, tristate);
+                                this.mapCache.clear();
                                 return ProcessResult.of(true, Text.of("Successfully set flag!"));
                             }
 
@@ -197,8 +211,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
                 TextActions.showText(Text.of("Click to Set a Flag")),
                 "Global Flags:\n"));
 
-        for (Flag f : this.map.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList
-                ())) {
+        for (IFlag f : this.map.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FCUtil.readableTristateText(map.get(f)))
@@ -218,42 +231,23 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
     }
 
     @Override
-    public void writeToDatabase(DataSource dataSource) throws SQLException {
-        try (Connection conn = dataSource.getConnection()) {
-            try (Statement statement = conn.createStatement()) {
-                statement.execute("CREATE TABLE IF NOT EXISTS FLAGMAP(KEY VARCHAR (256), VALUE " +
-                        "VARCHAR (256));" +
-                        "DELETE FROM FLAGMAP;");
-            }
-            try (PreparedStatement statement = conn.prepareStatement("INSERT INTO FLAGMAP(KEY, " +
-                    "VALUE) VALUES (? , ?)")) {
-                for (Map.Entry<Flag, Tristate> entry : map.entrySet()) {
-                    statement.setString(1, entry.getKey().name());
-                    statement.setString(2, entry.getValue().name());
-                    statement.addBatch();
-                }
-                statement.executeBatch();
+    public void save(Path directory) {
+        try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.db").normalize().toString()).make()) {
+            Map<String, String> storageFlagMap = flagMapDB.hashMap("flags", Serializer.STRING, Serializer.STRING).make();
+            storageFlagMap.clear();
+            for (Map.Entry<IFlag, Tristate> entry : map.entrySet()) {
+                storageFlagMap.put(entry.getKey().flagName(), entry.getValue().name());
             }
         }
     }
 
-    public void loadFromDatabase(DataSource dataSource) throws SQLException {
-        try (Connection conn = dataSource.getConnection()) {
-            CacheMap<Flag, Tristate> flagMap = new CacheMap<>((key, map) -> Tristate.UNDEFINED);
-            try (Statement statement = conn.createStatement()) {
-                statement.execute("CREATE TABLE IF NOT EXISTS FLAGMAP(KEY VARCHAR (256), VALUE " +
-                        "VARCHAR (256));");
-                try (ResultSet mapEntrySet = statement.executeQuery("SELECT * FROM FLAGMAP")) {
-                    while (mapEntrySet.next()) {
-                        try {
-                            flagMap.put(Flag.valueOf(mapEntrySet.getString("KEY")),
-                                    Tristate.valueOf(mapEntrySet.getString("VALUE")));
-                        } catch (IllegalArgumentException ignored) {
-                        }
-                    }
-                }
+    public void load(Path directory) {
+        try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.db").normalize().toString()).make()) {
+            Map<String, String> storageFlagMap = flagMapDB.hashMap("flags", Serializer.STRING, Serializer.STRING).make();
+            map.clear();
+            for (Map.Entry<String, String> entry : storageFlagMap.entrySet()) {
+                map.put(Flag.flagFrom(entry.getKey()), Tristate.valueOf(entry.getValue()));
             }
-            this.map = flagMap;
         }
     }
 

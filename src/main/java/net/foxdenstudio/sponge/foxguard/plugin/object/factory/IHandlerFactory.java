@@ -27,15 +27,15 @@ package net.foxdenstudio.sponge.foxguard.plugin.object.factory;
 
 
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 
-import javax.sql.DataSource;
-import java.sql.SQLException;
+import java.nio.file.Path;
 
 public interface IHandlerFactory extends IFGFactory {
 
-    IHandler create(String name, int priority, String arguments, CommandSource source);
+    IHandler create(String name, int priority, String arguments, CommandSource source) throws CommandException;
 
-    IHandler create(DataSource source, String name, int priority, boolean isEnabled) throws SQLException;
+    IHandler create(Path directory, String name, int priority, boolean isEnabled);
 
 }

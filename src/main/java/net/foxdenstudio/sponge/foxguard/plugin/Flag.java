@@ -31,7 +31,7 @@ import org.spongepowered.api.util.Tristate;
 
 import java.util.*;
 
-public enum Flag {
+public enum Flag implements IFlag {
 
     ROOT(true, "root", "Everything"),
 
@@ -71,7 +71,7 @@ public enum Flag {
     private final boolean defaultValue;
     private final Flag[] parents;
 
-    private List<Set<Flag>> hierarchy;
+    private List<Set<IFlag>> hierarchy;
 
 
     Flag(boolean defaultValue, String flagName, String humanName, Flag... parents) {
@@ -81,9 +81,12 @@ public enum Flag {
         this.humanName = humanName;
     }
 
-    public static Flag flagFrom(String name) {
+    public static IFlag flagFrom(String name) {
         for (Flag flag : Flag.values()) {
             if (flag.flagName.equalsIgnoreCase(name)) return flag;
+        }
+        for (IFlag flag : otherFlags) {
+            if (flag.flagName().equalsIgnoreCase(name)) return flag;
         }
         return null;
     }
@@ -93,26 +96,25 @@ public enum Flag {
         return humanName;
     }
 
+    @Override
     public String flagName() {
         return flagName;
     }
 
-    public boolean hasParent() {
-        return parents.length != 0;
-    }
-
-    public Flag[] getParents() {
+    @Override
+    public IFlag[] getParents() {
         return parents;
     }
 
-    public List<Set<Flag>> getHierarchy(){
+    @Override
+    public List<Set<IFlag>> getHierarchy() {
         if (hierarchy == null) {
-            List<Set<Flag>> list = new ArrayList<>();
-            Set<Flag> current = new LinkedHashSet<>();
+            List<Set<IFlag>> list = new ArrayList<>();
+            Set<IFlag> current = new LinkedHashSet<>();
             current.add(this);
-            while (!current.isEmpty()){
+            while (!current.isEmpty()) {
                 list.add(ImmutableSet.copyOf(current));
-                Set<Flag> newSet = new LinkedHashSet<>();
+                Set<IFlag> newSet = new LinkedHashSet<>();
                 current.forEach(flag -> Arrays.stream(flag.getParents()).forEach(newSet::add));
                 current = newSet;
             }
@@ -121,8 +123,46 @@ public enum Flag {
         return hierarchy;
     }
 
+    /**
+     * This method is a convenience method for other plugins who wish to add more flags.
+     * When implementing {@link IFlag#getHierarchy()}, the behavior is extremely important.
+     * As such they can simply call this method, which will handle all of the logic for them.
+     * Of course they should cache the result themselves, as it will never change. Caching it here would be slower.
+     *
+     * @param child
+     * @return
+     */
+    public static List<Set<IFlag>> getHierarchyStatic(IFlag child) {
+        List<Set<IFlag>> list = new ArrayList<>();
+        Set<IFlag> current = new LinkedHashSet<>();
+        current.add(child);
+        while (!current.isEmpty()) {
+            list.add(ImmutableSet.copyOf(current));
+            Set<IFlag> newSet = new LinkedHashSet<>();
+            current.forEach(flag -> Arrays.stream(flag.getParents()).forEach(newSet::add));
+            current = newSet;
+        }
+        return ImmutableList.copyOf(list);
+    }
+
+    @Override
     public Tristate resolve(Tristate input) {
         if (input == Tristate.UNDEFINED) return this.defaultValue ? Tristate.TRUE : Tristate.FALSE;
         else return input;
+    }
+
+    private static List<IFlag> otherFlags = new ArrayList<>();
+
+    public static boolean addFlag(IFlag flag) {
+        if (flagFrom(flag.flagName()) == null) {
+            otherFlags.add(flag);
+            return true;
+        } else return false;
+    }
+
+    public static void addAllFlags(Iterable<IFlag> flags) {
+        for (IFlag flag : flags) {
+            addFlag(flag);
+        }
     }
 }

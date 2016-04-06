@@ -30,8 +30,10 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
-import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.GlobalWorldRegion;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
@@ -78,31 +80,43 @@ public class CommandDelete implements CommandCallable {
             return CommandResult.empty();
         } else if (isIn(REGIONS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
-            String worldName = parse.flagmap.get("world");
-            World world = null;
-            if (source instanceof Player) world = ((Player) source).getWorld();
-            if (!worldName.isEmpty()) {
-                Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
-                if (optWorld.isPresent()) {
-                    world = optWorld.get();
+            IRegion region = null;
+            if (!parse.flagmap.keySet().contains("world"))
+                region = FGManager.getInstance().getRegion(parse.args[1]);
+            if (region == null) {
+                String worldName = parse.flagmap.get("world");
+                World world = null;
+                if (source instanceof Player) world = ((Player) source).getWorld();
+                if (!worldName.isEmpty()) {
+                    Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
+                    if (optWorld.isPresent()) {
+                        world = optWorld.get();
+                    } else {
+                        if (world == null)
+                            throw new CommandException(Text.of("No world exists with name \"" + worldName + "\"!"));
+                    }
                 }
+                if (world == null) throw new CommandException(Text.of("Must specify a world!"));
+                region = FGManager.getInstance().getWorldRegion(world, parse.args[1]);
             }
-            if (world == null) throw new CommandException(Text.of("Must specify a world!"));
-            if (parse.args[1].equalsIgnoreCase(GlobalRegion.NAME))
+            if (region == null)
+                throw new CommandException(Text.of("No region exists with the name \"" + parse.args[1] + "\"!"));
+            if (region instanceof GlobalWorldRegion) {
                 throw new CommandException(Text.of("You may not delete the global region!"));
-            boolean success = FGManager.getInstance().removeRegion(world, parse.args[1]);
-            if (!success)
-                throw new ArgumentParseException(Text.of("No region exists with that name!"), parse.args[1], 1);
-
+            }
+            boolean success = FGManager.getInstance().removeRegion(region);
+            if (!success) throw new CommandException(Text.of("There was an error trying to delete the region!"));
             source.sendMessage(Text.of(TextColors.GREEN, "Region deleted successfully!"));
             return CommandResult.success();
         } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
-            if (parse.args[1].equalsIgnoreCase(GlobalHandler.NAME))
-                throw new CommandException(Text.of("You may not delete the global handler!"));
-            boolean success = FGManager.getInstance().removeHandler(parse.args[1]);
-            if (!success)
+            IHandler handler = FGManager.getInstance().gethandler(parse.args[1]);
+            if (handler == null)
                 throw new ArgumentParseException(Text.of("No handler exists with that name!"), parse.args[1], 1);
+            if (handler instanceof GlobalHandler)
+                throw new CommandException(Text.of("You may not delete the global handler!"));
+            boolean success = FGManager.getInstance().removeHandler(handler);
+            if (!success) throw new CommandException(Text.of("There was an error trying to delete the handler!"));
             source.sendMessage(Text.of(TextColors.GREEN, "Handler deleted successfully!"));
             return CommandResult.success();
         } else throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);
@@ -135,15 +149,20 @@ public class CommandDelete implements CommandCallable {
                             world = optWorld.get();
                         }
                     }
-                    if (world == null) return ImmutableList.of();
-                    return FGManager.getInstance().getRegionList(world).stream()
-                            .filter(region -> !(region instanceof GlobalRegion))
+                    //TODO prevent deletion of super global
+                    if (world == null) return FGManager.getInstance().getRegions().stream()
+                            .map(IFGObject::getName)
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                    else return FGManager.getInstance().getAllRegions(world).stream()
+                            .filter(region -> !(region instanceof GlobalWorldRegion))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
-                    return FGManager.getInstance().getHandlerList().stream()
+                    return FGManager.getInstance().getHandlers().stream()
                             .filter(region -> !(region instanceof GlobalHandler))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))

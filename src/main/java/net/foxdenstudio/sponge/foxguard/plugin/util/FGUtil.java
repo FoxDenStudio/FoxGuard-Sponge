@@ -26,12 +26,13 @@
 package net.foxdenstudio.sponge.foxguard.plugin.util;
 
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
-import net.foxdenstudio.sponge.foxguard.plugin.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
 import org.spongepowered.api.command.CommandSource;
@@ -47,6 +48,7 @@ public final class FGUtil {
         if (object instanceof IGlobal) return TextColors.YELLOW;
         else if (!object.isEnabled()) return TextColors.GRAY;
         else if (object instanceof IController) return TextColors.GREEN;
+        else if ((object instanceof IRegion) && !(object instanceof IWorldRegion)) return TextColors.AQUA;
         else return TextColors.WHITE;
     }
 
@@ -62,17 +64,31 @@ public final class FGUtil {
     }
 
     public static String getRegionName(IRegion region, boolean dispWorld) {
-        return region.getShortTypeName() + " : " + (dispWorld ? region.getWorld().getName() + " : " : "") + region.getName();
+        return region.getShortTypeName() + " : " + (dispWorld && region instanceof IWorldRegion ? ((IWorldRegion) region).getWorld().getName() + " : " : "") + region.getName();
     }
 
-    public static Flag nearestParent(Flag child, Set<Flag> set) {
-        for(Set<Flag> level : child.getHierarchy()){
-            for(Flag flag : level){
-                if(set.contains(flag)){
+    public static IFlag nearestParent(IFlag child, Set<IFlag> set) {
+        for (Set<IFlag> level : child.getHierarchy()) {
+            for (IFlag flag : level) {
+                if (set.contains(flag)) {
                     return flag;
                 }
             }
         }
         return child;
+    }
+
+    public static String getCategory(IFGObject object) {
+        if (object instanceof IRegion) {
+            if (object instanceof IWorldRegion) return "worldregion";
+            else return "region";
+        } else if (object instanceof IHandler) {
+            if (object instanceof IController) return "controller";
+            else return "handler";
+        } else return "object";
+    }
+
+    public static String genWorldFlag(IRegion region) {
+        return region instanceof IWorldRegion ? "--w:" + ((IWorldRegion) region).getWorld().getName() + " " : "";
     }
 }

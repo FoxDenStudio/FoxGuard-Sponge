@@ -35,6 +35,8 @@ import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateObjectEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.util.RegionCache;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
@@ -86,26 +88,35 @@ public class CommandModify implements CommandCallable {
             return CommandResult.empty();
         } else if (isIn(REGIONS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
-            String worldName = parse.flagmap.get("world");
-            World world = null;
-            if (source instanceof Player) world = ((Player) source).getWorld();
-            if (!worldName.isEmpty()) {
-                Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
-                if (optWorld.isPresent()) {
-                    world = optWorld.get();
+            IRegion region = null;
+            if (!parse.flagmap.keySet().contains("world"))
+                region = FGManager.getInstance().getRegion(parse.args[1]);
+            if (region == null) {
+                String worldName = parse.flagmap.get("world");
+                World world = null;
+                if (source instanceof Player) world = ((Player) source).getWorld();
+                if (!worldName.isEmpty()) {
+                    Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
+                    if (optWorld.isPresent()) {
+                        world = optWorld.get();
+                    } else {
+                        if (world == null)
+                            throw new CommandException(Text.of("No world exists with name \"" + worldName + "\"!"));
+                    }
                 }
+                if (world == null) throw new CommandException(Text.of("Must specify a world!"));
+                region = FGManager.getInstance().getWorldRegion(world, parse.args[1]);
             }
-            if (world == null) throw new CommandException(Text.of("Must specify a world!"));
-            IRegion region = FGManager.getInstance().getRegion(world, parse.args[1]);
             if (region == null)
-                throw new CommandException(Text.of("No region with name \"" + parse.args[1] + "\"!"));
+                throw new ArgumentParseException(Text.of("No region exists with that name!"), parse.args[1], 1);
             ProcessResult result = region.modify(source, parse.args.length < 3 ? "" : parse.args[2]);
             if (result.isSuccess()) {
-                FGManager.getInstance().clearCache(world);
+                FGManager.getInstance().markDirty(region, RegionCache.DirtyType.MODIFIED);
+                final IRegion finalRegion = region;
                 Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
                     @Override
                     public IFGObject getTarget() {
-                        return region;
+                        return finalRegion;
                     }
 
                     @Override
@@ -205,14 +216,18 @@ public class CommandModify implements CommandCallable {
                             world = optWorld.get();
                         }
                     }
-                    if (world == null) return ImmutableList.of();
-                    return FGManager.getInstance().getRegionList(world).stream()
+                    if (world == null) return FGManager.getInstance().getRegions().stream()
+                            .map(IFGObject::getName)
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                    return FGManager.getInstance().getAllRegions(world).stream()
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
-                    return FGManager.getInstance().getHandlerList().stream()
+                    return FGManager.getInstance().getHandlers().stream()
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
@@ -243,7 +258,7 @@ public class CommandModify implements CommandCallable {
                     }
                 }
                 if (world == null) return ImmutableList.of();
-                IRegion region = FGManager.getInstance().getRegion(world, parse.args[1]);
+                IWorldRegion region = FGManager.getInstance().getWorldRegion(world, parse.args[1]);
                 if (region == null) return ImmutableList.of();
                 return region.modifySuggestions(source, parse.current.token).stream()
                         .map(args -> parse.current.prefix + args)

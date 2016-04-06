@@ -33,6 +33,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCallable;
@@ -64,7 +65,7 @@ public class CommandDetail implements CommandCallable {
         map.put(key, value);
         if (isIn(WORLD_ALIASES, key) && !map.containsKey("world")) {
             map.put("world", value);
-        }else if (isIn(ALL_ALIASES, key) && !map.containsKey("all")) {
+        } else if (isIn(ALL_ALIASES, key) && !map.containsKey("all")) {
             map.put("all", value);
         }
     };
@@ -89,22 +90,30 @@ public class CommandDetail implements CommandCallable {
             return CommandResult.empty();
         } else if (isIn(REGIONS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
-            String worldName = parse.flagmap.get("world");
-            World world = null;
-            if (source instanceof Player) world = ((Player) source).getWorld();
-            if (!worldName.isEmpty()) {
-                Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
-                if (optWorld.isPresent()) {
-                    world = optWorld.get();
+            IRegion region = null;
+            if (!parse.flagmap.keySet().contains("world"))
+                region = FGManager.getInstance().getRegion(parse.args[1]);
+            if (region == null) {
+                String worldName = parse.flagmap.get("world");
+                World world = null;
+                if (source instanceof Player) world = ((Player) source).getWorld();
+                if (!worldName.isEmpty()) {
+                    Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
+                    if (optWorld.isPresent()) {
+                        world = optWorld.get();
+                    } else {
+                        if (world == null)
+                            throw new CommandException(Text.of("No world exists with name \"" + worldName + "\"!"));
+                    }
                 }
+                if (world == null) throw new CommandException(Text.of("Must specify a world!"));
+                region = FGManager.getInstance().getWorldRegion(world, parse.args[1]);
             }
-            if (world == null) throw new CommandException(Text.of("Must specify a world!"));
-            IRegion region = FGManager.getInstance().getRegion(world, parse.args[1]);
             if (region == null)
-                throw new CommandException(Text.of("No region with name \"" + parse.args[1] + "\"!"));
+                throw new CommandException(Text.of("No region exists with the name \"" + parse.args[1] + "\"!"));
             Text.Builder builder = Text.builder();
             builder.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
-            if (parse.args.length <= 2 || parse.args[2].isEmpty() || parse.flagmap.containsKey("all")) {
+            if (parse.args.length < 3 || parse.args[2].isEmpty() || parse.flagmap.containsKey("all")) {
                 builder.append(Text.of(TextColors.GREEN, "------- General -------\n"));
                 builder.append(Text.of(TextColors.GOLD, "Name: "), Text.of(TextColors.RESET, region.getName() + "\n"));
                 builder.append(Text.of(TextColors.GOLD, "Type: "), Text.of(TextColors.RESET, region.getLongTypeName() + "\n"));
@@ -112,15 +121,18 @@ public class CommandDetail implements CommandCallable {
                         .append(Text.of(TextColors.GOLD, "Enabled: "))
                         .append(Text.of(TextColors.RESET, (region.isEnabled() ? "True" : "False") + "\n"))
                         .onClick(TextActions.runCommand("/foxguard " + (region.isEnabled() ? "disable" : "enable") +
-                                " r --w:" + region.getWorld().getName() + " " + region.getName()))
+                                " r " + FGUtil.genWorldFlag(region) + region.getName()))
                         .onHover(TextActions.showText(Text.of("Click to " + (region.isEnabled() ? "Disable" : "Enable"))))
                         .build());
-                builder.append(Text.of(TextColors.GOLD, "World: "), Text.of(TextColors.RESET, region.getWorld().getName() + "\n"));
+                if (region instanceof IWorldRegion)
+                    builder.append(Text.of(TextColors.GOLD, "World: "), Text.of(TextColors.RESET, ((IWorldRegion) region).getWorld().getName() + "\n"));
                 builder.append(Text.of(TextColors.GREEN, "------- Details -------\n"));
                 builder.append(region.details(source, parse.args.length < 3 ? "" : parse.args[2]));
                 outboundLinks(builder, region);
             } else {
-                builder.append(Text.of(TextColors.GREEN, "------- Details for Region \"" + region.getName() + "\" in World \"" + region.getWorld().getName() + "\" -------\n"));
+                builder.append(Text.of(TextColors.GREEN, "------- Details for Region \"" + region.getName() + "\"" +
+                        (region instanceof IWorldRegion ? (" in World \"" + ((IWorldRegion) region).getWorld().getName() + "\"") : "") +
+                        " -------\n"));
                 builder.append(region.details(source, parse.args.length < 3 ? "" : parse.args[2]));
             }
             source.sendMessage(builder.build());
@@ -152,10 +164,10 @@ public class CommandDetail implements CommandCallable {
                 builder.append(Text.of(TextColors.GREEN, "------- Details -------\n"));
                 builder.append(handler.details(source, parse.args.length < 3 ? "" : parse.args[2]));
                 builder.append(Text.of(TextColors.GREEN, "\n------- Inbound Links -------"));
-                List<IController> controllerList = FGManager.getInstance().getControllerList().stream()
+                List<IController> controllerList = FGManager.getInstance().getControllers().stream()
                         .filter(controller -> controller.getHandlers().contains(handler))
                         .collect(GuavaCollectors.toImmutableList());
-                List<IRegion> regionList = FGManager.getInstance().getRegionList().stream()
+                List<IRegion> regionList = FGManager.getInstance().getAllRegions().stream()
                         .filter(region -> region.getHandlers().contains(handler))
                         .collect(GuavaCollectors.toImmutableList());
                 if (controllerList.size() == 0 && regionList.size() == 0)
@@ -165,11 +177,11 @@ public class CommandDetail implements CommandCallable {
                         TextActions.showText(Text.of("View details for controller \"" + controller.getName() + "\"")))));
 
                 regionList.forEach(region -> builder.append(Text.of(FGUtil.getColorForObject(region),
-                        TextActions.runCommand("/foxguard detail region --w:" + region.getWorld() + " " + region.getName()),
+                        TextActions.runCommand("/foxguard detail region " + FGUtil.genWorldFlag(region) + region.getName()),
                         TextActions.showText(Text.of("View details for region \"" + region.getName() + "\"")),
                         "\n" + FGUtil.getRegionName(region, true)
                 )));
-                if(handler instanceof IController){
+                if (handler instanceof IController) {
                     outboundLinks(builder, (IController) handler);
                 }
             } else {
@@ -183,7 +195,7 @@ public class CommandDetail implements CommandCallable {
         }
     }
 
-    private void outboundLinks(Text.Builder builder, ILinkable linkable){
+    private void outboundLinks(Text.Builder builder, ILinkable linkable) {
         builder.append(Text.of(TextColors.GREEN, "\n------- Outbound Links -------"));
         if (linkable.getHandlers().size() == 0)
             builder.append(Text.of(TextStyles.ITALIC, "\nNo outbound links!"));
@@ -221,14 +233,18 @@ public class CommandDetail implements CommandCallable {
                             world = optWorld.get();
                         }
                     }
-                    if (world == null) return ImmutableList.of();
-                    return FGManager.getInstance().getRegionList(world).stream()
+                    if (world == null) return FGManager.getInstance().getRegions().stream()
+                            .map(IFGObject::getName)
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                    return FGManager.getInstance().getAllRegions(world).stream()
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
-                    return FGManager.getInstance().getHandlerList().stream()
+                    return FGManager.getInstance().getHandlers().stream()
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)

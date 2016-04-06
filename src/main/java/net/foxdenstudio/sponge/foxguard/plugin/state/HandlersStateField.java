@@ -90,7 +90,7 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
                         .collect(GuavaCollectors.toImmutableList());
             } else if (parse.current.index == 1) {
                 if (parse.args[0].equals("add")) {
-                    return FGManager.getInstance().getHandlerList().stream()
+                    return FGManager.getInstance().getHandlers().stream()
                             .filter(handler -> !this.list.contains(handler))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))

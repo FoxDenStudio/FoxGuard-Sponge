@@ -84,14 +84,15 @@ public class InteractListener implements EventListener<InteractEvent> {
         }
         if (typeFlag == null) return;
         List<IHandler> handlerList = new ArrayList<>();
-        final Vector3d finalLoc = loc;
         Vector3i chunk = new Vector3i(
                 GenericMath.floor(loc.getX() / 16.0),
                 GenericMath.floor(loc.getY() / 16.0),
                 GenericMath.floor(loc.getZ() / 16.0));
-        FGManager.getInstance().getRegionList(world, chunk).stream()
+        final Vector3d finalLoc = loc;
+        final World finalWorld = world;
+        FGManager.getInstance().getAllRegions(world, chunk).stream()
                 .filter(IFGObject::isEnabled)
-                .filter(region -> region.contains(finalLoc))
+                .filter(region -> region.contains(finalLoc, finalWorld))
                 .forEach(region -> region.getHandlers().stream()
                         .filter(IFGObject::isEnabled)
                         .filter(handler -> !handlerList.contains(handler))
