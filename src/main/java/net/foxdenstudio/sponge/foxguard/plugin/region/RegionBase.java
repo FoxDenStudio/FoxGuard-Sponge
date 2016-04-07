@@ -31,15 +31,17 @@ import net.foxdenstudio.sponge.foxguard.plugin.FGObjectBase;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public abstract class RegionBase extends FGObjectBase implements IRegion {
 
-    private final List<IHandler> handlers;
+    private final Set<IHandler> handlers;
 
     RegionBase(String name) {
         super(name);
-        this.handlers = new ArrayList<>();
+        this.handlers = new HashSet<>();
     }
 
     @Override
@@ -49,10 +51,7 @@ public abstract class RegionBase extends FGObjectBase implements IRegion {
 
     @Override
     public boolean addHandler(IHandler handler) {
-        if (!FGManager.getInstance().isRegistered(handler)) {
-            return false;
-        }
-        return this.handlers.add(handler);
+        return FGManager.getInstance().isRegistered(handler) && this.handlers.add(handler);
     }
 
     @Override

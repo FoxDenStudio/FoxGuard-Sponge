@@ -27,11 +27,12 @@ package net.foxdenstudio.sponge.foxguard.plugin.object;
 
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface ILinkable {
 
-    List<IHandler> getHandlers();
+    Collection<IHandler> getHandlers();
 
     boolean addHandler(IHandler handler);
 
