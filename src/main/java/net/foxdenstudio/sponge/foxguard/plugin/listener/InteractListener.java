@@ -32,6 +32,8 @@ import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
@@ -77,6 +79,7 @@ public class InteractListener implements EventListener<InteractEvent> {
                     typeFlag = Flag.PLAYER_INTERACT_SECONDARY;
             }
         } else if (event instanceof InteractBlockEvent) {
+            if(((InteractBlockEvent) event).getTargetBlock().getState().getType().equals(BlockTypes.AIR)) return;
             world = ((InteractBlockEvent) event).getTargetBlock().getLocation().get().getExtent();
             loc = ((InteractBlockEvent) event).getTargetBlock().getPosition().toDouble();
             if (event instanceof InteractBlockEvent.Primary) typeFlag = Flag.BLOCK_INTERACT_PRIMARY;

@@ -67,7 +67,7 @@ public final class FGStorageManager {
                     logger.error("There was an error while saving region \"" + name + "\"!", e);
                 }
 
-                logger.info("Saving metadata");
+                logger.info("Saving metadata for region \"" + name + "\"");
                 try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.db").normalize().toString()).make()) {
                     Atomic.String metaName = metaDB.atomicString("name").make();
                     Atomic.String metaCategory = metaDB.atomicString("category").make();
@@ -97,7 +97,7 @@ public final class FGStorageManager {
             mainMap.clear();
             linksMap.clear();
 
-            Path dir = worldDirectories.get(world.getName()).resolve("regions");
+            Path dir = worldDirectories.get(world.getName()).resolve("wregions");
             constructDirectory(dir);
             FGManager.getInstance().getWorldRegions(world).forEach(fgObject -> {
                 String name = fgObject.getName();
@@ -110,7 +110,7 @@ public final class FGStorageManager {
                     logger.error("There was an error while saving world region \"" + name + "\" in world \"" + world.getName() + "\"!", e);
                 }
 
-                logger.info("Saving metadata");
+                logger.info("Saving metadata for world region \"" + name + "\"");
                 try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.db").normalize().toString()).make()) {
                     Atomic.String metaName = metaDB.atomicString("name").make();
                     Atomic.String metaCategory = metaDB.atomicString("category").make();
@@ -152,7 +152,7 @@ public final class FGStorageManager {
                     logger.error("There was an error while saving handler \"" + name + "\"!", e);
                 }
 
-                logger.info("Saving metadata");
+                logger.info("Saving metadata for handler \"" + name + "\"");
                 try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.db").normalize().toString()).make()) {
                     Atomic.String metaName = metaDB.atomicString("name").make();
                     Atomic.String metaCategory = metaDB.atomicString("category").make();
@@ -186,15 +186,6 @@ public final class FGStorageManager {
                 Path singleDir = dir.resolve(name.toLowerCase());
                 Path metaDataFile = singleDir.resolve("metadata.db");
                 logger.info("Loading region \"" + name + "\" from " + singleDir);
-                if (!FGManager.getInstance().isRegionNameAvailable(name)) {
-                    logger.error("Name conflict detected! \"" + name + "\" is already in use! A world region is likely already using that name.");
-                    if (FGConfigManager.getInstance().cleanupFiles()) {
-                        logger.warn("Cleaning up unused files");
-                        System.gc();
-                        System.runFinalization();
-                        deleteDirectory(singleDir);
-                    }
-                }
                 if (Files.exists(metaDataFile) && !Files.isDirectory(metaDataFile)) {
                     String category;
                     String type;
@@ -211,6 +202,15 @@ public final class FGStorageManager {
                     if (name.equalsIgnoreCase(SuperGlobalRegion.NAME)) {
                         logger.info("Global region found! Skipping...");
                         return;
+                    }
+                    if (!FGManager.getInstance().isRegionNameAvailable(name)) {
+                        logger.error("Name conflict detected! \"" + name + "\" is already in use! A world region is likely already using that name.");
+                        if (FGConfigManager.getInstance().cleanupFiles()) {
+                            logger.warn("Cleaning up unused files");
+                            System.gc();
+                            System.runFinalization();
+                            deleteDirectory(singleDir);
+                        }
                     }
                     if (category == null) category = "";
                     if (type == null) type = "";
@@ -235,6 +235,10 @@ public final class FGStorageManager {
                         }
                     }
                 } else {
+                    if (name.equalsIgnoreCase(SuperGlobalRegion.NAME)) {
+                        logger.info("Global region found! Skipping...");
+                        return;
+                    }
                     logger.warn("Metadata file not found! Skipping...");
                     if (Files.exists(singleDir)) {
                         if (isEmptyDirectory(singleDir)) {
@@ -271,15 +275,6 @@ public final class FGStorageManager {
                 Path singleDir = dir.resolve(name.toLowerCase());
                 Path metaDataFile = singleDir.resolve("metadata.db");
                 logger.info("Loading world region \"" + name + "\" from " + singleDir);
-                if (!FGManager.getInstance().isWorldRegionNameAvailable(name, world)) {
-                    logger.error("Name conflict detected! \"" + name + "\" is already in use! A super region is likely already using that name.");
-                    if (FGConfigManager.getInstance().cleanupFiles()) {
-                        logger.warn("Cleaning up unused files");
-                        System.gc();
-                        System.runFinalization();
-                        deleteDirectory(singleDir);
-                    }
-                }
                 if (Files.exists(metaDataFile) && !Files.isDirectory(metaDataFile)) {
                     String category;
                     String type;
@@ -297,11 +292,20 @@ public final class FGStorageManager {
                         logger.info("Global world region found! Skipping...");
                         return;
                     }
+                    if (!FGManager.getInstance().isWorldRegionNameAvailable(name, world)) {
+                        logger.error("Name conflict detected! \"" + name + "\" is already in use! A super region is likely already using that name.");
+                        if (FGConfigManager.getInstance().cleanupFiles()) {
+                            logger.warn("Cleaning up unused files");
+                            System.gc();
+                            System.runFinalization();
+                            deleteDirectory(singleDir);
+                        }
+                    }
                     if (category == null) category = "";
                     if (type == null) type = "";
                     IWorldRegion object = null;
                     try {
-                        if (category.equalsIgnoreCase("region"))
+                        if (category.equalsIgnoreCase("worldregion"))
                             object = FGFactoryManager.getInstance().createWorldRegion(singleDir, name, type, enabled);
                         else logger.warn("Category \"" + category + "\" is invalid!");
                     } catch (Exception e) {
@@ -320,6 +324,10 @@ public final class FGStorageManager {
                         }
                     }
                 } else {
+                    if (name.equalsIgnoreCase(GlobalWorldRegion.NAME)) {
+                        logger.info("Global world region found! Skipping...");
+                        return;
+                    }
                     logger.warn("Metadata file not found! Skipping...");
                     if (Files.exists(singleDir)) {
                         if (isEmptyDirectory(singleDir)) {
@@ -402,6 +410,10 @@ public final class FGStorageManager {
                         }
                     }
                 } else {
+                    if (name.equalsIgnoreCase(GlobalHandler.NAME)) {
+                        logger.info("Global handler found! Skipping...");
+                        return;
+                    }
                     logger.warn("Metadata file not found! Skipping...");
                     if (Files.exists(singleDir)) {
                         if (isEmptyDirectory(singleDir)) {
@@ -483,7 +495,7 @@ public final class FGStorageManager {
 
     public synchronized void loadControllerLinks() {
         Path dir = directory.resolve("handlers");
-        FGManager.getInstance().getControllers().forEach(controller-> controller.loadLinks(dir.resolve(controller.getName().toLowerCase())));
+        FGManager.getInstance().getControllers().forEach(controller -> controller.loadLinks(dir.resolve(controller.getName().toLowerCase())));
 
     }
 
@@ -495,7 +507,7 @@ public final class FGStorageManager {
                 logger.info("Deleting directory \"" + directory + "\" to make room for new data.");
                 System.gc();
                 System.runFinalization();
-                deleteDirectory(singleDirectory);
+                deleteDirectory(singleDirectory, true);
             }
             loaded.add(entry);
         }
@@ -542,6 +554,10 @@ public final class FGStorageManager {
     }
 
     private void deleteDirectory(Path directory) {
+        deleteDirectory(directory, false);
+    }
+
+    private void deleteDirectory(Path directory, boolean innerOnly) {
         FoxGuardMain.instance().getLogger().info("Deleting directory: " + directory);
         if (Files.exists(directory) && Files.isDirectory(directory))
             try {
@@ -559,7 +575,7 @@ public final class FGStorageManager {
 
                     @Override
                     public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                        if (exc == null) {
+                        if (exc == null && (!innerOnly || !Files.isSameFile(dir, directory))) {
                             try {
                                 Files.delete(dir);
                                 logger.info("Deleted directory: " + dir);
@@ -586,7 +602,24 @@ public final class FGStorageManager {
     private void constructDirectory(Path directory) {
         if (!Files.exists(directory)) {
             try {
-                Files.createDirectory(directory);
+                int counter = 1;
+                while (true) {
+                    try {
+                        Files.createDirectory(directory);
+                        break;
+                    } catch (AccessDeniedException e) {
+                        if (counter > 5) throw e;
+                        else {
+                            logger.error("Unable to create directory: " + directory + "  Trying again in " + counter + " second(s)");
+                            try {
+                                Thread.sleep(1000 * counter);
+                            } catch (InterruptedException e1) {
+                                e1.printStackTrace();
+                            }
+                        }
+                    }
+                    counter++;
+                }
                 logger.info("Created directory: " + directory);
             } catch (IOException e) {
                 logger.error("There was an error creating the directory: " + directory, e);
@@ -596,7 +629,24 @@ public final class FGStorageManager {
             try {
                 Files.delete(directory);
                 try {
-                    Files.createDirectory(directory);
+                    int counter = 1;
+                    while (true) {
+                        try {
+                            Files.createDirectory(directory);
+                            break;
+                        } catch (AccessDeniedException e) {
+                            if (counter > 5) throw e;
+                            else {
+                                logger.error("Unable to create directory: " + directory + "  Trying again in " + counter + " second(s)");
+                                try {
+                                    Thread.sleep(1000 * counter);
+                                } catch (InterruptedException e1) {
+                                    e1.printStackTrace();
+                                }
+                            }
+                        }
+                        counter++;
+                    }
                     logger.info("Created directory: " + directory);
                 } catch (IOException e) {
                     logger.error("Error creating the directory: " + directory, e);
