@@ -31,10 +31,10 @@ public final class FGStorageManager {
     private final Logger logger = FoxGuardMain.instance().getLogger();
     private final Set<LoadEntry> loaded = new HashSet<>();
     private final Path directory = getDirectory();
-    private final Map<World, Path> worldDirectories = new CacheMap<>((k, m) -> {
-        if (k instanceof World) {
-            Path dir = getWorldDirectory((World) k);
-            m.put((World) k, dir);
+    private final Map<String, Path> worldDirectories = new CacheMap<>((k, m) -> {
+        if (k instanceof String) {
+            Path dir = getWorldDirectory((String) k);
+            m.put((String) k, dir);
             return dir;
         } else return null;
     });
@@ -52,6 +52,7 @@ public final class FGStorageManager {
             Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).make();
 
             mainMap.clear();
+            linksMap.clear();
 
             Path dir = directory.resolve("regions");
             constructDirectory(dir);
@@ -87,15 +88,16 @@ public final class FGStorageManager {
     }
 
     public synchronized void saveWorldRegions(World world) {
-        try (DB mainDB = DBMaker.fileDB(worldDirectories.get(world).resolve("wregions.db").normalize().toString()).make()) {
+        try (DB mainDB = DBMaker.fileDB(worldDirectories.get(world.getName()).resolve("wregions.db").normalize().toString()).make()) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).make();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).make();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).make();
             Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).make();
 
             mainMap.clear();
+            linksMap.clear();
 
-            Path dir = worldDirectories.get(world).resolve("regions");
+            Path dir = worldDirectories.get(world.getName()).resolve("regions");
             constructDirectory(dir);
             FGManager.getInstance().getWorldRegions(world).forEach(fgObject -> {
                 String name = fgObject.getName();
@@ -184,7 +186,7 @@ public final class FGStorageManager {
                 Path singleDir = dir.resolve(name.toLowerCase());
                 Path metaDataFile = singleDir.resolve("metadata.db");
                 logger.info("Loading region \"" + name + "\" from " + singleDir);
-                if(!FGManager.getInstance().isRegionNameAvailable(name)){
+                if (!FGManager.getInstance().isRegionNameAvailable(name)) {
                     logger.error("Name conflict detected! \"" + name + "\" is already in use! A world region is likely already using that name.");
                     if (FGConfigManager.getInstance().cleanupFiles()) {
                         logger.warn("Cleaning up unused files");
@@ -206,7 +208,7 @@ public final class FGStorageManager {
                             "\",  Category: \"" + category +
                             "\",  Type: \"" + type +
                             "\",  Enabled: \"" + enabled + "\"");
-                    if(name.equalsIgnoreCase(SuperGlobalRegion.NAME)){
+                    if (name.equalsIgnoreCase(SuperGlobalRegion.NAME)) {
                         logger.info("Global region found! Skipping...");
                         return;
                     }
@@ -258,18 +260,18 @@ public final class FGStorageManager {
     }
 
     public synchronized void loadWorldRegions(World world) {
-        try (DB mainDB = DBMaker.fileDB(worldDirectories.get(world).resolve("wregions.db").normalize().toString()).make()) {
+        try (DB mainDB = DBMaker.fileDB(worldDirectories.get(world.getName()).resolve("wregions.db").normalize().toString()).make()) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).make();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).make();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).make();
 
-            Path dir = worldDirectories.get(world).resolve("wregions");
+            Path dir = worldDirectories.get(world.getName()).resolve("wregions");
             mainMap.entrySet().forEach((entry) -> {
                 String name = entry.getKey();
                 Path singleDir = dir.resolve(name.toLowerCase());
                 Path metaDataFile = singleDir.resolve("metadata.db");
                 logger.info("Loading world region \"" + name + "\" from " + singleDir);
-                if(!FGManager.getInstance().isWorldRegionNameAvailable(name, world)){
+                if (!FGManager.getInstance().isWorldRegionNameAvailable(name, world)) {
                     logger.error("Name conflict detected! \"" + name + "\" is already in use! A super region is likely already using that name.");
                     if (FGConfigManager.getInstance().cleanupFiles()) {
                         logger.warn("Cleaning up unused files");
@@ -291,7 +293,7 @@ public final class FGStorageManager {
                             "\",  Category: \"" + category +
                             "\",  Type: \"" + type +
                             "\",  Enabled: \"" + enabled + "\"");
-                    if(name.equalsIgnoreCase(GlobalWorldRegion.NAME)){
+                    if (name.equalsIgnoreCase(GlobalWorldRegion.NAME)) {
                         logger.info("Global world region found! Skipping...");
                         return;
                     }
@@ -371,7 +373,7 @@ public final class FGStorageManager {
                             "\",  Type: \"" + type +
                             "\",  Enabled: \"" + enabled +
                             "\",  Priority: \"" + priority + "\"");
-                    if(name.equalsIgnoreCase(GlobalHandler.NAME)){
+                    if (name.equalsIgnoreCase(GlobalHandler.NAME)) {
                         logger.info("Global handler found! Skipping...");
                         return;
                     }
@@ -427,7 +429,7 @@ public final class FGStorageManager {
     public synchronized void loadGlobalHandler() {
         Path path;
         constructDirectory(path = directory.resolve("handlers"));
-        constructDirectory(path = path.resolve(GlobalHandler.NAME));
+        constructDirectory(path = path.resolve(GlobalHandler.NAME.toLowerCase()));
         FGManager.getInstance().getGlobalHandler().load(path);
     }
 
@@ -438,20 +440,75 @@ public final class FGStorageManager {
     }
 
     public synchronized void loadRegionLinks() {
-
+        try (DB mainDB = DBMaker.fileDB(directory.resolve("regions.db").normalize().toString()).make()) {
+            Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).make();
+            linksMap.entrySet().forEach(entry -> {
+                IRegion region = FGManager.getInstance().getRegion(entry.getKey());
+                if (region != null) {
+                    String handlersString = entry.getValue();
+                    if (handlersString != null && !handlersString.isEmpty()) {
+                        String[] handlersNames = handlersString.split(",");
+                        Arrays.stream(handlersNames).forEach(handlerName -> {
+                            IHandler handler = FGManager.getInstance().gethandler(handlerName);
+                            if (handler != null) {
+                                FGManager.getInstance().link(region, handler);
+                            }
+                        });
+                    }
+                }
+            });
+        }
     }
 
     public synchronized void loadWorldRegionLinks(World world) {
+        try (DB mainDB = DBMaker.fileDB(worldDirectories.get(world.getName()).resolve("wregions.db").normalize().toString()).make()) {
+            Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).make();
+            linksMap.entrySet().forEach(entry -> {
+                IRegion region = FGManager.getInstance().getWorldRegion(world, entry.getKey());
+                if (region != null) {
+                    String handlersString = entry.getValue();
+                    if (handlersString != null && !handlersString.isEmpty()) {
+                        String[] handlersNames = handlersString.split(",");
+                        Arrays.stream(handlersNames).forEach(handlerName -> {
+                            IHandler handler = FGManager.getInstance().gethandler(handlerName);
+                            if (handler != null) {
+                                FGManager.getInstance().link(region, handler);
+                            }
+                        });
+                    }
+                }
+            });
+        }
     }
 
     public synchronized void loadControllerLinks() {
+        Path dir = directory.resolve("handlers");
+        FGManager.getInstance().getControllers().forEach(controller-> controller.loadLinks(dir.resolve(controller.getName().toLowerCase())));
 
     }
 
     public synchronized void addObject(IFGObject object) {
+        LoadEntry entry = new LoadEntry(object);
+        if (!loaded.contains(entry)) {
+            Path singleDirectory = entry.getPath();
+            if (Files.exists(singleDirectory)) {
+                logger.info("Deleting directory \"" + directory + "\" to make room for new data.");
+                System.gc();
+                System.runFinalization();
+                deleteDirectory(singleDirectory);
+            }
+            loaded.add(entry);
+        }
     }
 
     public synchronized void removeObject(IFGObject object) {
+        if (FGConfigManager.getInstance().cleanupFiles()) {
+            Path singleDir = new LoadEntry(object).getPath();
+            logger.warn("Cleaning up unused files");
+            System.gc();
+            System.runFinalization();
+            deleteDirectory(singleDir);
+        }
     }
 
     private Path getDirectory() {
@@ -466,19 +523,19 @@ public final class FGStorageManager {
         return path;
     }
 
-    private Path getWorldDirectory(World world) {
+    private Path getWorldDirectory(String world) {
         Path path = Sponge.getGame().getSavesDirectory();
         if (FGConfigManager.getInstance().saveWorldRegionsInWorldFolders()) {
             path = path.resolve(Sponge.getServer().getDefaultWorldName());
-            if (!Sponge.getServer().getDefaultWorld().get().equals(world.getProperties())) {
-                path = path.resolve(world.getName());
+            if (!Sponge.getServer().getDefaultWorld().get().getWorldName().equalsIgnoreCase(world)) {
+                path = path.resolve(world);
             }
             path = path.resolve("foxguard");
         } else {
             if (FGConfigManager.getInstance().useConfigFolder()) {
                 path = FoxGuardMain.instance().getConfigDirectory();
             }
-            path = path.resolve("foxguard").resolve("worlds").resolve(world.getName());
+            path = path.resolve("foxguard").resolve("worlds").resolve(world);
         }
         constructDirectory(path);
         return path;
@@ -572,7 +629,7 @@ public final class FGStorageManager {
         return builder.toString();
     }
 
-    private static class LoadEntry {
+    private class LoadEntry {
         public final String name;
         public final Type type;
         public final String world;
@@ -612,8 +669,28 @@ public final class FGStorageManager {
             return name.toLowerCase().hashCode() + type.hashCode() + world.toLowerCase().hashCode();
         }
 
-        public enum Type {
-            REGION, WREGION, HANDLER
+        public Path getPath() {
+            Path singleDirectory;
+            switch (this.type) {
+                case REGION:
+                    singleDirectory = directory.resolve("regions");
+                    break;
+                case WREGION:
+                    singleDirectory = worldDirectories.get(this.world).resolve("wregions");
+                    break;
+                case HANDLER:
+                    singleDirectory = directory.resolve("handlers");
+                    break;
+                default:
+                    singleDirectory = null;
+                    break;
+            }
+            return singleDirectory.resolve(this.name.toLowerCase());
         }
+
+    }
+
+    public enum Type {
+        REGION, WREGION, HANDLER
     }
 }
