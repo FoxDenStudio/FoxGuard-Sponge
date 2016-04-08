@@ -195,7 +195,7 @@ public final class FGStorageManager {
                         type = metaDB.exists("type") ? metaDB.atomicString("type").make().get() : typeMap.get(name);
                         enabled = metaDB.exists("enabled") ? metaDB.atomicBoolean("enabled").make().get() : enabledMap.get(name);
                     }
-                    logger.info("Region info loaded! Name: \"" + name +
+                    logger.info("Region info loaded!  Name: \"" + name +
                             "\",  Category: \"" + category +
                             "\",  Type: \"" + type +
                             "\",  Enabled: \"" + enabled + "\"");
@@ -223,8 +223,9 @@ public final class FGStorageManager {
                         logger.error("There was an error creating the region!", e);
                     }
                     if (object != null) {
-                        FGManager.getInstance().addRegion(object);
                         loaded.add(new LoadEntry(object));
+                        FGManager.getInstance().addRegion(object);
+                        logger.info("Successfully created and added region \"" + name + "\"!");
                     } else {
                         logger.warn("A region was unable to be created. Either the metadata is incorrect, or there is no longer a factory available to create it.");
                         if (FGConfigManager.getInstance().cleanupFiles()) {
@@ -259,7 +260,6 @@ public final class FGStorageManager {
                     }
                 }
             });
-
         }
     }
 
@@ -284,7 +284,7 @@ public final class FGStorageManager {
                         type = metaDB.exists("type") ? metaDB.atomicString("type").make().get() : typeMap.get(name);
                         enabled = metaDB.exists("enabled") ? metaDB.atomicBoolean("enabled").make().get() : enabledMap.get(name);
                     }
-                    logger.info("World region info loaded! Name: " + name +
+                    logger.info("World region info loaded!  Name: " + name +
                             "\",  Category: \"" + category +
                             "\",  Type: \"" + type +
                             "\",  Enabled: \"" + enabled + "\"");
@@ -312,8 +312,9 @@ public final class FGStorageManager {
                         logger.error("There was an error creating the world region!", e);
                     }
                     if (object != null) {
+                        loaded.add(new LoadEntry(object, world.getName()));
                         FGManager.getInstance().addWorldRegion(world, object);
-                        loaded.add(new LoadEntry(object));
+                        logger.info("Successfully created and added world region \"" + name + "\"!");
                     } else {
                         logger.warn("A world region was unable to be created. Either the metadata is incorrect, or there is no longer a factory available to create it.");
                         if (FGConfigManager.getInstance().cleanupFiles()) {
@@ -348,7 +349,6 @@ public final class FGStorageManager {
                     }
                 }
             });
-
         }
     }
 
@@ -376,7 +376,7 @@ public final class FGStorageManager {
                         enabled = metaDB.exists("enabled") ? metaDB.atomicBoolean("enabled").make().get() : enabledMap.get(name);
                         priority = metaDB.exists("priority") ? metaDB.atomicInteger("priority").make().get() : priorityMap.get(name);
                     }
-                    logger.info("Handler info loaded! Name: " + name +
+                    logger.info("Handler info loaded!  Name: " + name +
                             "\",  Category: \"" + category +
                             "\",  Type: \"" + type +
                             "\",  Enabled: \"" + enabled +
@@ -398,8 +398,9 @@ public final class FGStorageManager {
                         logger.error("There was an error creating the handler!", e);
                     }
                     if (object != null) {
-                        FGManager.getInstance().addHandler(object);
                         loaded.add(new LoadEntry(object));
+                        FGManager.getInstance().addHandler(object);
+                        logger.info("Successfully created and added handler \"" + name + "\"!");
                     } else {
                         logger.warn("A handler was unable to be created. Either the metadata is incorrect, or there is no longer a factory available to create it.");
                         if (FGConfigManager.getInstance().cleanupFiles()) {
@@ -434,7 +435,6 @@ public final class FGStorageManager {
                     }
                 }
             });
-
         }
     }
 
@@ -496,7 +496,6 @@ public final class FGStorageManager {
     public synchronized void loadControllerLinks() {
         Path dir = directory.resolve("handlers");
         FGManager.getInstance().getControllers().forEach(controller -> controller.loadLinks(dir.resolve(controller.getName().toLowerCase())));
-
     }
 
     public synchronized void addObject(IFGObject object) {
@@ -654,7 +653,6 @@ public final class FGStorageManager {
             } catch (IOException e) {
                 logger.error("Error deleting the file: " + directory, e);
             }
-
         }
     }
 
@@ -704,6 +702,20 @@ public final class FGStorageManager {
             } else throw new IllegalArgumentException("Object is not of a valid subtype!");
         }
 
+        public LoadEntry(IFGObject object, String altWorld) {
+            name = object.getName();
+            if (object instanceof IWorldRegion) {
+                type = Type.WREGION;
+                world = altWorld;
+            } else if (object instanceof IRegion) {
+                type = Type.REGION;
+                world = "";
+            } else if (object instanceof IHandler) {
+                type = Type.HANDLER;
+                world = "";
+            } else throw new IllegalArgumentException("Object is not of a valid subtype!");
+        }
+
         @Override
         public boolean equals(Object obj) {
             if (obj instanceof LoadEntry) {
@@ -737,7 +749,6 @@ public final class FGStorageManager {
             }
             return singleDirectory.resolve(this.name.toLowerCase());
         }
-
     }
 
     public enum Type {
