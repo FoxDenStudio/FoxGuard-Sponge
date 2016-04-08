@@ -110,7 +110,7 @@ public final class FGFactoryManager {
         return null;
     }
 
-    public IHandler createHandler(Path directory, String name, String type, int priority, boolean isEnabled) {
+    public IHandler createHandler(Path directory, String name, String type, boolean isEnabled, int priority) {
         for (IHandlerFactory hf : handlerFactories) {
             if (hf.getType().equalsIgnoreCase(type)) {
                 IHandler handler = hf.create(directory, name, priority, isEnabled);
@@ -130,7 +130,7 @@ public final class FGFactoryManager {
         return null;
     }
 
-    public IController createController(Path directory, String name, String type, int priority, boolean isEnabled) {
+    public IController createController(Path directory, String name, String type, boolean isEnabled, int priority) {
         for (IControllerFactory cf : controllerFactories) {
             if (cf.getType().equalsIgnoreCase(type)) {
                 IController controller = cf.create(directory, name, priority, isEnabled);
