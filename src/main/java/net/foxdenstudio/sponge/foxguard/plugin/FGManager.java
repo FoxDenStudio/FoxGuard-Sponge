@@ -320,6 +320,7 @@ public final class FGManager {
         if (!this.handlers.contains(handler)) {
             return false;
         }
+        FGStorageManager.getInstance().removeObject(handler);
         Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
             @Override
             public IFGObject getTarget() {
@@ -331,7 +332,6 @@ public final class FGManager {
                 return FoxGuardMain.getCause();
             }
         });
-//        FGStorageManager.getInstance().markForDeletion(handler);
         handlers.remove(handler);
         return true;
     }
@@ -343,6 +343,7 @@ public final class FGManager {
             if (region == null) return false;
             if (!this.regions.contains(region)) return false;
             this.regions.remove(region);
+            FGStorageManager.getInstance().removeObject(region);
             Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
                 @Override
                 public IFGObject getTarget() {
@@ -377,6 +378,7 @@ public final class FGManager {
             }
         }
         if (removed) {
+            FGStorageManager.getInstance().removeObject(region);
             Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
                 @Override
                 public IFGObject getTarget() {
@@ -423,10 +425,9 @@ public final class FGManager {
         } else if (object instanceof IHandler) {
             if (this.gethandler(newName) != null) return false;
         }
-//        FGStorageManager.getInstance().markForDeletion(object);
+        FGStorageManager.getInstance().removeObject(object);
         object.setName(newName);
-//        FGStorageManager.getInstance().unmarkForDeletion(object);
-//        FGStorageManager.getInstance().update(object);
+        FGStorageManager.getInstance().addObject(object);
         return true;
     }
 

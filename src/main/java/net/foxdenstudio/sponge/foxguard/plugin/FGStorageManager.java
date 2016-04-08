@@ -515,10 +515,12 @@ public final class FGStorageManager {
     public synchronized void removeObject(IFGObject object) {
         if (FGConfigManager.getInstance().cleanupFiles()) {
             Path singleDir = new LoadEntry(object).getPath();
-            logger.warn("Cleaning up unused files");
-            System.gc();
-            System.runFinalization();
-            deleteDirectory(singleDir);
+            if (Files.exists(singleDir)) {
+                logger.warn("Cleaning up unused files");
+                System.gc();
+                System.runFinalization();
+                deleteDirectory(singleDir);
+            }
         }
     }
 
@@ -671,7 +673,7 @@ public final class FGStorageManager {
     private String serializeHandlerList(Collection<IHandler> handlers) {
         StringBuilder builder = new StringBuilder();
         for (Iterator<IHandler> it = handlers.iterator(); it.hasNext(); ) {
-            builder.append(it.next());
+            builder.append(it.next().getName());
             if (it.hasNext()) builder.append(",");
         }
         return builder.toString();

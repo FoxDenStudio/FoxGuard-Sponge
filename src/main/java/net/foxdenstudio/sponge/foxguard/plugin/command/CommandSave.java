@@ -27,6 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -47,9 +48,7 @@ public class CommandSave implements CommandCallable {
         }
         FGStorageManager.getInstance().saveHandlers();
         FGStorageManager.getInstance().saveRegions();
-        /*for (World world : Sponge.getGame().getServer().getWorlds()) {
-            FGStorageManager.getInstance().writeWorld(world);
-        }*/
+        Sponge.getServer().getWorlds().forEach(FGStorageManager.getInstance()::saveWorldRegions);
         source.sendMessage(Text.of(TextColors.GREEN, "Successfully saved!"));
         return CommandResult.success();
     }
