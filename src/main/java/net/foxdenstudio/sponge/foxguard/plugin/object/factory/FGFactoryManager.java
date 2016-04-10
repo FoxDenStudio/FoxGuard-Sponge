@@ -37,6 +37,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isIn;
 
@@ -214,33 +215,49 @@ public final class FGFactoryManager {
     }
 
     public List<String> getPrimaryRegionTypeAliases() {
-        List<String> aliases = new ArrayList<>();
-        for (IFGFactory factory : regionFactories) {
-            aliases.addAll(Arrays.asList(factory.getPrimaryAlias()));
-        }
-        return aliases;
+        return regionFactories.stream().map(IFGFactory::getPrimaryAlias).collect(Collectors.toList());
     }
 
     public List<String> getPrimaryWorldRegionTypeAliases() {
-        List<String> aliases = new ArrayList<>();
-        for (IFGFactory factory : worldRegionFactories) {
-            aliases.addAll(Arrays.asList(factory.getPrimaryAlias()));
-        }
-        return aliases;
+        return worldRegionFactories.stream().map(IFGFactory::getPrimaryAlias).collect(Collectors.toList());
     }
 
     public List<String> getPrimaryHandlerTypeAliases() {
+        return handlerFactories.stream().map(IFGFactory::getPrimaryAlias).collect(Collectors.toList());
+    }
+
+    public List<String> getPrimaryControllerTypeAliases() {
+        return controllerFactories.stream().map(IFGFactory::getPrimaryAlias).collect(Collectors.toList());
+    }
+
+    public List<String> getRegionTypeAliases() {
         List<String> aliases = new ArrayList<>();
-        for (IFGFactory factory : handlerFactories) {
-            aliases.addAll(Arrays.asList(factory.getPrimaryAlias()));
+        for (IFGFactory factory : regionFactories) {
+            aliases.addAll(Arrays.asList(factory.getAliases()));
         }
         return aliases;
     }
 
-    public List<String> getPrimaryControllerTypeAliases() {
+    public List<String> getWorldRegionTypeAliases() {
+        List<String> aliases = new ArrayList<>();
+        for (IFGFactory factory : worldRegionFactories) {
+            aliases.addAll(Arrays.asList(factory.getAliases()));
+        }
+        return aliases;
+    }
+
+    public List<String> getHandlerTypeAliases() {
+        List<String> aliases = new ArrayList<>();
+        for (IFGFactory factory : handlerFactories) {
+            aliases.addAll(Arrays.asList(factory.getAliases()));
+        }
+        return aliases;
+    }
+
+    public List<String> getControllerTypeAliases() {
         List<String> aliases = new ArrayList<>();
         for (IFGFactory factory : controllerFactories) {
-            aliases.addAll(Arrays.asList(factory.getPrimaryAlias()));
+            aliases.addAll(Arrays.asList(factory.getAliases()));
         }
         return aliases;
     }

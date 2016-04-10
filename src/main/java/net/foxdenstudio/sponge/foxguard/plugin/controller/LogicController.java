@@ -15,6 +15,7 @@ import org.spongepowered.api.util.Tristate;
 import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 import static org.spongepowered.api.util.Tristate.*;
 
@@ -38,7 +39,7 @@ public class LogicController extends ControllerBase {
     }
 
     @Override
-    public EventResult handle(@Nullable User user, IFlag flag, Event event) {
+    public EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra) {
         return null;
     }
 
@@ -86,7 +87,7 @@ public class LogicController extends ControllerBase {
     private enum Operation {
         OR {
             @Override
-            public Tristate operate(List<IHandler> handlers, Tristate mode, User user, Flag flag, Event event) {
+            public Tristate operate(List<IHandler> handlers, Tristate mode, User user, Flag flag, Optional<Event> event, Object... extra) {
                 Tristate state = UNDEFINED;
                 for (IHandler handler : handlers) {
                     Tristate ts = handler.handle(user, flag, event).getState();
@@ -99,10 +100,10 @@ public class LogicController extends ControllerBase {
         },
         AND {
             @Override
-            public Tristate operate(List<IHandler> handlers, Tristate mode, User user, Flag flag, Event event) {
+            public Tristate operate(List<IHandler> handlers, Tristate mode, User user, Flag flag, Optional<Event> event, Object... extra) {
                 Tristate state = UNDEFINED;
                 for (IHandler handler : handlers) {
-                    Tristate ts = handler.handle(user, flag, event).getState();
+                    Tristate ts = handler.handle(user, flag, event, extra).getState();
                     if (ts == UNDEFINED) ts = mode;
                     state = state.and(ts);
                     if (state == FALSE) return FALSE;
@@ -112,10 +113,10 @@ public class LogicController extends ControllerBase {
         },
         XOR {
             @Override
-            public Tristate operate(List<IHandler> handlers, Tristate mode, User user, Flag flag, Event event) {
+            public Tristate operate(List<IHandler> handlers, Tristate mode, User user, Flag flag, Optional<Event> event, Object... extra) {
                 Tristate state = UNDEFINED;
                 for (IHandler handler : handlers) {
-                    Tristate ts = handler.handle(user, flag, event).getState();
+                    Tristate ts = handler.handle(user, flag, event, extra).getState();
                     if (ts == UNDEFINED) ts = mode;
                     state = XORMatrix[state.ordinal()][ts.ordinal()];
                 }
@@ -124,9 +125,9 @@ public class LogicController extends ControllerBase {
         },
         NOT {
             @Override
-            public Tristate operate(List<IHandler> handlers, Tristate mode, User user, Flag flag, Event event) {
+            public Tristate operate(List<IHandler> handlers, Tristate mode, User user, Flag flag, Optional<Event> event, Object... extra) {
                 if (handlers.size() > 0) {
-                    Tristate state = handlers.get(0).handle(user, flag, event).getState();
+                    Tristate state = handlers.get(0).handle(user, flag, event, extra).getState();
                     if (state == UNDEFINED) state = mode;
                     if (state == TRUE) state = FALSE;
                     else if (state == FALSE) state = TRUE;
@@ -136,10 +137,10 @@ public class LogicController extends ControllerBase {
         },
         NOR {
             @Override
-            public Tristate operate(List<IHandler> handlers, Tristate mode, User user, Flag flag, Event event) {
+            public Tristate operate(List<IHandler> handlers, Tristate mode, User user, Flag flag, Optional<Event> event, Object... extra) {
                 Tristate state = UNDEFINED;
                 for (IHandler handler : handlers) {
-                    Tristate ts = handler.handle(user, flag, event).getState();
+                    Tristate ts = handler.handle(user, flag, event, extra).getState();
                     if (ts == UNDEFINED) ts = mode;
                     state = state.or(ts);
                     if (state == TRUE) return TRUE;
@@ -151,10 +152,10 @@ public class LogicController extends ControllerBase {
         },
         NAND {
             @Override
-            public Tristate operate(List<IHandler> handlers, Tristate mode, User user, Flag flag, Event event) {
+            public Tristate operate(List<IHandler> handlers, Tristate mode, User user, Flag flag, Optional<Event> event, Object... extra) {
                 Tristate state = UNDEFINED;
                 for (IHandler handler : handlers) {
-                    Tristate ts = handler.handle(user, flag, event).getState();
+                    Tristate ts = handler.handle(user, flag, event, extra).getState();
                     if (ts == UNDEFINED) ts = mode;
                     state = state.and(ts);
                     if (state == FALSE) return FALSE;
@@ -166,10 +167,10 @@ public class LogicController extends ControllerBase {
         },
         XNOR {
             @Override
-            public Tristate operate(List<IHandler> handlers, Tristate mode, User user, Flag flag, Event event) {
+            public Tristate operate(List<IHandler> handlers, Tristate mode, User user, Flag flag, Optional<Event> event, Object... extra) {
                 Tristate state = UNDEFINED;
                 for (IHandler handler : handlers) {
-                    Tristate ts = handler.handle(user, flag, event).getState();
+                    Tristate ts = handler.handle(user, flag, event, extra).getState();
                     if (ts == UNDEFINED) ts = mode;
                     state = XORMatrix[state.ordinal()][ts.ordinal()];
                 }
@@ -185,6 +186,6 @@ public class LogicController extends ControllerBase {
                 {TRUE, FALSE, UNDEFINED}
         };
 
-        public abstract Tristate operate(List<IHandler> handlers, Tristate mode, User user, Flag flag, Event event);
+        public abstract Tristate operate(List<IHandler> handlers, Tristate mode, User user, Flag flag, Optional<Event> event, Object... extra);
     }
 }

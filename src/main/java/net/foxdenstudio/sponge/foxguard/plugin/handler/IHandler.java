@@ -32,10 +32,11 @@ import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
 
 import javax.annotation.Nullable;
+import java.util.Optional;
 
 public interface IHandler extends IFGObject, Comparable<IHandler> {
 
-    EventResult handle(@Nullable User user, IFlag flag, Event event);
+    EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra);
 
     int getPriority();
 

@@ -20,10 +20,7 @@ import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Fox on 1/4/2016.
@@ -55,7 +52,6 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
                     GenericMath.floor(from.getX() / 16.0),
                     GenericMath.floor(from.getY() / 16.0),
                     GenericMath.floor(from.getZ() / 16.0))).stream()
-                    .filter(IFGObject::isEnabled)
                     .filter(region -> region.contains(from, world))
                     .forEach(region -> region.getHandlers().stream()
                             .filter(IFGObject::isEnabled)
@@ -67,7 +63,6 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
                 GenericMath.floor(to.getY() / 16.0),
                 GenericMath.floor(to.getZ() / 16.0))).stream()
                 .filter(region -> region.contains(to, world))
-                .filter(IFGObject::isEnabled)
                 .forEach(region -> region.getHandlers().stream()
                         .filter(IFGObject::isEnabled)
                         .filter(handler -> !toList.contains(handler))
@@ -104,9 +99,9 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
                 break;
             }
             if (wrap.type == Type.FROM) {
-                flagState = flagState.and(wrap.handler.handle(player, Flag.PLAYER_EXIT, event).getState());
+                flagState = flagState.and(wrap.handler.handle(player, Flag.PLAYER_EXIT, Optional.of(event)).getState());
             } else {
-                flagState = flagState.and(wrap.handler.handle(player, Flag.PLAYER_ENTER, event).getState());
+                flagState = flagState.and(wrap.handler.handle(player, Flag.PLAYER_ENTER, Optional.of(event)).getState());
             }
             currPriority = wrap.handler.getPriority();
         }

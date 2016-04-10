@@ -55,6 +55,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
@@ -103,7 +104,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
     }
 
     @Override
-    public EventResult handle(User user, IFlag flag, Event event) {
+    public EventResult handle(User user, IFlag flag, Optional<Event> event, Object... extra) {
         return EventResult.of(mapCache.get(flag));
     }
 

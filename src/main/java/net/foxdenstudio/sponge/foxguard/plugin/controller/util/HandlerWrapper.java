@@ -8,6 +8,7 @@ import org.spongepowered.api.event.Event;
 import org.spongepowered.api.util.Tristate;
 
 import javax.annotation.Nullable;
+import java.util.Optional;
 
 public class HandlerWrapper {
 
@@ -33,9 +34,9 @@ public class HandlerWrapper {
         this(Type.CONSTANT, state, null);
     }
 
-    public EventResult handle(@Nullable User user, IFlag flag, Event event) {
+    public EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra) {
         if (type == Type.WRAPPER) {
-            return handler.handle(user, flag, event);
+            return handler.handle(user, flag, event, extra);
         } else {
             return EventResult.of(tristate);
         }

@@ -117,11 +117,19 @@ public class CommandCreate implements CommandCallable {
             if (parse.args.length < 3) throw new CommandException(Text.of("Must specify a type!"));
             IRegion newRegion;
             if (isWorldRegion) {
+                List<String> aliases = FGFactoryManager.getInstance().getWorldRegionTypeAliases();
+                if(!isIn(aliases.toArray(new String[aliases.size()]), parse.args[2])){
+                    throw new CommandException(Text.of("The type \"" + parse.args[2] + "\" is invalid!"));
+                }
                 newRegion = FGFactoryManager.getInstance().createWorldRegion(
                         parse.args[1], parse.args[2],
                         parse.args.length < 4 ? "" : parse.args[3],
                         source);
             } else {
+                List<String> aliases = FGFactoryManager.getInstance().getRegionTypeAliases();
+                if(!isIn(aliases.toArray(new String[aliases.size()]), parse.args[2])){
+                    throw new CommandException(Text.of("The type \"" + parse.args[2] + "\" is invalid!"));
+                }
                 newRegion = FGFactoryManager.getInstance().createRegion(
                         parse.args[1], parse.args[2],
                         parse.args.length < 4 ? "" : parse.args[3],
@@ -156,11 +164,19 @@ public class CommandCreate implements CommandCallable {
             if (parse.args.length < 3) throw new CommandException(Text.of("Must specify a type!"));
             IHandler newHandler;
             if (isController) {
+                List<String> aliases = FGFactoryManager.getInstance().getControllerTypeAliases();
+                if(!isIn(aliases.toArray(new String[aliases.size()]), parse.args[2])){
+                    throw new CommandException(Text.of("The type \"" + parse.args[2] + "\" is invalid!"));
+                }
                 newHandler = FGFactoryManager.getInstance().createController(
                         parse.args[1], parse.args[2], priority,
                         parse.args.length < 4 ? "" : parse.args[3],
                         source);
             } else {
+                List<String> aliases = FGFactoryManager.getInstance().getHandlerTypeAliases();
+                if(!isIn(aliases.toArray(new String[aliases.size()]), parse.args[2])){
+                    throw new CommandException(Text.of("The type \"" + parse.args[2] + "\" is invalid!"));
+                }
                 newHandler = FGFactoryManager.getInstance().createHandler(
                         parse.args[1], parse.args[2], priority,
                         parse.args.length < 4 ? "" : parse.args[3],
@@ -230,7 +246,7 @@ public class CommandCreate implements CommandCallable {
                 }
             } else if (parse.current.index == 2) {
                 if (isIn(REGIONS_ALIASES, parse.args[0])) {
-                    return FGFactoryManager.getInstance().getPrimaryWorldRegionTypeAliases().stream()
+                    return FGFactoryManager.getInstance().getPrimaryRegionTypeAliases().stream()
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());

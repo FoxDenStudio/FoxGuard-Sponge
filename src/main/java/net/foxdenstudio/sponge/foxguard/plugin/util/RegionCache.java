@@ -130,6 +130,7 @@ public class RegionCache {
                             break;
                     }
                 }
+                this.dirty.clear();
                 this.isDirty = false;
             }
             if (includeDisabled) return ImmutableSet.<IRegion>builder().addAll(contains).addAll(disabled).build();

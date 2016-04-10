@@ -6,7 +6,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
-import net.foxdenstudio.sponge.foxguard.plugin.region.SuperGlobalRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.GlobalWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
@@ -199,7 +199,7 @@ public final class FGStorageManager {
                             "\",  Category: \"" + category +
                             "\",  Type: \"" + type +
                             "\",  Enabled: \"" + enabled + "\"");
-                    if (name.equalsIgnoreCase(SuperGlobalRegion.NAME)) {
+                    if (name.equalsIgnoreCase(GlobalRegion.NAME)) {
                         logger.info("Global region found! Skipping...");
                         return;
                     }
@@ -236,7 +236,7 @@ public final class FGStorageManager {
                         }
                     }
                 } else {
-                    if (name.equalsIgnoreCase(SuperGlobalRegion.NAME)) {
+                    if (name.equalsIgnoreCase(GlobalRegion.NAME)) {
                         logger.info("Global region found! Skipping...");
                         return;
                     }

@@ -40,6 +40,7 @@ import org.spongepowered.api.text.format.TextColors;
 import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class PermissionHandler extends HandlerBase {
@@ -49,7 +50,7 @@ public class PermissionHandler extends HandlerBase {
     }
 
     @Override
-    public EventResult handle(@Nullable User user, IFlag flag, Event event) {
+    public EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra) {
         if (user == null) return EventResult.pass();
         /*while (flag != null) {
             if (user.hasPermission("foxguard.handler." + this.name.toLowerCase() + "." + flag.flagName() + ".allow"))

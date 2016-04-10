@@ -27,7 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.region.world;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.FGObjectBase;
+import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectBase;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import org.spongepowered.api.world.World;
 

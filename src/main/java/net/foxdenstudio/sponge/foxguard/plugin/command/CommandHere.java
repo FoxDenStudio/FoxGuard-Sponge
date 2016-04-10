@@ -132,6 +132,7 @@ public class CommandHere implements CommandCallable {
         output.append(Text.of(TextColors.AQUA, "----- Position: (" + String.format("%.1f, %.1f, %.1f", x, y, z) + ") -----\n"));
         if (!parse.flagmap.containsKey("handler") || parse.flagmap.containsKey("region")) {
             output.append(Text.of(TextColors.GREEN, "------- Regions Located Here -------\n"));
+            Collections.sort(regionList, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
             ListIterator<IRegion> regionListIterator = regionList.listIterator();
             while (regionListIterator.hasNext()) {
                 IRegion region = regionListIterator.next();
@@ -150,6 +151,7 @@ public class CommandHere implements CommandCallable {
                     .filter(handler -> !handlerList.contains(handler))
                     .forEach(handlerList::add));
             output.append(Text.of(TextColors.GREEN, "------- Handlers Located Here -------\n"));
+            Collections.sort(handlerList, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
             ListIterator<IHandler> handlerListIterator = handlerList.listIterator();
             while (handlerListIterator.hasNext()) {
                 IHandler handler = handlerListIterator.next();

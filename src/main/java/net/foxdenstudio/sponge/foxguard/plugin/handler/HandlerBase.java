@@ -25,7 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
-import net.foxdenstudio.sponge.foxguard.plugin.FGObjectBase;
+import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectBase;
 
 public abstract class HandlerBase extends FGObjectBase implements IHandler {
 

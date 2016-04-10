@@ -15,10 +15,10 @@ import java.util.List;
 /**
  * Created by Fox on 4/2/2016.
  */
-public class SuperGlobalRegion extends RegionBase {
+public class GlobalRegion extends RegionBase {
     public static final String NAME = "_sglobal";
 
-    SuperGlobalRegion(String name) {
+    public GlobalRegion() {
         super(NAME);
     }
 

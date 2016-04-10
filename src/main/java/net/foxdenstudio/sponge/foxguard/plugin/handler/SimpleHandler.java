@@ -37,7 +37,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
-import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
@@ -172,7 +171,7 @@ public class SimpleHandler extends HandlerBase {
                                 case REMOVE:
                                     for (User user : argUsers) {
                                         if (FCUtil.isUserInCollection(set, user)) {
-                                            set.remove(user);
+                                            set.removeIf(u -> u.getUniqueId().equals(user.getUniqueId()));
                                             successes++;
                                         } else failures++;
                                     }
@@ -302,7 +301,12 @@ public class SimpleHandler extends HandlerBase {
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             } else if (parse.current.index == 1) {
-                if (isIn(GROUPS_ALIASES, parse.args[0]) || isIn(SET_ALIASES, parse.args[0])) {
+                if (isIn(GROUPS_ALIASES, parse.args[0])) {
+                    return ImmutableList.of("owner", "member").stream()
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                } else if (isIn(SET_ALIASES, parse.args[0])) {
                     return ImmutableList.of("owner", "member").stream()
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
@@ -404,7 +408,7 @@ public class SimpleHandler extends HandlerBase {
     }
 
     @Override
-    public EventResult handle(User user, IFlag flag, Event event) {
+    public EventResult handle(User user, IFlag flag, Optional<Event> event, Object... extra) {
         if (user == null) {
             switch (this.passiveOption) {
                 case OWNER:

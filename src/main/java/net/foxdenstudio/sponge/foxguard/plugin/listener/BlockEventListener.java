@@ -47,6 +47,7 @@ import org.spongepowered.api.world.World;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public class BlockEventListener implements EventListener<ChangeBlockEvent> {
 
@@ -88,7 +89,6 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
                     GenericMath.floor((loc.getY()) / 16.0),
                     GenericMath.floor((loc.getZ()) / 16.0));
             FGManager.getInstance().getAllRegions(world, chunk).stream()
-                    .filter(IFGObject::isEnabled)
                     .filter(region -> region.contains(loc, world))
                     .forEach(region -> region.getHandlers().stream()
                             .filter(IFGObject::isEnabled)
@@ -102,7 +102,7 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
             if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
                 break;
             }
-            flagState = flagState.and(handler.handle(user, typeFlag, event).getState());
+            flagState = flagState.and(handler.handle(user, typeFlag, Optional.of(event)).getState());
             currPriority = handler.getPriority();
         }
         flagState = typeFlag.resolve(flagState);

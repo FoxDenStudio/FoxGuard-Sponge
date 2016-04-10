@@ -17,10 +17,7 @@ import org.spongepowered.api.util.Tristate;
 
 import javax.annotation.Nullable;
 import java.nio.file.Path;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MessageController extends ControllerBase {
 
@@ -37,21 +34,21 @@ public class MessageController extends ControllerBase {
     }
 
     @Override
-    public EventResult handle(@Nullable User user, IFlag flag, Event event) {
+    public EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra) {
         if (configs.containsKey(flag)) {
             Config c = configs.get(flag);
             if (messages.containsKey(c.messageID)) {
-                EventResult result = slot.handle(user, flag, event);
+                EventResult result = slot.handle(user, flag, event, extra);
                 if (c.enabled.get(result.getState())) {
                     return EventResult.of(result.getState(), messages.get(c.messageID));
                 } else {
                     return result;
                 }
             } else {
-                return slot.handle(user, flag, event);
+                return slot.handle(user, flag, event, extra);
             }
         } else {
-            return slot.handle(user, flag, event);
+            return slot.handle(user, flag, event, extra);
         }
     }
 

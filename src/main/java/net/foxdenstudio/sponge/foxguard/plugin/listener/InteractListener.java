@@ -32,7 +32,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
-import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
@@ -48,6 +47,7 @@ import org.spongepowered.api.world.World;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public class InteractListener implements EventListener<InteractEvent> {
 
@@ -94,7 +94,6 @@ public class InteractListener implements EventListener<InteractEvent> {
         final Vector3d finalLoc = loc;
         final World finalWorld = world;
         FGManager.getInstance().getAllRegions(world, chunk).stream()
-                .filter(IFGObject::isEnabled)
                 .filter(region -> region.contains(finalLoc, finalWorld))
                 .forEach(region -> region.getHandlers().stream()
                         .filter(IFGObject::isEnabled)
@@ -108,7 +107,7 @@ public class InteractListener implements EventListener<InteractEvent> {
             if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
                 break;
             }
-            flagState = flagState.and(handler.handle(user, typeFlag, event).getState());
+            flagState = flagState.and(handler.handle(user, typeFlag, Optional.of(event)).getState());
             currPriority = handler.getPriority();
         }
         flagState = typeFlag.resolve(flagState);

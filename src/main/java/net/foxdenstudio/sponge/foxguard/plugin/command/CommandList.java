@@ -49,6 +49,7 @@ import org.spongepowered.api.world.World;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
@@ -99,6 +100,7 @@ public class CommandList implements CommandCallable {
             Text.Builder output = Text.builder()
                     .append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"))
                     .append(Text.of(TextColors.GREEN, "------- Regions" + (allFlag ? "" : (" for World: \"" + worldName + "\"")) + " -------\n"));
+            Collections.sort(regionList, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
             ListIterator<IRegion> regionListIterator = regionList.listIterator();
             while (regionListIterator.hasNext()) {
                 IRegion region = regionListIterator.next();
@@ -113,10 +115,11 @@ public class CommandList implements CommandCallable {
 
         } else if (isIn(Aliases.HANDLERS_ALIASES, parse.args[0])) {
             boolean controllers = parse.flagmap.containsKey("all");
-            Set<IHandler> handlers = FGManager.getInstance().getHandlers(controllers);
+            List<IHandler> handlers = FGManager.getInstance().getHandlers(controllers).stream().collect(Collectors.toList());
             Text.Builder output = Text.builder()
                     .append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"))
                     .append(Text.of(TextColors.GREEN, "------- Handlers " + (controllers ? "and Controllers " : "") + "-------\n"));
+            Collections.sort(handlers, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
             Iterator<IHandler> handlerIterator = handlers.iterator();
             while (handlerIterator.hasNext()) {
                 IHandler handler = handlerIterator.next();

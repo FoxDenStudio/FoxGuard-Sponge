@@ -27,10 +27,9 @@ package net.foxdenstudio.sponge.foxguard.plugin.region;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.FGObjectBase;
+import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectBase;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

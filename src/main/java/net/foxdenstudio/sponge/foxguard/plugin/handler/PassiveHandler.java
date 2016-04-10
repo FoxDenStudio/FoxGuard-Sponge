@@ -54,6 +54,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
@@ -79,7 +80,7 @@ public class PassiveHandler extends HandlerBase {
     }
 
     @Override
-    public EventResult handle(@Nullable User user, IFlag flag, Event event) {
+    public EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra) {
         if (user != null) {
             return EventResult.pass();
         }

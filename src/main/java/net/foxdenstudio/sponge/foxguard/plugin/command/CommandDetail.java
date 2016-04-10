@@ -50,10 +50,7 @@ import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.world.World;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -142,7 +139,7 @@ public class CommandDetail implements CommandCallable {
 
             IHandler handler = FGManager.getInstance().gethandler(parse.args[1]);
             if (handler == null)
-                throw new CommandException(Text.of("No gandler with name \"" + parse.args[1] + "\"!"));
+                throw new CommandException(Text.of("No handler with name \"" + parse.args[1] + "\"!"));
             Text.Builder builder = Text.builder();
             builder.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
             if (parse.args.length <= 2 || parse.args[2].isEmpty() || parse.flagmap.containsKey("all")) {
@@ -166,9 +163,11 @@ public class CommandDetail implements CommandCallable {
                 builder.append(Text.of(TextColors.GREEN, "\n------- Inbound Links -------"));
                 List<IController> controllerList = FGManager.getInstance().getControllers().stream()
                         .filter(controller -> controller.getHandlers().contains(handler))
+                        .sorted((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()))
                         .collect(GuavaCollectors.toImmutableList());
                 List<IRegion> regionList = FGManager.getInstance().getAllRegions().stream()
                         .filter(region -> region.getHandlers().contains(handler))
+                        .sorted((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()))
                         .collect(GuavaCollectors.toImmutableList());
                 if (controllerList.size() == 0 && regionList.size() == 0)
                     builder.append(Text.of(TextStyles.ITALIC, "\nNo inbound links!"));
@@ -199,7 +198,7 @@ public class CommandDetail implements CommandCallable {
         builder.append(Text.of(TextColors.GREEN, "\n------- Outbound Links -------"));
         if (linkable.getHandlers().size() == 0)
             builder.append(Text.of(TextStyles.ITALIC, "\nNo outbound links!"));
-        linkable.getHandlers().stream().forEach(handler -> builder.append(Text.of(FGUtil.getColorForObject(handler),
+        linkable.getHandlers().stream().sorted((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName())).forEach(handler -> builder.append(Text.of(FGUtil.getColorForObject(handler),
                 TextActions.runCommand("/foxguard det h " + handler.getName()),
                 TextActions.showText(Text.of("View Details for " + (handler instanceof IController ? "controller" : "handler") + " \"" + handler.getName() + "\"")),
                 "\n" + handler.getShortTypeName() + " : " + handler.getName()

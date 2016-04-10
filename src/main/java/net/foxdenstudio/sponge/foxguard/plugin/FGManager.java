@@ -38,6 +38,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.GlobalWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.RegionCache;
@@ -62,6 +63,7 @@ public final class FGManager {
     private final Map<World, Set<IWorldRegion>> worldRegions;
     private final Set<IRegion> regions;
     private final Set<IHandler> handlers;
+    private final GlobalRegion globalRegion;
     private final GlobalHandler globalHandler;
 
     private final RegionCache regionCache;
@@ -77,7 +79,9 @@ public final class FGManager {
         });
         regions = new HashSet<>();
         handlers = new HashSet<>();
+        globalRegion = new GlobalRegion();
         globalHandler = new GlobalHandler();
+        regions.add(globalRegion);
         handlers.add(globalHandler);
 
         this.regionCache = new RegionCache(regions, worldRegions);
