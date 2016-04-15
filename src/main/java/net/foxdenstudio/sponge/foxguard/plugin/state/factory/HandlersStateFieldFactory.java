@@ -34,7 +34,7 @@ public class HandlersStateFieldFactory implements IStateFieldFactory {
 
     @Override
     public IStateField createStateField(SourceState sourceState) {
-        return new HandlersStateField();
+        return new HandlersStateField(sourceState);
     }
 
 }

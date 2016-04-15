@@ -12,7 +12,7 @@ public abstract class ControllerBase extends HandlerBase implements IController 
 
     protected final List<IHandler> handlers;
 
-    ControllerBase(String name, int priority) {
+    public ControllerBase(String name, int priority) {
         super(name, priority);
         this.handlers = new ArrayList<>();
     }

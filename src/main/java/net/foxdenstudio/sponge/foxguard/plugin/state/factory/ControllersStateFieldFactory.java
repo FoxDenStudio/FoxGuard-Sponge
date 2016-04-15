@@ -34,7 +34,7 @@ public class ControllersStateFieldFactory implements IStateFieldFactory {
 
     @Override
     public IStateField createStateField(SourceState sourceState) {
-        return new ControllersStateField();
+        return new ControllersStateField(sourceState);
     }
 
 }

@@ -57,6 +57,8 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
                             .filter(IFGObject::isEnabled)
                             .filter(handler -> !temp.contains(handler))
                             .forEach(temp::add));
+        } else {
+            fromList = new ArrayList<>(fromList);
         }
         FGManager.getInstance().getAllRegions(world, new Vector3i(
                 GenericMath.floor(to.getX() / 16.0),
@@ -67,9 +69,6 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
                         .filter(IFGObject::isEnabled)
                         .filter(handler -> !toList.contains(handler))
                         .forEach(toList::add));
-
-        //System.out.println(fromList);
-        //System.out.println(toList);
 
         final List<IHandler> toComplete = new ArrayList<>(toList);
 
@@ -136,8 +135,7 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
         @Override
         public int compareTo(HandlerWrapper w) {
             int val = handler.compareTo(w.handler);
-            if (val != 0) return val;
-            else return type.compareTo(w.type);
+            return val != 0 ? val : type.compareTo(w.type);
         }
 
         @Override

@@ -47,6 +47,7 @@ import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +60,7 @@ import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 public class CommandCreate implements CommandCallable {
 
     private static final String[] PRIORITY_ALIASES = {"priority", "prio", "p", "order", "level", "rank"};
-    private static final String[] RESERVED = {"all", "state", "full", "everything"};
+    private static final String[] STATE_ALIASES = {"state", "s", "buffer"};
 
     private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
         map.put(key, value);
@@ -67,11 +68,14 @@ public class CommandCreate implements CommandCallable {
             map.put("world", value);
         } else if (isIn(PRIORITY_ALIASES, key) && !map.containsKey("priority")) {
             map.put("priority", value);
+        } else if (isIn(STATE_ALIASES, key) && !map.containsKey("state")) {
+            map.put("state", value);
         }
     };
 
+    @Nonnull
     @Override
-    public CommandResult process(CommandSource source, String arguments) throws CommandException {
+    public CommandResult process(@Nonnull CommandSource source, @Nonnull String arguments) throws CommandException {
         if (!testPermission(source)) {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
@@ -118,7 +122,7 @@ public class CommandCreate implements CommandCallable {
             IRegion newRegion;
             if (isWorldRegion) {
                 List<String> aliases = FGFactoryManager.getInstance().getWorldRegionTypeAliases();
-                if(!isIn(aliases.toArray(new String[aliases.size()]), parse.args[2])){
+                if (!isIn(aliases.toArray(new String[aliases.size()]), parse.args[2])) {
                     throw new CommandException(Text.of("The type \"" + parse.args[2] + "\" is invalid!"));
                 }
                 newRegion = FGFactoryManager.getInstance().createWorldRegion(
@@ -127,7 +131,7 @@ public class CommandCreate implements CommandCallable {
                         source);
             } else {
                 List<String> aliases = FGFactoryManager.getInstance().getRegionTypeAliases();
-                if(!isIn(aliases.toArray(new String[aliases.size()]), parse.args[2])){
+                if (!isIn(aliases.toArray(new String[aliases.size()]), parse.args[2])) {
                     throw new CommandException(Text.of("The type \"" + parse.args[2] + "\" is invalid!"));
                 }
                 newRegion = FGFactoryManager.getInstance().createRegion(
@@ -165,7 +169,7 @@ public class CommandCreate implements CommandCallable {
             IHandler newHandler;
             if (isController) {
                 List<String> aliases = FGFactoryManager.getInstance().getControllerTypeAliases();
-                if(!isIn(aliases.toArray(new String[aliases.size()]), parse.args[2])){
+                if (!isIn(aliases.toArray(new String[aliases.size()]), parse.args[2])) {
                     throw new CommandException(Text.of("The type \"" + parse.args[2] + "\" is invalid!"));
                 }
                 newHandler = FGFactoryManager.getInstance().createController(
@@ -174,7 +178,7 @@ public class CommandCreate implements CommandCallable {
                         source);
             } else {
                 List<String> aliases = FGFactoryManager.getInstance().getHandlerTypeAliases();
-                if(!isIn(aliases.toArray(new String[aliases.size()]), parse.args[2])){
+                if (!isIn(aliases.toArray(new String[aliases.size()]), parse.args[2])) {
                     throw new CommandException(Text.of("The type \"" + parse.args[2] + "\" is invalid!"));
                 }
                 newHandler = FGFactoryManager.getInstance().createHandler(
@@ -193,8 +197,9 @@ public class CommandCreate implements CommandCallable {
         } else throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);
     }
 
+    @Nonnull
     @Override
-    public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
+    public List<String> getSuggestions(@Nonnull CommandSource source, @Nonnull String arguments) throws CommandException {
         if (!testPermission(source)) return ImmutableList.of();
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
@@ -210,6 +215,7 @@ public class CommandCreate implements CommandCallable {
                         .filter(new StartsWithPredicate(parse.current.token))
                         .collect(GuavaCollectors.toImmutableList());
             else if (parse.current.index == 1) {
+                if(parse.current.token == null || parse.current.token.isEmpty()) return ImmutableList.of();
                 Tristate available = null;
                 if (isIn(REGIONS_ALIASES, parse.args[0])) {
                     available = Tristate.fromBoolean(FGManager.getInstance().isRegionNameAvailable(parse.current.token));
@@ -302,22 +308,25 @@ public class CommandCreate implements CommandCallable {
     }
 
     @Override
-    public boolean testPermission(CommandSource source) {
+    public boolean testPermission(@Nonnull CommandSource source) {
         return source.hasPermission("foxguard.command.modify.objects.create");
     }
 
+    @Nonnull
     @Override
-    public Optional<? extends Text> getShortDescription(CommandSource source) {
+    public Optional<? extends Text> getShortDescription(@Nonnull CommandSource source) {
         return Optional.empty();
     }
 
+    @Nonnull
     @Override
-    public Optional<? extends Text> getHelp(CommandSource source) {
+    public Optional<? extends Text> getHelp(@Nonnull CommandSource source) {
         return Optional.empty();
     }
 
+    @Nonnull
     @Override
-    public Text getUsage(CommandSource source) {
+    public Text getUsage(@Nonnull CommandSource source) {
         return Text.of("create <region [--w:<world>] | handler> <name> [--priority:<num>] <type> [args...]");
     }
 }

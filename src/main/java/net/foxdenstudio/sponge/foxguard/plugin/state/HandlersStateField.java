@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.state.ListStateFieldBase;
+import net.foxdenstudio.sponge.foxcore.plugin.state.SourceState;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
@@ -36,29 +37,39 @@ import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class HandlersStateField extends ListStateFieldBase<IHandler> {
 
     public static final String ID = "handler";
 
-    public HandlersStateField() {
-        super("Handlers");
+    public HandlersStateField(SourceState sourceState) {
+        super("Handlers", sourceState);
     }
 
     @Override
-    public Text currentState() {
+    public Text currentState(CommandSource source) {
         Text.Builder builder = Text.builder();
         int index = 1;
         for (Iterator<IHandler> it = this.list.iterator(); it.hasNext(); ) {
             IHandler handler = it.next();
-            builder.append(Text.of(FGUtil.getColorForObject(handler), "  " + (index++) + ": " + handler.getShortTypeName() + " : " + handler.getName()));
+            if (source instanceof Player) {
+                builder.append(Text.of(TextColors.RED,
+                        TextActions.runCommand("/foxguard s h remove " + handler.getName()),
+                        TextActions.showText(Text.of("Remove from Handler State Buffer")),
+                        "  [-] "));
+            }
+            builder.append(Text.of(FGUtil.getColorForObject(handler), (index++) + ": " + handler.getShortTypeName() + " : " + handler.getName()));
             if (it.hasNext()) builder.append(Text.of("\n"));
         }
         return builder.build();
@@ -109,6 +120,31 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
         return ImmutableList.of();
     }
 
+    @Override
+    public Optional<Text> getScoreboardTitle() {
+        return Optional.of(Text.of(TextColors.GREEN, this.name,
+                TextColors.YELLOW, " (", this.list.size(), ")"));
+    }
+
+    @Override
+    public List<Text> getScoreboardText() {
+        int[] index = {1};
+        return this.list.stream()
+                .map(handler -> Text.of(FGUtil.getColorForObject(handler),
+                        "  " + index[0]++ + ": " + handler.getShortTypeName() + " : " + handler.getName()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean showScoreboard() {
+        return !list.isEmpty();
+    }
+
+    @Override
+    public boolean prioritizeLast() {
+        return false;
+    }
+
     public ProcessResult add(CommandSource source, String arguments) throws CommandException {
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).parse();
 
@@ -119,7 +155,7 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
         if (this.list.contains(handler))
             throw new ArgumentParseException(Text.of("Handler is already in your state buffer!"), parse.args[0], 1);
         this.list.add(handler);
-
+        sourceState.updateScoreboard();
         return ProcessResult.of(true, Text.of("Successfully added handler to your state buffer!"));
     }
 
@@ -142,6 +178,7 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
             if (!this.list.contains(handler))
                 throw new ArgumentParseException(Text.of("Handler is not in your state buffer!"), parse.args[0], 1);
             this.list.remove(handler);
+            sourceState.updateScoreboard();
             return ProcessResult.of(true, Text.of("Successfully removed handler from your state buffer!"));
         } else {
             int successes = 0, failures = 0;
@@ -168,6 +205,7 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
                 successes++;
             }
             if (successes > 0) {
+                sourceState.updateScoreboard();
                 return ProcessResult.of(true, Text.of(TextColors.GREEN, "Successfully removed handlers handlers from your state buffer with "
                         + successes + " successes" + (failures > 0 ? " and " + failures + " failures!" : "!")));
             } else {

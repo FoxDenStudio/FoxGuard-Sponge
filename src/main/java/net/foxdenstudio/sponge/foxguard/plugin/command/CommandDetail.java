@@ -50,7 +50,10 @@ import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.world.World;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -87,9 +90,7 @@ public class CommandDetail implements CommandCallable {
             return CommandResult.empty();
         } else if (isIn(REGIONS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
-            IRegion region = null;
-            if (!parse.flagmap.keySet().contains("world"))
-                region = FGManager.getInstance().getRegion(parse.args[1]);
+            IRegion region = FGManager.getInstance().getRegion(parse.args[1]);
             if (region == null) {
                 String worldName = parse.flagmap.get("world");
                 World world = null;
@@ -125,7 +126,7 @@ public class CommandDetail implements CommandCallable {
                     builder.append(Text.of(TextColors.GOLD, "World: "), Text.of(TextColors.RESET, ((IWorldRegion) region).getWorld().getName() + "\n"));
                 builder.append(Text.of(TextColors.GREEN, "------- Details -------\n"));
                 builder.append(region.details(source, parse.args.length < 3 ? "" : parse.args[2]));
-                outboundLinks(builder, region);
+                outboundLinks(builder, region, source);
             } else {
                 builder.append(Text.of(TextColors.GREEN, "------- Details for Region \"" + region.getName() + "\"" +
                         (region instanceof IWorldRegion ? (" in World \"" + ((IWorldRegion) region).getWorld().getName() + "\"") : "") +
@@ -159,7 +160,9 @@ public class CommandDetail implements CommandCallable {
                         .onHover(TextActions.showText(Text.of("Click to Change Priority")))
                         .build());
                 builder.append(Text.of(TextColors.GREEN, "------- Details -------\n"));
-                builder.append(handler.details(source, parse.args.length < 3 ? "" : parse.args[2]));
+                Text objectDetails = handler.details(source, parse.args.length < 3 ? "" : parse.args[2]);
+                if (objectDetails == null) objectDetails = Text.of();
+                builder.append(objectDetails);
                 builder.append(Text.of(TextColors.GREEN, "\n------- Inbound Links -------"));
                 List<IController> controllerList = FGManager.getInstance().getControllers().stream()
                         .filter(controller -> controller.getHandlers().contains(handler))
@@ -171,17 +174,76 @@ public class CommandDetail implements CommandCallable {
                         .collect(GuavaCollectors.toImmutableList());
                 if (controllerList.size() == 0 && regionList.size() == 0)
                     builder.append(Text.of(TextStyles.ITALIC, "\nNo inbound links!"));
-                controllerList.forEach(controller -> builder.append(Text.of(FGUtil.getColorForObject(controller),
-                        TextActions.runCommand("/foxguard det c " + controller.getName()),
-                        TextActions.showText(Text.of("View details for controller \"" + controller.getName() + "\"")))));
+                controllerList.forEach(controller -> {
+                    builder.append(Text.of("\n"));
+                    if (source instanceof Player) {
+                        List<IHandler> selectedHandlers = FGUtil.getSelectedHandlers(source);
+                        List<IController> selectedControllers = FGUtil.getSelectedControllers(source);
+                        if (selectedHandlers.contains(controller)) {
+                            builder.append(Text.of(TextColors.GRAY, "[h+]"));
+                            builder.append(Text.of(TextColors.RED,
+                                    TextActions.runCommand("/foxguard s h remove " + controller.getName()),
+                                    TextActions.showText(Text.of("Remove from Handler State Buffer")),
+                                    "[h-]"));
+                        } else {
+                            builder.append(Text.of(TextColors.GREEN,
+                                    TextActions.runCommand("/foxguard s h add " + controller.getName()),
+                                    TextActions.showText(Text.of("Add to Handler State Buffer")),
+                                    "[h+]"));
+                            builder.append(Text.of(TextColors.GRAY, "[h-]"));
+                        }
+                        if (selectedControllers.contains(controller)) {
+                            builder.append(Text.of(TextColors.GRAY, "[c+]"));
+                            builder.append(Text.of(TextColors.RED,
+                                    TextActions.runCommand("/foxguard s c remove " + controller.getName()),
+                                    TextActions.showText(Text.of("Remove from Controller State Buffer")),
+                                    "[c-]"));
+                        } else {
+                            builder.append(Text.of(TextColors.GREEN,
+                                    TextActions.runCommand("/foxguard s c add " + controller.getName()),
+                                    TextActions.showText(Text.of("Add to Controller State Buffer")),
+                                    "[c+]"));
+                            builder.append(Text.of(TextColors.GRAY, "[c-]"));
+                        }
+                        builder.append(Text.of(" "));
+                    }
+                    builder.append(Text.of(FGUtil.getColorForObject(controller),
+                            TextActions.runCommand("/foxguard det c " + controller.getName()),
+                            TextActions.showText(Text.of("View details for controller \"" + controller.getName() + "\"")),
+                            controller.getShortTypeName() + " : " + controller.getName()));
+                });
 
-                regionList.forEach(region -> builder.append(Text.of(FGUtil.getColorForObject(region),
-                        TextActions.runCommand("/foxguard detail region " + FGUtil.genWorldFlag(region) + region.getName()),
-                        TextActions.showText(Text.of("View details for region \"" + region.getName() + "\"")),
-                        "\n" + FGUtil.getRegionName(region, true)
-                )));
+                regionList.forEach(region -> {
+                    builder.append(Text.of("\n"));
+                    if (source instanceof Player) {
+                        List<IRegion> selectedRegions = FGUtil.getSelectedRegions(source);
+                        if (selectedRegions.contains(region)) {
+                            builder.append(Text.of(TextColors.GRAY, "[+]"));
+                            builder.append(Text.of(TextColors.RED,
+                                    TextActions.runCommand("/foxguard s r remove " +
+                                            FGUtil.genWorldFlag(region) +
+                                            region.getName()),
+                                    TextActions.showText(Text.of("Remove from State Buffer")),
+                                    "[-]"));
+                        } else {
+                            builder.append(Text.of(TextColors.GREEN,
+                                    TextActions.runCommand("/foxguard s r add " +
+                                            FGUtil.genWorldFlag(region) +
+                                            region.getName()),
+                                    TextActions.showText(Text.of("Add to State Buffer")),
+                                    "[+]"));
+                            builder.append(Text.of(TextColors.GRAY, "[-]"));
+                        }
+                        builder.append(Text.of(" "));
+                    }
+                    builder.append(Text.of(FGUtil.getColorForObject(region),
+                            TextActions.runCommand("/foxguard detail region " + FGUtil.genWorldFlag(region) + region.getName()),
+                            TextActions.showText(Text.of("View details for region \"" + region.getName() + "\"")),
+                            FGUtil.getRegionName(region, true)
+                    ));
+                });
                 if (handler instanceof IController) {
-                    outboundLinks(builder, (IController) handler);
+                    outboundLinks(builder, (IController) handler, source);
                 }
             } else {
                 builder.append(Text.of(TextColors.GREEN, "------- Details for Handler \"" + handler.getName() + "\" -------\n"));
@@ -194,15 +256,54 @@ public class CommandDetail implements CommandCallable {
         }
     }
 
-    private void outboundLinks(Text.Builder builder, ILinkable linkable) {
+    private void outboundLinks(Text.Builder builder, ILinkable linkable, CommandSource source) {
         builder.append(Text.of(TextColors.GREEN, "\n------- Outbound Links -------"));
         if (linkable.getHandlers().size() == 0)
             builder.append(Text.of(TextStyles.ITALIC, "\nNo outbound links!"));
-        linkable.getHandlers().stream().sorted((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName())).forEach(handler -> builder.append(Text.of(FGUtil.getColorForObject(handler),
-                TextActions.runCommand("/foxguard det h " + handler.getName()),
-                TextActions.showText(Text.of("View Details for " + (handler instanceof IController ? "controller" : "handler") + " \"" + handler.getName() + "\"")),
-                "\n" + handler.getShortTypeName() + " : " + handler.getName()
-        )));
+        linkable.getHandlers().stream().sorted((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName())).forEach(handler -> {
+            builder.append(Text.of("\n"));
+            if (source instanceof Player) {
+                List<IHandler> selectedHandlers = FGUtil.getSelectedHandlers(source);
+                List<IController> selectedControllers = FGUtil.getSelectedControllers(source);
+                if (selectedHandlers.contains(handler)) {
+                    builder.append(Text.of(TextColors.GRAY, "[h+]"));
+                    builder.append(Text.of(TextColors.RED,
+                            TextActions.runCommand("/foxguard s h remove " + handler.getName()),
+                            TextActions.showText(Text.of("Remove from Handler State Buffer")),
+                            "[h-]"));
+                } else {
+                    builder.append(Text.of(TextColors.GREEN,
+                            TextActions.runCommand("/foxguard s h add " + handler.getName()),
+                            TextActions.showText(Text.of("Add to Handler State Buffer")),
+                            "[h+]"));
+                    builder.append(Text.of(TextColors.GRAY, "[h-]"));
+                }
+                if (handler instanceof IController) {
+                    IController controller = ((IController) handler);
+                    if (selectedControllers.contains(controller)) {
+                        builder.append(Text.of(TextColors.GRAY, "[c+]"));
+                        builder.append(Text.of(TextColors.RED,
+                                TextActions.runCommand("/foxguard s c remove " + controller.getName()),
+                                TextActions.showText(Text.of("Remove from Controller State Buffer")),
+                                "[c-]"));
+                    } else {
+                        builder.append(Text.of(TextColors.GREEN,
+                                TextActions.runCommand("/foxguard s c add " + controller.getName()),
+                                TextActions.showText(Text.of("Add to Controller State Buffer")),
+                                "[c+]"));
+                        builder.append(Text.of(TextColors.GRAY, "[c-]"));
+                    }
+                } else {
+                    builder.append(Text.of(TextColors.DARK_GRAY, "[c+][c-]"));
+                }
+                builder.append(Text.of(" "));
+            }
+            builder.append(Text.of(FGUtil.getColorForObject(handler),
+                    TextActions.runCommand("/foxguard det h " + handler.getName()),
+                    TextActions.showText(Text.of("View Details for " + (handler instanceof IController ? "controller" : "handler") + " \"" + handler.getName() + "\"")),
+                    handler.getShortTypeName() + " : " + handler.getName()
+            ));
+        });
     }
 
     @Override

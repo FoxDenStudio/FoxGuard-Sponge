@@ -80,9 +80,7 @@ public class CommandDelete implements CommandCallable {
             return CommandResult.empty();
         } else if (isIn(REGIONS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
-            IRegion region = null;
-            if (!parse.flagmap.keySet().contains("world"))
-                region = FGManager.getInstance().getRegion(parse.args[1]);
+            IRegion region = FGManager.getInstance().getRegion(parse.args[1]);
             if (region == null) {
                 String worldName = parse.flagmap.get("world");
                 World world = null;

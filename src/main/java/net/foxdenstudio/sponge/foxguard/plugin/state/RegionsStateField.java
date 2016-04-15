@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.state.ListStateFieldBase;
+import net.foxdenstudio.sponge.foxcore.plugin.state.SourceState;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
@@ -39,6 +40,8 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.action.TextActions;
+import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.world.World;
@@ -49,6 +52,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.WORLD_ALIASES;
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isIn;
@@ -64,24 +68,27 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         }
     };
 
-    public RegionsStateField() {
-        super("Regions");
+    public RegionsStateField(SourceState sourceState) {
+        super("Regions", sourceState);
     }
 
     @Override
-    public Text currentState() {
+    public Text currentState(CommandSource source) {
         Text.Builder builder = Text.builder();
         Iterator<IRegion> regionIterator = this.list.iterator();
         int index = 1;
         while (regionIterator.hasNext()) {
             IRegion region = regionIterator.next();
-            if (region instanceof IWorldRegion) {
-                builder.append(Text.of(FGUtil.getColorForObject(region),
-                        (index++) + ": " + region.getShortTypeName() + " : " + ((IWorldRegion) region).getWorld().getName() + " : " + region.getName()));
-            } else {
-                builder.append(Text.of(FGUtil.getColorForObject(region),
-                        (index++) + ": " + region.getShortTypeName() + " : " + region.getName()));
+            if (source instanceof Player) {
+                builder.append(Text.of(TextColors.RED,
+                        TextActions.runCommand("/foxguard s r remove " +
+                                FGUtil.genWorldFlag(region) +
+                                region.getName()),
+                        TextActions.showText(Text.of("Remove from State Buffer")),
+                        "  [-] "));
             }
+            builder.append(Text.of(FGUtil.getColorForObject(region),
+                    (index++) + ": " + FGUtil.getRegionName(region, true)));
             if (regionIterator.hasNext()) builder.append(Text.of("\n"));
         }
         return builder.build();
@@ -158,13 +165,36 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         return ImmutableList.of();
     }
 
+    @Override
+    public Optional<Text> getScoreboardTitle() {
+        return Optional.of(Text.of(TextColors.GREEN, this.name,
+                TextColors.YELLOW, " (", this.list.size(), ")"));
+    }
+
+    @Override
+    public List<Text> getScoreboardText() {
+        int[] index = {1};
+        return this.list.stream()
+                .map(region -> Text.of(FGUtil.getColorForObject(region),
+                        "  " + index[0]++ + ": " + FGUtil.getRegionName(region, true)))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean showScoreboard() {
+        return !list.isEmpty();
+    }
+
+    @Override
+    public boolean prioritizeLast() {
+        return false;
+    }
+
     public ProcessResult add(CommandSource source, String arguments) throws CommandException {
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(MAPPER).parse();
 
         if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name!"));
-        IRegion region = null;
-        if (!parse.flagmap.keySet().contains("world"))
-            region = FGManager.getInstance().getRegion(parse.args[0]);
+        IRegion region = FGManager.getInstance().getRegion(parse.args[0]);
         if (region == null) {
             String worldName = parse.flagmap.get("world");
             World world = null;
@@ -183,7 +213,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         if (this.list.contains(region))
             throw new CommandException(Text.of("Region is already in your state buffer!"));
         this.list.add(region);
-
+        sourceState.updateScoreboard();
         return ProcessResult.of(true, Text.of("Successfully added region to your state buffer!"));
     }
 
@@ -229,7 +259,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         if (!this.list.contains(region))
             throw new CommandException(Text.of("Region is not in your state buffer!"));
         this.list.remove(region);
-
+        sourceState.updateScoreboard();
         return ProcessResult.of(true, Text.of("Successfully removed region from your state buffer!"));
     }
 }

@@ -32,6 +32,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandDispatcher;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.plugin.command.*;
+import net.foxdenstudio.sponge.foxguard.plugin.controller.LogicController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.PassiveHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.PermissionHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.SimpleHandler;
@@ -304,6 +305,7 @@ public final class FoxGuardMain {
         manager.registerHandlerFactory(new PermissionHandler.Factory());
 
         //manager.registerControllerFactory(new MessageController.Factory());
+        manager.registerControllerFactory(new LogicController.Factory());
     }
 
     /**

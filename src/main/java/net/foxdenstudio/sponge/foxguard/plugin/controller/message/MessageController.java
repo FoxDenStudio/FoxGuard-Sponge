@@ -1,12 +1,14 @@
-package net.foxdenstudio.sponge.foxguard.plugin.controller;
+package net.foxdenstudio.sponge.foxguard.plugin.controller.message;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxguard.plugin.IFlag;
+import net.foxdenstudio.sponge.foxguard.plugin.controller.ControllerBase;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.util.HandlerWrapper;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.ISendableMessage;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
@@ -17,13 +19,16 @@ import org.spongepowered.api.util.Tristate;
 
 import javax.annotation.Nullable;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public class MessageController extends ControllerBase {
 
     private HandlerWrapper slot;
-    private Map<String, Text> messages;
-    private Map<IFlag, Config> configs;
+    private Map<String, ISendableMessage> messages;
+    private Map<Config, String> configs;
 
 
     public MessageController(String name, int priority) {
@@ -35,20 +40,12 @@ public class MessageController extends ControllerBase {
 
     @Override
     public EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra) {
-        if (configs.containsKey(flag)) {
-            Config c = configs.get(flag);
-            if (messages.containsKey(c.messageID)) {
-                EventResult result = slot.handle(user, flag, event, extra);
-                if (c.enabled.get(result.getState())) {
-                    return EventResult.of(result.getState(), messages.get(c.messageID));
-                } else {
-                    return result;
-                }
-            } else {
-                return slot.handle(user, flag, event, extra);
-            }
+        EventResult result = slot.handle(user, flag, event, extra);
+        String messageName = configs.get(new Config(flag, result.getState()));
+        if (messageName != null) {
+            return result;
         } else {
-            return slot.handle(user, flag, event, extra);
+            return result;
         }
     }
 
@@ -142,50 +139,49 @@ public class MessageController extends ControllerBase {
         this.slot = slot;
     }
 
-    public Map<String, Text> getMessages() {
+    public Map<String, ISendableMessage> getMessages() {
         return messages;
     }
 
-    public void setMessages(Map<String, Text> messages) {
+    public void setMessages(Map<String, ISendableMessage> messages) {
         this.messages = messages;
     }
 
-    public Map<IFlag, Config> getConfigs() {
+    public Map<Config, String> getConfigs() {
         return configs;
     }
 
-    public void setConfigs(Map<IFlag, Config> configs) {
+    public void setConfigs(Map<Config, String> configs) {
         this.configs = configs;
     }
 
-    private class Config {
+    private static final class Config {
 
-        public final Map<Tristate, Boolean> enabled;
-        public String messageID;
+        public final IFlag flag;
+        public final Tristate state;
 
-
-        private Config() {
-            enabled = new EnumMap<>(Tristate.class);
+        public Config(IFlag flag, Tristate state) {
+            this.flag = flag;
+            this.state = state;
         }
 
-        public Config(Tristate state, String messageID) {
-            this();
-            this.messageID = messageID;
-            for (Tristate t : Tristate.values()) {
-                if (t == state) {
-                    enabled.put(t, true);
-                } else {
-                    enabled.put(t, false);
-                }
-            }
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Config config = (Config) o;
+
+            if (flag != null ? !flag.equals(config.flag) : config.flag != null) return false;
+            return state == config.state;
+
         }
 
-        public Config(boolean deny, boolean passthrough, boolean allow, String messageID) {
-            this();
-            this.messageID = messageID;
-            enabled.put(Tristate.FALSE, deny);
-            enabled.put(Tristate.UNDEFINED, passthrough);
-            enabled.put(Tristate.TRUE, allow);
+        @Override
+        public int hashCode() {
+            int result = flag != null ? flag.hashCode() : 0;
+            result = 31 * result + (state != null ? state.hashCode() : 0);
+            return result;
         }
     }
 

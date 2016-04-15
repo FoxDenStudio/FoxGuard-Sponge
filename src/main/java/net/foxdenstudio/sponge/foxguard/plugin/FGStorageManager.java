@@ -679,7 +679,7 @@ public final class FGStorageManager {
         return builder.toString();
     }
 
-    private class LoadEntry {
+    private final class LoadEntry {
         public final String name;
         public final Type type;
         public final String world;
@@ -719,18 +719,24 @@ public final class FGStorageManager {
         }
 
         @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof LoadEntry) {
-                LoadEntry entry = (LoadEntry) obj;
-                return name.equalsIgnoreCase(entry.name) &&
-                        type.equals(entry.type) &&
-                        world.equalsIgnoreCase(entry.world);
-            } else return false;
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            LoadEntry entry = (LoadEntry) o;
+
+            if (name != null ? !name.equals(entry.name) : entry.name != null) return false;
+            if (type != entry.type) return false;
+            return world != null ? world.equals(entry.world) : entry.world == null;
+
         }
 
         @Override
         public int hashCode() {
-            return name.toLowerCase().hashCode() + type.hashCode() + world.toLowerCase().hashCode();
+            int result = name != null ? name.hashCode() : 0;
+            result = 31 * result + (type != null ? type.hashCode() : 0);
+            result = 31 * result + (world != null ? world.hashCode() : 0);
+            return result;
         }
 
         public Path getPath() {

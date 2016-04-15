@@ -31,8 +31,10 @@ import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
+import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.state.ControllersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
 import org.spongepowered.api.command.CommandSource;
@@ -45,7 +47,8 @@ import java.util.Set;
 public final class FGUtil {
 
     public static TextColor getColorForObject(IFGObject object) {
-        if (object instanceof IGlobal) return TextColors.YELLOW;
+        if (object instanceof GlobalRegion) return TextColors.LIGHT_PURPLE;
+        else if (object instanceof IGlobal) return TextColors.YELLOW;
         else if (!object.isEnabled()) return TextColors.GRAY;
         else if (object instanceof IController) return TextColors.GREEN;
         else if ((object instanceof IRegion) && !(object instanceof IWorldRegion)) return TextColors.AQUA;
@@ -61,6 +64,11 @@ public final class FGUtil {
     @SuppressWarnings("unchecked")
     public static List<IHandler> getSelectedHandlers(CommandSource source) {
         return ((HandlersStateField) FCStateManager.instance().getStateMap().get(source).getOrCreate(HandlersStateField.ID).get()).getList();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static List<IController> getSelectedControllers(CommandSource source) {
+        return ((ControllersStateField) FCStateManager.instance().getStateMap().get(source).getOrCreate(ControllersStateField.ID).get()).getList();
     }
 
     public static String getRegionName(IRegion region, boolean dispWorld) {

@@ -25,7 +25,9 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.listener.util;
 
+import net.foxdenstudio.sponge.foxguard.plugin.controller.message.ChatMessage;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
 
 import java.util.Optional;
@@ -37,9 +39,9 @@ public final class EventResult {
     private static final EventResult FAILURE = of(Tristate.FALSE);
 
     private final Tristate state;
-    private final Optional<Text> message;
+    private final Optional<ISendableMessage> message;
 
-    private EventResult(Tristate success, Optional<Text> message) {
+    private EventResult(Tristate success, Optional<ISendableMessage> message) {
         this.state = success;
         this.message = message;
     }
@@ -48,8 +50,12 @@ public final class EventResult {
         return new EventResult(state, Optional.empty());
     }
 
-    public static EventResult of(Tristate success, Text message) {
+    public static EventResult of(Tristate success, ISendableMessage message) {
         return new EventResult(success, Optional.of(message));
+    }
+
+    public static EventResult of(Tristate success, Text message) {
+        return new EventResult(success, Optional.of(new ChatMessage(message, ChatTypes.ACTION_BAR)));
     }
 
     public static EventResult allow() {
@@ -68,7 +74,7 @@ public final class EventResult {
         return state;
     }
 
-    public Optional<Text> getMessage() {
+    public Optional<ISendableMessage> getMessage() {
         return message;
     }
 }

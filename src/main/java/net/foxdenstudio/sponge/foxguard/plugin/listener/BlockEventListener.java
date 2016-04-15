@@ -117,14 +117,24 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
                 if (user instanceof Player) {
                     Player player = (Player) user;
                     Vector3i pos = player.getLocation().getPosition().toInt();
-                    boolean flag = false;
+                    Response r = Response.NONE;
                     for (Transaction<BlockSnapshot> trans : event.getTransactions()) {
-                        if (trans.getOriginal().getPosition().distanceSquared(pos) < 4096) {
-                            flag = true;
+                        int dist = trans.getOriginal().getPosition().distanceSquared(pos);
+                        if (dist < 64) {
+                            r = Response.BASIC;
+                            break;
+                        }
+                        if (dist < 4096) {
+                            r = Response.LOCATION;
                             break;
                         }
                     }
-                    if (flag) player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
+                    if (r == Response.BASIC)
+                        player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
+                    else if (r == Response.LOCATION)
+                        player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission! " +
+                                event.getTransactions().get(0).getOriginal().getPosition() +
+                                (event.getTransactions().size() > 1 ? "..." : "")));
                 }
             } else {
 
@@ -139,5 +149,8 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
         }
     }
 
+    private enum Response {
+        NONE, BASIC, LOCATION
+    }
 
 }

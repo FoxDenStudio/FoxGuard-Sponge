@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
@@ -136,6 +137,27 @@ public class CommandHere implements CommandCallable {
             ListIterator<IRegion> regionListIterator = regionList.listIterator();
             while (regionListIterator.hasNext()) {
                 IRegion region = regionListIterator.next();
+                if (source instanceof Player) {
+                    List<IRegion> selectedRegions = FGUtil.getSelectedRegions(source);
+                    if (selectedRegions.contains(region)) {
+                        output.append(Text.of(TextColors.GRAY, "[+]"));
+                        output.append(Text.of(TextColors.RED,
+                                TextActions.runCommand("/foxguard s r remove " +
+                                        (region instanceof IWorldRegion ? ("--w:" + ((IWorldRegion) region).getWorld() + " ") : "") +
+                                        region.getName()),
+                                TextActions.showText(Text.of("Remove from State Buffer")),
+                                "[-]"));
+                    } else {
+                        output.append(Text.of(TextColors.GREEN,
+                                TextActions.runCommand("/foxguard s r add " +
+                                        (region instanceof IWorldRegion ? ("--w:" + ((IWorldRegion) region).getWorld().getName() + " ") : "") +
+                                        region.getName()),
+                                TextActions.showText(Text.of("Add to State Buffer")),
+                                "[+]"));
+                        output.append(Text.of(TextColors.GRAY, "[-]"));
+                    }
+                    output.append(Text.of(" "));
+                }
                 output.append(Text.of(FGUtil.getColorForObject(region),
                         TextActions.runCommand("/foxguard detail region" + (region instanceof IWorldRegion ? (" --w:" + ((IWorldRegion) region).getWorld().getName() + " ") : "") + region.getName()),
                         TextActions.showText(Text.of("View Details")),
@@ -155,6 +177,42 @@ public class CommandHere implements CommandCallable {
             ListIterator<IHandler> handlerListIterator = handlerList.listIterator();
             while (handlerListIterator.hasNext()) {
                 IHandler handler = handlerListIterator.next();
+                if (source instanceof Player) {
+                    List<IHandler> selectedHandlers = FGUtil.getSelectedHandlers(source);
+                    List<IController> selectedControllers = FGUtil.getSelectedControllers(source);
+                    if (selectedHandlers.contains(handler)) {
+                        output.append(Text.of(TextColors.GRAY, "[h+]"));
+                        output.append(Text.of(TextColors.RED,
+                                TextActions.runCommand("/foxguard s h remove " + handler.getName()),
+                                TextActions.showText(Text.of("Remove from Handler State Buffer")),
+                                "[h-]"));
+                    } else {
+                        output.append(Text.of(TextColors.GREEN,
+                                TextActions.runCommand("/foxguard s h add " + handler.getName()),
+                                TextActions.showText(Text.of("Add to Handler State Buffer")),
+                                "[h+]"));
+                        output.append(Text.of(TextColors.GRAY, "[h-]"));
+                    }
+                    if (handler instanceof IController) {
+                        IController controller = ((IController) handler);
+                        if (selectedControllers.contains(controller)) {
+                            output.append(Text.of(TextColors.GRAY, "[c+]"));
+                            output.append(Text.of(TextColors.RED,
+                                    TextActions.runCommand("/foxguard s c remove " + controller.getName()),
+                                    TextActions.showText(Text.of("Remove from Controller State Buffer")),
+                                    "[c-]"));
+                        } else {
+                            output.append(Text.of(TextColors.GREEN,
+                                    TextActions.runCommand("/foxguard s c add " + controller.getName()),
+                                    TextActions.showText(Text.of("Add to Controller State Buffer")),
+                                    "[c+]"));
+                            output.append(Text.of(TextColors.GRAY, "[c-]"));
+                        }
+                    } else {
+                        output.append(Text.of(TextColors.DARK_GRAY, "[c+][c-]"));
+                    }
+                    output.append(Text.of(" "));
+                }
                 output.append(Text.of(FGUtil.getColorForObject(handler),
                         TextActions.runCommand("/foxguard detail handler " + handler.getName()),
                         TextActions.showText(Text.of("View Details")),

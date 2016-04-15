@@ -34,7 +34,7 @@ public class RegionsStateFieldFactory implements IStateFieldFactory {
 
     @Override
     public IStateField createStateField(SourceState sourceState) {
-        return new RegionsStateField();
+        return new RegionsStateField(sourceState);
     }
 
 }
