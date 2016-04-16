@@ -316,7 +316,7 @@ public final class FoxGuardMain {
         eventManager.registerListener(this, InteractEvent.class, new InteractListener());
         eventManager.registerListener(this, SpawnEntityEvent.class, new SpawnEntityEventListener());
         if (FGConfigManager.getInstance().getModules().get(FGConfigManager.Module.MOVEMENT)) {
-            PlayerMoveListener pml = new PlayerMoveListener();
+            PlayerMoveListener pml = new PlayerMoveListener(true);
             eventManager.registerListener(this, DisplaceEntityEvent.class, pml);
             eventManager.registerListeners(this, pml.new Listeners());
         }

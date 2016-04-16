@@ -83,6 +83,7 @@ public final class FGManager {
         globalHandler = new GlobalHandler();
         regions.add(globalRegion);
         handlers.add(globalHandler);
+        link(globalRegion, globalHandler);
 
         this.regionCache = new RegionCache(regions, worldRegions);
     }

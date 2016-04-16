@@ -106,15 +106,15 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
             currPriority = handler.getPriority();
         }
         flagState = typeFlag.resolve(flagState);
-        if (user instanceof Player && CommandDebug.instance().getDebug().get(user)) {
-            if (flagState == Tristate.FALSE) {
-                Vector3i vec = event.getTransactions().get(0).getOriginal().getPosition();
-                ((Player) user).sendMessage(Text.of("Block action denied at (" + vec.getX() + ", " + vec.getY() + ", " + vec.getZ() + ")"
-                        + (event.getTransactions().size() > 1 ? " and " + (event.getTransactions().size() - 1) + " other positions" : "") + "!"));
-            }
-        } else {
-            if (flagState == Tristate.FALSE) {
-                if (user instanceof Player) {
+
+        if (flagState == Tristate.FALSE) {
+            if (user instanceof Player) {
+                if (CommandDebug.instance().getDebug().get(user)) {
+                    Vector3i vec = event.getTransactions().get(0).getOriginal().getPosition();
+                    ((Player) user).sendMessage(Text.of("Block action denied at (" + vec.getX() + ", " + vec.getY() + ", " + vec.getZ() + ")"
+                            + (event.getTransactions().size() > 1 ? " and " + (event.getTransactions().size() - 1) + " other positions" : "") + "!"));
+                } else {
+
                     Player player = (Player) user;
                     Vector3i pos = player.getLocation().getPosition().toInt();
                     Response r = Response.NONE;
@@ -136,10 +136,11 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
                                 event.getTransactions().get(0).getOriginal().getPosition() +
                                 (event.getTransactions().size() > 1 ? "..." : "")));
                 }
-            } else {
-
             }
+        } else {
+
         }
+
         if (flagState == Tristate.FALSE) {
 
             event.setCancelled(true);

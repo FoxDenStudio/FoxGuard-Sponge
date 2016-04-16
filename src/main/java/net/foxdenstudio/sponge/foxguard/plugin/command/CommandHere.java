@@ -28,10 +28,12 @@ package net.foxdenstudio.sponge.foxguard.plugin.command;
 import com.flowpowered.math.vector.Vector3d;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.FCUtil;
+import net.foxdenstudio.sponge.foxcore.plugin.command.CommandHUD;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.PlayerMoveListener;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
@@ -58,6 +60,8 @@ import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
 public class CommandHere implements CommandCallable {
 
+    private static final String[] PRIORITY_ALIASES = {"priority", "prio", "p"};
+
     private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
         map.put(key, value);
         if (isIn(REGIONS_ALIASES, key) && !map.containsKey("region")) {
@@ -66,6 +70,8 @@ public class CommandHere implements CommandCallable {
             map.put("handler", value);
         } else if (isIn(WORLD_ALIASES, key) && !map.containsKey("world")) {
             map.put("world", value);
+        } else if (isIn(PRIORITY_ALIASES, key) && !map.containsKey("priority")) {
+            map.put("priority", value);
         }
     };
 
@@ -76,6 +82,7 @@ public class CommandHere implements CommandCallable {
             return CommandResult.empty();
         }
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(MAPPER).parse();
+        PlayerMoveListener.HUDConfig hudConfig = new PlayerMoveListener.HUDConfig(false, false, false);
 
         String worldName = parse.flagmap.get("world");
         World world = null;
@@ -129,6 +136,7 @@ public class CommandHere implements CommandCallable {
         List<IRegion> regionList = FGManager.getInstance().getAllRegions(world).stream()
                 .filter(region -> region.contains(x, y, z, finalWorld))
                 .collect(Collectors.toList());
+        List<IHandler> handlerList = new ArrayList<>();
         output.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
         output.append(Text.of(TextColors.AQUA, "----- Position: (" + String.format("%.1f, %.1f, %.1f", x, y, z) + ") -----\n"));
         if (!parse.flagmap.containsKey("handler") || parse.flagmap.containsKey("region")) {
@@ -165,15 +173,21 @@ public class CommandHere implements CommandCallable {
                 if (regionListIterator.hasNext()) output.append(Text.of("\n"));
             }
             flag = true;
+            hudConfig.regions = true;
         }
         if (!parse.flagmap.containsKey("region") || parse.flagmap.containsKey("handler")) {
             if (flag) output.append(Text.of("\n"));
-            List<IHandler> handlerList = new ArrayList<>();
+
             regionList.forEach(region -> region.getHandlers().stream()
                     .filter(handler -> !handlerList.contains(handler))
                     .forEach(handlerList::add));
             output.append(Text.of(TextColors.GREEN, "------- Handlers Located Here -------\n"));
-            Collections.sort(handlerList, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
+            if (parse.flagmap.containsKey("priority")) {
+                Collections.sort(handlerList, (o1, o2) -> o2.getPriority() - o1.getPriority());
+                hudConfig.priority = true;
+            } else {
+                Collections.sort(handlerList, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
+            }
             ListIterator<IHandler> handlerListIterator = handlerList.listIterator();
             while (handlerListIterator.hasNext()) {
                 IHandler handler = handlerListIterator.next();
@@ -219,8 +233,18 @@ public class CommandHere implements CommandCallable {
                         handler.getShortTypeName() + " : " + handler.getName()));
                 if (handlerListIterator.hasNext()) output.append(Text.of("\n"));
             }
+            hudConfig.handlers = true;
         }
         source.sendMessage(output.build());
+        if (source instanceof Player) {
+            Player player = (Player) source;
+            if (CommandHUD.instance().getIsHUDEnabled().get(player)) {
+                PlayerMoveListener instance = PlayerMoveListener.getInstance();
+                instance.getHudConfigMap().put(player, hudConfig);
+                instance.renderHUD(player, regionList, handlerList, hudConfig);
+                instance.showScoreboard(player);
+            }
+        }
         return CommandResult.empty();
     }
 
@@ -236,12 +260,12 @@ public class CommandHere implements CommandCallable {
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT) && parse.current.index < 3 && parse.current.token.isEmpty()) {
             return ImmutableList.of(parse.current.prefix + "~");
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.SHORTFLAG)) {
-            return ImmutableList.of("r", "h").stream()
+            return ImmutableList.of("r", "h", "p").stream()
                     .filter(flag -> !parse.flagmap.containsKey(flag))
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY))
-            return ImmutableList.of("world").stream()
+            return ImmutableList.of("world", "regions", "handlers", "priority").stream()
                     .filter(new StartsWithPredicate(parse.current.token))
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());
