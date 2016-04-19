@@ -83,7 +83,7 @@ public final class FGManager {
         globalHandler = new GlobalHandler();
         regions.add(globalRegion);
         handlers.add(globalHandler);
-        link(globalRegion, globalHandler);
+        globalRegion.addHandler(globalHandler);
 
         this.regionCache = new RegionCache(regions, worldRegions);
     }
@@ -409,7 +409,7 @@ public final class FGManager {
                 return FoxGuardMain.getCause();
             }
         });
-        return !(handler instanceof GlobalHandler && !(linkable instanceof GlobalWorldRegion)) && linkable.addHandler(handler);
+        return !(handler instanceof GlobalHandler && !(linkable instanceof GlobalWorldRegion || linkable instanceof GlobalRegion)) && linkable.addHandler(handler);
     }
 
     public boolean unlink(ILinkable linkable, IHandler handler) {
@@ -420,7 +420,7 @@ public final class FGManager {
                 return FoxGuardMain.getCause();
             }
         });
-        return !(handler instanceof GlobalHandler && linkable instanceof GlobalWorldRegion) && linkable.removeHandler(handler);
+        return !(handler instanceof GlobalHandler) && linkable.removeHandler(handler);
     }
 
     public boolean rename(IFGObject object, String newName) {

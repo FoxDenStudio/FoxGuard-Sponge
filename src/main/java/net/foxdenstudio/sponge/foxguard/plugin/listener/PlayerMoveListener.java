@@ -47,7 +47,7 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
     private final Map<Player, Scoreboard> scoreboardMap = new CacheMap<>((k, m) -> {
         if (k instanceof Player) {
             Scoreboard s = Scoreboard.builder().build();
-            Objective o = Objective.builder().criterion(Criteria.DUMMY).name("foxguardhere").build();
+            Objective o = Objective.builder().criterion(Criteria.DUMMY).name("foxguardhere").displayName(Text.EMPTY).build();
             s.addObjective(o);
             s.updateDisplaySlot(o, DisplaySlots.SIDEBAR);
             m.put((Player) k, s);
@@ -157,10 +157,12 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
                 event.setCancelled(false);
                 if (hud) {
                     renderHUD(player, regionList, toComplete, config);
+                    player.setScoreboard(this.scoreboardMap.get(player));
                 }
             }
         } else if (hud) {
             renderHUD(player, regionList, toComplete, config);
+            player.setScoreboard(this.scoreboardMap.get(player));
         }
     }
 
@@ -168,67 +170,64 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
         this.scoreboardMap.remove(player);
         Scoreboard scoreboard = this.scoreboardMap.get(player);
         Objective objective = scoreboard.getObjective("foxguardhere").get();
-        int slot = 15;
         if (config.regions) {
             Collections.sort(regions, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
             if (config.handlers) {
                 if (config.priority) {
-                    Collections.sort(handlers, (o1, o2) -> o1.getPriority() - o2.getPriority());
+                    Collections.sort(handlers, (o1, o2) -> o2.getPriority() - o1.getPriority());
                 } else {
                     Collections.sort(handlers, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
                 }
-                objective.setDisplayName(Text.of(TextColors.GOLD, "Regions and Handlers Located Here"));
+                objective.setDisplayName(Text.of(TextColors.GOLD, "  Regions and Handlers Here  "));
                 final int total = regions.size() + handlers.size();
                 final int regionCount = (int) Math.round(13.0 * regions.size() / total);
                 final int handlerCount = (int) Math.round(13.0 * handlers.size() / total);
+                int slot = Math.min(15, total + 2);
                 Score regionsScore = objective.getOrCreateScore(Text.of(TextColors.GREEN, "Regions (" + player.getWorld().getName() + ") ",
                         TextColors.YELLOW, "(" + regions.size() + ")"));
                 regionsScore.setScore(slot--);
-                for (int i = 0; i < regionCount; i++) {
+                for (int i = 0; i < regionCount && i < regions.size(); i++) {
                     IRegion region = regions.get(i);
                     Score score = objective.getOrCreateScore(Text.of(FGUtil.getColorForObject(region),
-                            FGUtil.getRegionName(region, false)));
+                            "  " + FGUtil.getRegionName(region, false)));
                     score.setScore(slot--);
-                    objective.addScore(score);
                 }
-                Score handlersScore = objective.getOrCreateScore(Text.of(TextColors.GREEN, "Handlers ",
+                Score handlersScore = objective.getOrCreateScore(Text.of(TextColors.GREEN, "Handlers " + (config.priority ? "by Priority " : ""),
                         TextColors.YELLOW, "(" + handlers.size() + ")"));
                 handlersScore.setScore(slot--);
-                for (int i = 0; i < handlerCount; i++) {
+                for (int i = 0; i < handlerCount && i < handlers.size(); i++) {
                     IHandler handler = handlers.get(i);
                     Score score = objective.getOrCreateScore(Text.of(FGUtil.getColorForObject(handler),
-                            handler.getShortTypeName() + " : " + handler.getName()));
+                            "  " + handler.getShortTypeName() + " : " + handler.getName()));
                     score.setScore(slot--);
-                    objective.addScore(score);
                 }
-                
+
             } else {
-                objective.setDisplayName(Text.of(TextColors.GOLD, "Regions Located Here (" + player.getWorld().getName() + ")"));
+                int slot = regions.size();
+                objective.setDisplayName(Text.of(TextColors.GOLD, "  Regions Here (" + player.getWorld().getName() + ")  "));
                 for (IRegion region : regions) {
                     Score score = objective.getOrCreateScore(Text.of(FGUtil.getColorForObject(region),
-                            FGUtil.getRegionName(region, false)));
+                            "  " + FGUtil.getRegionName(region, false)));
                     score.setScore(slot--);
-                    objective.addScore(score);
                     if (slot <= 0) break;
                 }
             }
         } else if (config.handlers) {
             if (config.priority) {
-                objective.setDisplayName(Text.of(TextColors.GOLD, "Handlers Located Here by Priority"));
+                objective.setDisplayName(Text.of(TextColors.GOLD, "  Handlers Here by Priority  "));
                 for (IHandler handler : handlers) {
                     Score score = objective.getOrCreateScore(Text.of(FGUtil.getColorForObject(handler),
-                            handler.getShortTypeName() + " : " + handler.getName()));
+                            "  " + handler.getShortTypeName() + " : " + handler.getName()));
                     score.setScore(handler.getPriority());
-                    objective.addScore(score);
                 }
             } else {
-                objective.setDisplayName(Text.of(TextColors.GOLD, "Handlers Located Here"));
+                int slot = handlers.size();
+                objective.setDisplayName(Text.of(TextColors.GOLD, "  Handlers Here  "));
                 Collections.sort(handlers, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
                 for (IHandler handler : handlers) {
                     Score score = objective.getOrCreateScore(Text.of(FGUtil.getColorForObject(handler),
-                            handler.getShortTypeName() + " : " + handler.getName()));
+                            "  " + handler.getShortTypeName() + " : " + handler.getName()));
                     score.setScore(slot--);
-                    objective.addScore(score);
                     if (slot <= 0) break;
                 }
             }

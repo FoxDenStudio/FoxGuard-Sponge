@@ -62,10 +62,8 @@ public class SpawnEntityEventListener implements EventListener<SpawnEntityEvent>
         User user;
         if (event.getCause().containsType(Player.class)) {
             user = event.getCause().first(Player.class).get();
-            System.out.println(user);
         } else if (event.getCause().containsType(User.class)) {
             user = event.getCause().first(User.class).get();
-            System.out.println(user);
         } else {
             user = null;
         }

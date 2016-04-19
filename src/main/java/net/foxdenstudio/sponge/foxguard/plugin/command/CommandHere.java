@@ -82,6 +82,7 @@ public class CommandHere implements CommandCallable {
             return CommandResult.empty();
         }
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(MAPPER).parse();
+        boolean hud = false;
         PlayerMoveListener.HUDConfig hudConfig = new PlayerMoveListener.HUDConfig(false, false, false);
 
         String worldName = parse.flagmap.get("world");
@@ -107,6 +108,7 @@ public class CommandHere implements CommandCallable {
             x = pPos.getX();
             y = pPos.getY();
             z = pPos.getZ();
+            hud = true;
         } else if (parse.args.length > 0 && parse.args.length < 3) {
             throw new CommandException(Text.of("Not enough arguments!"));
         } else if (parse.args.length == 3) {
@@ -236,7 +238,7 @@ public class CommandHere implements CommandCallable {
             hudConfig.handlers = true;
         }
         source.sendMessage(output.build());
-        if (source instanceof Player) {
+        if (hud) {
             Player player = (Player) source;
             if (CommandHUD.instance().getIsHUDEnabled().get(player)) {
                 PlayerMoveListener instance = PlayerMoveListener.getInstance();

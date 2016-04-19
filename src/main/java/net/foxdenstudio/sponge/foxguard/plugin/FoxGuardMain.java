@@ -223,33 +223,6 @@ public final class FoxGuardMain {
     }
 
     /**
-     * @param jdbcUrl A String representation of the connection url for the database.
-     * @return DataSource Object that is retrieved based off of the url from the SqlService.
-     * @throws SQLException
-     */
-    public DataSource getDataSource(String jdbcUrl) throws SQLException {
-        if (sql == null) {
-            sql = game.getServiceManager().provide(SqlService.class).get();
-        }
-        try {
-            return sql.getDataSource(jdbcUrl);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            File file = new File(jdbcUrl.split(":", 3)[2]);
-            if (file.exists()) {
-                if (!file.delete()) {
-                    file.deleteOnExit();
-                    throw e;
-                } else {
-                    return sql.getDataSource(jdbcUrl);
-                }
-            } else {
-                throw e;
-            }
-        }
-    }
-
-    /**
      * A private method that registers the list of commands, their aliases, and the command class.
      */
     private void registerCommands() {
