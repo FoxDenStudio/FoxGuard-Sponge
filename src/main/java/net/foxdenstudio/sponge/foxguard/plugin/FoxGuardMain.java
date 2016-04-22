@@ -68,6 +68,7 @@ import org.spongepowered.api.event.world.LoadWorldEvent;
 import org.spongepowered.api.event.world.UnloadWorldEvent;
 import org.spongepowered.api.plugin.Dependency;
 import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.service.permission.PermissionService;
 import org.spongepowered.api.service.permission.SubjectData;
 import org.spongepowered.api.service.sql.SqlService;
@@ -84,15 +85,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-@Plugin(id = "foxguard", name = "FoxGuard", version = FoxGuardMain.PLUGIN_VERSION, dependencies = {
+@Plugin(id = "foxguard", name = "FoxGuard", dependencies = {
         @Dependency(id = "foxcore")
 })
 public final class FoxGuardMain {
-
-    /**
-     * String object containing the current version of the plugin.
-     */
-    public static final String PLUGIN_VERSION = "0.16.1-SNAPSHOT";//VERSION
 
     public final Cause pluginCause = Cause.builder().named("plugin", this).build();
 
@@ -114,6 +110,9 @@ public final class FoxGuardMain {
     @Inject
     @ConfigDir(sharedRoot = true)
     private Path configDirectory;
+
+    @Inject
+    private PluginContainer container;
 
     @Inject
     private SpongeStatsLite stats;
@@ -142,7 +141,7 @@ public final class FoxGuardMain {
     @Listener
     public void gamePreInit(GamePreInitializationEvent event) {
         logger.info("Beginning FoxGuard initialization");
-        logger.info("Version: " + PLUGIN_VERSION);
+        logger.info("Version: " + container.getVersion().orElse("Unknown"));
         logger.info("Loading configs");
         new FGConfigManager();
         logger.info("Saving configs");
@@ -253,7 +252,7 @@ public final class FoxGuardMain {
     private void registerCoreCommands(FCCommandDispatcher dispatcher) {
         Text.Builder builder = Text.builder();
         builder.append(Text.of(TextColors.GOLD, "FoxGuard World Protection Plugin\n"));
-        builder.append(Text.of("Version: " + FoxGuardMain.PLUGIN_VERSION + "\n"));
+        builder.append(Text.of("Version: " + container.getVersion().orElse("Unknown") + "\n"));
         builder.append(Text.of("Author: gravityfox\n"));
 
         for (CommandMapping mapping : FoxCoreMain.instance().getFCDispatcher().getCommands()) {

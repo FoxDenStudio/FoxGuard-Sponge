@@ -10,17 +10,11 @@ git:
   submodules: false
 before_install: git submodule update --init --recursive
 
-before_script:
-  - bash ./setversion.sh
-
 env: GRADLE_OPTS="-Xms1g -Xmx3g"
-script: gradle build
+script: ./gradlew build
 
 notifications:
   email: false
-
-before_deploy:
-  - for f in "./build/libs/FoxGuard*SNAPSHOT.jar"; do mv ${f} "./build/libs/FoxGuard-${TRAVIS_TAG}-${TRAVIS_BUILD_NUMBER}-SNAPSHOT.jar"; done
 
 deploy:
   file_glob: true

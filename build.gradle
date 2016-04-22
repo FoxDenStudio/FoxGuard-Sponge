@@ -7,11 +7,29 @@ buildscript {
     }
 }
 
+plugins {
+    id 'org.spongepowered.plugin' version '0.5.1'
+}
+
 apply plugin: 'java'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group 'net.foxdenstudio.sponge.foxguard'
-version 'ALPHA-SNAPSHOT'
+version '0.17.0'
+
+if (System.env.TRAVIS) {
+    String tempVersion = ''
+    if (System.env.TRAVIS_TAG) {
+        tempVersion = System.env.TRAVIS_TAG;
+        if(tempVersion.startsWith("v")){
+            tempVersion = tempVersion.substring(1)
+        }
+        tempVersion += "-$System.env.TRAVIS_BUILD_NUMBER"
+    } else {
+        tempVersion = version + "-$System.env.TRAVIS_BUILD_NUMBER-SNAPSHOT"
+    }
+    version tempVersion
+}
 
 apply from: project(":FoxCore").file("sponge.gradle")
 
@@ -38,6 +56,7 @@ dependencies {
 }
 
 shadowJar {
+    classifier = ''
     dependencies {
         include dependency('net.minecrell.mcstats:statslite-sponge')
     }
