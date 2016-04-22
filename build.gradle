@@ -1,16 +1,18 @@
 buildscript {
     repositories {
         jcenter()
+        maven {
+            name 'Sponge maven repo'
+            url 'http://repo.spongepowered.org/maven'
+        }
     }
     dependencies {
         classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
+        classpath 'org.spongepowered:spongegradle:0.5.1'
     }
 }
 
-plugins {
-    id 'org.spongepowered.plugin' version '0.5.1'
-}
-
+apply plugin: 'org.spongepowered.plugin'
 apply plugin: 'java'
 apply plugin: 'com.github.johnrengelman.shadow'
 
