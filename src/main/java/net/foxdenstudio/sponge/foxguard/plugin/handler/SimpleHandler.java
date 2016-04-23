@@ -537,22 +537,22 @@ public class SimpleHandler extends HandlerBase {
     @Override
     public void save(Path directory) {
         try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.db").normalize().toString()).make()) {
-            Map<String, String> ownerStorageFlagMap = flagMapDB.hashMap("owners", Serializer.STRING, Serializer.STRING).make();
+            Map<String, String> ownerStorageFlagMap = flagMapDB.hashMap("owners", Serializer.STRING, Serializer.STRING).createOrOpen();
             ownerStorageFlagMap.clear();
             for (Map.Entry<IFlag, Tristate> entry : ownerPermissions.entrySet()) {
                 ownerStorageFlagMap.put(entry.getKey().flagName(), entry.getValue().name());
             }
-            Map<String, String> memberStorageFlagMap = flagMapDB.hashMap("members", Serializer.STRING, Serializer.STRING).make();
+            Map<String, String> memberStorageFlagMap = flagMapDB.hashMap("members", Serializer.STRING, Serializer.STRING).createOrOpen();
             memberStorageFlagMap.clear();
             for (Map.Entry<IFlag, Tristate> entry : memberPermissions.entrySet()) {
                 memberStorageFlagMap.put(entry.getKey().flagName(), entry.getValue().name());
             }
-            Map<String, String> defaultStorageFlagMap = flagMapDB.hashMap("default", Serializer.STRING, Serializer.STRING).make();
+            Map<String, String> defaultStorageFlagMap = flagMapDB.hashMap("default", Serializer.STRING, Serializer.STRING).createOrOpen();
             defaultStorageFlagMap.clear();
             for (Map.Entry<IFlag, Tristate> entry : defaultPermissions.entrySet()) {
                 defaultStorageFlagMap.put(entry.getKey().flagName(), entry.getValue().name());
             }
-            Atomic.String passiveOptionString = flagMapDB.atomicString("passive").make();
+            Atomic.String passiveOptionString = flagMapDB.atomicString("passive").createOrOpen();
             passiveOptionString.set(passiveOption.name());
         }
         Path usersFile = directory.resolve("users.cfg");
@@ -678,7 +678,7 @@ public class SimpleHandler extends HandlerBase {
             Map<IFlag, Tristate> defaultPermissions = new CacheMap<>((k, m) -> Tristate.UNDEFINED);
             PassiveOptions option = PassiveOptions.PASSTHROUGH;
             try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.db").normalize().toString()).make()) {
-                Map<String, String> ownerStorageFlagMap = flagMapDB.hashMap("owners", Serializer.STRING, Serializer.STRING).make();
+                Map<String, String> ownerStorageFlagMap = flagMapDB.hashMap("owners", Serializer.STRING, Serializer.STRING).createOrOpen();
                 for (Map.Entry<String, String> entry : ownerStorageFlagMap.entrySet()) {
                     IFlag flag = Flag.flagFrom(entry.getKey());
                     if (flag != null) {
@@ -688,7 +688,7 @@ public class SimpleHandler extends HandlerBase {
                         }
                     }
                 }
-                Map<String, String> memberStorageFlagMap = flagMapDB.hashMap("members", Serializer.STRING, Serializer.STRING).make();
+                Map<String, String> memberStorageFlagMap = flagMapDB.hashMap("members", Serializer.STRING, Serializer.STRING).createOrOpen();
                 for (Map.Entry<String, String> entry : memberStorageFlagMap.entrySet()) {
                     IFlag flag = Flag.flagFrom(entry.getKey());
                     if (flag != null) {
@@ -698,7 +698,7 @@ public class SimpleHandler extends HandlerBase {
                         }
                     }
                 }
-                Map<String, String> defaultStorageFlagMap = flagMapDB.hashMap("default", Serializer.STRING, Serializer.STRING).make();
+                Map<String, String> defaultStorageFlagMap = flagMapDB.hashMap("default", Serializer.STRING, Serializer.STRING).createOrOpen();
                 for (Map.Entry<String, String> entry : defaultStorageFlagMap.entrySet()) {
                     IFlag flag = Flag.flagFrom(entry.getKey());
                     if (flag != null) {
@@ -708,7 +708,7 @@ public class SimpleHandler extends HandlerBase {
                         }
                     }
                 }
-                Atomic.String passiveOptionString = flagMapDB.atomicString("passive").make();
+                Atomic.String passiveOptionString = flagMapDB.atomicString("passive").createOrOpen();
                 try {
                     PassiveOptions po = PassiveOptions.valueOf(passiveOptionString.get());
                     if (po != null) option = po;

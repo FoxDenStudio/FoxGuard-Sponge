@@ -234,7 +234,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
     @Override
     public void save(Path directory) {
         try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.db").normalize().toString()).make()) {
-            Map<String, String> storageFlagMap = flagMapDB.hashMap("flags", Serializer.STRING, Serializer.STRING).make();
+            Map<String, String> storageFlagMap = flagMapDB.hashMap("flags", Serializer.STRING, Serializer.STRING).createOrOpen();
             storageFlagMap.clear();
             for (Map.Entry<IFlag, Tristate> entry : map.entrySet()) {
                 storageFlagMap.put(entry.getKey().flagName(), entry.getValue().name());
@@ -244,7 +244,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
 
     public void load(Path directory) {
         try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.db").normalize().toString()).make()) {
-            Map<String, String> storageFlagMap = flagMapDB.hashMap("flags", Serializer.STRING, Serializer.STRING).make();
+            Map<String, String> storageFlagMap = flagMapDB.hashMap("flags", Serializer.STRING, Serializer.STRING).createOrOpen();
             map.clear();
             for (Map.Entry<String, String> entry : storageFlagMap.entrySet()) {
                 map.put(Flag.flagFrom(entry.getKey()), Tristate.valueOf(entry.getValue()));

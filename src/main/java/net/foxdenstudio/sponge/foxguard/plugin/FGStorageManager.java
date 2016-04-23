@@ -46,10 +46,10 @@ public final class FGStorageManager {
 
     public synchronized void saveRegions() {
         try (DB mainDB = DBMaker.fileDB(directory.resolve("regions.db").normalize().toString()).make()) {
-            Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).make();
-            Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).make();
-            Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).make();
-            Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).make();
+            Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
+            Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
 
             mainMap.clear();
             linksMap.clear();
@@ -69,10 +69,10 @@ public final class FGStorageManager {
 
                 logger.info("Saving metadata for region \"" + name + "\"");
                 try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.db").normalize().toString()).make()) {
-                    Atomic.String metaName = metaDB.atomicString("name").make();
-                    Atomic.String metaCategory = metaDB.atomicString("category").make();
-                    Atomic.String metaType = metaDB.atomicString("type").make();
-                    Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").make();
+                    Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
+                    Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
+                    Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
+                    Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
                     metaName.set(name);
                     metaCategory.set(FGUtil.getCategory(fgObject));
                     metaType.set(fgObject.getUniqueTypeString());
@@ -89,10 +89,10 @@ public final class FGStorageManager {
 
     public synchronized void saveWorldRegions(World world) {
         try (DB mainDB = DBMaker.fileDB(worldDirectories.get(world.getName()).resolve("wregions.db").normalize().toString()).make()) {
-            Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).make();
-            Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).make();
-            Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).make();
-            Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).make();
+            Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
+            Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
 
             mainMap.clear();
             linksMap.clear();
@@ -112,10 +112,10 @@ public final class FGStorageManager {
 
                 logger.info("Saving metadata for world region \"" + name + "\"");
                 try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.db").normalize().toString()).make()) {
-                    Atomic.String metaName = metaDB.atomicString("name").make();
-                    Atomic.String metaCategory = metaDB.atomicString("category").make();
-                    Atomic.String metaType = metaDB.atomicString("type").make();
-                    Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").make();
+                    Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
+                    Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
+                    Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
+                    Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
                     metaName.set(name);
                     metaCategory.set(FGUtil.getCategory(fgObject));
                     metaType.set(fgObject.getUniqueTypeString());
@@ -132,10 +132,10 @@ public final class FGStorageManager {
 
     public synchronized void saveHandlers() {
         try (DB mainDB = DBMaker.fileDB(directory.resolve("handlers.db").normalize().toString()).make()) {
-            Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).make();
-            Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).make();
-            Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).make();
-            Map<String, Integer> priorityMap = mainDB.hashMap("priority", Serializer.STRING, Serializer.INTEGER).make();
+            Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
+            Map<String, Integer> priorityMap = mainDB.hashMap("priority", Serializer.STRING, Serializer.INTEGER).createOrOpen();
 
             mainMap.clear();
 
@@ -154,11 +154,11 @@ public final class FGStorageManager {
 
                 logger.info("Saving metadata for handler \"" + name + "\"");
                 try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.db").normalize().toString()).make()) {
-                    Atomic.String metaName = metaDB.atomicString("name").make();
-                    Atomic.String metaCategory = metaDB.atomicString("category").make();
-                    Atomic.String metaType = metaDB.atomicString("type").make();
-                    Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").make();
-                    Atomic.Integer metaPriority = metaDB.atomicInteger("priority").make();
+                    Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
+                    Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
+                    Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
+                    Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
+                    Atomic.Integer metaPriority = metaDB.atomicInteger("priority").createOrOpen();
                     metaName.set(name);
                     metaCategory.set(FGUtil.getCategory(fgObject));
                     metaType.set(fgObject.getUniqueTypeString());
@@ -176,9 +176,9 @@ public final class FGStorageManager {
 
     public synchronized void loadRegions() {
         try (DB mainDB = DBMaker.fileDB(directory.resolve("regions.db").normalize().toString()).make()) {
-            Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).make();
-            Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).make();
-            Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).make();
+            Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
 
             Path dir = directory.resolve("regions");
             mainMap.entrySet().forEach((entry) -> {
@@ -191,9 +191,9 @@ public final class FGStorageManager {
                     String type;
                     Boolean enabled;
                     try (DB metaDB = DBMaker.fileDB(metaDataFile.normalize().toString()).make()) {
-                        category = metaDB.exists("category") ? metaDB.atomicString("category").make().get() : entry.getValue();
-                        type = metaDB.exists("type") ? metaDB.atomicString("type").make().get() : typeMap.get(name);
-                        enabled = metaDB.exists("enabled") ? metaDB.atomicBoolean("enabled").make().get() : enabledMap.get(name);
+                        category = metaDB.exists("category") ? metaDB.atomicString("category").createOrOpen().get() : entry.getValue();
+                        type = metaDB.exists("type") ? metaDB.atomicString("type").createOrOpen().get() : typeMap.get(name);
+                        enabled = metaDB.exists("enabled") ? metaDB.atomicBoolean("enabled").createOrOpen().get() : enabledMap.get(name);
                     }
                     logger.info("Region info loaded!  Name: \"" + name +
                             "\",  Category: \"" + category +
@@ -265,9 +265,9 @@ public final class FGStorageManager {
 
     public synchronized void loadWorldRegions(World world) {
         try (DB mainDB = DBMaker.fileDB(worldDirectories.get(world.getName()).resolve("wregions.db").normalize().toString()).make()) {
-            Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).make();
-            Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).make();
-            Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).make();
+            Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
 
             Path dir = worldDirectories.get(world.getName()).resolve("wregions");
             mainMap.entrySet().forEach((entry) -> {
@@ -280,9 +280,9 @@ public final class FGStorageManager {
                     String type;
                     Boolean enabled;
                     try (DB metaDB = DBMaker.fileDB(metaDataFile.normalize().toString()).make()) {
-                        category = metaDB.exists("category") ? metaDB.atomicString("category").make().get() : entry.getValue();
-                        type = metaDB.exists("type") ? metaDB.atomicString("type").make().get() : typeMap.get(name);
-                        enabled = metaDB.exists("enabled") ? metaDB.atomicBoolean("enabled").make().get() : enabledMap.get(name);
+                        category = metaDB.exists("category") ? metaDB.atomicString("category").createOrOpen().get() : entry.getValue();
+                        type = metaDB.exists("type") ? metaDB.atomicString("type").createOrOpen().get() : typeMap.get(name);
+                        enabled = metaDB.exists("enabled") ? metaDB.atomicBoolean("enabled").createOrOpen().get() : enabledMap.get(name);
                     }
                     logger.info("World region info loaded!  Name: " + name +
                             "\",  Category: \"" + category +
@@ -354,10 +354,10 @@ public final class FGStorageManager {
 
     public synchronized void loadHandlers() {
         try (DB mainDB = DBMaker.fileDB(directory.resolve("handlers.db").normalize().toString()).make()) {
-            Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).make();
-            Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).make();
-            Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).make();
-            Map<String, Integer> priorityMap = mainDB.hashMap("priority", Serializer.STRING, Serializer.INTEGER).make();
+            Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
+            Map<String, Integer> priorityMap = mainDB.hashMap("priority", Serializer.STRING, Serializer.INTEGER).createOrOpen();
 
             Path dir = directory.resolve("handlers");
             mainMap.entrySet().forEach((entry) -> {
@@ -371,10 +371,10 @@ public final class FGStorageManager {
                     Boolean enabled;
                     Integer priority;
                     try (DB metaDB = DBMaker.fileDB(metaDataFile.normalize().toString()).make()) {
-                        category = metaDB.exists("category") ? metaDB.atomicString("category").make().get() : entry.getValue();
-                        type = metaDB.exists("type") ? metaDB.atomicString("type").make().get() : typeMap.get(name);
-                        enabled = metaDB.exists("enabled") ? metaDB.atomicBoolean("enabled").make().get() : enabledMap.get(name);
-                        priority = metaDB.exists("priority") ? metaDB.atomicInteger("priority").make().get() : priorityMap.get(name);
+                        category = metaDB.exists("category") ? metaDB.atomicString("category").createOrOpen().get() : entry.getValue();
+                        type = metaDB.exists("type") ? metaDB.atomicString("type").createOrOpen().get() : typeMap.get(name);
+                        enabled = metaDB.exists("enabled") ? metaDB.atomicBoolean("enabled").createOrOpen().get() : enabledMap.get(name);
+                        priority = metaDB.exists("priority") ? metaDB.atomicInteger("priority").createOrOpen().get() : priorityMap.get(name);
                     }
                     logger.info("Handler info loaded!  Name: " + name +
                             "\",  Category: \"" + category +
@@ -453,7 +453,7 @@ public final class FGStorageManager {
 
     public synchronized void loadRegionLinks() {
         try (DB mainDB = DBMaker.fileDB(directory.resolve("regions.db").normalize().toString()).make()) {
-            Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).make();
+            Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
             linksMap.entrySet().forEach(entry -> {
                 IRegion region = FGManager.getInstance().getRegion(entry.getKey());
                 if (region != null) {
@@ -474,7 +474,7 @@ public final class FGStorageManager {
 
     public synchronized void loadWorldRegionLinks(World world) {
         try (DB mainDB = DBMaker.fileDB(worldDirectories.get(world.getName()).resolve("wregions.db").normalize().toString()).make()) {
-            Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).make();
+            Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
             linksMap.entrySet().forEach(entry -> {
                 IRegion region = FGManager.getInstance().getWorldRegion(world, entry.getKey());
                 if (region != null) {

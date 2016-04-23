@@ -203,7 +203,7 @@ public class PassiveHandler extends HandlerBase {
     @Override
     public void save(Path directory) {
         try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.db").normalize().toString()).make()) {
-            Map<String, String> storageFlagMap = flagMapDB.hashMap("flags", Serializer.STRING, Serializer.STRING).make();
+            Map<String, String> storageFlagMap = flagMapDB.hashMap("flags", Serializer.STRING, Serializer.STRING).createOrOpen();
             storageFlagMap.clear();
             for (Map.Entry<IFlag, Tristate> entry : map.entrySet()) {
                 storageFlagMap.put(entry.getKey().flagName(), entry.getValue().name());
@@ -239,7 +239,7 @@ public class PassiveHandler extends HandlerBase {
         @Override
         public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
             try(DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.db").normalize().toString()).make()) {
-                Map<String, String> storageFlagMap = flagMapDB.hashMap("flags", Serializer.STRING, Serializer.STRING).make();
+                Map<String, String> storageFlagMap = flagMapDB.hashMap("flags", Serializer.STRING, Serializer.STRING).createOrOpen();
                 CacheMap<IFlag, Tristate> map = new CacheMap<>((k, m) -> Tristate.UNDEFINED);
                 for (Map.Entry<String, String> entry : storageFlagMap.entrySet()) {
                     map.put(Flag.flagFrom(entry.getKey()), Tristate.valueOf(entry.getValue()));
