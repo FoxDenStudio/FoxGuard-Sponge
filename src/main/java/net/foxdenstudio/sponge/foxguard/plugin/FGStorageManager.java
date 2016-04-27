@@ -5,15 +5,12 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
-import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.GlobalWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
-import org.mapdb.Atomic;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.Serializer;
+import org.mapdb.*;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.world.World;
@@ -84,6 +81,13 @@ public final class FGStorageManager {
                 enabledMap.put(name, fgObject.isEnabled());
                 linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
             });
+        } catch (DBException.DataCorruption e) {
+            try {
+                Files.deleteIfExists(directory.resolve("regions.db"));
+                saveRegions();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
         }
     }
 
@@ -127,6 +131,13 @@ public final class FGStorageManager {
                 enabledMap.put(name, fgObject.isEnabled());
                 linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
             });
+        } catch (DBException.DataCorruption e) {
+            try {
+                Files.deleteIfExists(directory.resolve("regions.db"));
+                saveWorldRegions(world);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
         }
     }
 
@@ -171,6 +182,13 @@ public final class FGStorageManager {
                 enabledMap.put(name, fgObject.isEnabled());
                 priorityMap.put(name, fgObject.getPriority());
             });
+        } catch (DBException.DataCorruption e) {
+            try {
+                Files.deleteIfExists(directory.resolve("regions.db"));
+                saveHandlers();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
         }
     }
 
