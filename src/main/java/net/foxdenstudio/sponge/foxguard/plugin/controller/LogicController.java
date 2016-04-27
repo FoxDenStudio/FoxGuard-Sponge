@@ -111,7 +111,7 @@ public class LogicController extends ControllerBase {
     @Override
     public void save(Path directory) {
         try (DB linksDB = DBMaker.fileDB(directory.resolve("links.db").normalize().toString()).make()) {
-            List<String> linksList = linksDB.indexTreeList("links", Serializer.STRING).make();
+            List<String> linksList = linksDB.indexTreeList("links", Serializer.STRING).createOrOpen();
             linksList.clear();
             handlers.stream().map(IFGObject::getName).forEach(linksList::add);
         }
@@ -141,7 +141,7 @@ public class LogicController extends ControllerBase {
     @Override
     public void loadLinks(Path directory) {
         try (DB linksDB = DBMaker.fileDB(directory.resolve("links.db").normalize().toString()).make()) {
-            List<String> linksList = linksDB.indexTreeList("links", Serializer.STRING).make();
+            List<String> linksList = linksDB.indexTreeList("links", Serializer.STRING).createOrOpen();
             handlers.clear();
             linksList.stream()
                     .filter(name -> !this.name.equalsIgnoreCase(name))

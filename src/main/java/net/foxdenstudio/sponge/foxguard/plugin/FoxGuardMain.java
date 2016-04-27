@@ -77,17 +77,19 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
 
-import javax.sql.DataSource;
-import java.io.File;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-@Plugin(id = "foxguard", name = "FoxGuard", dependencies = {
-        @Dependency(id = "foxcore")
-})
+@Plugin(id = "foxguard",
+        name = "FoxGuard",
+        dependencies = {
+                @Dependency(id = "foxcore")
+        },
+        description = "A world protection plugin built for SpongeAPI. Highly extensible with many features. Requires FoxCore.",
+        authors = {"gravityfox"},
+        url = "https://github.com/FoxDenStudio/FoxGuard")
 public final class FoxGuardMain {
 
     public final Cause pluginCause = Cause.builder().named("plugin", this).build();
@@ -215,7 +217,7 @@ public final class FoxGuardMain {
         FGManager.getInstance().initWorld(event.getTargetWorld());
         logger.info("Loading worldregions for world: \"" + event.getTargetWorld().getName() + "\"");
         FGStorageManager.getInstance().loadWorldRegions(event.getTargetWorld());
-        if(loaded){
+        if (loaded) {
             logger.info("Loading links for world : \"" + event.getTargetWorld().getName() + "\"");
             FGStorageManager.getInstance().loadWorldRegionLinks(event.getTargetWorld());
         }
