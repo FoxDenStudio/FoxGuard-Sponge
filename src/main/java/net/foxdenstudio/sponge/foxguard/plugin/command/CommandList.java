@@ -131,9 +131,13 @@ public class CommandList implements CommandCallable {
                 try {
                     number = Integer.parseInt(parse.flagmap.get("number"));
                 } catch (NumberFormatException ignored) {
-                    number = 18;
+                    if (source instanceof Player) number = 18;
+                    else number = Integer.MAX_VALUE;
                 }
-            } else number = 18;
+            } else {
+                if (source instanceof Player) number = 18;
+                else number = Integer.MAX_VALUE;
+            }
             if (number < 1) number = 1;
             int maxPage = (Math.max(regionList.size() - 1, 0) / number) + 1;
             if (page < 1) page = 1;
@@ -144,13 +148,13 @@ public class CommandList implements CommandCallable {
                     .append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"))
                     .append(Text.of(TextColors.GREEN, "------- Regions" + (allFlag ? "" : (" for World: \"" + worldName + "\"")) + " -------\n"));
             Collections.sort(regionList, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
-            ListIterator<IRegion> regionListIterator = regionList.listIterator();
+            Iterator<IRegion> regionIterator = regionList.iterator();
             for (int i = 0; i < skip; i++) {
-                regionListIterator.next();
+                regionIterator.next();
             }
             int count = 0;
-            while (regionListIterator.hasNext() && count < number) {
-                IRegion region = regionListIterator.next();
+            while (regionIterator.hasNext() && count < number) {
+                IRegion region = regionIterator.next();
                 if (source instanceof Player) {
                     List<IRegion> selectedRegions = FGUtil.getSelectedRegions(source);
                     if (selectedRegions.contains(region)) {
@@ -177,11 +181,13 @@ public class CommandList implements CommandCallable {
                         TextActions.showText(Text.of("View Details")),
                         FGUtil.getRegionName(region, allFlag)));
                 count++;
-                if (regionListIterator.hasNext() && count < number) builder.append(Text.of("\n"));
+                if (regionIterator.hasNext() && count < number) builder.append(Text.of("\n"));
             }
             if (maxPage > 1)
                 builder.append(Text.of("\n")).append(FCUtil.pageFooter(page, maxPage, "/fg ls " + arguments, null));
             source.sendMessage(builder.build());
+
+            //----------------------------------------------------------------------------------------------------------
         } else if (isIn(Aliases.HANDLERS_ALIASES, parse.args[0])) {
             boolean controllers = parse.flagmap.containsKey("all");
             List<IHandler> handlerList = FGManager.getInstance().getHandlers(controllers).stream().collect(Collectors.toList());
@@ -199,12 +205,41 @@ public class CommandList implements CommandCallable {
                 }
             }
 
+            int page, number;
+            if (parse.flagmap.containsKey("page")) {
+                try {
+                    page = Integer.parseInt(parse.flagmap.get("page"));
+                } catch (NumberFormatException ignored) {
+                    page = 1;
+                }
+            } else page = 1;
+            if (parse.flagmap.containsKey("number")) {
+                try {
+                    number = Integer.parseInt(parse.flagmap.get("number"));
+                } catch (NumberFormatException ignored) {
+                    if (source instanceof Player) number = 18;
+                    else number = Integer.MAX_VALUE;
+                }
+            } else {
+                if (source instanceof Player) number = 18;
+                else number = Integer.MAX_VALUE;
+            }
+            if (number < 1) number = 1;
+            int maxPage = (Math.max(handlerList.size() - 1, 0) / number) + 1;
+            if (page < 1) page = 1;
+            else if (page > maxPage) page = maxPage;
+            int skip = (page - 1) * number;
+
             Text.Builder builder = Text.builder()
                     .append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"))
                     .append(Text.of(TextColors.GREEN, "------- Handlers " + (controllers ? "and Controllers " : "") + "-------\n"));
             Collections.sort(handlerList, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
             Iterator<IHandler> handlerIterator = handlerList.iterator();
-            while (handlerIterator.hasNext()) {
+            for (int i = 0; i < skip; i++) {
+                handlerIterator.next();
+            }
+            int count = 0;
+            while (handlerIterator.hasNext() && count < number) {
                 IHandler handler = handlerIterator.next();
                 if (source instanceof Player) {
                     List<IHandler> selectedHandlers = FGUtil.getSelectedHandlers(source);
@@ -262,55 +297,106 @@ public class CommandList implements CommandCallable {
                         TextActions.runCommand("/foxguard det h " + handler.getName()),
                         TextActions.showText(Text.of("View Details")),
                         handler.getShortTypeName() + " : " + handler.getName()));
-                if (handlerIterator.hasNext()) builder.append(Text.of("\n"));
+                if (handlerIterator.hasNext() && count < number) builder.append(Text.of("\n"));
             }
+            if (maxPage > 1)
+                builder.append(Text.of("\n")).append(FCUtil.pageFooter(page, maxPage, "/fg ls " + arguments, null));
             source.sendMessage(builder.build());
+
+            //----------------------------------------------------------------------------------------------------------
         } else if (isIn(Aliases.CONTROLLERS_ALIASES, parse.args[0])) {
-            Set<IController> controllers = FGManager.getInstance().getControllers();
-            Text.Builder output = Text.builder()
+            List<IController> controllerList = FGManager.getInstance().getControllers().stream().collect(Collectors.toList());
+            if (parse.flagmap.containsKey("query")) {
+                String query = parse.flagmap.get("query");
+                if (query.startsWith("/")) {
+                    FCUtil.FCPattern pattern = FCUtil.parseUserRegex(query);
+                    controllerList = controllerList.stream()
+                            .filter(controller -> pattern.matches(controller.getName()))
+                            .collect(Collectors.toList());
+                } else {
+                    controllerList = controllerList.stream()
+                            .filter(controller -> controller.getName().toLowerCase().contains(query.toLowerCase()))
+                            .collect(Collectors.toList());
+                }
+            }
+
+            int page, number;
+            if (parse.flagmap.containsKey("page")) {
+                try {
+                    page = Integer.parseInt(parse.flagmap.get("page"));
+                } catch (NumberFormatException ignored) {
+                    page = 1;
+                }
+            } else page = 1;
+            if (parse.flagmap.containsKey("number")) {
+                try {
+                    number = Integer.parseInt(parse.flagmap.get("number"));
+                } catch (NumberFormatException ignored) {
+                    if (source instanceof Player) number = 18;
+                    else number = Integer.MAX_VALUE;
+                }
+            } else {
+                if (source instanceof Player) number = 18;
+                else number = Integer.MAX_VALUE;
+            }
+            if (number < 1) number = 1;
+            int maxPage = (Math.max(controllerList.size() - 1, 0) / number) + 1;
+            if (page < 1) page = 1;
+            else if (page > maxPage) page = maxPage;
+            int skip = (page - 1) * number;
+
+            Text.Builder builder = Text.builder()
                     .append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"))
                     .append(Text.of(TextColors.GREEN, "------- Controllers -------\n"));
-            Iterator<IController> controllerIterator = controllers.iterator();
-            while (controllerIterator.hasNext()) {
+            Iterator<IController> controllerIterator = controllerList.iterator();
+            for (int i = 0; i < skip; i++) {
+                controllerIterator.next();
+            }
+            int count = 0;
+            while (controllerIterator.hasNext() && count < number) {
                 IController controller = controllerIterator.next();
                 if (source instanceof Player) {
                     List<IHandler> selectedHandlers = FGUtil.getSelectedHandlers(source);
                     List<IController> selectedControllers = FGUtil.getSelectedControllers(source);
                     if (selectedHandlers.contains(controller)) {
-                        output.append(Text.of(TextColors.GRAY, "[h+]"));
-                        output.append(Text.of(TextColors.RED,
+                        builder.append(Text.of(TextColors.GRAY, "[h+]"));
+                        builder.append(Text.of(TextColors.RED,
                                 TextActions.runCommand("/foxguard s h remove " + controller.getName()),
                                 TextActions.showText(Text.of("Remove from Handler State Buffer")),
                                 "[h-]"));
                     } else {
-                        output.append(Text.of(TextColors.GREEN,
+                        builder.append(Text.of(TextColors.GREEN,
                                 TextActions.runCommand("/foxguard s h add " + controller.getName()),
                                 TextActions.showText(Text.of("Add to Handler State Buffer")),
                                 "[h+]"));
-                        output.append(Text.of(TextColors.GRAY, "[h-]"));
+                        builder.append(Text.of(TextColors.GRAY, "[h-]"));
                     }
                     if (selectedControllers.contains(controller)) {
-                        output.append(Text.of(TextColors.GRAY, "[c+]"));
-                        output.append(Text.of(TextColors.RED,
+                        builder.append(Text.of(TextColors.GRAY, "[c+]"));
+                        builder.append(Text.of(TextColors.RED,
                                 TextActions.runCommand("/foxguard s c remove " + controller.getName()),
                                 TextActions.showText(Text.of("Remove from Controller State Buffer")),
                                 "[c-]"));
                     } else {
-                        output.append(Text.of(TextColors.GREEN,
+                        builder.append(Text.of(TextColors.GREEN,
                                 TextActions.runCommand("/foxguard s c add " + controller.getName()),
                                 TextActions.showText(Text.of("Add to Controller State Buffer")),
                                 "[c+]"));
-                        output.append(Text.of(TextColors.GRAY, "[c-]"));
+                        builder.append(Text.of(TextColors.GRAY, "[c-]"));
                     }
-                    output.append(Text.of(" "));
+                    builder.append(Text.of(" "));
                 }
-                output.append(Text.of(FGUtil.getColorForObject(controller),
+                builder.append(Text.of(FGUtil.getColorForObject(controller),
                         TextActions.runCommand("/foxguard det h " + controller.getName()),
                         TextActions.showText(Text.of("View Details")),
                         controller.getShortTypeName() + " : " + controller.getName()));
-                if (controllerIterator.hasNext()) output.append(Text.of("\n"));
+                count++;
+                if (controllerIterator.hasNext() && count < number) builder.append(Text.of("\n"));
             }
-            source.sendMessage(output.build());
+            if (maxPage > 1)
+                builder.append(Text.of("\n")).append(FCUtil.pageFooter(page, maxPage, "/fg ls " + arguments, null));
+
+            source.sendMessage(builder.build());
         } else {
             throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);
         }
