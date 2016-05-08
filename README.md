@@ -9,18 +9,20 @@ Also, at the time of it's creation, there really wasn't a flexible and powerful 
 
 ## How it works
 This plugin separates regions from handlers, in that you create them separately and then link them as needed.
-Regions define areas of effect, and each dimension has its own unique regions. (Dynamic Regions are under consideration, but not high priority.)
+Regions define areas of effect, with some being contained within a world, and others spanning multiple worlds.
 Handlers are instructions for how events should be handled. They are global for the server.
 
-When events are fired, they are checked to see if they fall within one or more regions. The event is then passed on to all Handlers that have been linked to the corrisponding regions. The Handlers are then evaluated from highest to lowest priority, and the first non-ambivalent response is used to cancel/allow the action.
+When events are fired, they are checked to see if they fall within one or more regions. 
+The event is then passed on to all Handlers that have been linked to the corresponding regions. 
+The handlers are then evaluated from highest to lowest priority, and the first non-ambivalent response is used to cancel/allow the action.
 
 This allows some very complex rules for those who need the power to control everything down to the finest detail.
 However, this also allows for very simple rules that are much friendlier to lower performing servers.
 
-Essentially, Regions can be a simple as rectangular plots of land, or as complex as mandelbrot fractals.
+Essentially, regions can be a simple as rectangular plots of land, or as complex as mandelbrot fractals.
 Handlers can be as simple as a "block everything for everyone" or as complicated as the United States government.
 This offers both performance and power, and allows users to use only what they need.
-It also allows other plugins to add their own Regions and Handlers for plugin interoperability or simply more options.
+It also allows other plugins to add their own regions and handlers for plugin interoperability or simply more options.
 
 ## Building from source
 ### Downloading
@@ -41,7 +43,7 @@ If you don't have gradle installed:
 
 ### Build Location
 The built jarfile can be found under `./build/libs`
-It should be named FoxGuard-SNAPSHOT.jar
+It should be named something like FoxGuard-SNAPSHOT.jar with some version info and whatnot.
 
 ## Note from the author about the plugin 
 When I started writing this plugin it was meant as a one-off compile and forget plugin to protect a spawn area for a friend.

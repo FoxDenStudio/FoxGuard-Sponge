@@ -119,7 +119,6 @@ public final class FoxGuardMain {
     @Inject
     private SpongeStatsLite stats;
 
-    private SqlService sql;
     private UserStorageService userStorage;
 
     private boolean loaded = false;
@@ -339,4 +338,5 @@ public final class FoxGuardMain {
     public static Cause getCause() {
         return instance().pluginCause;
     }
+
 }

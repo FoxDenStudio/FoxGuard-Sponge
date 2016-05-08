@@ -76,6 +76,11 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
     }
 
     @Override
+    public Text detailedState(CommandSource source, String args) {
+        return currentState(source);
+    }
+
+    @Override
     public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).limit(1).parseLastFlags(false).parse();
         String newArgs = parse.args.length > 1 ? parse.args[1] : "";

@@ -26,13 +26,13 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
+import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
-import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCallable;
@@ -57,16 +57,20 @@ import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
 public class CommandList implements CommandCallable {
 
-    private static final String[] SUPER_ALIASES = {"super", "sup", "s"};
-
     private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
         map.put(key, value);
-        if (Aliases.isIn(WORLD_ALIASES, key) && !map.containsKey("world")) {
+        if (isIn(WORLD_ALIASES, key) && !map.containsKey("world")) {
             map.put("world", value);
-        } else if (Aliases.isIn(ALL_ALIASES, key) && !map.containsKey("all")) {
+        } else if (isIn(ALL_ALIASES, key) && !map.containsKey("all")) {
             map.put("all", value);
         } else if (isIn(SUPER_ALIASES, key) && !map.containsKey("super")) {
             map.put("super", value);
+        } else if (isIn(QUERY_ALIASES, key) && !map.containsKey("query")) {
+            map.put("query", value);
+        } else if (isIn(PAGE_ALIASES, key) && !map.containsKey("page")) {
+            map.put("page", value);
+        } else if (isIn(NUMBER_ALIASES, key) && !map.containsKey("number")) {
+            map.put("number", value);
         }
     };
 
@@ -92,19 +96,60 @@ public class CommandList implements CommandCallable {
                 Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
                 if (optWorld.isPresent()) {
                     FGManager.getInstance().getWorldRegions(optWorld.get()).forEach(regionList::add);
+                    if (parse.flagmap.containsKey("super"))
+                        FGManager.getInstance().getRegions().forEach(regionList::add);
                     allFlag = false;
                 }
             }
             if (allFlag) {
-                FGManager.getInstance().getAllRegions().forEach(regionList::add);
+                if (parse.flagmap.containsKey("super")) FGManager.getInstance().getRegions().forEach(regionList::add);
+                else FGManager.getInstance().getAllRegions().forEach(regionList::add);
             }
+            if (parse.flagmap.containsKey("query")) {
+                String query = parse.flagmap.get("query");
+                if (query.startsWith("/")) {
+                    FCUtil.FCPattern pattern = FCUtil.parseUserRegex(query);
+                    regionList = regionList.stream()
+                            .filter(region -> pattern.matches(region.getName()))
+                            .collect(Collectors.toList());
+                } else {
+                    regionList = regionList.stream()
+                            .filter(region -> region.getName().toLowerCase().contains(query.toLowerCase()))
+                            .collect(Collectors.toList());
+                }
+            }
+
+            int page, number;
+            if (parse.flagmap.containsKey("page")) {
+                try {
+                    page = Integer.parseInt(parse.flagmap.get("page"));
+                } catch (NumberFormatException ignored) {
+                    page = 1;
+                }
+            } else page = 1;
+            if (parse.flagmap.containsKey("number")) {
+                try {
+                    number = Integer.parseInt(parse.flagmap.get("number"));
+                } catch (NumberFormatException ignored) {
+                    number = 18;
+                }
+            } else number = 18;
+            if (number < 1) number = 1;
+            int maxPage = (Math.max(regionList.size() - 1, 0) / number) + 1;
+            if (page < 1) page = 1;
+            else if (page > maxPage) page = maxPage;
+            int skip = (page - 1) * number;
 
             Text.Builder builder = Text.builder()
                     .append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"))
                     .append(Text.of(TextColors.GREEN, "------- Regions" + (allFlag ? "" : (" for World: \"" + worldName + "\"")) + " -------\n"));
             Collections.sort(regionList, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
             ListIterator<IRegion> regionListIterator = regionList.listIterator();
-            while (regionListIterator.hasNext()) {
+            for (int i = 0; i < skip; i++) {
+                regionListIterator.next();
+            }
+            int count = 0;
+            while (regionListIterator.hasNext() && count < number) {
                 IRegion region = regionListIterator.next();
                 if (source instanceof Player) {
                     List<IRegion> selectedRegions = FGUtil.getSelectedRegions(source);
@@ -131,19 +176,34 @@ public class CommandList implements CommandCallable {
                         TextActions.runCommand("/foxguard det r " + FGUtil.genWorldFlag(region) + region.getName()),
                         TextActions.showText(Text.of("View Details")),
                         FGUtil.getRegionName(region, allFlag)));
-                if (regionListIterator.hasNext()) builder.append(Text.of("\n"));
+                count++;
+                if (regionListIterator.hasNext() && count < number) builder.append(Text.of("\n"));
             }
+            if (maxPage > 1)
+                builder.append(Text.of("\n")).append(FCUtil.pageFooter(page, maxPage, "/fg ls " + arguments, null));
             source.sendMessage(builder.build());
-
-
         } else if (isIn(Aliases.HANDLERS_ALIASES, parse.args[0])) {
             boolean controllers = parse.flagmap.containsKey("all");
-            List<IHandler> handlers = FGManager.getInstance().getHandlers(controllers).stream().collect(Collectors.toList());
+            List<IHandler> handlerList = FGManager.getInstance().getHandlers(controllers).stream().collect(Collectors.toList());
+            if (parse.flagmap.containsKey("query")) {
+                String query = parse.flagmap.get("query");
+                if (query.startsWith("/")) {
+                    FCUtil.FCPattern pattern = FCUtil.parseUserRegex(query);
+                    handlerList = handlerList.stream()
+                            .filter(handler -> pattern.matches(handler.getName()))
+                            .collect(Collectors.toList());
+                } else {
+                    handlerList = handlerList.stream()
+                            .filter(handler -> handler.getName().toLowerCase().contains(query.toLowerCase()))
+                            .collect(Collectors.toList());
+                }
+            }
+
             Text.Builder builder = Text.builder()
                     .append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"))
                     .append(Text.of(TextColors.GREEN, "------- Handlers " + (controllers ? "and Controllers " : "") + "-------\n"));
-            Collections.sort(handlers, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
-            Iterator<IHandler> handlerIterator = handlers.iterator();
+            Collections.sort(handlerList, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
+            Iterator<IHandler> handlerIterator = handlerList.iterator();
             while (handlerIterator.hasNext()) {
                 IHandler handler = handlerIterator.next();
                 if (source instanceof Player) {

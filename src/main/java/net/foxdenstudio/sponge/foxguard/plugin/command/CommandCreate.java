@@ -28,8 +28,9 @@ package net.foxdenstudio.sponge.foxguard.plugin.command;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
-import net.foxdenstudio.sponge.foxcore.plugin.state.PositionsStateField;
+import net.foxdenstudio.sponge.foxcore.plugin.state.PositionStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
@@ -144,7 +145,7 @@ public class CommandCreate implements CommandCallable {
             boolean success = FGManager.getInstance().addRegion(newRegion, world);
             if (!success)
                 throw new CommandException(Text.of("There was an error trying to create the " + (isWorldRegion ? "World" : "") + "Region!"));
-            FCStateManager.instance().getStateMap().get(source).flush(PositionsStateField.ID);
+            FCStateManager.instance().getStateMap().get(source).flush(PositionStateField.ID);
             source.sendMessage(Text.of(TextColors.GREEN, (isWorldRegion ? "Worldr" : "R") + "egion created successfully"));
             return CommandResult.success();
             //----------------------------------------------------------------------------------------------------------------------

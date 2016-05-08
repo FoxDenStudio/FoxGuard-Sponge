@@ -1,3 +1,28 @@
+/*
+ * This file is part of FoxGuard, licensed under the MIT License (MIT).
+ *
+ * Copyright (c) gravityfox - https://gravityfox.net/
+ * Copyright (c) contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.GenericMath;
@@ -13,6 +38,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
+import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.Listener;
@@ -64,106 +90,109 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
     @Override
     public void handle(DisplaceEntityEvent event) throws Exception {
 
-        if (event.isCancelled()) return;
-        Player player;
-        if (event.getTargetEntity().getPassenger().isPresent() && event.getTargetEntity().getPassenger().get() instanceof Player) {
-            player = (Player) event.getTargetEntity().getPassenger().get();
-        } else if (event instanceof DisplaceEntityEvent.TargetPlayer) {
-            player = ((DisplaceEntityEvent.TargetPlayer) event).getTargetEntity();
-        } else return;
-
-        final boolean hud = CommandHUD.instance().getIsHUDEnabled().get(player) && player.getScoreboard() == scoreboardMap.get(player);
-        final HUDConfig config = this.hudConfigMap.get(player);
-        final boolean regionHUD = hud && config.regions;
+        if (event.isCancelled() || event.getTargetEntity().getVehicle().isPresent()) return;
 
         World world = event.getTargetEntity().getWorld();
-        List<IHandler> fromList = last.get(player).list, toList = new ArrayList<>();
-        List<IRegion> regionList = new ArrayList<>();
-        Vector3d to = event.getToTransform().getPosition().add(0, 0.1, 0);
-        if (fromList == null) {
-            fromList = new ArrayList<>();
-            final List<IHandler> temp = fromList;
-            Vector3d from = event.getFromTransform().getPosition().add(0, 0.1, 0);
-            FGManager.getInstance().getAllRegions(world, new Vector3i(
-                    GenericMath.floor(from.getX() / 16.0),
-                    GenericMath.floor(from.getY() / 16.0),
-                    GenericMath.floor(from.getZ() / 16.0))).stream()
-                    .filter(region -> region.contains(from, world))
-                    .forEach(region -> region.getHandlers().stream()
-                            .filter(IFGObject::isEnabled)
-                            .filter(handler -> !temp.contains(handler))
-                            .forEach(temp::add));
-        } else {
-            fromList = new ArrayList<>(fromList);
-        }
-        FGManager.getInstance().getAllRegions(world, new Vector3i(
-                GenericMath.floor(to.getX() / 16.0),
-                GenericMath.floor(to.getY() / 16.0),
-                GenericMath.floor(to.getZ() / 16.0))).stream()
-                .filter(region -> region.contains(to, world))
-                .forEach(region -> {
-                    if (regionHUD) regionList.add(region);
-                    region.getHandlers().stream()
-                            .filter(IFGObject::isEnabled)
-                            .filter(handler -> !toList.contains(handler))
-                            .forEach(toList::add);
+        boolean cancel = false;
+
+        getPassengerStack(event.getTargetEntity()).stream()
+                .filter(entity -> entity instanceof Player)
+                .map(entity -> (Player) entity)
+                .forEach(player -> {
+                    final boolean hud = CommandHUD.instance().getIsHUDEnabled().get(player) && player.getScoreboard() == scoreboardMap.get(player);
+                    final HUDConfig config = this.hudConfigMap.get(player);
+                    final boolean regionHUD = hud && config.regions;
+
+                    List<IHandler> fromList = last.get(player).list, toList = new ArrayList<>();
+                    List<IRegion> regionList = new ArrayList<>();
+                    Vector3d to = event.getToTransform().getPosition().add(0, 0.1, 0);
+                    if (fromList == null) {
+                        fromList = new ArrayList<>();
+                        final List<IHandler> temp = fromList;
+                        Vector3d from = event.getFromTransform().getPosition().add(0, 0.1, 0);
+                        FGManager.getInstance().getAllRegions(world, new Vector3i(
+                                GenericMath.floor(from.getX() / 16.0),
+                                GenericMath.floor(from.getY() / 16.0),
+                                GenericMath.floor(from.getZ() / 16.0))).stream()
+                                .filter(region -> region.contains(from, world))
+                                .forEach(region -> region.getHandlers().stream()
+                                        .filter(IFGObject::isEnabled)
+                                        .filter(handler -> !temp.contains(handler))
+                                        .forEach(temp::add));
+                    } else {
+                        fromList = new ArrayList<>(fromList);
+                    }
+                    FGManager.getInstance().getAllRegions(world, new Vector3i(
+                            GenericMath.floor(to.getX() / 16.0),
+                            GenericMath.floor(to.getY() / 16.0),
+                            GenericMath.floor(to.getZ() / 16.0))).stream()
+                            .filter(region -> region.contains(to, world))
+                            .forEach(region -> {
+                                if (regionHUD) regionList.add(region);
+                                region.getHandlers().stream()
+                                        .filter(IFGObject::isEnabled)
+                                        .filter(handler -> !toList.contains(handler))
+                                        .forEach(toList::add);
+                            });
+
+                    final List<IHandler> toComplete = new ArrayList<>(toList);
+
+                    final List<IHandler> temp = fromList;
+                    ImmutableList.copyOf(fromList).stream()
+                            .filter(toList::contains)
+                            .forEach(handler -> {
+                                temp.remove(handler);
+                                toList.remove(handler);
+                            });
+                    List<HandlerWrapper> finalList = new ArrayList<>();
+                    fromList.stream()
+                            .map(handler -> new HandlerWrapper(handler, Type.FROM))
+                            .forEach(finalList::add);
+                    toList.stream()
+                            .map(handler -> new HandlerWrapper(handler, Type.TO))
+                            .forEach(finalList::add);
+
+                    if (finalList.size() == 0) {
+                        this.last.put(player, new LastWrapper(toComplete, event.getToTransform().getPosition()));
+                        return;
+                    }
+
+                    if (full) {
+                        Collections.sort(finalList);
+                        int currPriority = finalList.get(0).handler.getPriority();
+                        Tristate flagState = Tristate.UNDEFINED;
+                        for (HandlerWrapper wrap : finalList) {
+                            if (wrap.handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
+                                break;
+                            }
+                            if (wrap.type == Type.FROM) {
+                                flagState = flagState.and(wrap.handler.handle(player, Flag.PLAYER_EXIT, Optional.of(event)).getState());
+                            } else {
+                                flagState = flagState.and(wrap.handler.handle(player, Flag.PLAYER_ENTER, Optional.of(event)).getState());
+                            }
+                            currPriority = wrap.handler.getPriority();
+                        }
+                        flagState = Flag.PLAYER_PASS.resolve(flagState);
+
+                        if (flagState == Tristate.FALSE) {
+                            player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission to pass!"));
+                            Vector3d position = this.last.get(player).position;
+                            if (position == null) position = event.getFromTransform().getPosition();
+                            event.setToTransform(event.getToTransform().setPosition(position));
+                        } else {
+                            this.last.put(player, new LastWrapper(toComplete, event.getToTransform().getPosition()));
+                            //makes sure that handlers are unable to cancel the event directly.
+                            event.setCancelled(false);
+                            if (hud) {
+                                renderHUD(player, regionList, toComplete, config);
+                                player.setScoreboard(this.scoreboardMap.get(player));
+                            }
+                        }
+                    } else if (hud) {
+                        renderHUD(player, regionList, toComplete, config);
+                        player.setScoreboard(this.scoreboardMap.get(player));
+                    }
                 });
-
-        final List<IHandler> toComplete = new ArrayList<>(toList);
-
-        final List<IHandler> temp = fromList;
-        ImmutableList.copyOf(fromList).stream()
-                .filter(toList::contains)
-                .forEach(handler -> {
-                    temp.remove(handler);
-                    toList.remove(handler);
-                });
-        List<HandlerWrapper> finalList = new ArrayList<>();
-        fromList.stream()
-                .map(handler -> new HandlerWrapper(handler, Type.FROM))
-                .forEach(finalList::add);
-        toList.stream()
-                .map(handler -> new HandlerWrapper(handler, Type.TO))
-                .forEach(finalList::add);
-        if (finalList.size() == 0) {
-            this.last.put(player, new LastWrapper(toComplete, event.getToTransform().getPosition()));
-            return;
-        }
-        if (full) {
-            Collections.sort(finalList);
-            int currPriority = finalList.get(0).handler.getPriority();
-            Tristate flagState = Tristate.UNDEFINED;
-            for (HandlerWrapper wrap : finalList) {
-                if (wrap.handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
-                    break;
-                }
-                if (wrap.type == Type.FROM) {
-                    flagState = flagState.and(wrap.handler.handle(player, Flag.PLAYER_EXIT, Optional.of(event)).getState());
-                } else {
-                    flagState = flagState.and(wrap.handler.handle(player, Flag.PLAYER_ENTER, Optional.of(event)).getState());
-                }
-                currPriority = wrap.handler.getPriority();
-            }
-            flagState = Flag.PLAYER_PASS.resolve(flagState);
-
-            if (flagState == Tristate.FALSE) {
-                player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission to pass!"));
-                Vector3d position = this.last.get(player).position;
-                if (position == null) position = event.getFromTransform().getPosition();
-                event.setToTransform(event.getToTransform().setPosition(position));
-            } else {
-                this.last.put(player, new LastWrapper(toComplete, event.getToTransform().getPosition()));
-                //makes sure that handlers are unable to cancel the event directly.
-                event.setCancelled(false);
-                if (hud) {
-                    renderHUD(player, regionList, toComplete, config);
-                    player.setScoreboard(this.scoreboardMap.get(player));
-                }
-            }
-        } else if (hud) {
-            renderHUD(player, regionList, toComplete, config);
-            player.setScoreboard(this.scoreboardMap.get(player));
-        }
     }
 
     public void renderHUD(Player player, List<IRegion> regions, List<IHandler> handlers, HUDConfig config) {
@@ -244,6 +273,15 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
 
     public static PlayerMoveListener getInstance() {
         return instance;
+    }
+
+    private static Set<Entity> getPassengerStack(Entity e){
+        Set<Entity> set = new HashSet<>();
+        set.add(e);
+        Optional<Entity> po = e.getPassenger();
+        if(po.isPresent())
+        set.addAll(getPassengerStack(po.get()));
+        return set;
     }
 
     private enum Type {
