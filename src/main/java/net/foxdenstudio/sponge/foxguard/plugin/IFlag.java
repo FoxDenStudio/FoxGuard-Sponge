@@ -34,8 +34,6 @@ import java.util.Set;
  * Created by Fox on 4/2/2016.
  */
 public interface IFlag {
-    @Override
-    String toString();
 
     String flagName();
 

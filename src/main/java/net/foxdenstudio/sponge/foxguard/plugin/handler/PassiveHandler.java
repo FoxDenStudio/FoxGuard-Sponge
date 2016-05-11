@@ -118,7 +118,7 @@ public class PassiveHandler extends HandlerBase {
                             return ProcessResult.of(false, Text.of("Not a valid value!"));
                         }
                         if (flag == null) {
-                            for (Flag thatExist : Flag.values()) {
+                            for (IFlag thatExist : Flag.getFlags()) {
                                 this.map.put(thatExist, tristate);
                             }
                             this.mapCache.clear();
@@ -156,8 +156,8 @@ public class PassiveHandler extends HandlerBase {
                         .collect(GuavaCollectors.toImmutableList());
             } else if (parse.current.index == 1) {
                 if (isIn(SET_ALIASES, parse.args[0])) {
-                    return Arrays.stream(Flag.values())
-                            .map(Flag::flagName)
+                    return Flag.getFlags().stream()
+                            .map(IFlag::flagName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());

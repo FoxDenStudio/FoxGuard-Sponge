@@ -26,19 +26,21 @@
 package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.GenericMath;
+import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import net.foxdenstudio.sponge.foxcore.plugin.command.CommandDebug;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
-import org.spongepowered.api.block.BlockSnapshot;
-import org.spongepowered.api.block.BlockTypes;
-import org.spongepowered.api.data.Transaction;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.living.Agent;
+import org.spongepowered.api.entity.living.Creature;
+import org.spongepowered.api.entity.living.Hostile;
+import org.spongepowered.api.entity.living.monster.Blaze;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
-import org.spongepowered.api.event.block.ChangeBlockEvent;
+import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
@@ -49,18 +51,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class BlockEventListener implements EventListener<ChangeBlockEvent> {
+public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
 
     @Override
-    public void handle(ChangeBlockEvent event) throws Exception {
+    public void handle(SpawnEntityEvent event) throws Exception {
         if (event.isCancelled()) return;
-        if (event.getTransactions().isEmpty()) return;
-        for (Transaction<BlockSnapshot> tr : event.getTransactions()) {
-            if (tr.getOriginal().getState().getType().equals(BlockTypes.DIRT)
-                    && tr.getFinal().getState().getType().equals(BlockTypes.GRASS)
-                    || tr.getOriginal().getState().getType().equals(BlockTypes.GRASS)
-                    && tr.getFinal().getState().getType().equals(BlockTypes.DIRT)) return;
+        for (Entity entity : event.getEntities()) {
+            if (entity instanceof Player) return;
         }
+        if (event.getEntities().isEmpty()) return;
         User user;
         if (event.getCause().containsType(Player.class)) {
             user = event.getCause().first(Player.class).get();
@@ -69,25 +68,22 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
         } else {
             user = null;
         }
-        //DebugHelper.printBlockEvent(event);
-        Flag typeFlag;
-        if (event instanceof ChangeBlockEvent.Modify) typeFlag = Flag.BLOCK_MODIFY;
-        else if (event instanceof ChangeBlockEvent.Break) typeFlag = Flag.BLOCK_BREAK;
-        else if (event instanceof ChangeBlockEvent.Place) typeFlag = Flag.BLOCK_PLACE;
-        else return;
 
-        //FoxGuardMain.instance().getLogger().info(player.getName());
+        Flag typeFlag = null;
+        Entity oneEntity = event.getEntities().get(0);
+        if (oneEntity instanceof Agent) typeFlag = Flag.SPAWN_MOB_PASSIVE;
+        if (oneEntity instanceof Hostile) typeFlag = Flag.SPAWN_MOB_HOSTILE;
+        if (typeFlag == null) return;
 
         List<IHandler> handlerList = new ArrayList<>();
-        handlerList.add(FGManager.getInstance().getGlobalHandler());
         World world = event.getTargetWorld();
 
-        for (Transaction<BlockSnapshot> trans : event.getTransactions()) {
-            Vector3i loc = trans.getOriginal().getLocation().get().getBlockPosition();
+        for (Entity entity : event.getEntities()) {
+            Vector3d loc = entity.getLocation().getPosition();
             Vector3i chunk = new Vector3i(
-                    GenericMath.floor((loc.getX()) / 16.0),
-                    GenericMath.floor((loc.getY()) / 16.0),
-                    GenericMath.floor((loc.getZ()) / 16.0));
+                    GenericMath.floor(loc.getX() / 16.0),
+                    GenericMath.floor(loc.getY() / 16.0),
+                    GenericMath.floor(loc.getZ() / 16.0));
             FGManager.getInstance().getAllRegions(world, chunk).stream()
                     .filter(region -> region.contains(loc, world))
                     .forEach(region -> region.getHandlers().stream()
@@ -105,53 +101,14 @@ public class BlockEventListener implements EventListener<ChangeBlockEvent> {
             flagState = flagState.and(handler.handle(user, typeFlag, Optional.of(event)).getState());
             currPriority = handler.getPriority();
         }
-        flagState = typeFlag.resolve(flagState);
-
         if (flagState == Tristate.FALSE) {
-            if (user instanceof Player) {
-                if (CommandDebug.instance().getDebug().get(user)) {
-                    Vector3i vec = event.getTransactions().get(0).getOriginal().getPosition();
-                    ((Player) user).sendMessage(Text.of("Block action denied at (" + vec.getX() + ", " + vec.getY() + ", " + vec.getZ() + ")"
-                            + (event.getTransactions().size() > 1 ? " and " + (event.getTransactions().size() - 1) + " other positions" : "") + "!"));
-                } else {
-
-                    Player player = (Player) user;
-                    Vector3i pos = player.getLocation().getPosition().toInt();
-                    Response r = Response.NONE;
-                    for (Transaction<BlockSnapshot> trans : event.getTransactions()) {
-                        int dist = trans.getOriginal().getPosition().distanceSquared(pos);
-                        if (dist < 64) {
-                            r = Response.BASIC;
-                            break;
-                        }
-                        if (dist < 4096) {
-                            r = Response.LOCATION;
-                            break;
-                        }
-                    }
-                    if (r == Response.BASIC)
-                        player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
-                    else if (r == Response.LOCATION)
-                        player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission! " +
-                                event.getTransactions().get(0).getOriginal().getPosition() +
-                                (event.getTransactions().size() > 1 ? "..." : "")));
-                }
-            }
-        } else {
-
-        }
-
-        if (flagState == Tristate.FALSE) {
-
+            if (user instanceof Player)
+                ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
             event.setCancelled(true);
         } else {
             //makes sure that handlers are unable to cancel the event directly.
             event.setCancelled(false);
         }
-    }
-
-    private enum Response {
-        NONE, BASIC, LOCATION
     }
 
 }

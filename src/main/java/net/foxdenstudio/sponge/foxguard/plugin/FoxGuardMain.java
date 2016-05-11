@@ -33,13 +33,11 @@ import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.plugin.command.*;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.LogicController;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.GroupHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.PassiveHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.PermissionHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.SimpleHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.listener.BlockEventListener;
-import net.foxdenstudio.sponge.foxguard.plugin.listener.InteractListener;
-import net.foxdenstudio.sponge.foxguard.plugin.listener.PlayerMoveListener;
-import net.foxdenstudio.sponge.foxguard.plugin.listener.SpawnEntityEventListener;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.*;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.CuboidRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.ElevationRegion;
@@ -61,9 +59,11 @@ import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.action.InteractEvent;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.entity.DisplaceEntityEvent;
 import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.event.game.state.*;
+import org.spongepowered.api.event.world.ExplosionEvent;
 import org.spongepowered.api.event.world.LoadWorldEvent;
 import org.spongepowered.api.event.world.UnloadWorldEvent;
 import org.spongepowered.api.plugin.Dependency;
@@ -71,7 +71,6 @@ import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.service.permission.PermissionService;
 import org.spongepowered.api.service.permission.SubjectData;
-import org.spongepowered.api.service.sql.SqlService;
 import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
@@ -275,6 +274,7 @@ public final class FoxGuardMain {
 
         manager.registerHandlerFactory(new SimpleHandler.Factory());
         manager.registerHandlerFactory(new PassiveHandler.Factory());
+        manager.registerHandlerFactory(new GroupHandler.Factory());
         manager.registerHandlerFactory(new PermissionHandler.Factory());
 
         //manager.registerControllerFactory(new MessageController.Factory());
@@ -285,14 +285,16 @@ public final class FoxGuardMain {
      * A private method that registers the Listener class and the corresponding event class.
      */
     private void registerListeners() {
-        eventManager.registerListener(this, ChangeBlockEvent.class, new BlockEventListener());
+        eventManager.registerListener(this, ChangeBlockEvent.class, new BlockListener());
         eventManager.registerListener(this, InteractEvent.class, new InteractListener());
-        eventManager.registerListener(this, SpawnEntityEvent.class, new SpawnEntityEventListener());
+        eventManager.registerListener(this, SpawnEntityEvent.class, new SpawnEntityListener());
         if (FGConfigManager.getInstance().getModules().get(FGConfigManager.Module.MOVEMENT)) {
             PlayerMoveListener pml = new PlayerMoveListener(true);
             eventManager.registerListener(this, DisplaceEntityEvent.class, pml);
             eventManager.registerListeners(this, pml.new Listeners());
         }
+        eventManager.registerListener(this, ExplosionEvent.class, new ExplosionListener());
+        eventManager.registerListener(this, DamageEntityEvent.class, new DamageListener());
     }
 
     /**

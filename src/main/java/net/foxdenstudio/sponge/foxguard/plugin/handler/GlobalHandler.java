@@ -146,7 +146,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
                                 return ProcessResult.of(false, Text.of("Not a valid value!"));
                             }
                             if (flag == null) {
-                                for (Flag thatExist : Flag.values()) {
+                                for (IFlag thatExist : Flag.getFlags()) {
                                     this.map.put(thatExist, tristate);
                                 }
                                 this.mapCache.clear();
@@ -188,8 +188,8 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             } else if (parse.current.index == 1) {
-                return Arrays.stream(Flag.values())
-                        .map(Flag::flagName)
+                return Flag.getFlags().stream()
+                        .map(IFlag::flagName)
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());

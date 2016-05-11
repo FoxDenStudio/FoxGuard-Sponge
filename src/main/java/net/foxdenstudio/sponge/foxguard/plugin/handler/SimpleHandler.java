@@ -236,7 +236,7 @@ public class SimpleHandler extends HandlerBase {
                                 return ProcessResult.of(false, Text.of("Not a valid value!"));
                             }
                             if (flag == null) {
-                                for (Flag thatExist : Flag.values()) {
+                                for (IFlag thatExist : Flag.getFlags()) {
                                     map.put(thatExist, tristate);
                                 }
                                 clearCache();
@@ -324,8 +324,8 @@ public class SimpleHandler extends HandlerBase {
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(SET_ALIASES, parse.args[0])) {
-                    return Arrays.stream(Flag.values())
-                            .map(Flag::flagName)
+                    return Flag.getFlags().stream()
+                            .map(IFlag::flagName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());

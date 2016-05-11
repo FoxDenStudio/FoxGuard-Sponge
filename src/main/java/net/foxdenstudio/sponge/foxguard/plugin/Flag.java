@@ -33,19 +33,21 @@ import java.util.*;
 
 public enum Flag implements IFlag {
 
-    ROOT(true, "root", "Everything"),
+    ROOT(true, "root", "Root"),
+    BUFF(false, "buff", "Buffs", ROOT),
+    DEBUFF(true, "debuff", "Debuffs", ROOT),
 
-    INTERACT(true, "click", "Click", ROOT),
+    INTERACT(true, "click", "Click", DEBUFF),
     INTERACT_PRIMARY(true, "attack", "Attack", INTERACT),
     INTERACT_SECONDARY(true, "interact", "Interact", INTERACT),
 
-    BLOCK(true, "block", "Blocks", ROOT),
+    BLOCK(true, "block", "Blocks", DEBUFF),
     BLOCK_CHANGE(true, "blockchange", "Change-Blocks", BLOCK),
     BLOCK_PLACE(true, "blockplace", "Place-Blocks", BLOCK_CHANGE),
     BLOCK_BREAK(true, "blockbreak", "Break-Blocks", BLOCK_CHANGE),
     BLOCK_MODIFY(true, "blockmodify", "Modify-Blocks", BLOCK_CHANGE),
 
-    BLOCK_INTERACT(true, "blockclick", "Click-Blocks", INTERACT),
+    BLOCK_INTERACT(true, "blockclick", "Click-Blocks", INTERACT, BLOCK),
     BLOCK_INTERACT_PRIMARY(true, "blockattack", "Attack-Blocks", BLOCK_INTERACT, INTERACT_PRIMARY),
     BLOCK_INTERACT_SECONDARY(true, "blockinteract", "Interact-Blocks", BLOCK_INTERACT, INTERACT_SECONDARY),
 
@@ -57,13 +59,38 @@ public enum Flag implements IFlag {
     PLAYER_INTERACT_PRIMARY(true, "playerattack", "Attack-Players", PLAYER_INTERACT, ENTITY_INTERACT_PRIMARY),
     PLAYER_INTERACT_SECONDARY(true, "playerinteract", "Interact-Players", PLAYER_INTERACT, ENTITY_INTERACT_SECONDARY),
 
-    SPAWN_MOB(true, "spawnmob", "Spawn-Mobs", ROOT),
-    SPAWN_MOB_HOSTILE(true, "spawnmobhostile", "Spawn-Hostile-Mobs", SPAWN_MOB),
+    SPAWN_MOB(true, "spawnmob", "Spawn-Mobs", DEBUFF),
     SPAWN_MOB_PASSIVE(true, "spawnmobpassive", "Spawn-Passive-Mobs", SPAWN_MOB),
+    SPAWN_MOB_HOSTILE(true, "spawnmobhostile", "Spawn-Hostile-Mobs", SPAWN_MOB),
 
-    PLAYER_PASS(true, "playerpass", "Player-Pass-Borders", ROOT),
+    PLAYER_PASS(true, "playerpass", "Player-Pass-Borders", DEBUFF),
     PLAYER_ENTER(true, "playerenter", "Player-Enter", PLAYER_PASS),
-    PLAYER_EXIT(true, "playerexit", "Player-Exit", PLAYER_PASS);
+    PLAYER_EXIT(true, "playerexit", "Player-Exit", PLAYER_PASS),
+
+    DAMAGE_ENTITY(true, "damageentity", "Damage-Entities", DEBUFF),
+    DAMAGE_LIVING(true, "damageliving", "Damage-Living", DAMAGE_ENTITY),
+    DAMAGE_MOB(true, "damagemob", "Damage-Mobs", DAMAGE_LIVING),
+    DAMAGE_MOB_PASSIVE(true, "damagemobpassive", "Damage-Passive-Mobs", DAMAGE_MOB),
+    DAMAGE_MOB_HOSTILE(true, "damagemobhostile", "Damage-Hostile-Mobs", DAMAGE_MOB),
+    DAMAGE_PLAYER(true, "damageplayer", "Damage-Players", DAMAGE_LIVING),
+
+    KILL_LIVING(true, "killliving", "Kill-Living", DAMAGE_LIVING),
+    KILL_MOB(true, "killmob", "Kill-Mobs", KILL_LIVING, DAMAGE_MOB),
+    KILL_MOB_PASSIVE(true, "killmobpassive", "Kill-Passive-Mobs", KILL_MOB, DAMAGE_MOB_PASSIVE),
+    KILL_MOB_HOSTILE(true, "killmobhostile", "Kill-Hostile-Mobs", KILL_MOB, DAMAGE_MOB_HOSTILE),
+    KILL_PLAYER(true, "killplayer", "Kill-Players", KILL_LIVING, DAMAGE_PLAYER),
+
+    IGNITE_ENTITY(true, "igniteentity", "Ignite-Entities", DAMAGE_ENTITY),
+    IGNITE_LIVING(true, "igniteliving", "Ignite-Living", IGNITE_ENTITY, DAMAGE_LIVING),
+    IGNITE_MOB(true, "ignitemob", "Ignite-Mobs", IGNITE_LIVING, DAMAGE_MOB),
+    IGNITE_MOB_PASSIVE(true, "ignitemobpassive", "Ignite-Passive-Mobs", IGNITE_MOB, DAMAGE_MOB_PASSIVE),
+    IGNITE_MOB_HOSTILE(true, "ignitemobhostile", "Ignite-Hostile-Mobs", IGNITE_MOB, DAMAGE_MOB_HOSTILE),
+    IGNITE_PLAYER(true, "igniteplayer", "Ignite-Players", IGNITE_LIVING, DAMAGE_PLAYER),
+
+    EXPLOSION(true, "explosion", "Explosions", DEBUFF),
+
+    INVINCIBLE(false, "invincible", "Invincibility", BUFF),
+    UNDYING(false, "undying", "Undying", INVINCIBLE);
 
 
     private final String humanName;
@@ -82,7 +109,7 @@ public enum Flag implements IFlag {
     }
 
     public static IFlag flagFrom(String name) {
-        for (Flag flag : Flag.values()) {
+        for (Flag flag : values()) {
             if (flag.flagName.equalsIgnoreCase(name)) return flag;
         }
         for (IFlag flag : otherFlags) {
@@ -152,17 +179,48 @@ public enum Flag implements IFlag {
     }
 
     private static List<IFlag> otherFlags = new ArrayList<>();
+    private static List<IFlag> allFlags = new ArrayList<>();
+
+    public static List<IFlag> getFlags() {
+        return allFlags;
+    }
+
+    private static void genFlagsList() {
+        ImmutableList.Builder<IFlag> builder = ImmutableList.builder();
+        builder.addAll(Arrays.asList(values()));
+        builder.addAll(otherFlags);
+        allFlags = builder.build();
+    }
 
     public static boolean addFlag(IFlag flag) {
-        if (flagFrom(flag.flagName()) == null) {
+        if (flag != null && flagFrom(flag.flagName()) == null) {
             otherFlags.add(flag);
+            genFlagsList();
             return true;
         } else return false;
     }
 
     public static void addAllFlags(Iterable<IFlag> flags) {
+        if (flags == null) return;
         for (IFlag flag : flags) {
             addFlag(flag);
         }
+        genFlagsList();
     }
+
+    public static final Comparator<IFlag> COMPARATOR = (f1, f2) -> {
+        if (f1 instanceof Flag) {
+            if (f2 instanceof Flag) {
+                return ((Flag) f1).compareTo((Flag) f2);
+            } else {
+                return -1;
+            }
+        } else {
+            if (f2 instanceof Flag) {
+                return 1;
+            } else {
+                return otherFlags.indexOf(f1) - otherFlags.indexOf(f2);
+            }
+        }
+    };
 }

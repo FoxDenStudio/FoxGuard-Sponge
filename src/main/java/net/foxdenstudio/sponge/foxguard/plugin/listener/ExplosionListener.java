@@ -32,14 +32,11 @@ import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
-import org.spongepowered.api.entity.Entity;
-import org.spongepowered.api.entity.living.Creature;
-import org.spongepowered.api.entity.living.Hostile;
-import org.spongepowered.api.entity.living.monster.Blaze;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.event.Cancellable;
 import org.spongepowered.api.event.EventListener;
-import org.spongepowered.api.event.entity.SpawnEntityEvent;
+import org.spongepowered.api.event.world.ExplosionEvent;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
@@ -50,15 +47,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class SpawnEntityEventListener implements EventListener<SpawnEntityEvent> {
-
+public class ExplosionListener implements EventListener<ExplosionEvent> {
     @Override
-    public void handle(SpawnEntityEvent event) throws Exception {
-        if (event.isCancelled()) return;
-        for (Entity entity : event.getEntities()) {
-            if (entity instanceof Player) return;
-        }
-        if (event.getEntities().isEmpty()) return;
+    public void handle(ExplosionEvent event) throws Exception {
+        if (!(event instanceof Cancellable)) return;
+        if (((Cancellable) event).isCancelled()) return;
         User user;
         if (event.getCause().containsType(Player.class)) {
             user = event.getCause().first(Player.class).get();
@@ -68,29 +61,25 @@ public class SpawnEntityEventListener implements EventListener<SpawnEntityEvent>
             user = null;
         }
 
-        Flag typeFlag = null;
-        Entity oneEntity = event.getEntities().get(0);
-        if (oneEntity instanceof Blaze) System.out.println(event.getCause());
-        if (oneEntity instanceof Creature) typeFlag = Flag.SPAWN_MOB_PASSIVE;
-        if (oneEntity instanceof Hostile) typeFlag = Flag.SPAWN_MOB_HOSTILE;
-        if (typeFlag == null) return;
-
-        List<IHandler> handlerList = new ArrayList<>();
         World world = event.getTargetWorld();
+        Vector3d loc = event.getExplosion().getOrigin();
+        Flag typeFlag = null;
+        if (event instanceof ExplosionEvent.Pre)
+            typeFlag = Flag.EXPLOSION;
+        if (typeFlag == null) return;
+        List<IHandler> handlerList = new ArrayList<>();
+        final Vector3d finalLoc = loc;
+        final World finalWorld = world;
+        FGManager.getInstance().getAllRegions(world, new Vector3i(
+                GenericMath.floor(loc.getX() / 16.0),
+                GenericMath.floor(loc.getY() / 16.0),
+                GenericMath.floor(loc.getZ() / 16.0))).stream()
+                .filter(region -> region.contains(finalLoc, finalWorld))
+                .forEach(region -> region.getHandlers().stream()
+                        .filter(IFGObject::isEnabled)
+                        .filter(handler -> !handlerList.contains(handler))
+                        .forEach(handlerList::add));
 
-        for (Entity entity : event.getEntities()) {
-            Vector3d loc = entity.getLocation().getPosition();
-            Vector3i chunk = new Vector3i(
-                    GenericMath.floor(loc.getX() / 16.0),
-                    GenericMath.floor(loc.getY() / 16.0),
-                    GenericMath.floor(loc.getZ() / 16.0));
-            FGManager.getInstance().getAllRegions(world, chunk).stream()
-                    .filter(region -> region.contains(loc, world))
-                    .forEach(region -> region.getHandlers().stream()
-                            .filter(IFGObject::isEnabled)
-                            .filter(handler -> !handlerList.contains(handler))
-                            .forEach(handlerList::add));
-        }
         Collections.sort(handlerList);
         int currPriority = handlerList.get(0).getPriority();
         Tristate flagState = Tristate.UNDEFINED;
@@ -101,14 +90,14 @@ public class SpawnEntityEventListener implements EventListener<SpawnEntityEvent>
             flagState = flagState.and(handler.handle(user, typeFlag, Optional.of(event)).getState());
             currPriority = handler.getPriority();
         }
+        flagState = typeFlag.resolve(flagState);
         if (flagState == Tristate.FALSE) {
             if (user instanceof Player)
                 ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
-            event.setCancelled(true);
+            ((Cancellable) event).setCancelled(true);
         } else {
             //makes sure that handlers are unable to cancel the event directly.
-            event.setCancelled(false);
+            ((Cancellable) event).setCancelled(false);
         }
     }
-
 }

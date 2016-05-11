@@ -314,9 +314,6 @@ public final class FGStorageManager {
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
             Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
 
-            mainMap.clear();
-            linksMap.clear();
-
             Path dir = directory.resolve("regions");
             constructDirectory(dir);
             String name = fgObject.getName();
@@ -361,9 +358,6 @@ public final class FGStorageManager {
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
             Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
-
-            mainMap.clear();
-            linksMap.clear();
 
             Path dir = worldDirectories.get(fgObject.getWorld().getName()).resolve("wregions");
             constructDirectory(dir);
@@ -410,8 +404,6 @@ public final class FGStorageManager {
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
             Map<String, Integer> priorityMap = mainDB.hashMap("priority", Serializer.STRING, Serializer.INTEGER).createOrOpen();
 
-            mainMap.clear();
-
             Path dir = directory.resolve("handlers");
             constructDirectory(dir);
             String name = fgObject.getName();
@@ -448,6 +440,97 @@ public final class FGStorageManager {
                 saveHandlers();
             } catch (IOException e1) {
                 e1.printStackTrace();
+            }
+        }
+    }
+
+    public synchronized void removeRegion(IRegion fgObject) {
+        if (fgObject instanceof IWorldRegion) removeWorldRegion((IWorldRegion) fgObject);
+        else try (DB mainDB = DBMaker.fileDB(directory.resolve("regions.db").normalize().toString()).make()) {
+            Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
+            Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
+
+            mainMap.remove(fgObject.getName());
+            typeMap.remove(fgObject.getName());
+            enabledMap.remove(fgObject.getName());
+            linksMap.remove(fgObject.getName());
+        } catch (DBException.DataCorruption e) {
+            try {
+                Files.deleteIfExists(directory.resolve("regions.db"));
+                saveRegions();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
+        if (FGConfigManager.getInstance().cleanupFiles()) {
+            Path singleDir = new LoadEntry(fgObject).getPath();
+            if (Files.exists(singleDir)) {
+                logger.warn("Cleaning up unused files");
+                System.gc();
+                System.runFinalization();
+                deleteDirectory(singleDir);
+            }
+        }
+    }
+
+    public synchronized void removeWorldRegion(IWorldRegion fgObject) {
+        try (DB mainDB = DBMaker.fileDB(worldDirectories.get(fgObject.getWorld().getName()).resolve("wregions.db").normalize().toString()).make()) {
+            Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
+            Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
+
+            mainMap.remove(fgObject.getName());
+            typeMap.remove(fgObject.getName());
+            enabledMap.remove(fgObject.getName());
+            linksMap.remove(fgObject.getName());
+        } catch (DBException.DataCorruption e) {
+            try {
+                Files.deleteIfExists(directory.resolve("regions.db"));
+                saveWorldRegions(fgObject.getWorld());
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
+        if (FGConfigManager.getInstance().cleanupFiles()) {
+            Path singleDir = new LoadEntry(fgObject).getPath();
+            if (Files.exists(singleDir)) {
+                logger.warn("Cleaning up unused files");
+                System.gc();
+                System.runFinalization();
+                deleteDirectory(singleDir);
+            }
+        }
+    }
+
+    public synchronized void removeHandler(IHandler fgObject) {
+        try (DB mainDB = DBMaker.fileDB(directory.resolve("handlers.db").normalize().toString()).make()) {
+            Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
+            Map<String, Integer> priorityMap = mainDB.hashMap("priority", Serializer.STRING, Serializer.INTEGER).createOrOpen();
+
+            mainMap.remove(fgObject.getName());
+            typeMap.remove(fgObject.getName());
+            enabledMap.remove(fgObject.getName());
+            priorityMap.remove(fgObject.getName());
+        } catch (DBException.DataCorruption e) {
+            try {
+                Files.deleteIfExists(directory.resolve("regions.db"));
+                saveHandlers();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
+        if (FGConfigManager.getInstance().cleanupFiles()) {
+            Path singleDir = new LoadEntry(fgObject).getPath();
+            if (Files.exists(singleDir)) {
+                logger.warn("Cleaning up unused files");
+                System.gc();
+                System.runFinalization();
+                deleteDirectory(singleDir);
             }
         }
     }
@@ -692,7 +775,7 @@ public final class FGStorageManager {
         if (!loaded.contains(entry)) {
             Path singleDirectory = entry.getPath();
             if (Files.exists(singleDirectory)) {
-                logger.info("Deleting directory \"" + directory + "\" to make room for new data.");
+                logger.info("Deleting directory \"" + singleDirectory + "\" to make room for new data.");
                 System.gc();
                 System.runFinalization();
                 deleteDirectory(singleDirectory, true);
@@ -710,16 +793,15 @@ public final class FGStorageManager {
         }
     }
 
-
     public synchronized void removeObject(IFGObject object) {
-        if (FGConfigManager.getInstance().cleanupFiles()) {
-            Path singleDir = new LoadEntry(object).getPath();
-            if (Files.exists(singleDir)) {
-                logger.warn("Cleaning up unused files");
-                System.gc();
-                System.runFinalization();
-                deleteDirectory(singleDir);
+        if (object instanceof IRegion) {
+            if (object instanceof IWorldRegion) {
+                this.removeWorldRegion((IWorldRegion) object);
+            } else {
+                this.removeRegion((IRegion) object);
             }
+        } else if (object instanceof IHandler) {
+            this.removeHandler((IHandler) object);
         }
     }
 
