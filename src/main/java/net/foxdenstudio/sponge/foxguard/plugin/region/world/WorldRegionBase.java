@@ -29,42 +29,18 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectBase;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.region.RegionBase;
 import org.spongepowered.api.world.World;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class WorldRegionBase extends FGObjectBase implements IWorldRegion {
+public abstract class WorldRegionBase extends RegionBase implements IWorldRegion {
 
-    private final List<IHandler> handlers;
-    private World world;
+    protected World world;
 
-    WorldRegionBase(String name) {
+    protected WorldRegionBase(String name) {
         super(name);
-        this.handlers = new ArrayList<>();
-    }
-
-    @Override
-    public List<IHandler> getHandlers() {
-        return ImmutableList.copyOf(this.handlers);
-    }
-
-    @Override
-    public boolean addHandler(IHandler handler) {
-        if (!FGManager.getInstance().isRegistered(handler)) {
-            return false;
-        }
-        return this.handlers.add(handler);
-    }
-
-    @Override
-    public boolean removeHandler(IHandler handler) {
-        return this.handlers.remove(handler);
-    }
-
-    @Override
-    public void clearHandlers() {
-        this.handlers.clear();
     }
 
     @Override
@@ -77,6 +53,15 @@ public abstract class WorldRegionBase extends FGObjectBase implements IWorldRegi
         if (this.world == null) {
             this.world = world;
         }
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + "{" +
+                "name='" + name + '\'' +
+                ", isEnabled=" + isEnabled +
+                ", world=" + world.getName() +
+                '}';
     }
 
 }

@@ -25,8 +25,6 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.object;
 
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
-
 public abstract class FGObjectBase implements IFGObject {
 
     protected String name;

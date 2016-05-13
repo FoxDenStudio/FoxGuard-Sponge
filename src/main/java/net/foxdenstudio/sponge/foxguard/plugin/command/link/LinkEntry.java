@@ -58,4 +58,12 @@ public class LinkEntry {
         result = 31 * result + (handler != null ? handler.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "LinkEntry{" +
+                "linkable=" + linkable +
+                ", handler=" + handler +
+                '}';
+    }
 }

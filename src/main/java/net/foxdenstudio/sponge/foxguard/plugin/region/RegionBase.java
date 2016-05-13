@@ -38,7 +38,7 @@ public abstract class RegionBase extends FGObjectBase implements IRegion {
 
     private final Set<IHandler> handlers;
 
-    RegionBase(String name) {
+    protected RegionBase(String name) {
         super(name);
         this.handlers = new HashSet<>();
     }
@@ -62,6 +62,5 @@ public abstract class RegionBase extends FGObjectBase implements IRegion {
     public void clearHandlers() {
         this.handlers.clear();
     }
-
 
 }

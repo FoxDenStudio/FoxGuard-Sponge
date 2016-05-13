@@ -29,6 +29,8 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.command.link.LinkEntry;
+import net.foxdenstudio.sponge.foxguard.plugin.command.link.LinkageParser;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
@@ -48,6 +50,7 @@ import org.spongepowered.api.world.World;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -69,28 +72,9 @@ public class CommandLink2 implements CommandCallable {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(mapper).parse();
-
-        if (parse.args.length == 0) {
-            if (FGUtil.getSelectedRegions(source).size() == 0 &&
-                    FGUtil.getSelectedHandlers(source).size() == 0)
-                throw new CommandException(Text.of("You don't have any regions or handlers in your state buffer!"));
-            if (FGUtil.getSelectedRegions(source).size() == 0)
-                throw new CommandException(Text.of("You don't have any regions in your state buffer!"));
-            if (FGUtil.getSelectedHandlers(source).size() == 0)
-                throw new CommandException(Text.of("You don't have any handlers in your state buffer!"));
-            int[] successes = {0};
-            FGUtil.getSelectedRegions(source).stream().forEach(
-                    region -> FGUtil.getSelectedHandlers(source).stream()
-                            .filter(handler -> !(handler instanceof GlobalHandler))
-                            .forEach(handler -> successes[0] += FGManager.getInstance().link(region, handler) ? 1 : 0));
-            source.sendMessage(Text.of(TextColors.GREEN, "Successfully formed " + successes[0] + " links!"));
-            FCStateManager.instance().getStateMap().get(source).flush(RegionsStateField.ID, HandlersStateField.ID);
-            return CommandResult.builder().successCount(successes[0]).build();
-        } else {
-
-            return CommandResult.success();
-        }
+        Set<LinkEntry> set = LinkageParser.parseLinkageExpression(arguments, source);
+        System.out.println(set);
+        return CommandResult.empty();
     }
 
     @Override

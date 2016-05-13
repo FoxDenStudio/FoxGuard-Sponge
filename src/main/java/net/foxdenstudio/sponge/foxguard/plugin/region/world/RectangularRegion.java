@@ -173,10 +173,7 @@ public class RectangularRegion extends WorldRegionBase {
         }
     }
 
-    @Override
-    public String toString() {
-        return this.boundingBox.toString();
-    }
+
 
     public static class Factory implements IWorldRegionFactory {
 

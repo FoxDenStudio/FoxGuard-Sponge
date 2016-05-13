@@ -44,6 +44,7 @@ public final class FGConfigManager {
     private boolean saveWorldRegionsInWorldFolders;
     private boolean saveInWorldFolder;
     private boolean useConfigFolder;
+    private int nameLengthLimit;
 
     private Map<Module, Boolean> modules = new EnumMap<>(Module.class);
 
@@ -55,34 +56,6 @@ public final class FGConfigManager {
     public static FGConfigManager getInstance() {
         if (instance == null) new FGConfigManager();
         return instance;
-    }
-
-    private void load() {
-        Path configFile =
-                FoxGuardMain.instance().getConfigDirectory().resolve("foxguard.cfg");
-        CommentedConfigurationNode root;
-        ConfigurationLoader<CommentedConfigurationNode> loader =
-                HoconConfigurationLoader.builder().setPath(configFile).build();
-        if (Files.exists(configFile)) {
-            try {
-                root = loader.load();
-            } catch (IOException e) {
-                root = loader.createEmptyNode(ConfigurationOptions.defaults());
-            }
-        } else {
-            root = loader.createEmptyNode(ConfigurationOptions.defaults());
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        cleanupFiles = root.getNode("storage", "cleanupFiles").getBoolean(true);
-        saveInWorldFolder = root.getNode("storage", "saveInWorldFolder").getBoolean(true);
-        saveWorldRegionsInWorldFolders = root.getNode("storage", "saveWorldRegionsInWorldFolders").getBoolean(true);
-        useConfigFolder = root.getNode("storage", "useConfigFolder").getBoolean(false);
-        for (Module m : Module.values()) {
-            this.modules.put(m, root.getNode("module", m.name).getBoolean(true));
-        }
-
-        //--------------------------------------------------------------------------------------------------------------
     }
 
     public void save() {
@@ -120,7 +93,11 @@ public final class FGConfigManager {
                 "This makes it easier to copy and paste world data without causing de-synchronization between the world data and FoxGuard Data.")
                 .setValue(saveWorldRegionsInWorldFolders);
         root.getNode("storage", "useConfigFolder").setComment("Whether or not to place the foxguard folder inside the config folder.\n" +
-                "Only applies if files are not kept inside the world folder.").setValue(useConfigFolder);
+                "Only applies if files are not kept inside the world folder.")
+                .setValue(useConfigFolder);
+        root.getNode("general", "nameLengthLimit").setComment("The length limit for object names. Use 0 or lower for no limit.\n" +
+                "Extremely long names can cause a variety of unfixable issues. You have been warned.")
+                .setValue(nameLengthLimit);
 
         for (Module m : Module.values()) {
             root.getNode("module", m.name).setValue(this.modules.get(m));
@@ -133,6 +110,35 @@ public final class FGConfigManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void load() {
+        Path configFile =
+                FoxGuardMain.instance().getConfigDirectory().resolve("foxguard.cfg");
+        CommentedConfigurationNode root;
+        ConfigurationLoader<CommentedConfigurationNode> loader =
+                HoconConfigurationLoader.builder().setPath(configFile).build();
+        if (Files.exists(configFile)) {
+            try {
+                root = loader.load();
+            } catch (IOException e) {
+                root = loader.createEmptyNode(ConfigurationOptions.defaults());
+            }
+        } else {
+            root = loader.createEmptyNode(ConfigurationOptions.defaults());
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        cleanupFiles = root.getNode("storage", "cleanupFiles").getBoolean(true);
+        saveInWorldFolder = root.getNode("storage", "saveInWorldFolder").getBoolean(true);
+        saveWorldRegionsInWorldFolders = root.getNode("storage", "saveWorldRegionsInWorldFolders").getBoolean(true);
+        useConfigFolder = root.getNode("storage", "useConfigFolder").getBoolean(false);
+        nameLengthLimit = root.getNode("general", "nameLengthLimit").getInt(24);
+        for (Module m : Module.values()) {
+            this.modules.put(m, root.getNode("module", m.name).getBoolean(true));
+        }
+
+        //--------------------------------------------------------------------------------------------------------------
     }
 
 
@@ -150,6 +156,10 @@ public final class FGConfigManager {
 
     public boolean useConfigFolder() {
         return useConfigFolder;
+    }
+
+    public int getNameLengthLimit() {
+        return nameLengthLimit;
     }
 
     public Map<Module, Boolean> getModules() {

@@ -29,8 +29,8 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.state.PositionStateField;
+import net.foxdenstudio.sponge.foxguard.plugin.FGConfigManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
@@ -107,11 +107,14 @@ public class CommandCreate implements CommandCallable {
             }
             if (isWorldRegion && world == null) throw new CommandException(Text.of("Must specify a world!"));
             if (parse.args[1].matches("^.*[^0-9a-zA-Z_$].*$"))
-                throw new ArgumentParseException(Text.of("Name must be alphanumeric!"), parse.args[1], 1);
+                throw new CommandException(Text.of("Name must be alphanumeric!"));
             if (parse.args[1].matches("^[0-9].*$"))
-                throw new ArgumentParseException(Text.of("Name can't start with a number!"), parse.args[1], 1);
+                throw new CommandException(Text.of("Name can't start with a number!"));
             if (!FGManager.getInstance().isNameValid(parse.args[1]))
                 throw new CommandException(Text.of("You may not use \"" + parse.args[1] + "\" as a name!"));
+            int lengthLimit = FGConfigManager.getInstance().getNameLengthLimit();
+            if (lengthLimit > 0 && parse.args[1].length() > lengthLimit)
+                throw new CommandException(Text.of("Name is too long!"));
             if (isWorldRegion) {
                 if (!FGManager.getInstance().isWorldRegionNameAvailable(parse.args[1], world))
                     throw new ArgumentParseException(Text.of("That name is already taken!"), parse.args[1], 1);
@@ -158,6 +161,9 @@ public class CommandCreate implements CommandCallable {
                 throw new ArgumentParseException(Text.of("Name can't start with a number!"), parse.args[1], 1);
             if (!FGManager.getInstance().isNameValid(parse.args[1]))
                 throw new CommandException(Text.of("You may not use \"" + parse.args[1] + "\" as a name!"));
+            int lengthLimit = FGConfigManager.getInstance().getNameLengthLimit();
+            if (lengthLimit > 0 && parse.args[1].length() > lengthLimit)
+                throw new CommandException(Text.of("Name is too long!"));
             int priority = 0;
             try {
                 priority = Integer.parseInt(parse.flagmap.get("priority"));
@@ -216,7 +222,25 @@ public class CommandCreate implements CommandCallable {
                         .filter(new StartsWithPredicate(parse.current.token))
                         .collect(GuavaCollectors.toImmutableList());
             else if (parse.current.index == 1) {
-                if(parse.current.token == null || parse.current.token.isEmpty()) return ImmutableList.of();
+                if (parse.current.token == null || parse.current.token.isEmpty()) return ImmutableList.of();
+                if (parse.current.token.matches("^.*[^0-9a-zA-Z_$].*$")) {
+                    source.sendMessage(Text.of(TextColors.RED, "Name must be alphanumeric!"));
+                    return ImmutableList.of();
+                }
+                if (parse.current.token.matches("^[0-9].*$")) {
+                    source.sendMessage(Text.of(TextColors.RED, "Name can't start with a number!"));
+                    return ImmutableList.of();
+                }
+                if (!FGManager.getInstance().isNameValid(parse.current.token)) {
+                    source.sendMessage(Text.of(TextColors.RED, "You may not use \"" + parse.current.token + "\" as a name!"));
+                    return ImmutableList.of();
+                }
+                int lengthLimit = FGConfigManager.getInstance().getNameLengthLimit();
+                if (lengthLimit > 0 && parse.current.token.length() > lengthLimit) {
+                    source.sendMessage(Text.of(TextColors.RED, "Name is too long!"));
+                    return ImmutableList.of();
+                }
+
                 Tristate available = null;
                 if (isIn(REGIONS_ALIASES, parse.args[0])) {
                     available = Tristate.fromBoolean(FGManager.getInstance().isRegionNameAvailable(parse.current.token));

@@ -25,57 +25,162 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.command.link;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import net.foxdenstudio.sponge.foxguard.plugin.command.link.exception.LinkException;
+import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
+import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
+import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.World;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Created by Fox on 4/19/2016.
  */
 public class LinkageParser {
 
+    private static final String REGEX = "[>()]|([\"'])(?:\\\\.|[^\\\\>(),])*?\\1|(?:\\\\.|[^\"'\\s>(),])+";
+    private static final Pattern PATTERN = Pattern.compile(REGEX);
+
     private World currentWorld;
 
-    public static Set<LinkEntry> parseLinkageExpression(String expression, CommandSource source) throws LinkException {
-
-        return null;
+    public static Set<LinkEntry> parseLinkageExpression(String expression, CommandSource source) throws CommandException {
+        return new LinkageParser(source).parse(expression, source);
     }
 
-    public LinkageParser(String expression, CommandSource source) {
+    public static List<String> getSuggestions(String expressionString, CommandSource source) {
+        String[] parts = expressionString.split(" +", -1);
+        String endPart = parts[parts.length - 1];
+        Matcher matcher = PATTERN.matcher(endPart);
+        boolean found = false;
+        while(matcher.find()){found = true;}
+        if(found) {
+            String token = matcher.group();
 
-    }
+        } else {
 
-    /**
-     * Created by Fox on 4/30/2016.
-     */
-    public class Expression implements IExpression {
-
-        private static final String REGEX = "[>()]|([\"'])(?:\\\\.|[^\\\\>(),])*?\\1|(?:\\\\.|[^\"'\\s>(),])+";
-
-        private List<Set<IExpression>> contents;
-
-        public Expression(String expression) throws LinkException {
-            this(expression, null);
         }
 
-        public Expression(String expression, World world) throws LinkException {
-            if (!checkParentheses(expression)) throw new LinkException();
-            Pattern pattern = Pattern.compile(REGEX);
-            Matcher matcher = pattern.matcher(expression);
-            Set<IExpression> set = new HashSet<>();
-            while (true){
+        World world;
+        if (source instanceof Player) world = ((Player) source).getWorld();
+        return ImmutableList.of();
+    }
 
+    private LinkageParser(CommandSource source) {
+        if (source instanceof Player) {
+            currentWorld = ((Player) source).getWorld();
+        }
+    }
+
+    private Set<LinkEntry> parse(String expressionString, CommandSource source) throws CommandException {
+        String[] parts = expressionString.split(";");
+        Set<LinkEntry> set = new HashSet<>();
+        for (String part : parts) {
+            if (!checkParentheses(part)) {
+                throw new CommandException(Text.of("You must close all parentheses!"));
             }
+            IExpression expression = new Expression(part, source, Stage.START);
+            set.addAll(expression.getLinks());
+        }
+        return ImmutableSet.copyOf(set);
+    }
+
+    private static boolean checkParentheses(String expression) {
+        Pattern leftPattern = Pattern.compile("\\(");
+        Matcher leftMatcher = leftPattern.matcher(expression);
+        int leftCount = 0;
+        while (leftMatcher.find()) {
+            leftCount++;
+        }
+        Pattern rightPattern = Pattern.compile("\\)");
+        Matcher rightMatcher = rightPattern.matcher(expression);
+        int rightCount = 0;
+        while (rightMatcher.find()) {
+            rightCount++;
+        }
+        return leftCount == rightCount;
+    }
+
+    public class Expression implements IExpression {
+
+        private List<Set<IExpression>> contents = new ArrayList<>();
+        private Stage stage;
+
+        public Expression(String expressionString, CommandSource source, Stage stage) {
+            this.stage = stage;
+            Matcher matcher = PATTERN.matcher(expressionString);
+            int parentheses = 0;
+            int startIndex = 0;
+            while (matcher.find()) {
+                if (matcher.group().equals("(")) parentheses++;
+                else if (matcher.group().equals(")")) parentheses--;
+                else if (matcher.group().equals(">") && parentheses == 0) {
+                    contents.add(parseSegment(expressionString.substring(startIndex, matcher.start()), source));
+                    startIndex = matcher.end();
+                    this.stage = Stage.REST;
+                }
+            }
+            contents.add(parseSegment(expressionString.substring(startIndex, expressionString.length()), source));
+        }
+
+        private Set<IExpression> parseSegment(String segmentString, CommandSource source) {
+            Set<IExpression> set = new HashSet<>();
+            Set<IFGObject> stubObjects = new HashSet<>();
+            Matcher matcher = PATTERN.matcher(segmentString);
+            while (matcher.find()) {
+                if (matcher.group().equals("(")) {
+                    int startIndex = matcher.end();
+                    int parentheses = 1;
+                    while (parentheses != 0 && matcher.find()) {
+                        if (matcher.group().equals("(")) parentheses++;
+                        else if (matcher.group().equals(")")) parentheses--;
+                    }
+                    set.add(new Expression(segmentString.substring(startIndex, matcher.start()), source, stage));
+                } else {
+                    String token = matcher.group();
+                    if (!token.startsWith("-")) {
+                        if (token.startsWith("%")) {
+                            Optional<World> worldOptional = Sponge.getServer().getWorld(token.substring(1));
+                            if (worldOptional.isPresent()) currentWorld = worldOptional.get();
+                        } else if (token.startsWith("$")) {
+                            String name = token.substring(1);
+                            if (Aliases.isIn(Aliases.REGIONS_ALIASES, name)) {
+                                set.add(new ExpressionStub(ImmutableSet.copyOf(FGUtil.getSelectedRegions(source))));
+                            } else if (Aliases.isIn(Aliases.HANDLERS_ALIASES, name)) {
+                                set.add(new ExpressionStub(ImmutableSet.copyOf(FGUtil.getSelectedHandlers(source))));
+                            } else if (Aliases.isIn(Aliases.CONTROLLERS_ALIASES, name)) {
+                                set.add(new ExpressionStub(ImmutableSet.copyOf(FGUtil.getSelectedControllers(source))));
+                            }
+                        } else {
+                            if (token.startsWith("^")) {
+                                IController controller = FGManager.getInstance().getController(token.substring(1));
+                                if (controller != null) stubObjects.add(controller);
+                            } else if (stage == Stage.START) {
+                                IRegion region = FGManager.getInstance().getRegionFromWorld(currentWorld, token);
+                                if (region != null) stubObjects.add(region);
+                            } else {
+                                IHandler handler = FGManager.getInstance().gethandler(token);
+                                if (handler != null) stubObjects.add(handler);
+                            }
+                        }
+                    }
+                }
+            }
+            if (stubObjects.size() > 0) set.add(new ExpressionStub(stubObjects));
+            return ImmutableSet.copyOf(set);
         }
 
         @Override
@@ -90,7 +195,7 @@ public class LinkageParser {
         }
 
         @Override
-        public Set<LinkEntry> getLinks() throws LinkException {
+        public Set<LinkEntry> getLinks() {
             if (contents.size() > 0) {
                 Set<LinkEntry> set = new HashSet<>();
                 if (contents.size() > 1) {
@@ -105,15 +210,12 @@ public class LinkageParser {
                         to = contents.get(i);
                         for (IExpression fromEx : from) {
                             for (IExpression toEx : to) {
-                                for (IFGObject fromObj : fromEx.getValue()) {
-                                    if (fromObj instanceof ILinkable) {
-                                        for (IFGObject toObj : toEx.getValue()) {
-                                            if (toObj instanceof IHandler) {
-                                                set.add(new LinkEntry((ILinkable) fromObj, (IHandler) toObj));
-                                            } else throw new LinkException();
-                                        }
-                                    } else throw new LinkException();
-                                }
+                                fromEx.getValue().stream()
+                                        .filter(fromObj -> fromObj instanceof ILinkable)
+                                        .forEach(fromObj -> set.addAll(toEx.getValue().stream()
+                                                .filter(toObj -> toObj instanceof IHandler)
+                                                .map(toObj -> new LinkEntry((ILinkable) fromObj, (IHandler) toObj))
+                                                .collect(Collectors.toList())));
                             }
                         }
                     }
@@ -125,22 +227,6 @@ public class LinkageParser {
                     return set;
                 }
             } else return ImmutableSet.of();
-        }
-
-        private boolean checkParentheses(String expression) {
-            Pattern leftPattern = Pattern.compile("\\(");
-            Matcher leftMatcher = leftPattern.matcher(expression);
-            int leftCount = 0;
-            while (leftMatcher.find()) {
-                leftCount++;
-            }
-            Pattern rightPattern = Pattern.compile("\\)");
-            Matcher rightMatcher = rightPattern.matcher(expression);
-            int rightCount = 0;
-            while (rightMatcher.find()) {
-                rightCount++;
-            }
-            return leftCount == rightCount;
         }
 
     }
@@ -165,5 +251,9 @@ public class LinkageParser {
             return ImmutableSet.of();
         }
 
+    }
+
+    private enum Stage {
+        START, REST
     }
 }

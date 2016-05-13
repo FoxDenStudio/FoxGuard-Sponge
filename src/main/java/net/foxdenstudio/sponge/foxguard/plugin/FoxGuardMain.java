@@ -245,6 +245,7 @@ public final class FoxGuardMain {
         fgDispatcher.register(new CommandPriority(), "priority", "prio", "level", "rank");
 
         fgDispatcher.register(new CommandTest(), "test");
+        fgDispatcher.register(new CommandLink2(), "link2");
 
         game.getCommandManager().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
     }

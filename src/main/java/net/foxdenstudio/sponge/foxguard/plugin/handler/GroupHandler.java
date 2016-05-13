@@ -271,7 +271,7 @@ public class GroupHandler extends HandlerBase {
     @Override
     public Text details(CommandSource source, String arguments) {
         Text.Builder builder = Text.builder();
-        builder.append(Text.of(TextColors.GOLD, "Permission:\n"))
+        builder.append(Text.of(TextColors.GREEN, "Permission: "))
                 .append(Text.of(TextColors.RESET, "foxguard.handler."))
                 .append(Text.of(TextColors.YELLOW, this.getName()))
                 .append(Text.of("\n"));

@@ -25,7 +25,6 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.command.link;
 
-import net.foxdenstudio.sponge.foxguard.plugin.command.link.exception.LinkException;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 
 import java.util.Set;
@@ -37,6 +36,6 @@ public interface IExpression {
 
     Set<IFGObject> getValue();
 
-    Set<LinkEntry> getLinks() throws LinkException;
+    Set<LinkEntry> getLinks();
 
 }
