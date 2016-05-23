@@ -40,6 +40,7 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.world.World;
 
 import java.util.*;
@@ -64,18 +65,78 @@ public class LinkageParser {
     public static List<String> getSuggestions(String expressionString, CommandSource source) {
         String[] parts = expressionString.split(" +", -1);
         String endPart = parts[parts.length - 1];
-        Matcher matcher = PATTERN.matcher(endPart);
+        Matcher matcher = PATTERN.matcher(expressionString);
         boolean found = false;
-        while(matcher.find()){found = true;}
-        if(found) {
-            String token = matcher.group();
-
-        } else {
-
+        Stage stage = Stage.START;
+        World world = source instanceof Player ? ((Player) source).getWorld() : null;
+        int parentheses = 0;
+        String match = "";
+        while (matcher.find()) {
+            found = true;
+            match = matcher.group();
+            if (match.equals("(")) parentheses++;
+            else if (match.equals(")")) parentheses--;
+            else if (match.equals(">") && parentheses == 0) stage = Stage.REST;
+            else if (match.startsWith("%")) {
+                Optional<World> worldOptional = Sponge.getServer().getWorld(match.substring(1));
+                if (worldOptional.isPresent()) world = worldOptional.get();
+            }
+            if (parentheses < 0) return ImmutableList.of();
         }
-
-        World world;
-        if (source instanceof Player) world = ((Player) source).getWorld();
+        if (found) {
+            String token = match;
+            if (expressionString.endsWith(">") || expressionString.endsWith(",")) {
+                return ImmutableList.of(endPart + " ");
+            } else if (expressionString.endsWith(" ")) {
+                if (stage == Stage.START) {
+                    return FGManager.getInstance().getAllRegions(world).stream()
+                            .map(IFGObject::getName)
+                            .sorted()
+                            .collect(Collectors.toList());
+                } else {
+                    return FGManager.getInstance().getHandlers().stream()
+                            .map(IFGObject::getName)
+                            .sorted()
+                            .collect(Collectors.toList());
+                }
+            } else if (expressionString.endsWith(token)) {
+                if (token.startsWith("^")) {
+                    return FGManager.getInstance().getControllers().stream()
+                            .map(IFGObject::getName)
+                            .filter(new StartsWithPredicate(token.substring(1)))
+                            .sorted()
+                            .map(str -> endPart + str.substring(token.length() - 1))
+                            .collect(Collectors.toList());
+                } else if (token.startsWith("%")) {
+                    return Sponge.getServer().getWorlds().stream()
+                            .map(World::getName)
+                            .filter(new StartsWithPredicate(token.substring(1)))
+                            .map(str -> endPart + str.substring(token.length() - 1))
+                            .collect(Collectors.toList());
+                } else {
+                    if (stage == Stage.START) {
+                        return FGManager.getInstance().getAllRegions(world).stream()
+                                .map(IFGObject::getName)
+                                .filter(new StartsWithPredicate(token))
+                                .sorted()
+                                .map(str -> endPart + str.substring(token.length()))
+                                .collect(Collectors.toList());
+                    } else {
+                        return FGManager.getInstance().getHandlers().stream()
+                                .map(IFGObject::getName)
+                                .filter(new StartsWithPredicate(token))
+                                .sorted()
+                                .map(str -> endPart + str.substring(token.length()))
+                                .collect(Collectors.toList());
+                    }
+                }
+            }
+        } else {
+            return FGManager.getInstance().getAllRegions(world).stream()
+                    .map(IFGObject::getName)
+                    .sorted()
+                    .collect(Collectors.toList());
+        }
         return ImmutableList.of();
     }
 

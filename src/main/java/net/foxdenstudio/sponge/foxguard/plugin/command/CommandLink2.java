@@ -79,7 +79,7 @@ public class CommandLink2 implements CommandCallable {
 
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
-        return ImmutableList.of();
+        return LinkageParser.getSuggestions(arguments, source);
     }
 
     @Override

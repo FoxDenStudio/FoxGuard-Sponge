@@ -34,7 +34,6 @@ import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.plugin.command.*;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.LogicController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GroupHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.PassiveHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.PermissionHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.SimpleHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.*;
@@ -274,7 +273,6 @@ public final class FoxGuardMain {
         manager.registerWorldRegionFactory(new ElevationRegion.Factory());
 
         manager.registerHandlerFactory(new SimpleHandler.Factory());
-        manager.registerHandlerFactory(new PassiveHandler.Factory());
         manager.registerHandlerFactory(new GroupHandler.Factory());
         manager.registerHandlerFactory(new PermissionHandler.Factory());
 

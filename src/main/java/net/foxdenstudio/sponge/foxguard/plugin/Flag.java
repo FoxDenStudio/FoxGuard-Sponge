@@ -46,6 +46,8 @@ public enum Flag implements IFlag {
     BLOCK_PLACE(true, "blockplace", "Place-Blocks", BLOCK_CHANGE),
     BLOCK_BREAK(true, "blockbreak", "Break-Blocks", BLOCK_CHANGE),
     BLOCK_MODIFY(true, "blockmodify", "Modify-Blocks", BLOCK_CHANGE),
+    BLOCK_DECAY(true, "blockdecay", "Block-Decay", BLOCK_CHANGE),
+    BLOCK_GROW(true, "blockgrow", "Block-Growth", BLOCK_CHANGE),
 
     BLOCK_INTERACT(true, "blockclick", "Click-Blocks", INTERACT, BLOCK),
     BLOCK_INTERACT_PRIMARY(true, "blockattack", "Attack-Blocks", BLOCK_INTERACT, INTERACT_PRIMARY),
@@ -179,9 +181,10 @@ public enum Flag implements IFlag {
     }
 
     private static List<IFlag> otherFlags = new ArrayList<>();
-    private static List<IFlag> allFlags = new ArrayList<>();
+    private static List<IFlag> allFlags = null;
 
     public static List<IFlag> getFlags() {
+        if (allFlags == null) genFlagsList();
         return allFlags;
     }
 

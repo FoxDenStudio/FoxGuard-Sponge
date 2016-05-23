@@ -17,7 +17,7 @@ apply plugin: 'java'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group 'net.foxdenstudio.sponge.foxguard'
-version '0.18.0'
+version '0.19.0'
 
 if (System.env.TRAVIS) {
     String tempVersion = ''
@@ -74,5 +74,5 @@ artifacts {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.11'
+    gradleVersion = '2.13'
 }

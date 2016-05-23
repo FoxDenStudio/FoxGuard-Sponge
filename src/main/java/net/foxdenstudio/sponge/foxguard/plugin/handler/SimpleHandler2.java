@@ -26,7 +26,6 @@
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
@@ -34,9 +33,10 @@ import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.IFlag;
+import net.foxdenstudio.sponge.foxguard.plugin.IFlag2;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
-import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
+import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
@@ -54,11 +54,13 @@ import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
+import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -66,56 +68,114 @@ import java.util.*;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
-public class SimpleHandler extends HandlerBase {
+public class SimpleHandler2 extends HandlerBase implements IHandler2 {
 
-    private final Map<IFlag, Tristate> ownerPermissions;
-    private final Map<IFlag, Tristate> memberPermissions;
-    private final Map<IFlag, Tristate> defaultPermissions;
+    private final List<Group> groups;
+    private final Map<String, List<Entry>> groupPermissions;
 
-    private final Map<IFlag, Tristate> ownerPermCache;
-    private final Map<IFlag, Tristate> memberPermCache;
-    private final Map<IFlag, Tristate> defaultPermCache;
+    private final List<Entry> defaultPermissions;
+    private final Map<String, Map<Set<IFlag2>, Tristate>> groupPermCache;
+    private final Map<User, Map<Set<IFlag2>, Tristate>> userPermCache;
 
+    private final Map<Set<IFlag2>, Tristate> defaultPermCache;
     private PassiveOptions passiveOption = PassiveOptions.PASSTHROUGH;
-    private Set<User> owners = new HashSet<>();
-    private Set<User> members = new HashSet<>();
+    private Group passiveGroup;
+    private Map<Set<IFlag2>, Tristate> passiveGroupCacheRef;
+    private final Map<Set<IFlag2>, Tristate> passivePermCache;
 
-    public SimpleHandler(String name, int priority) {
+    public SimpleHandler2(String name, int priority) {
         this(name, priority,
-                new CacheMap<>((o, m) -> Tristate.UNDEFINED),
-                new CacheMap<>((o, m) -> Tristate.UNDEFINED),
-                new CacheMap<>((o, m) -> Tristate.UNDEFINED));
+                new HashMap<>(),
+                new ArrayList<>());
     }
 
-    public SimpleHandler(String name, int priority,
-                         Map<IFlag, Tristate> ownerPermissions,
-                         Map<IFlag, Tristate> memberPermissions,
-                         Map<IFlag, Tristate> defaultPermissions) {
+    public SimpleHandler2(String name, int priority,
+                          Map<String, List<Entry>> groupPermissions,
+                          List<Entry> defaultPermissions) {
         super(name, priority);
-        this.ownerPermissions = ownerPermissions;
-        this.memberPermissions = memberPermissions;
+        this.groups = new ArrayList<>();
+
+        this.groupPermissions = groupPermissions;
         this.defaultPermissions = defaultPermissions;
 
-        this.ownerPermCache = new CacheMap<>((o, m) -> {
-            if (o instanceof Flag) {
-                Tristate state = ownerPermissions.get(FGUtil.nearestParent((Flag) o, ownerPermissions.keySet()));
-                m.put((Flag) o, state);
-                return state;
-            } else return Tristate.UNDEFINED;
+        this.groupPermCache = new CacheMap<>((k1, m1) -> {
+            if (k1 instanceof String) {
+                List<Entry> entries = SimpleHandler2.this.groupPermissions.get(k1);
+                Map<Set<IFlag2>, Tristate> map = new CacheMap<>((k2, m2) -> {
+                    if (k2 instanceof Set) {
+                        for (Object o : (Set) k2) {
+                            if (!(o instanceof IFlag2)) return null;
+                        }
+                        Set<IFlag2> flagSet = (Set<IFlag2>) k2;
+                        Tristate state = Tristate.UNDEFINED;
+                        for (Entry entry : entries) {
+                            if (flagSet.containsAll(entry.set)) {
+                                state = entry.state;
+                                break;
+                            }
+                        }
+                        m2.put(flagSet, state);
+                        return state;
+                    } else return null;
+                });
+                m1.put((String) k1, map);
+                return map;
+            } else return null;
         });
-        this.memberPermCache = new CacheMap<>((o, m) -> {
-            if (o instanceof Flag) {
-                Tristate state = memberPermissions.get(FGUtil.nearestParent((Flag) o, memberPermissions.keySet()));
-                m.put((Flag) o, state);
+        this.defaultPermCache = new CacheMap<>((k, m) -> {
+            if (k instanceof Set) {
+                for (Object o : (Set) k) {
+                    if (!(o instanceof IFlag2)) return null;
+                }
+                Set<IFlag2> flagSet = (Set<IFlag2>) k;
+                Tristate state = Tristate.UNDEFINED;
+                for (Entry entry : SimpleHandler2.this.defaultPermissions) {
+                    if (flagSet.containsAll(entry.set)) {
+                        state = entry.state;
+                        break;
+                    }
+                }
+                m.put(flagSet, state);
                 return state;
-            } else return Tristate.UNDEFINED;
+            } else return null;
         });
-        this.defaultPermCache = new CacheMap<>((o, m) -> {
-            if (o instanceof Flag) {
-                Tristate state = defaultPermissions.get(FGUtil.nearestParent((Flag) o, defaultPermissions.keySet()));
-                m.put((Flag) o, state);
+        this.userPermCache = new CacheMap<>((k, m) -> {
+            if (k instanceof User) {
+                for (Group g : groups) {
+                    if (FCUtil.isUserInCollection(g.set, (User) k)) {
+                        Map<Set<IFlag2>, Tristate> map = groupPermCache.get(g.name);
+                        m.put(((User) k), map);
+                        return map;
+                    }
+                }
+                m.put((User) k, defaultPermCache);
+                return defaultPermCache;
+            } else return null;
+        });
+        this.passivePermCache = new CacheMap<>((k, m) -> {
+            if (k instanceof Set) {
+                for (Object o : (Set) k) {
+                    if (!(o instanceof IFlag2)) return null;
+                }
+                Set<IFlag2> flagSet = (Set<IFlag2>) k;
+                Tristate state = Tristate.UNDEFINED;
+                switch (passiveOption) {
+                    case ALLOW:
+                        state = Tristate.TRUE;
+                        break;
+                    case DENY:
+                        state = Tristate.FALSE;
+                        break;
+                    case GROUP:
+                        state = passiveGroupCacheRef.get(flagSet);
+                        break;
+                    case DEFAULT:
+                        state = defaultPermCache.get(flagSet);
+                        break;
+                }
+                m.put(flagSet, state);
                 return state;
-            } else return Tristate.UNDEFINED;
+            } else return null;
         });
     }
 
@@ -408,34 +468,14 @@ public class SimpleHandler extends HandlerBase {
     }
 
     @Override
-    public EventResult handle(User user, IFlag flag, Optional<Event> event, Object... extra) {
-        if (user == null) {
-            switch (this.passiveOption) {
-                case OWNER:
-                    return EventResult.of(this.ownerPermCache.get(flag));
-                case MEMBER:
-                    return EventResult.of(this.memberPermCache.get(flag));
-                case DEFAULT:
-                    return EventResult.of(this.defaultPermCache.get(flag));
-                case ALLOW:
-                    return EventResult.allow();
-                case DENY:
-                    return EventResult.deny();
-                case PASSTHROUGH:
-                    return EventResult.pass();
-            }
-        }
-        if (FCUtil.isUserInCollection(this.owners, user))
-            return EventResult.of(this.ownerPermCache.get(flag));
-        else if (FCUtil.isUserInCollection(this.members, user))
-            return EventResult.of(this.memberPermCache.get(flag));
-        else return EventResult.of(this.defaultPermCache.get(flag));
+    public EventResult handle(@Nullable User user, Set<IFlag2> flags, ExtraContext extra) {
+        if (user == null) return EventResult.of(this.passivePermCache.get(flags));
+        else return EventResult.of(this.userPermCache.get(user).get(flags));
     }
 
-    private void clearCache() {
-        this.ownerPermCache.clear();
-        this.memberPermCache.clear();
-        this.defaultPermCache.clear();
+    @Override
+    public EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra) {
+        return EventResult.pass();
     }
 
     @Override
@@ -591,38 +631,6 @@ public class SimpleHandler extends HandlerBase {
         }
     }
 
-    public boolean removeOwner(User user) {
-        return owners.remove(user);
-    }
-
-    public boolean addOwner(User user) {
-        return owners.add(user);
-    }
-
-    public Set<User> getOwners() {
-        return ImmutableSet.copyOf(owners);
-    }
-
-    public void setOwners(Set<User> owners) {
-        this.owners = owners;
-    }
-
-    public Set<User> getMembers() {
-        return ImmutableSet.copyOf(members);
-    }
-
-    public void setMembers(Set<User> members) {
-        this.members = members;
-    }
-
-    public boolean addMember(User player) {
-        return members.add(player);
-    }
-
-    public boolean removeMember(User player) {
-        return members.remove(player);
-    }
-
     public PassiveOptions getPassiveOption() {
         return passiveOption;
     }
@@ -631,8 +639,14 @@ public class SimpleHandler extends HandlerBase {
         this.passiveOption = passiveOption;
     }
 
+    private void clearCache() {
+        this.groupPermCache.clear();
+        this.defaultPermCache.clear();
+        this.userPermCache.clear();
+    }
+
     public enum PassiveOptions {
-        ALLOW, DENY, PASSTHROUGH, OWNER, MEMBER, DEFAULT;
+        ALLOW, DENY, PASSTHROUGH, GROUP, DEFAULT;
 
         public String toString() {
             switch (this) {
@@ -642,10 +656,8 @@ public class SimpleHandler extends HandlerBase {
                     return "Deny";
                 case PASSTHROUGH:
                     return "Passthrough";
-                case OWNER:
-                    return "Owner";
-                case MEMBER:
-                    return "Member";
+                case GROUP:
+                    return "Group";
                 case DEFAULT:
                     return "Default";
                 default:
@@ -654,10 +666,38 @@ public class SimpleHandler extends HandlerBase {
         }
     }
 
-    public enum UserOperations {
+    private enum UserOperations {
         ADD,
         REMOVE,
         SET
+    }
+
+    public class Entry {
+        public Set<IFlag2> set;
+        public Tristate state;
+
+        public Entry(Set<IFlag2> set, Tristate state) {
+            this.set = set;
+            this.state = state;
+        }
+    }
+
+    public class Group {
+        public String name;
+        public String displayName;
+        public TextColor color;
+        public Set<User> set;
+
+        public Group(String name, Set<User> set) {
+            this(name, set, TextColors.WHITE);
+        }
+
+        public Group(String name, Set<User> set, TextColor color) {
+            this.name = name.toLowerCase();
+            this.displayName = name;
+            this.color = color;
+            this.set = set;
+        }
     }
 
     public static class Factory implements IHandlerFactory {
@@ -666,7 +706,7 @@ public class SimpleHandler extends HandlerBase {
 
         @Override
         public IHandler create(String name, int priority, String arguments, CommandSource source) {
-            SimpleHandler handler = new SimpleHandler(name, priority);
+            SimpleHandler2 handler = new SimpleHandler2(name, priority);
             if (source instanceof Player) handler.addOwner((Player) source);
             return handler;
         }
@@ -746,7 +786,7 @@ public class SimpleHandler extends HandlerBase {
                     } else return Optional.empty();
                 } else return Optional.empty();
             });
-            SimpleHandler handler = new SimpleHandler(name, priority, ownerPermissions, memberPermissions, defaultPermissions);
+            SimpleHandler2 handler = new SimpleHandler2(name, priority, ownerPermissions, memberPermissions, defaultPermissions);
             owners.stream().filter(Optional::isPresent).forEach(userOptional -> handler.addOwner(userOptional.get()));
             members.stream().filter(Optional::isPresent).forEach(userOptional -> handler.addMember(userOptional.get()));
             handler.setPassiveOption(option);

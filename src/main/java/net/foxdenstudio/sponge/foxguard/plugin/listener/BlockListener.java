@@ -74,6 +74,8 @@ public class BlockListener implements EventListener<ChangeBlockEvent> {
         if (event instanceof ChangeBlockEvent.Modify) typeFlag = Flag.BLOCK_MODIFY;
         else if (event instanceof ChangeBlockEvent.Break) typeFlag = Flag.BLOCK_BREAK;
         else if (event instanceof ChangeBlockEvent.Place) typeFlag = Flag.BLOCK_PLACE;
+        else if (event instanceof ChangeBlockEvent.Decay) typeFlag = Flag.BLOCK_DECAY;
+        else if (event instanceof ChangeBlockEvent.Grow) typeFlag = Flag.BLOCK_GROW;
         else return;
 
         //FoxGuardMain.instance().getLogger().info(player.getName());

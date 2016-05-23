@@ -211,6 +211,10 @@ public final class FGManager {
         return ImmutableSet.copyOf(this.regions);
     }
 
+    public Set<IWorldRegion> getWorldRegions(World world) {
+        return ImmutableSet.copyOf(this.worldRegions.get(world));
+    }
+
     public Set<IRegion> getAllRegions() {
         Set<IRegion> set = new HashSet<>();
         this.worldRegions.forEach((world, tset) -> tset.forEach(set::add));
@@ -218,11 +222,8 @@ public final class FGManager {
         return ImmutableSet.copyOf(set);
     }
 
-    public Set<IWorldRegion> getWorldRegions(World world) {
-        return ImmutableSet.copyOf(this.worldRegions.get(world));
-    }
-
     public Set<IRegion> getAllRegions(World world) {
+        if(world == null) return getRegions();
         Set<IRegion> set = new HashSet<>();
         this.worldRegions.get(world).forEach(set::add);
         this.regions.forEach(set::add);
