@@ -81,16 +81,16 @@ public class GroupHandler extends HandlerBase {
         this.defaultPermissions = defaultPermissions;
 
         this.groupPermCache = new CacheMap<>((o, m) -> {
-            if (o instanceof Flag) {
-                Tristate state = groupPermissions.get(FGUtil.nearestParent((Flag) o, groupPermissions.keySet()));
-                m.put((Flag) o, state);
+            if (o instanceof IFlag) {
+                Tristate state = groupPermissions.get(FGUtil.nearestParent((IFlag) o, groupPermissions.keySet()));
+                m.put((IFlag) o, state);
                 return state;
             } else return Tristate.UNDEFINED;
         });
         this.defaultPermCache = new CacheMap<>((o, m) -> {
-            if (o instanceof Flag) {
-                Tristate state = defaultPermissions.get(FGUtil.nearestParent((Flag) o, defaultPermissions.keySet()));
-                m.put((Flag) o, state);
+            if (o instanceof IFlag) {
+                Tristate state = defaultPermissions.get(FGUtil.nearestParent((IFlag) o, defaultPermissions.keySet()));
+                m.put((IFlag) o, state);
                 return state;
             } else return Tristate.UNDEFINED;
         });

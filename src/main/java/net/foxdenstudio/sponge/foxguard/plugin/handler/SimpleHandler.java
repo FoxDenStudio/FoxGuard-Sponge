@@ -97,23 +97,23 @@ public class SimpleHandler extends HandlerBase {
         this.defaultPermissions = defaultPermissions;
 
         this.ownerPermCache = new CacheMap<>((o, m) -> {
-            if (o instanceof Flag) {
-                Tristate state = ownerPermissions.get(FGUtil.nearestParent((Flag) o, ownerPermissions.keySet()));
-                m.put((Flag) o, state);
+            if (o instanceof IFlag) {
+                Tristate state = ownerPermissions.get(FGUtil.nearestParent((IFlag) o, ownerPermissions.keySet()));
+                m.put((IFlag) o, state);
                 return state;
             } else return Tristate.UNDEFINED;
         });
         this.memberPermCache = new CacheMap<>((o, m) -> {
-            if (o instanceof Flag) {
-                Tristate state = memberPermissions.get(FGUtil.nearestParent((Flag) o, memberPermissions.keySet()));
-                m.put((Flag) o, state);
+            if (o instanceof IFlag) {
+                Tristate state = memberPermissions.get(FGUtil.nearestParent((IFlag) o, memberPermissions.keySet()));
+                m.put((IFlag) o, state);
                 return state;
             } else return Tristate.UNDEFINED;
         });
         this.defaultPermCache = new CacheMap<>((o, m) -> {
-            if (o instanceof Flag) {
-                Tristate state = defaultPermissions.get(FGUtil.nearestParent((Flag) o, defaultPermissions.keySet()));
-                m.put((Flag) o, state);
+            if (o instanceof IFlag) {
+                Tristate state = defaultPermissions.get(FGUtil.nearestParent((IFlag) o, defaultPermissions.keySet()));
+                m.put((IFlag) o, state);
                 return state;
             } else return Tristate.UNDEFINED;
         });
