@@ -71,9 +71,9 @@ public class PassiveHandler extends HandlerBase {
         super(name, priority);
         this.map = map;
         this.mapCache = new CacheMap<>((o, m) -> {
-            if (o instanceof Flag) {
-                Tristate state = map.get(FGUtil.nearestParent((Flag) o, map.keySet()));
-                m.put((Flag) o, state);
+            if (o instanceof IFlag) {
+                Tristate state = map.get(FGUtil.nearestParent((IFlag) o, map.keySet()));
+                m.put((IFlag) o, state);
                 return state;
             } else return Tristate.UNDEFINED;
         });
