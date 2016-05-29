@@ -30,8 +30,8 @@ import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
-import net.foxdenstudio.sponge.foxguard.plugin.Flag;
-import net.foxdenstudio.sponge.foxguard.plugin.IFlag;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
@@ -52,7 +52,6 @@ import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
 
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

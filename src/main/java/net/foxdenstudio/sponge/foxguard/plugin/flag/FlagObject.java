@@ -23,13 +23,17 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin;
+package net.foxdenstudio.sponge.foxguard.plugin.flag;
 
 /**
- * Created by Fox on 5/19/2016.
+ * Created by Fox on 5/25/2016.
  */
-public interface IFlag2 {
+public class FlagObject {
+    public final String name;
+    public final int id;
 
-    String flagName();
-
+    FlagObject(String name, int id) {
+        this.name = name;
+        this.id = id;
+    }
 }

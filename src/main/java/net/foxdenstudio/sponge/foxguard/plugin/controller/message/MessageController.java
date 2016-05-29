@@ -28,7 +28,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.controller.message;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
-import net.foxdenstudio.sponge.foxguard.plugin.IFlag;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.ControllerBase;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.util.HandlerWrapper;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;

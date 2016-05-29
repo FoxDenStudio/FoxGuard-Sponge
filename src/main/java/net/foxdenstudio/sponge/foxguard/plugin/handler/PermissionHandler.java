@@ -27,7 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
-import net.foxdenstudio.sponge.foxguard.plugin.IFlag;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
 import org.spongepowered.api.command.CommandException;

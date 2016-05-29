@@ -23,29 +23,13 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.handler;
+package net.foxdenstudio.sponge.foxguard.plugin.flag;
 
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag2;
-import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
-import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
-import org.spongepowered.api.entity.living.player.User;
-import org.spongepowered.api.event.Event;
+/**
+ * Created by Fox on 5/19/2016.
+ */
+public interface IFlag2 {
 
-import javax.annotation.Nullable;
-import java.util.Optional;
-import java.util.Set;
-
-public interface IHandler extends IFGObject, Comparable<IHandler> {
-
-    EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra);
-
-    EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra);
-
-    int getPriority();
-
-    void setPriority(int priority);
+    String flagName();
 
 }

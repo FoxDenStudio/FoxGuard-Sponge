@@ -25,7 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.controller.util;
 
-import net.foxdenstudio.sponge.foxguard.plugin.IFlag;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import org.spongepowered.api.entity.living.player.User;

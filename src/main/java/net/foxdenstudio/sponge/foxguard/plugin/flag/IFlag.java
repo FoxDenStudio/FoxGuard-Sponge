@@ -23,23 +23,33 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.handler;
+package net.foxdenstudio.sponge.foxguard.plugin.flag;
 
-import net.foxdenstudio.sponge.foxguard.plugin.IFlag2;
-import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
-import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
-import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.util.Tristate;
 
-import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Set;
 
-public interface IHandler2 extends IFGObject, Comparable<IHandler2> {
+/**
+ * Created by Fox on 4/2/2016.
+ */
+public interface IFlag {
 
-    EventResult handle(@Nullable User user, Set<IFlag2> flags, ExtraContext extra);
+    String flagName();
 
-    int getPriority();
+    IFlag[] getParents();
 
-    void setPriority(int priority);
+    /**
+     * Gets the hierarchy of the flag. This behavior is very specific, and is already implemented in
+     * {@link Flag#getHierarchyStatic(IFlag)} for use by other plugins wishing to implement {@code IFlag}.
+     * @return A list of ordered sets representing the hierarchy of the flag.
+     */
+    List<Set<IFlag>> getHierarchy();
 
+    /**
+     *
+     * @param input
+     * @return
+     */
+    Tristate resolve(Tristate input);
 }

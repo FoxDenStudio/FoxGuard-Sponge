@@ -23,33 +23,55 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin;
+package net.foxdenstudio.sponge.foxguard.plugin.flag;
 
-import org.spongepowered.api.util.Tristate;
+import com.google.common.collect.ImmutableSet;
 
-import java.util.List;
+import java.util.BitSet;
 import java.util.Set;
 
 /**
- * Created by Fox on 4/2/2016.
+ * Created by Fox on 5/25/2016.
  */
-public interface IFlag {
+public class FlagBitSet extends BitSet {
 
-    String flagName();
+    public FlagBitSet() {
+        super(FlagRegistry.getInstance().getNumFlags());
+    }
 
-    IFlag[] getParents();
+    public FlagBitSet(FlagObject... flags) {
+        this();
+        for (FlagObject flag : flags) {
+            this.set(flag.id);
+        }
+    }
 
-    /**
-     * Gets the hierarchy of the flag. This behavior is very specific, and is already implemented in
-     * {@link Flag#getHierarchyStatic(IFlag)} for use by other plugins wishing to implement {@code IFlag}.
-     * @return A list of ordered sets representing the hierarchy of the flag.
-     */
-    List<Set<IFlag>> getHierarchy();
+    public FlagBitSet(Set<FlagObject> flags){
+        this();
+        for (FlagObject flag : flags) {
+            this.set(flag.id);
+        }
+    }
 
-    /**
-     *
-     * @param input
-     * @return
-     */
-    Tristate resolve(Tristate input);
+    public boolean getFlag(FlagObject flag){
+        return this.get(flag.id);
+    }
+
+    public void setFlag(FlagObject flag) {
+        this.set(flag.id);
+    }
+
+    public void setFlag(FlagObject flag, boolean value) {
+        this.set(flag.id, value);
+    }
+
+    public Set<FlagObject> toFlagSet() {
+        ImmutableSet.Builder<FlagObject> builder = ImmutableSet.builder();
+        FlagRegistry registry = FlagRegistry.getInstance();
+        int index = -1;
+        while((index = this.nextSetBit(index + 1)) >= 0){
+            builder.add(registry.getFlag(index));
+        }
+        return builder.build();
+    }
 }

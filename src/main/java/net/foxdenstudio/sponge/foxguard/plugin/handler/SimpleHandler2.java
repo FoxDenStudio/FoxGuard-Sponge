@@ -30,10 +30,11 @@ import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
-import net.foxdenstudio.sponge.foxguard.plugin.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
-import net.foxdenstudio.sponge.foxguard.plugin.IFlag;
-import net.foxdenstudio.sponge.foxguard.plugin.IFlag2;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagObject;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
@@ -48,7 +49,6 @@ import org.mapdb.Serializer;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.command.source.ProxySource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
@@ -68,20 +68,20 @@ import java.util.*;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
-public class SimpleHandler2 extends HandlerBase implements IHandler2 {
+public class SimpleHandler2 extends HandlerBase {
 
     private final List<Group> groups;
     private final Map<String, List<Entry>> groupPermissions;
 
     private final List<Entry> defaultPermissions;
-    private final Map<String, Map<Set<IFlag2>, Tristate>> groupPermCache;
-    private final Map<User, Map<Set<IFlag2>, Tristate>> userPermCache;
+    private final Map<String, Map<FlagBitSet, Tristate>> groupPermCache;
+    private final Map<User, Map<FlagBitSet, Tristate>> userPermCache;
 
-    private final Map<Set<IFlag2>, Tristate> defaultPermCache;
+    private final Map<FlagBitSet, Tristate> defaultPermCache;
     private PassiveOptions passiveOption = PassiveOptions.PASSTHROUGH;
     private Group passiveGroup;
-    private Map<Set<IFlag2>, Tristate> passiveGroupCacheRef;
-    private final Map<Set<IFlag2>, Tristate> passivePermCache;
+    private Map<FlagBitSet, Tristate> passiveGroupCacheRef;
+    private final Map<FlagBitSet, Tristate> passivePermCache;
 
     public SimpleHandler2(String name, int priority) {
         this(name, priority,
@@ -101,20 +101,17 @@ public class SimpleHandler2 extends HandlerBase implements IHandler2 {
         this.groupPermCache = new CacheMap<>((k1, m1) -> {
             if (k1 instanceof String) {
                 List<Entry> entries = SimpleHandler2.this.groupPermissions.get(k1);
-                Map<Set<IFlag2>, Tristate> map = new CacheMap<>((k2, m2) -> {
-                    if (k2 instanceof Set) {
-                        for (Object o : (Set) k2) {
-                            if (!(o instanceof IFlag2)) return null;
-                        }
-                        Set<IFlag2> flagSet = (Set<IFlag2>) k2;
+                Map<FlagBitSet, Tristate> map = new CacheMap<>((k2, m2) -> {
+                    if (k2 instanceof FlagBitSet) {
+                        FlagBitSet flags = (FlagBitSet) k2;
                         Tristate state = Tristate.UNDEFINED;
                         for (Entry entry : entries) {
-                            if (flagSet.containsAll(entry.set)) {
+                            if (flags.toFlagSet().containsAll(entry.set)) {
                                 state = entry.state;
                                 break;
                             }
                         }
-                        m2.put(flagSet, state);
+                        m2.put(flags, state);
                         return state;
                     } else return null;
                 });
@@ -123,19 +120,16 @@ public class SimpleHandler2 extends HandlerBase implements IHandler2 {
             } else return null;
         });
         this.defaultPermCache = new CacheMap<>((k, m) -> {
-            if (k instanceof Set) {
-                for (Object o : (Set) k) {
-                    if (!(o instanceof IFlag2)) return null;
-                }
-                Set<IFlag2> flagSet = (Set<IFlag2>) k;
+            if (k instanceof FlagBitSet) {
+                FlagBitSet flags = (FlagBitSet) k;
                 Tristate state = Tristate.UNDEFINED;
                 for (Entry entry : SimpleHandler2.this.defaultPermissions) {
-                    if (flagSet.containsAll(entry.set)) {
+                    if (flags.toFlagSet().containsAll(entry.set)) {
                         state = entry.state;
                         break;
                     }
                 }
-                m.put(flagSet, state);
+                m.put(flags, state);
                 return state;
             } else return null;
         });
@@ -143,7 +137,7 @@ public class SimpleHandler2 extends HandlerBase implements IHandler2 {
             if (k instanceof User) {
                 for (Group g : groups) {
                     if (FCUtil.isUserInCollection(g.set, (User) k)) {
-                        Map<Set<IFlag2>, Tristate> map = groupPermCache.get(g.name);
+                        Map<FlagBitSet, Tristate> map = groupPermCache.get(g.name);
                         m.put(((User) k), map);
                         return map;
                     }
@@ -153,11 +147,8 @@ public class SimpleHandler2 extends HandlerBase implements IHandler2 {
             } else return null;
         });
         this.passivePermCache = new CacheMap<>((k, m) -> {
-            if (k instanceof Set) {
-                for (Object o : (Set) k) {
-                    if (!(o instanceof IFlag2)) return null;
-                }
-                Set<IFlag2> flagSet = (Set<IFlag2>) k;
+            if (k instanceof FlagBitSet) {
+                FlagBitSet flags = (FlagBitSet) k;
                 Tristate state = Tristate.UNDEFINED;
                 switch (passiveOption) {
                     case ALLOW:
@@ -167,13 +158,13 @@ public class SimpleHandler2 extends HandlerBase implements IHandler2 {
                         state = Tristate.FALSE;
                         break;
                     case GROUP:
-                        state = passiveGroupCacheRef.get(flagSet);
+                        state = passiveGroupCacheRef.get(flags);
                         break;
                     case DEFAULT:
-                        state = defaultPermCache.get(flagSet);
+                        state = defaultPermCache.get(flags);
                         break;
                 }
-                m.put(flagSet, state);
+                m.put(flags, state);
                 return state;
             } else return null;
         });
@@ -181,10 +172,6 @@ public class SimpleHandler2 extends HandlerBase implements IHandler2 {
 
     @Override
     public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
-        if (!source.hasPermission("foxguard.command.modify.objects.modify.handlers")) {
-            if (source instanceof ProxySource) source = ((ProxySource) source).getOriginalSource();
-            if (source instanceof Player && !this.owners.contains(source)) return ProcessResult.failure();
-        }
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).parse();
         if (parse.args.length > 0) {
             if (isIn(GROUPS_ALIASES, parse.args[0])) {
@@ -347,6 +334,11 @@ public class SimpleHandler2 extends HandlerBase implements IHandler2 {
         }
     }
 
+    public ProcessResult modify2(CommandSource source, String arguments) throws CommandException {
+
+        return ProcessResult.failure();
+    }
+
     @Override
     public List<String> modifySuggestions(CommandSource source, String arguments) throws CommandException {
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
@@ -468,7 +460,7 @@ public class SimpleHandler2 extends HandlerBase implements IHandler2 {
     }
 
     @Override
-    public EventResult handle(@Nullable User user, Set<IFlag2> flags, ExtraContext extra) {
+    public EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra) {
         if (user == null) return EventResult.of(this.passivePermCache.get(flags));
         else return EventResult.of(this.userPermCache.get(user).get(flags));
     }
@@ -496,6 +488,10 @@ public class SimpleHandler2 extends HandlerBase implements IHandler2 {
     @Override
     public Text details(CommandSource source, String arguments) {
         Text.Builder builder = Text.builder();
+        builder.append(Text.of(TextColors.GOLD,
+                TextActions.suggestCommand("/foxguard md h " + this.getName() + " group owners add "),
+                TextActions.showText(Text.of("Click to Add a Group")),
+                "Owners: "));
         builder.append(Text.of(TextColors.GOLD,
                 TextActions.suggestCommand("/foxguard md h " + this.getName() + " group owners add "),
                 TextActions.showText(Text.of("Click to Add a Player(s) to Owners")),
@@ -673,10 +669,10 @@ public class SimpleHandler2 extends HandlerBase implements IHandler2 {
     }
 
     public class Entry {
-        public Set<IFlag2> set;
+        public Set<FlagObject> set;
         public Tristate state;
 
-        public Entry(Set<IFlag2> set, Tristate state) {
+        public Entry(Set<FlagObject> set, Tristate state) {
             this.set = set;
             this.state = state;
         }
@@ -688,11 +684,11 @@ public class SimpleHandler2 extends HandlerBase implements IHandler2 {
         public TextColor color;
         public Set<User> set;
 
-        public Group(String name, Set<User> set) {
+        Group(String name, Set<User> set) {
             this(name, set, TextColors.WHITE);
         }
 
-        public Group(String name, Set<User> set, TextColor color) {
+        Group(String name, Set<User> set, TextColor color) {
             this.name = name.toLowerCase();
             this.displayName = name;
             this.color = color;
@@ -707,7 +703,7 @@ public class SimpleHandler2 extends HandlerBase implements IHandler2 {
         @Override
         public IHandler create(String name, int priority, String arguments, CommandSource source) {
             SimpleHandler2 handler = new SimpleHandler2(name, priority);
-            if (source instanceof Player) handler.addOwner((Player) source);
+//            if (source instanceof Player) handler.addOwner((Player) source);
             return handler;
         }
 

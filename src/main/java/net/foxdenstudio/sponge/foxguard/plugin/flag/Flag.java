@@ -23,7 +23,7 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin;
+package net.foxdenstudio.sponge.foxguard.plugin.flag;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
