@@ -177,7 +177,7 @@ public class CommandTest implements CommandCallable {
             count++;
             builder.append(Text.of(count + ": " + str + "\n"));
         }
-        for (Map.Entry<String, String> entry : parse.flagmap.entrySet()) {
+        for (Map.Entry<String, String> entry : parse.flags.entrySet()) {
             builder.append(Text.of(entry.getKey() + " : " + entry.getValue() + "\n"));
         }
         source.sendMessage(builder.build());

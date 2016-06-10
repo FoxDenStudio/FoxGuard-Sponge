@@ -34,6 +34,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IControllerFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
@@ -110,7 +111,7 @@ public class LogicController extends ControllerBase {
         builder.append(Text.of(TextColors.GOLD, "Operator: "));
         builder.append(Text.of(TextColors.RESET, operator.toString()));
         builder.append(Text.of(TextColors.GOLD, "\nMode: "));
-        builder.append(FCUtil.readableTristateText(mode));
+        builder.append(FGUtil.readableTristateText(mode));
         builder.append(Text.of(TextColors.GOLD, "\nShort Circuit: "));
         builder.append(Text.of(TextColors.RESET, shortCircuit));
         return builder.build();

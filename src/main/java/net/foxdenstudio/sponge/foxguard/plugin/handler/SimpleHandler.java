@@ -485,7 +485,7 @@ public class SimpleHandler extends HandlerBase {
         for (IFlag f : this.ownerPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
-                            .append(FCUtil.readableTristateText(ownerPermissions.get(f)))
+                            .append(FGUtil.readableTristateText(ownerPermissions.get(f)))
                             .append(Text.of("\n"))
                             .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set owners " + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
@@ -499,7 +499,7 @@ public class SimpleHandler extends HandlerBase {
         for (IFlag f : this.memberPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
-                            .append(FCUtil.readableTristateText(memberPermissions.get(f)))
+                            .append(FGUtil.readableTristateText(memberPermissions.get(f)))
                             .append(Text.of("\n"))
                             .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set members " + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
@@ -513,7 +513,7 @@ public class SimpleHandler extends HandlerBase {
         for (IFlag f : this.defaultPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
-                            .append(FCUtil.readableTristateText(defaultPermissions.get(f)))
+                            .append(FGUtil.readableTristateText(defaultPermissions.get(f)))
                             .append(Text.of("\n"))
                             .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set default " + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))

@@ -282,7 +282,7 @@ public class GroupHandler extends HandlerBase {
         for (IFlag f : this.groupPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
-                            .append(FCUtil.readableTristateText(groupPermissions.get(f)))
+                            .append(FGUtil.readableTristateText(groupPermissions.get(f)))
                             .append(Text.of("\n"))
                             .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set group " + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
@@ -296,7 +296,7 @@ public class GroupHandler extends HandlerBase {
         for (IFlag f : this.defaultPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
-                            .append(FCUtil.readableTristateText(defaultPermissions.get(f)))
+                            .append(FGUtil.readableTristateText(defaultPermissions.get(f)))
                             .append(Text.of("\n"))
                             .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set default " + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))

@@ -93,7 +93,7 @@ public class CommandCreate implements CommandCallable {
         } else if (isIn(REGIONS_ALIASES, parse.args[0]) || isIn(WORLDREGIONS_ALIASES, parse.args[0])) {
             boolean isWorldRegion = isIn(WORLDREGIONS_ALIASES, parse.args[0]);
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
-            String worldName = parse.flagmap.get("world");
+            String worldName = parse.flags.get("world");
             World world = null;
             if (source instanceof Player) world = ((Player) source).getWorld();
             if (!worldName.isEmpty()) {
@@ -110,7 +110,7 @@ public class CommandCreate implements CommandCallable {
                 throw new CommandException(Text.of("Name must be alphanumeric!"));
             if (parse.args[1].matches("^[0-9].*$"))
                 throw new CommandException(Text.of("Name can't start with a number!"));
-            if (!FGManager.getInstance().isNameValid(parse.args[1]))
+            if (!FGManager.isNameValid(parse.args[1]))
                 throw new CommandException(Text.of("You may not use \"" + parse.args[1] + "\" as a name!"));
             int lengthLimit = FGConfigManager.getInstance().getNameLengthLimit();
             if (lengthLimit > 0 && parse.args[1].length() > lengthLimit)
@@ -159,14 +159,14 @@ public class CommandCreate implements CommandCallable {
                 throw new ArgumentParseException(Text.of("Name must be alphanumeric!"), parse.args[1], 1);
             if (parse.args[1].matches("^[0-9].*$"))
                 throw new ArgumentParseException(Text.of("Name can't start with a number!"), parse.args[1], 1);
-            if (!FGManager.getInstance().isNameValid(parse.args[1]))
+            if (!FGManager.isNameValid(parse.args[1]))
                 throw new CommandException(Text.of("You may not use \"" + parse.args[1] + "\" as a name!"));
             int lengthLimit = FGConfigManager.getInstance().getNameLengthLimit();
             if (lengthLimit > 0 && parse.args[1].length() > lengthLimit)
                 throw new CommandException(Text.of("Name is too long!"));
             int priority = 0;
             try {
-                priority = Integer.parseInt(parse.flagmap.get("priority"));
+                priority = Integer.parseInt(parse.flags.get("priority"));
                 if (priority < Integer.MIN_VALUE / 2 + 1) priority = Integer.MIN_VALUE / 2 + 1;
                 else if (priority > Integer.MAX_VALUE / 2) priority = Integer.MAX_VALUE / 2;
             } catch (NumberFormatException ignored) {
@@ -231,7 +231,7 @@ public class CommandCreate implements CommandCallable {
                     source.sendMessage(Text.of(TextColors.RED, "Name can't start with a number!"));
                     return ImmutableList.of();
                 }
-                if (!FGManager.getInstance().isNameValid(parse.current.token)) {
+                if (!FGManager.isNameValid(parse.current.token)) {
                     source.sendMessage(Text.of(TextColors.RED, "You may not use \"" + parse.current.token + "\" as a name!"));
                     return ImmutableList.of();
                 }
@@ -245,7 +245,7 @@ public class CommandCreate implements CommandCallable {
                 if (isIn(REGIONS_ALIASES, parse.args[0])) {
                     available = Tristate.fromBoolean(FGManager.getInstance().isRegionNameAvailable(parse.current.token));
                 } else if (isIn(WORLDREGIONS_ALIASES, parse.args[0])) {
-                    String worldName = parse.flagmap.get("world");
+                    String worldName = parse.flags.get("world");
                     World world = null;
                     if (source instanceof Player) world = ((Player) source).getWorld();
                     if (!worldName.isEmpty()) {

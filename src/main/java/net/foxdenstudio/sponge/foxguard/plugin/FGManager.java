@@ -37,8 +37,8 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
-import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.GlobalWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.RegionCache;
@@ -54,9 +54,7 @@ import java.util.Set;
 
 public final class FGManager {
 
-    public static final String[] ILLEGAL_NAMES = {"con", "prn", "aux", "nul", "com0", "com1", "com2", "com3", "com4",
-            "com5", "com6", "com7", "com8", "com9", "lpt0", "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9",
-            "all", "state", "full", "everything"};
+    public static final String[] ILLEGAL_NAMES = {"all", "state", "full", "everything"};
     public static final String[] TYPES = {"region", "worldregion", "handler", "controller"};
 
     private static FGManager instance;
@@ -223,7 +221,7 @@ public final class FGManager {
     }
 
     public Set<IRegion> getAllRegions(World world) {
-        if(world == null) return getRegions();
+        if (world == null) return getRegions();
         Set<IRegion> set = new HashSet<>();
         this.worldRegions.get(world).forEach(set::add);
         this.regions.forEach(set::add);
@@ -453,8 +451,11 @@ public final class FGManager {
         return globalHandler;
     }
 
-    public boolean isNameValid(String name) {
+    public static boolean isNameValid(String name) {
         if (name.matches("^.*[ :\\.=;\"\'\\\\/\\{\\}\\(\\)\\[\\]<>#@\\|\\?\\*].*$")) return false;
+        for (String s : FGStorageManager.FS_ILLEGAL_NAMES) {
+            if (name.equalsIgnoreCase(s)) return false;
+        }
         for (String s : ILLEGAL_NAMES) {
             if (name.equalsIgnoreCase(s)) return false;
         }

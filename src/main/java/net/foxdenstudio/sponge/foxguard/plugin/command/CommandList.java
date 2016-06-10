@@ -91,22 +91,22 @@ public class CommandList implements CommandCallable {
         } else if (isIn(Aliases.REGIONS_ALIASES, parse.args[0])) {
             List<IRegion> regionList = new ArrayList<>();
             boolean allFlag = true;
-            String worldName = parse.flagmap.get("world");
+            String worldName = parse.flags.get("world");
             if (!worldName.isEmpty()) {
                 Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
                 if (optWorld.isPresent()) {
                     FGManager.getInstance().getWorldRegions(optWorld.get()).forEach(regionList::add);
-                    if (parse.flagmap.containsKey("super"))
+                    if (parse.flags.containsKey("super"))
                         FGManager.getInstance().getRegions().forEach(regionList::add);
                     allFlag = false;
                 }
             }
             if (allFlag) {
-                if (parse.flagmap.containsKey("super")) FGManager.getInstance().getRegions().forEach(regionList::add);
+                if (parse.flags.containsKey("super")) FGManager.getInstance().getRegions().forEach(regionList::add);
                 else FGManager.getInstance().getAllRegions().forEach(regionList::add);
             }
-            if (parse.flagmap.containsKey("query")) {
-                String query = parse.flagmap.get("query");
+            if (parse.flags.containsKey("query")) {
+                String query = parse.flags.get("query");
                 if (query.startsWith("/")) {
                     FCUtil.FCPattern pattern = FCUtil.parseUserRegex(query);
                     regionList = regionList.stream()
@@ -120,16 +120,16 @@ public class CommandList implements CommandCallable {
             }
 
             int page, number;
-            if (parse.flagmap.containsKey("page")) {
+            if (parse.flags.containsKey("page")) {
                 try {
-                    page = Integer.parseInt(parse.flagmap.get("page"));
+                    page = Integer.parseInt(parse.flags.get("page"));
                 } catch (NumberFormatException ignored) {
                     page = 1;
                 }
             } else page = 1;
-            if (parse.flagmap.containsKey("number")) {
+            if (parse.flags.containsKey("number")) {
                 try {
-                    number = Integer.parseInt(parse.flagmap.get("number"));
+                    number = Integer.parseInt(parse.flags.get("number"));
                 } catch (NumberFormatException ignored) {
                     if (source instanceof Player) number = 18;
                     else number = Integer.MAX_VALUE;
@@ -189,10 +189,10 @@ public class CommandList implements CommandCallable {
 
             //----------------------------------------------------------------------------------------------------------
         } else if (isIn(Aliases.HANDLERS_ALIASES, parse.args[0])) {
-            boolean controllers = parse.flagmap.containsKey("all");
+            boolean controllers = parse.flags.containsKey("all");
             List<IHandler> handlerList = FGManager.getInstance().getHandlers(controllers).stream().collect(Collectors.toList());
-            if (parse.flagmap.containsKey("query")) {
-                String query = parse.flagmap.get("query");
+            if (parse.flags.containsKey("query")) {
+                String query = parse.flags.get("query");
                 if (query.startsWith("/")) {
                     FCUtil.FCPattern pattern = FCUtil.parseUserRegex(query);
                     handlerList = handlerList.stream()
@@ -206,16 +206,16 @@ public class CommandList implements CommandCallable {
             }
 
             int page, number;
-            if (parse.flagmap.containsKey("page")) {
+            if (parse.flags.containsKey("page")) {
                 try {
-                    page = Integer.parseInt(parse.flagmap.get("page"));
+                    page = Integer.parseInt(parse.flags.get("page"));
                 } catch (NumberFormatException ignored) {
                     page = 1;
                 }
             } else page = 1;
-            if (parse.flagmap.containsKey("number")) {
+            if (parse.flags.containsKey("number")) {
                 try {
-                    number = Integer.parseInt(parse.flagmap.get("number"));
+                    number = Integer.parseInt(parse.flags.get("number"));
                 } catch (NumberFormatException ignored) {
                     if (source instanceof Player) number = 18;
                     else number = Integer.MAX_VALUE;
@@ -306,8 +306,8 @@ public class CommandList implements CommandCallable {
             //----------------------------------------------------------------------------------------------------------
         } else if (isIn(Aliases.CONTROLLERS_ALIASES, parse.args[0])) {
             List<IController> controllerList = FGManager.getInstance().getControllers().stream().collect(Collectors.toList());
-            if (parse.flagmap.containsKey("query")) {
-                String query = parse.flagmap.get("query");
+            if (parse.flags.containsKey("query")) {
+                String query = parse.flags.get("query");
                 if (query.startsWith("/")) {
                     FCUtil.FCPattern pattern = FCUtil.parseUserRegex(query);
                     controllerList = controllerList.stream()
@@ -321,16 +321,16 @@ public class CommandList implements CommandCallable {
             }
 
             int page, number;
-            if (parse.flagmap.containsKey("page")) {
+            if (parse.flags.containsKey("page")) {
                 try {
-                    page = Integer.parseInt(parse.flagmap.get("page"));
+                    page = Integer.parseInt(parse.flags.get("page"));
                 } catch (NumberFormatException ignored) {
                     page = 1;
                 }
             } else page = 1;
-            if (parse.flagmap.containsKey("number")) {
+            if (parse.flags.containsKey("number")) {
                 try {
-                    number = Integer.parseInt(parse.flagmap.get("number"));
+                    number = Integer.parseInt(parse.flags.get("number"));
                 } catch (NumberFormatException ignored) {
                     if (source instanceof Player) number = 18;
                     else number = Integer.MAX_VALUE;

@@ -49,6 +49,10 @@ import java.util.*;
  * Created by Fox on 4/6/2016.
  */
 public final class FGStorageManager {
+
+    public static final String[] FS_ILLEGAL_NAMES = {"con", "prn", "aux", "nul", "com0", "com1", "com2", "com3", "com4",
+            "com5", "com6", "com7", "com8", "com9", "lpt0", "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9"};
+
     private static FGStorageManager instance;
     private final Logger logger = FoxGuardMain.instance().getLogger();
     private final Set<LoadEntry> loaded = new HashSet<>();

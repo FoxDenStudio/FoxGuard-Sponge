@@ -85,7 +85,7 @@ public class CommandHere implements CommandCallable {
         boolean hud = false;
         PlayerMoveListener.HUDConfig hudConfig = new PlayerMoveListener.HUDConfig(false, false, false);
 
-        String worldName = parse.flagmap.get("world");
+        String worldName = parse.flags.get("world");
         World world = null;
         if (source instanceof Player) world = ((Player) source).getWorld();
         if (!worldName.isEmpty()) {
@@ -141,7 +141,7 @@ public class CommandHere implements CommandCallable {
         List<IHandler> handlerList = new ArrayList<>();
         output.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
         output.append(Text.of(TextColors.AQUA, "----- Position: (" + String.format("%.1f, %.1f, %.1f", x, y, z) + ") -----\n"));
-        if (!parse.flagmap.containsKey("handler") || parse.flagmap.containsKey("region")) {
+        if (!parse.flags.containsKey("handler") || parse.flags.containsKey("region")) {
             output.append(Text.of(TextColors.GREEN, "------- Regions Located Here -------\n"));
             Collections.sort(regionList, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
             ListIterator<IRegion> regionListIterator = regionList.listIterator();
@@ -177,14 +177,14 @@ public class CommandHere implements CommandCallable {
             flag = true;
             hudConfig.regions = true;
         }
-        if (!parse.flagmap.containsKey("region") || parse.flagmap.containsKey("handler")) {
+        if (!parse.flags.containsKey("region") || parse.flags.containsKey("handler")) {
             if (flag) output.append(Text.of("\n"));
 
             regionList.forEach(region -> region.getHandlers().stream()
                     .filter(handler -> !handlerList.contains(handler))
                     .forEach(handlerList::add));
             output.append(Text.of(TextColors.GREEN, "------- Handlers Located Here -------\n"));
-            if (parse.flagmap.containsKey("priority")) {
+            if (parse.flags.containsKey("priority")) {
                 Collections.sort(handlerList, (o1, o2) -> o2.getPriority() - o1.getPriority());
                 hudConfig.priority = true;
             } else {
@@ -263,7 +263,7 @@ public class CommandHere implements CommandCallable {
             return ImmutableList.of(parse.current.prefix + "~");
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.SHORTFLAG)) {
             return ImmutableList.of("r", "h", "p").stream()
-                    .filter(flag -> !parse.flagmap.containsKey(flag))
+                    .filter(flag -> !parse.flags.containsKey(flag))
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY))

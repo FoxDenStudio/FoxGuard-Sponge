@@ -43,7 +43,7 @@ public class FlagRegistry {
     private FlagRegistry() {
         // Force initialize Flags class.
         // This guarantees that FoxGuard flags are always the first to be registered.
-        FlagObject flag = Flags.ROOT;
+        Flags.ROOT.getClass();
     }
 
     public static FlagRegistry getInstance() {

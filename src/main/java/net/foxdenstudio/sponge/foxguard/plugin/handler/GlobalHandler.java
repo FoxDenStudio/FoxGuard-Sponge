@@ -214,7 +214,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
         for (IFlag f : this.map.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
-                            .append(FCUtil.readableTristateText(map.get(f)))
+                            .append(FGUtil.readableTristateText(map.get(f)))
                             .append(Text.of("\n"))
                             .onClick(TextActions.suggestCommand("/foxguard md h " + NAME + " set " +
                                     "" + f.flagName() + " "))

@@ -83,10 +83,10 @@ public class CommandRename implements CommandCallable {
             if (parse.args.length < 2) throw new CommandException(Text.of("You must specify a name!"));
             IRegion region = null;
             World world = null;
-            if (!parse.flagmap.keySet().contains("world"))
+            if (!parse.flags.keySet().contains("world"))
                 region = FGManager.getInstance().getRegion(parse.args[1]);
             if (region == null) {
-                String worldName = parse.flagmap.get("world");
+                String worldName = parse.flags.get("world");
                 if (source instanceof Player) world = ((Player) source).getWorld();
                 if (!worldName.isEmpty()) {
                     Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
@@ -164,7 +164,7 @@ public class CommandRename implements CommandCallable {
                         .collect(GuavaCollectors.toImmutableList());
             else if (parse.current.index == 1) {
                 if (isIn(REGIONS_ALIASES, parse.args[0])) {
-                    String worldName = parse.flagmap.get("world");
+                    String worldName = parse.flags.get("world");
                     World world = null;
                     if (source instanceof Player) world = ((Player) source).getWorld();
                     if (!worldName.isEmpty()) {
@@ -198,10 +198,10 @@ public class CommandRename implements CommandCallable {
                 if (isIn(REGIONS_ALIASES, parse.args[0]) || isIn(WORLDREGIONS_ALIASES, parse.args[0])) {
                     IRegion region = null;
                     World world = null;
-                    if (!parse.flagmap.keySet().contains("world"))
+                    if (!parse.flags.keySet().contains("world"))
                         region = FGManager.getInstance().getRegion(parse.args[1]);
                     if (region == null) {
-                        String worldName = parse.flagmap.get("world");
+                        String worldName = parse.flags.get("world");
                         if (source instanceof Player) world = ((Player) source).getWorld();
                         if (!worldName.isEmpty()) {
                             Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);

@@ -125,7 +125,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                         .filter(new StartsWithPredicate(parse.current.token))
                         .collect(GuavaCollectors.toImmutableList());
             } else if (parse.current.index == 1) {
-                String worldName = parse.flagmap.get("world");
+                String worldName = parse.flags.get("world");
                 World world = null;
                 if (source instanceof Player) world = ((Player) source).getWorld();
                 if (!worldName.isEmpty()) {
@@ -201,7 +201,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name!"));
         IRegion region = FGManager.getInstance().getRegion(parse.args[0]);
         if (region == null) {
-            String worldName = parse.flagmap.get("world");
+            String worldName = parse.flags.get("world");
             World world = null;
             if (source instanceof Player) world = ((Player) source).getWorld();
             if (!worldName.isEmpty()) {
@@ -233,7 +233,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
             region = this.list.get(index - 1);
         } catch (NumberFormatException e) {
             int matchCount = 0;
-            if (!parse.flagmap.keySet().contains("world")) {
+            if (!parse.flags.keySet().contains("world")) {
                 for (IRegion r : this.list) {
                     if (r.getName().equalsIgnoreCase(parse.args[0])) {
                         region = r;
@@ -242,7 +242,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                 }
             }
             if (matchCount != 1) {
-                String worldName = parse.flagmap.get("world");
+                String worldName = parse.flags.get("world");
                 World world = null;
                 if (source instanceof Player) world = ((Player) source).getWorld();
                 if (!worldName.isEmpty()) {

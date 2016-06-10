@@ -92,7 +92,7 @@ public class CommandDetail implements CommandCallable {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
             IRegion region = FGManager.getInstance().getRegion(parse.args[1]);
             if (region == null) {
-                String worldName = parse.flagmap.get("world");
+                String worldName = parse.flags.get("world");
                 World world = null;
                 if (source instanceof Player) world = ((Player) source).getWorld();
                 if (!worldName.isEmpty()) {
@@ -111,7 +111,7 @@ public class CommandDetail implements CommandCallable {
                 throw new CommandException(Text.of("No region exists with the name \"" + parse.args[1] + "\"!"));
             Text.Builder builder = Text.builder();
             builder.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
-            if (parse.args.length < 3 || parse.args[2].isEmpty() || parse.flagmap.containsKey("all")) {
+            if (parse.args.length < 3 || parse.args[2].isEmpty() || parse.flags.containsKey("all")) {
                 builder.append(Text.of(TextColors.GREEN, "------- General -------\n"));
                 builder.append(Text.of(TextColors.GOLD, "Name: "), Text.of(TextColors.RESET, region.getName() + "\n"));
                 builder.append(Text.of(TextColors.GOLD, "Type: "), Text.of(TextColors.RESET, region.getLongTypeName() + "\n"));
@@ -143,7 +143,7 @@ public class CommandDetail implements CommandCallable {
                 throw new CommandException(Text.of("No handler with name \"" + parse.args[1] + "\"!"));
             Text.Builder builder = Text.builder();
             builder.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
-            if (parse.args.length <= 2 || parse.args[2].isEmpty() || parse.flagmap.containsKey("all")) {
+            if (parse.args.length <= 2 || parse.args[2].isEmpty() || parse.flags.containsKey("all")) {
                 builder.append(Text.of(TextColors.GREEN, "------- General -------\n"));
                 builder.append(Text.of(TextColors.GOLD, "Name: "), Text.of(TextColors.RESET, handler.getName() + "\n"));
                 builder.append(Text.of(TextColors.GOLD, "Type: "), Text.of(TextColors.RESET, handler.getLongTypeName() + "\n"));
@@ -324,7 +324,7 @@ public class CommandDetail implements CommandCallable {
                         .collect(GuavaCollectors.toImmutableList());
             else if (parse.current.index == 1) {
                 if (isIn(REGIONS_ALIASES, parse.args[0])) {
-                    String worldName = parse.flagmap.get("world");
+                    String worldName = parse.flags.get("world");
                     World world = null;
                     if (source instanceof Player) world = ((Player) source).getWorld();
                     if (!worldName.isEmpty()) {

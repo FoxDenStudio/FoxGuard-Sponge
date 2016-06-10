@@ -131,7 +131,7 @@ public class CommandEnableDisable implements CommandCallable {
                 }
             }
         } else if (isIn(REGIONS_ALIASES, parse.args[0])) {
-            String worldName = parse.flagmap.get("world");
+            String worldName = parse.flags.get("world");
             World world = null;
             if (source instanceof Player) world = ((Player) source).getWorld();
             if (!worldName.isEmpty()) {
@@ -254,7 +254,7 @@ public class CommandEnableDisable implements CommandCallable {
                         .collect(GuavaCollectors.toImmutableList());
             else if (parse.current.index > 0) {
                 if (isIn(REGIONS_ALIASES, parse.args[0])) {
-                    String worldName = parse.flagmap.get("world");
+                    String worldName = parse.flags.get("world");
                     World world = null;
                     if (source instanceof Player) world = ((Player) source).getWorld();
                     if (!worldName.isEmpty()) {

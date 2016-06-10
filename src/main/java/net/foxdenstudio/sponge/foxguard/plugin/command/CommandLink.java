@@ -92,7 +92,7 @@ public class CommandLink implements CommandCallable {
             IRegion region = FGManager.getInstance().getRegion(parse.args[0]);
             World world = null;
             if (region == null) {
-                String worldName = parse.flagmap.get("world");
+                String worldName = parse.flags.get("world");
                 if (source instanceof Player) world = ((Player) source).getWorld();
                 if (!worldName.isEmpty()) {
                     Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);

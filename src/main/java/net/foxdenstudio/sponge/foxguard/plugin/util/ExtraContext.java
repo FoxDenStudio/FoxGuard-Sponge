@@ -25,6 +25,9 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.util;
 
+import com.google.common.collect.ImmutableList;
+
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -33,6 +36,7 @@ import java.util.Optional;
 public class ExtraContext {
 
     private Object[] objects;
+    private List<Object> objectList;
 
     private ExtraContext(Object[] objects) {
         this.objects = objects;
@@ -70,7 +74,8 @@ public class ExtraContext {
         }
     }
 
-    public Object[] getRaw() {
-        return objects;
+    public List<Object> getRaw() {
+        if (objectList == null) objectList = ImmutableList.copyOf(objects);
+        return objectList;
     }
 }

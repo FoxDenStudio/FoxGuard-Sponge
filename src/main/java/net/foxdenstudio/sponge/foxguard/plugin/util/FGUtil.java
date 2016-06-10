@@ -38,8 +38,10 @@ import net.foxdenstudio.sponge.foxguard.plugin.state.ControllersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.Tristate;
 
 import java.util.List;
 import java.util.Set;
@@ -98,5 +100,18 @@ public final class FGUtil {
 
     public static String genWorldFlag(IRegion region) {
         return region instanceof IWorldRegion ? "--w:" + ((IWorldRegion) region).getWorld().getName() + " " : "";
+    }
+
+    public static Text readableTristateText(Tristate state) {
+        switch (state) {
+            case UNDEFINED:
+                return Text.of(TextColors.YELLOW, "Passthrough");
+            case TRUE:
+                return Text.of(TextColors.GREEN, "True");
+            case FALSE:
+                return Text.of(TextColors.RED, "False");
+            default:
+                return Text.of(TextColors.LIGHT_PURPLE, "Wait wat?");
+        }
     }
 }

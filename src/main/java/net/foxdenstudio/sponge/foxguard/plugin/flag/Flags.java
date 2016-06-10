@@ -35,11 +35,9 @@ public class Flags {
     public static final FlagObject ROOT = REGISTRY.registerFlag("root");
     public static final FlagObject BUFF = REGISTRY.registerFlag("buff");
     public static final FlagObject DEBUFF = REGISTRY.registerFlag("debuff");
-
     public static final FlagObject INTERACT = REGISTRY.registerFlag("interact");
     public static final FlagObject PRIMARY = REGISTRY.registerFlag("primary");
     public static final FlagObject SECONDARY = REGISTRY.registerFlag("secondary");
-
     public static final FlagObject BLOCK = REGISTRY.registerFlag("block");
     public static final FlagObject CHANGE = REGISTRY.registerFlag("change");
     public static final FlagObject PLACE = REGISTRY.registerFlag("place");
@@ -47,15 +45,12 @@ public class Flags {
     public static final FlagObject MODIFY = REGISTRY.registerFlag("modify");
     public static final FlagObject DECAY = REGISTRY.registerFlag("decay");
     public static final FlagObject GROW = REGISTRY.registerFlag("grow");
-
     public static final FlagObject ENTITY = REGISTRY.registerFlag("entity");
     public static final FlagObject LIVING = REGISTRY.registerFlag("living");
     public static final FlagObject MOB = REGISTRY.registerFlag("mob");
     public static final FlagObject PLAYER = REGISTRY.registerFlag("player");
-
     public static final FlagObject PASSIVE = REGISTRY.registerFlag("passive");
     public static final FlagObject HOSTILE = REGISTRY.registerFlag("hostile");
-
     public static final FlagObject SPAWN = REGISTRY.registerFlag("spawn");
     public static final FlagObject PASS = REGISTRY.registerFlag("pass");
     public static final FlagObject ENTER = REGISTRY.registerFlag("enter");
@@ -66,4 +61,6 @@ public class Flags {
     public static final FlagObject EXPLOSION = REGISTRY.registerFlag("explosion");
     public static final FlagObject INVINCIBLE = REGISTRY.registerFlag("invincible");
     public static final FlagObject UNDYING = REGISTRY.registerFlag("undying");
+
+
 }
