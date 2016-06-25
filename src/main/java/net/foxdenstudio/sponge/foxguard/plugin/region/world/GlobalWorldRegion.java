@@ -122,4 +122,9 @@ public class GlobalWorldRegion extends WorldRegionBase implements IGlobal {
     public boolean isInChunk(Vector3i chunk) {
         return true;
     }
+
+    @Override
+    public boolean autoSave() {
+        return false;
+    }
 }

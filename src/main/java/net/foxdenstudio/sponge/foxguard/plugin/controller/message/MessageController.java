@@ -28,6 +28,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.controller.message;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.ControllerBase;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.util.HandlerWrapper;
@@ -35,6 +36,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.ISendableMessage;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.User;
@@ -65,13 +67,20 @@ public class MessageController extends ControllerBase {
 
     @Override
     public EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra) {
-        EventResult result = slot.handle(user, flag, event, extra);
+        return EventResult.pass();
+    }
+
+    @Override
+    public EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra) {
+        //TODO rewrite this class
+        /*EventResult result = slot.handle(user, flags, extra);
         String messageName = configs.get(new Config(flag, result.getState()));
         if (messageName != null) {
             return result;
         } else {
             return result;
-        }
+        }*/
+        return EventResult.pass();
     }
 
     @Override

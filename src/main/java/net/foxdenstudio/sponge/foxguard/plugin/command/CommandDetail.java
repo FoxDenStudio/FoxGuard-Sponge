@@ -175,7 +175,7 @@ public class CommandDetail implements CommandCallable {
                 if (controllerList.size() == 0 && regionList.size() == 0)
                     builder.append(Text.of(TextStyles.ITALIC, "\nNo inbound links!"));
                 controllerList.forEach(controller -> {
-                    builder.append(Text.of("\n"));
+                    builder.append(Text.NEW_LINE);
                     if (source instanceof Player) {
                         List<IHandler> selectedHandlers = FGUtil.getSelectedHandlers(source);
                         List<IController> selectedControllers = FGUtil.getSelectedControllers(source);
@@ -214,7 +214,7 @@ public class CommandDetail implements CommandCallable {
                 });
 
                 regionList.forEach(region -> {
-                    builder.append(Text.of("\n"));
+                    builder.append(Text.NEW_LINE);
                     if (source instanceof Player) {
                         List<IRegion> selectedRegions = FGUtil.getSelectedRegions(source);
                         if (selectedRegions.contains(region)) {
@@ -261,7 +261,7 @@ public class CommandDetail implements CommandCallable {
         if (linkable.getHandlers().size() == 0)
             builder.append(Text.of(TextStyles.ITALIC, "\nNo outbound links!"));
         linkable.getHandlers().stream().sorted((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName())).forEach(handler -> {
-            builder.append(Text.of("\n"));
+            builder.append(Text.NEW_LINE);
             if (source instanceof Player) {
                 List<IHandler> selectedHandlers = FGUtil.getSelectedHandlers(source);
                 List<IController> selectedControllers = FGUtil.getSelectedControllers(source);

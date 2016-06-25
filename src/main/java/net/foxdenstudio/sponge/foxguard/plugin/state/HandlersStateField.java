@@ -70,7 +70,7 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
                         "  [-] "));
             }
             builder.append(Text.of(FGUtil.getColorForObject(handler), (index++) + ": " + handler.getShortTypeName() + " : " + handler.getName()));
-            if (it.hasNext()) builder.append(Text.of("\n"));
+            if (it.hasNext()) builder.append(Text.NEW_LINE);
         }
         return builder.build();
     }

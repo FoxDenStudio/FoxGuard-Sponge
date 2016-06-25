@@ -126,4 +126,9 @@ public class GlobalRegion extends RegionBase {
     public List<String> modifySuggestions(CommandSource source, String arguments) throws CommandException {
         return ImmutableList.of();
     }
+
+    @Override
+    public boolean autoSave() {
+        return false;
+    }
 }

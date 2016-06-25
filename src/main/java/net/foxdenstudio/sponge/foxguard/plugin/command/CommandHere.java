@@ -172,13 +172,13 @@ public class CommandHere implements CommandCallable {
                         TextActions.runCommand("/foxguard detail region" + (region instanceof IWorldRegion ? (" --w:" + ((IWorldRegion) region).getWorld().getName() + " ") : "") + region.getName()),
                         TextActions.showText(Text.of("View Details")),
                         FGUtil.getRegionName(region, false)));
-                if (regionListIterator.hasNext()) output.append(Text.of("\n"));
+                if (regionListIterator.hasNext()) output.append(Text.NEW_LINE);
             }
             flag = true;
             hudConfig.regions = true;
         }
         if (!parse.flags.containsKey("region") || parse.flags.containsKey("handler")) {
-            if (flag) output.append(Text.of("\n"));
+            if (flag) output.append(Text.NEW_LINE);
 
             regionList.forEach(region -> region.getHandlers().stream()
                     .filter(handler -> !handlerList.contains(handler))
@@ -233,7 +233,7 @@ public class CommandHere implements CommandCallable {
                         TextActions.runCommand("/foxguard detail handler " + handler.getName()),
                         TextActions.showText(Text.of("View Details")),
                         handler.getShortTypeName() + " : " + handler.getName()));
-                if (handlerListIterator.hasNext()) output.append(Text.of("\n"));
+                if (handlerListIterator.hasNext()) output.append(Text.NEW_LINE);
             }
             hudConfig.handlers = true;
         }

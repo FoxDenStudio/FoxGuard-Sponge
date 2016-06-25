@@ -30,6 +30,7 @@ import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateObjectEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
@@ -113,6 +114,7 @@ public class CommandModify implements CommandCallable {
             Optional<Text> messageOptional = result.getMessage();
             if (result.isSuccess()) {
                 FGManager.getInstance().markDirty(region, RegionCache.DirtyType.MODIFIED);
+                FGStorageManager.getInstance().defaultModifiedMap.put(region, true);
                 final IRegion finalRegion = region;
                 Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
                     @Override
@@ -154,6 +156,7 @@ public class CommandModify implements CommandCallable {
             ProcessResult result = handler.modify(source, parse.args.length < 3 ? "" : parse.args[2]);
             Optional<Text> messageOptional = result.getMessage();
             if (result.isSuccess()) {
+                FGStorageManager.getInstance().defaultModifiedMap.put(handler, true);
                 Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
                     @Override
                     public IFGObject getTarget() {

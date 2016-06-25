@@ -31,9 +31,11 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.mapdb.Atomic;
 import org.mapdb.DB;
@@ -50,6 +52,7 @@ import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
 
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -248,6 +251,12 @@ public class GroupHandler extends HandlerBase {
         else return EventResult.of(this.defaultPermCache.get(flag));
     }
 
+    @Override
+    public EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra) {
+        //TODO rewrite class
+        return EventResult.pass();
+    }
+
     private void clearCache() {
         this.groupPermCache.clear();
         this.defaultPermCache.clear();
@@ -274,7 +283,7 @@ public class GroupHandler extends HandlerBase {
         builder.append(Text.of(TextColors.GREEN, "Permission: "))
                 .append(Text.of(TextColors.RESET, "foxguard.handler."))
                 .append(Text.of(TextColors.YELLOW, this.getName()))
-                .append(Text.of("\n"));
+                .append(Text.NEW_LINE);
         builder.append(Text.of(TextColors.GOLD,
                 TextActions.suggestCommand("/foxguard md h " + this.name + " set group "),
                 TextActions.showText(Text.of("Click to Set a Flag")),
@@ -283,7 +292,7 @@ public class GroupHandler extends HandlerBase {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FGUtil.readableTristateText(groupPermissions.get(f)))
-                            .append(Text.of("\n"))
+                            .append(Text.NEW_LINE)
                             .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set group " + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
                             .build()
@@ -297,7 +306,7 @@ public class GroupHandler extends HandlerBase {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FGUtil.readableTristateText(defaultPermissions.get(f)))
-                            .append(Text.of("\n"))
+                            .append(Text.NEW_LINE)
                             .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set default " + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
                             .build()

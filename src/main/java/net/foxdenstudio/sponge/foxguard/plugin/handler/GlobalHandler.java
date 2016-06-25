@@ -31,9 +31,11 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
+import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -51,6 +53,7 @@ import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
 
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -105,6 +108,11 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
     @Override
     public EventResult handle(User user, IFlag flag, Optional<Event> event, Object... extra) {
         return EventResult.of(mapCache.get(flag));
+    }
+
+    @Override
+    public EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra) {
+        return EventResult.pass();
     }
 
     @Override
@@ -215,7 +223,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FGUtil.readableTristateText(map.get(f)))
-                            .append(Text.of("\n"))
+                            .append(Text.NEW_LINE)
                             .onClick(TextActions.suggestCommand("/foxguard md h " + NAME + " set " +
                                     "" + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))

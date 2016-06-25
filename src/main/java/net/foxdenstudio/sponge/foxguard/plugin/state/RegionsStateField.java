@@ -89,7 +89,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
             }
             builder.append(Text.of(FGUtil.getColorForObject(region),
                     (index++) + ": " + FGUtil.getRegionName(region, true)));
-            if (regionIterator.hasNext()) builder.append(Text.of("\n"));
+            if (regionIterator.hasNext()) builder.append(Text.NEW_LINE);
         }
         return builder.build();
     }

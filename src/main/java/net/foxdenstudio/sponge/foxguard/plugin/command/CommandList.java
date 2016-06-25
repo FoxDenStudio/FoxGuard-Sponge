@@ -181,10 +181,10 @@ public class CommandList implements CommandCallable {
                         TextActions.showText(Text.of("View Details")),
                         FGUtil.getRegionName(region, allFlag)));
                 count++;
-                if (regionIterator.hasNext() && count < number) builder.append(Text.of("\n"));
+                if (regionIterator.hasNext() && count < number) builder.append(Text.NEW_LINE);
             }
             if (maxPage > 1)
-                builder.append(Text.of("\n")).append(FCUtil.pageFooter(page, maxPage, "/fg ls " + arguments, null));
+                builder.append(Text.NEW_LINE).append(FCUtil.pageFooter(page, maxPage, "/fg ls " + arguments, null));
             source.sendMessage(builder.build());
 
             //----------------------------------------------------------------------------------------------------------
@@ -297,10 +297,10 @@ public class CommandList implements CommandCallable {
                         TextActions.runCommand("/foxguard det h " + handler.getName()),
                         TextActions.showText(Text.of("View Details")),
                         handler.getShortTypeName() + " : " + handler.getName()));
-                if (handlerIterator.hasNext() && count < number) builder.append(Text.of("\n"));
+                if (handlerIterator.hasNext() && count < number) builder.append(Text.NEW_LINE);
             }
             if (maxPage > 1)
-                builder.append(Text.of("\n")).append(FCUtil.pageFooter(page, maxPage, "/fg ls " + arguments, null));
+                builder.append(Text.NEW_LINE).append(FCUtil.pageFooter(page, maxPage, "/fg ls " + arguments, null));
             source.sendMessage(builder.build());
 
             //----------------------------------------------------------------------------------------------------------
@@ -391,10 +391,10 @@ public class CommandList implements CommandCallable {
                         TextActions.showText(Text.of("View Details")),
                         controller.getShortTypeName() + " : " + controller.getName()));
                 count++;
-                if (controllerIterator.hasNext() && count < number) builder.append(Text.of("\n"));
+                if (controllerIterator.hasNext() && count < number) builder.append(Text.NEW_LINE);
             }
             if (maxPage > 1)
-                builder.append(Text.of("\n")).append(FCUtil.pageFooter(page, maxPage, "/fg ls " + arguments, null));
+                builder.append(Text.NEW_LINE).append(FCUtil.pageFooter(page, maxPage, "/fg ls " + arguments, null));
 
             source.sendMessage(builder.build());
         } else {

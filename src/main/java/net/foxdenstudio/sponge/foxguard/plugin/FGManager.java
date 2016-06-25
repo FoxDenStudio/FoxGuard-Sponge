@@ -169,8 +169,6 @@ public final class FGManager {
                 return FoxGuardMain.getCause();
             }
         });
-//        FGStorageManager.getInstance().unmarkForDeletion(region);
-//        if (update) FGStorageManager.getInstance().updateRegion(region);
         return true;
     }
 

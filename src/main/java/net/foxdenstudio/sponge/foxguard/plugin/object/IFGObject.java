@@ -26,8 +26,10 @@
 package net.foxdenstudio.sponge.foxguard.plugin.object;
 
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
+import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
 import net.foxdenstudio.sponge.foxguard.plugin.command.CommandDetail;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
@@ -37,7 +39,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 /**
- * Interface for all FoxGuard Objects. Inherited by {@link IWorldRegion Regions}
+ * Interface for all FoxGuard Objects. Inherited by {@link IRegion Regions}, {@link IWorldRegion World Regions},
  * and {@link IHandler Handlers}.
  * Essentially the core of the code, this is the most used interface.
  */
@@ -90,8 +92,6 @@ public interface IFGObject {
 
     /**
      * Sets the enable status of this object.
-     * It is up to the object to behave accordingly with its enable status.
-     * Disabled Regions should return false when queried and disabled Handlers should return {@link org.spongepowered.api.util.Tristate#UNDEFINED Tristate.UNDEFINED}
      *
      * @param state
      */
@@ -101,8 +101,8 @@ public interface IFGObject {
      * Gets the details for the object as a SpongeAPI {@link Text} Object. Used in the {@link CommandDetail Detail} command.
      * Should be dynamically generated with formatted text. Multiple lines are allowed.
      * Any arguments leftover from the detail command are passed to the detail method.
-     * This allows specific queries in case there is more data stored than can reasonable displayed.
-     * It is recommended to have click action wherever possible to ease the configuration of objects.
+     * This allows specific queries in case there is more data stored than can reasonably displayed.
+     * It is recommended to have click actions wherever possible to ease the configuration of objects.
      *
      * @param source
      * @param arguments The extra arguments from the {@link CommandDetail Detail} command. Object should still return something meaningful if this is empty.
@@ -126,22 +126,41 @@ public interface IFGObject {
      * This simply involves saving the object to a list, creating a metadata file,
      * and then calling {@link IFGObject#save(Path)}
      * <p>
-     * This should be set to false only when an object already employs some other method of persistence.
+     * This should be set to false only when an object already employs some other method of persistence, or simply does not require it.
      * This will often be the case if another plugin is hooking into FoxGuard and using an object as a kind of API accessor.
      * These object are either transient, or have their own methods of persistence.
      * <p>
-     * When set to false, FoxGuard will not mark this object to be loaded on restart,
+     * When set to false, FoxGuard will save this object, meaning it will not be loaded on the next server start,
      * which means the object must be re-added by some other means, or not at all.
      *
-     * @return Whether FoxGuard should autosave this object.
+     * @return Whether FoxGuard should auto-save this object.
      */
     @SuppressWarnings("SameReturnValue")
     default boolean autoSave() {
         return true;
     }
 
+    /**
+     * This method is called when the modify command is used to try to modify an object.
+     * This method is essentially a command handler that does a specific job.
+     * <p>
+     * The only really important thing to note is that it is important that an object report a modify result of success if and only if the object was actually modified.
+     * "Actually modified" implies that the object needs to be saved again.
+     *
+     * This contract is less important if an object implements the {@link IFGObject#shouldSave()} method.
+     *
+     * @param source    The {@link CommandSource} of the modify command
+     * @param arguments The {@link String} arguments specifically for this object
+     * @return the result of the operation. The success flag should be true if and only if the object was changed in some way.
+     * @throws CommandException If there is an issue parsing the command.
+     */
+
     ProcessResult modify(CommandSource source, String arguments) throws CommandException;
 
     List<String> modifySuggestions(CommandSource source, String arguments) throws CommandException;
+
+    default boolean shouldSave() {
+        return FGStorageManager.getInstance().defaultModifiedMap.get(this);
+    }
 
 }

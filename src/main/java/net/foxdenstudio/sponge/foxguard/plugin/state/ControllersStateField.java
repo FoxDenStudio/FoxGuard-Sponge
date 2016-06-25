@@ -70,7 +70,7 @@ public class ControllersStateField extends ListStateFieldBase<IController> {
                         "  [-] "));
             }
             builder.append(Text.of(FGUtil.getColorForObject(controller), (index++) + ": " + controller.getShortTypeName() + " : " + controller.getName()));
-            if (it.hasNext()) builder.append(Text.of("\n"));
+            if (it.hasNext()) builder.append(Text.NEW_LINE);
         }
         return builder.build();
     }

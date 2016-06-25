@@ -26,7 +26,9 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
@@ -36,9 +38,23 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
+import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.FORCE_ALIASES;
+import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.WORLD_ALIASES;
+import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isIn;
 
 public class CommandSave implements CommandCallable {
+
+    private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
+        map.put(key, value);
+        if (isIn(FORCE_ALIASES, key) && !map.containsKey("force")) {
+            map.put("force", value);
+        }
+    };
 
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
@@ -46,9 +62,15 @@ public class CommandSave implements CommandCallable {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        FGStorageManager.getInstance().saveHandlers();
-        FGStorageManager.getInstance().saveRegions();
-        Sponge.getServer().getWorlds().forEach(FGStorageManager.getInstance()::saveWorldRegions);
+
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(MAPPER).parse();
+
+        boolean force = parse.flags.containsKey("force");
+
+        FoxGuardMain.instance().getLogger().info(force ? "Force saving objects" : "Saving objects");
+        FGStorageManager.getInstance().saveRegions(force);
+        Sponge.getServer().getWorlds().forEach(world -> FGStorageManager.getInstance().saveWorldRegions(world, force));
+        FGStorageManager.getInstance().saveHandlers(force);
         source.sendMessage(Text.of(TextColors.GREEN, "Successfully saved!"));
         return CommandResult.success();
     }
@@ -75,7 +97,7 @@ public class CommandSave implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Text.of("save");
+        return Text.of("save [-f]");
     }
 
 }

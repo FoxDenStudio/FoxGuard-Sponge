@@ -26,14 +26,15 @@
 package net.foxdenstudio.sponge.foxguard.plugin.controller;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IControllerFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
@@ -82,7 +83,12 @@ public class LogicController extends ControllerBase {
 
     @Override
     public EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra) {
-        return EventResult.of(operator.operate(this.handlers, mode, shortCircuit, user, flag, event, extra));
+        return EventResult.pass();
+    }
+
+    @Override
+    public EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra) {
+        return EventResult.of(operator.operate(this.handlers, mode, shortCircuit, user, flags, extra));
     }
 
     @Override
@@ -132,7 +138,6 @@ public class LogicController extends ControllerBase {
         return ImmutableList.of();
     }
 
-
     @Override
     public void save(Path directory) {
         try (DB linksDB = DBMaker.fileDB(directory.resolve("links.db").normalize().toString()).make()) {
@@ -180,10 +185,10 @@ public class LogicController extends ControllerBase {
     private enum Operator {
         AND {
             @Override
-            public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, IFlag flag, Optional<Event> event, Object... extra) {
+            public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, FlagBitSet flags, ExtraContext extra) {
                 Tristate state = UNDEFINED;
                 for (IHandler handler : handlers) {
-                    Tristate ts = handler.handle(user, flag, event, extra).getState();
+                    Tristate ts = handler.handle(user, flags, extra).getState();
                     if (ts == UNDEFINED) ts = mode;
                     state = state.and(ts);
                     if (shortCircuit && state == FALSE) return FALSE;
@@ -193,10 +198,10 @@ public class LogicController extends ControllerBase {
         },
         OR {
             @Override
-            public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, IFlag flag, Optional<Event> event, Object... extra) {
+            public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, FlagBitSet flags, ExtraContext extra) {
                 Tristate state = UNDEFINED;
                 for (IHandler handler : handlers) {
-                    Tristate ts = handler.handle(user, flag, event, extra).getState();
+                    Tristate ts = handler.handle(user, flags, extra).getState();
                     if (ts == UNDEFINED) ts = mode;
                     state = state.or(ts);
                     if (shortCircuit && state == TRUE) return TRUE;
@@ -206,10 +211,10 @@ public class LogicController extends ControllerBase {
         },
         XOR {
             @Override
-            public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, IFlag flag, Optional<Event> event, Object... extra) {
+            public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, FlagBitSet flags, ExtraContext extra) {
                 Tristate state = UNDEFINED;
                 for (IHandler handler : handlers) {
-                    Tristate ts = handler.handle(user, flag, event, extra).getState();
+                    Tristate ts = handler.handle(user, flags, extra).getState();
                     if (ts == UNDEFINED) ts = mode;
                     state = XORMatrix[state.ordinal()][ts.ordinal()];
                 }
@@ -218,9 +223,9 @@ public class LogicController extends ControllerBase {
         },
         NOT {
             @Override
-            public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, IFlag flag, Optional<Event> event, Object... extra) {
+            public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, FlagBitSet flags, ExtraContext extra) {
                 if (handlers.size() > 0) {
-                    Tristate state = handlers.get(0).handle(user, flag, event, extra).getState();
+                    Tristate state = handlers.get(0).handle(user, flags, extra).getState();
                     if (state == UNDEFINED) state = mode;
                     if (state == TRUE) state = FALSE;
                     else if (state == FALSE) state = TRUE;
@@ -230,10 +235,10 @@ public class LogicController extends ControllerBase {
         },
         NAND {
             @Override
-            public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, IFlag flag, Optional<Event> event, Object... extra) {
+            public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, FlagBitSet flags, ExtraContext extra) {
                 Tristate state = UNDEFINED;
                 for (IHandler handler : handlers) {
-                    Tristate ts = handler.handle(user, flag, event, extra).getState();
+                    Tristate ts = handler.handle(user, flags, extra).getState();
                     if (ts == UNDEFINED) ts = mode;
                     state = state.and(ts);
                     if (shortCircuit && state == FALSE) break;
@@ -245,10 +250,10 @@ public class LogicController extends ControllerBase {
         },
         NOR {
             @Override
-            public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, IFlag flag, Optional<Event> event, Object... extra) {
+            public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, FlagBitSet flags, ExtraContext extra) {
                 Tristate state = UNDEFINED;
                 for (IHandler handler : handlers) {
-                    Tristate ts = handler.handle(user, flag, event, extra).getState();
+                    Tristate ts = handler.handle(user, flags, extra).getState();
                     if (ts == UNDEFINED) ts = mode;
                     state = state.or(ts);
                     if (shortCircuit && state == TRUE) break;
@@ -260,10 +265,10 @@ public class LogicController extends ControllerBase {
         },
         XNOR {
             @Override
-            public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, IFlag flag, Optional<Event> event, Object... extra) {
+            public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, FlagBitSet flags, ExtraContext extra) {
                 Tristate state = UNDEFINED;
                 for (IHandler handler : handlers) {
-                    Tristate ts = handler.handle(user, flag, event, extra).getState();
+                    Tristate ts = handler.handle(user, flags, extra).getState();
                     if (ts == UNDEFINED) ts = mode;
                     state = XORMatrix[state.ordinal()][ts.ordinal()];
                 }
@@ -279,7 +284,7 @@ public class LogicController extends ControllerBase {
                 {TRUE, FALSE, UNDEFINED}
         };
 
-        public abstract Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, IFlag flag, Optional<Event> event, Object... extra);
+        public abstract Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, @Nullable User user, FlagBitSet flags, ExtraContext extra);
 
         public static Operator from(String name) {
             for (Operator op : values()) {

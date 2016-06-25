@@ -25,6 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
+/*
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import net.foxdenstudio.sponge.foxcore.common.FCUtil;
@@ -33,9 +34,11 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
@@ -59,12 +62,14 @@ import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
+
 
 public class SimpleHandler extends HandlerBase {
 
@@ -432,6 +437,11 @@ public class SimpleHandler extends HandlerBase {
         else return EventResult.of(this.defaultPermCache.get(flag));
     }
 
+    @Override
+    public EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra) {
+        return EventResult.pass();
+    }
+
     private void clearCache() {
         this.ownerPermCache.clear();
         this.memberPermCache.clear();
@@ -466,7 +476,7 @@ public class SimpleHandler extends HandlerBase {
                     TextActions.showText(Text.of("Click to Remove Player \"" + u.getName() + "\" from Owners")),
                     u.getName())).append(Text.of("  "));
         }
-        builder.append(Text.of("\n"));
+        builder.append(Text.NEW_LINE);
         builder.append(Text.of(TextColors.GREEN,
                 TextActions.suggestCommand("/foxguard md h " + this.name + " group members add "),
                 TextActions.showText(Text.of("Click to Add a Player(s) to Members")),
@@ -477,7 +487,7 @@ public class SimpleHandler extends HandlerBase {
                     TextActions.showText(Text.of("Click to Remove Player \"" + u.getName() + "\" from Members")),
                     u.getName())).append(Text.of("  "));
         }
-        builder.append(Text.of("\n"));
+        builder.append(Text.NEW_LINE);
         builder.append(Text.of(TextColors.GOLD,
                 TextActions.suggestCommand("/foxguard md h " + this.name + " set owners "),
                 TextActions.showText(Text.of("Click to Set a Flag")),
@@ -486,7 +496,7 @@ public class SimpleHandler extends HandlerBase {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FGUtil.readableTristateText(ownerPermissions.get(f)))
-                            .append(Text.of("\n"))
+                            .append(Text.NEW_LINE)
                             .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set owners " + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
                             .build()
@@ -500,7 +510,7 @@ public class SimpleHandler extends HandlerBase {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FGUtil.readableTristateText(memberPermissions.get(f)))
-                            .append(Text.of("\n"))
+                            .append(Text.NEW_LINE)
                             .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set members " + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
                             .build()
@@ -514,7 +524,7 @@ public class SimpleHandler extends HandlerBase {
             builder.append(
                     Text.builder().append(Text.of("  " + f.toString() + ": "))
                             .append(FGUtil.readableTristateText(defaultPermissions.get(f)))
-                            .append(Text.of("\n"))
+                            .append(Text.NEW_LINE)
                             .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set default " + f.flagName() + " "))
                             .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
                             .build()
@@ -774,3 +784,4 @@ public class SimpleHandler extends HandlerBase {
         }
     }
 }
+*/

@@ -135,7 +135,7 @@ public class CommandTest implements CommandCallable {
                     for (IFlag f : level) {
                         builder.append(Text.of(f.flagName() + " "));
                     }
-                    builder.append(Text.of("\n"));
+                    builder.append(Text.NEW_LINE);
                 }
                 source.sendMessage(builder.build());
             }

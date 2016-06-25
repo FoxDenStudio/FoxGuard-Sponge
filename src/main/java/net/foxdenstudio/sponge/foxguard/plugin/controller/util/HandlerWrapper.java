@@ -25,9 +25,11 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.controller.util;
 
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
+import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.util.Tristate;
@@ -59,9 +61,9 @@ public class HandlerWrapper {
         this(Type.CONSTANT, state, null);
     }
 
-    public EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra) {
+    public EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra) {
         if (type == Type.WRAPPER) {
-            return handler.handle(user, flag, event, extra);
+            return handler.handle(user, flags, extra);
         } else {
             return EventResult.of(tristate);
         }
