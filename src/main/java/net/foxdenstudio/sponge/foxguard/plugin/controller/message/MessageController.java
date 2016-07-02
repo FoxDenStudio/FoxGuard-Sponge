@@ -65,6 +65,7 @@ public class MessageController extends ControllerBase {
         configs = new HashMap<>();
     }
 
+    @Deprecated
     @Override
     public EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra) {
         return EventResult.pass();
@@ -72,7 +73,7 @@ public class MessageController extends ControllerBase {
 
     @Override
     public EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra) {
-        //TODO rewrite this class
+        //TODO: rewrite this class
         /*EventResult result = slot.handle(user, flags, extra);
         String messageName = configs.get(new Config(flag, result.getState()));
         if (messageName != null) {

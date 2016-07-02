@@ -218,7 +218,6 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         if (this.list.contains(region))
             throw new CommandException(Text.of("Region is already in your state buffer!"));
         this.list.add(region);
-        sourceState.updateScoreboard();
         return ProcessResult.of(true, Text.of("Successfully added region to your state buffer!"));
     }
 
@@ -264,7 +263,6 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         if (!this.list.contains(region))
             throw new CommandException(Text.of("Region is not in your state buffer!"));
         this.list.remove(region);
-        sourceState.updateScoreboard();
         return ProcessResult.of(true, Text.of("Successfully removed region from your state buffer!"));
     }
 }

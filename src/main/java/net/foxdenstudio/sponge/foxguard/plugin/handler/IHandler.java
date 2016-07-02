@@ -40,6 +40,7 @@ import java.util.Set;
 
 public interface IHandler extends IFGObject, Comparable<IHandler> {
 
+    @Deprecated
     EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra);
 
     EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra);

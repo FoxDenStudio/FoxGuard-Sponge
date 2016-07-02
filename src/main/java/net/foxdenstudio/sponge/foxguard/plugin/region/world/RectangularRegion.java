@@ -67,14 +67,14 @@ public class RectangularRegion extends WorldRegionBase {
         for (int i = 0; i < args.length - 1; i += 2) {
             int x, z;
             try {
-                x = (int) FCUtil.parseCoordinate(source instanceof Player ?
+                x = FCUtil.parseCoordinate(source instanceof Player ?
                         ((Player) source).getLocation().getBlockX() : 0, args[i]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(
                         Text.of("Unable to parse \"" + args[i] + "\"!"), e, args[i], i);
             }
             try {
-                z = (int) FCUtil.parseCoordinate(source instanceof Player ?
+                z = FCUtil.parseCoordinate(source instanceof Player ?
                         ((Player) source).getLocation().getBlockZ() : 0, args[i + 1]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(

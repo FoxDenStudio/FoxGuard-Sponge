@@ -29,9 +29,10 @@ import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxcore.plugin.command.CommandDebug;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.data.Transaction;
@@ -44,12 +45,16 @@ import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+
+import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
+import static org.spongepowered.api.util.Tristate.FALSE;
+import static org.spongepowered.api.util.Tristate.TRUE;
+import static org.spongepowered.api.util.Tristate.UNDEFINED;
 
 public class BlockListener implements EventListener<ChangeBlockEvent> {
+
+    private static final FlagBitSet BASE_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, BLOCK, CHANGE);
 
     @Override
     public void handle(ChangeBlockEvent event) throws Exception {
@@ -70,12 +75,21 @@ public class BlockListener implements EventListener<ChangeBlockEvent> {
             user = null;
         }
         //DebugHelper.printBlockEvent(event);
-        Flag typeFlag;
+        /*Flag typeFlag;
         if (event instanceof ChangeBlockEvent.Modify) typeFlag = Flag.BLOCK_MODIFY;
         else if (event instanceof ChangeBlockEvent.Break) typeFlag = Flag.BLOCK_BREAK;
         else if (event instanceof ChangeBlockEvent.Place) typeFlag = Flag.BLOCK_PLACE;
         else if (event instanceof ChangeBlockEvent.Decay) typeFlag = Flag.BLOCK_DECAY;
         else if (event instanceof ChangeBlockEvent.Grow) typeFlag = Flag.BLOCK_GROW;
+        else return;*/
+
+        FlagBitSet flags = (FlagBitSet) BASE_FLAG_SET.clone();
+
+        if (event instanceof ChangeBlockEvent.Modify) flags.set(MODIFY);
+        else if (event instanceof ChangeBlockEvent.Break) flags.set(BREAK);
+        else if (event instanceof ChangeBlockEvent.Place) flags.set(PLACE);
+        else if (event instanceof ChangeBlockEvent.Decay) flags.set(DECAY);
+        else if (event instanceof ChangeBlockEvent.Grow) flags.set(GROW);
         else return;
 
         //FoxGuardMain.instance().getLogger().info(player.getName());
@@ -99,17 +113,18 @@ public class BlockListener implements EventListener<ChangeBlockEvent> {
         }
         Collections.sort(handlerList);
         int currPriority = handlerList.get(0).getPriority();
-        Tristate flagState = Tristate.UNDEFINED;
+        Tristate flagState = UNDEFINED;
         for (IHandler handler : handlerList) {
-            if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
+            if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                 break;
             }
-            flagState = flagState.and(handler.handle(user, typeFlag, Optional.of(event)).getState());
+            //flagState = flagState.and(handler.handle(user, typeFlag, Optional.of(event)).getState());
+            flagState = flagState.and(handler.handle(user, flags, ExtraContext.of(event)).getState());
             currPriority = handler.getPriority();
         }
-        flagState = typeFlag.resolve(flagState);
+        if(flagState == UNDEFINED) flagState = TRUE;
 
-        if (flagState == Tristate.FALSE) {
+        if (flagState == FALSE) {
             if (user instanceof Player) {
                 if (CommandDebug.instance().getDebug().get(user)) {
                     Vector3i vec = event.getTransactions().get(0).getOriginal().getPosition();
@@ -143,7 +158,7 @@ public class BlockListener implements EventListener<ChangeBlockEvent> {
 
         }
 
-        if (flagState == Tristate.FALSE) {
+        if (flagState == FALSE) {
 
             event.setCancelled(true);
         } else {

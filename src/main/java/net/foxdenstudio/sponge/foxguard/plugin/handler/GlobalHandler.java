@@ -26,7 +26,6 @@
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
@@ -105,6 +104,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
         return "global";
     }
 
+    @Deprecated
     @Override
     public EventResult handle(User user, IFlag flag, Optional<Event> event, Object... extra) {
         return EventResult.of(mapCache.get(flag));
@@ -123,7 +123,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
         }
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).parse();
         if (parse.args.length > 0) {
-            if (isIn(SET_ALIASES, parse.args[0])) {
+            if (isIn(FLAGS_ALIASES, parse.args[0])) {
                 if (parse.args.length > 1) {
                     IFlag flag;
                     if (parse.args[1].equalsIgnoreCase("all")) {

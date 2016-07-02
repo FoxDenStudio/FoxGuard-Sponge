@@ -160,7 +160,6 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
         if (this.list.contains(handler))
             throw new ArgumentParseException(Text.of("Handler is already in your state buffer!"), parse.args[0], 1);
         this.list.add(handler);
-        sourceState.updateScoreboard();
         return ProcessResult.of(true, Text.of("Successfully added handler to your state buffer!"));
     }
 
@@ -183,7 +182,6 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
             if (!this.list.contains(handler))
                 throw new ArgumentParseException(Text.of("Handler is not in your state buffer!"), parse.args[0], 1);
             this.list.remove(handler);
-            sourceState.updateScoreboard();
             return ProcessResult.of(true, Text.of("Successfully removed handler from your state buffer!"));
         } else {
             int successes = 0, failures = 0;
@@ -218,21 +216,5 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
                         "Check that their names or indices are valid."));
             }
         }
-    }
-
-    public List<String> removeSuggestions(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
-                .arguments(arguments)
-                .autoCloseQuotes(true)
-                .parse();
-        if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
-            if (parse.current.index == 0)
-                return this.list.stream()
-                        .map(IFGObject::getName)
-                        .filter(new StartsWithPredicate(parse.current.token))
-                        .collect(GuavaCollectors.toImmutableList());
-        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
-            return ImmutableList.of(parse.current.prefix + " ");
-        return ImmutableList.of();
     }
 }

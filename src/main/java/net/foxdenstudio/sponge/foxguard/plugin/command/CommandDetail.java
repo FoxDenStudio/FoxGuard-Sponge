@@ -120,7 +120,7 @@ public class CommandDetail implements CommandCallable {
                         .append(Text.of(TextColors.RESET, (region.isEnabled() ? "True" : "False") + "\n"))
                         .onClick(TextActions.runCommand("/foxguard " + (region.isEnabled() ? "disable" : "enable") +
                                 " r " + FGUtil.genWorldFlag(region) + region.getName()))
-                        .onHover(TextActions.showText(Text.of("Click to " + (region.isEnabled() ? "Disable" : "Enable"))))
+                        .onHover(TextActions.showText(Text.of("Click to " + (region.isEnabled() ? "disable" : "enable"))))
                         .build());
                 if (region instanceof IWorldRegion)
                     builder.append(Text.of(TextColors.GOLD, "World: "), Text.of(TextColors.RESET, ((IWorldRegion) region).getWorld().getName() + "\n"));
@@ -151,13 +151,13 @@ public class CommandDetail implements CommandCallable {
                         .append(Text.of(TextColors.GOLD, "Enabled: "))
                         .append(Text.of(TextColors.RESET, (handler.isEnabled() ? "True" : "False") + "\n"))
                         .onClick(TextActions.runCommand("/foxguard " + (handler.isEnabled() ? "disable" : "enable") + " h " + handler.getName()))
-                        .onHover(TextActions.showText(Text.of("Click to " + (handler.isEnabled() ? "Disable" : "Enable"))))
+                        .onHover(TextActions.showText(Text.of("Click to " + (handler.isEnabled() ? "disable" : "enable"))))
                         .build());
                 builder.append(Text.builder()
                         .append(Text.of(TextColors.GOLD, "Priority: "))
                         .append(Text.of(TextColors.RESET, handler.getPriority() + "\n"))
                         .onClick(TextActions.suggestCommand("/foxguard prio " + handler.getName() + " "))
-                        .onHover(TextActions.showText(Text.of("Click to Change Priority")))
+                        .onHover(TextActions.showText(Text.of("Click to change priority")))
                         .build());
                 builder.append(Text.of(TextColors.GREEN, "------- Details -------\n"));
                 Text objectDetails = handler.details(source, parse.args.length < 3 ? "" : parse.args[2]);
@@ -183,12 +183,12 @@ public class CommandDetail implements CommandCallable {
                             builder.append(Text.of(TextColors.GRAY, "[h+]"));
                             builder.append(Text.of(TextColors.RED,
                                     TextActions.runCommand("/foxguard s h remove " + controller.getName()),
-                                    TextActions.showText(Text.of("Remove from Handler State Buffer")),
+                                    TextActions.showText(Text.of("Remove from handler state buffer")),
                                     "[h-]"));
                         } else {
                             builder.append(Text.of(TextColors.GREEN,
                                     TextActions.runCommand("/foxguard s h add " + controller.getName()),
-                                    TextActions.showText(Text.of("Add to Handler State Buffer")),
+                                    TextActions.showText(Text.of("Add to handler state buffer")),
                                     "[h+]"));
                             builder.append(Text.of(TextColors.GRAY, "[h-]"));
                         }
@@ -196,12 +196,12 @@ public class CommandDetail implements CommandCallable {
                             builder.append(Text.of(TextColors.GRAY, "[c+]"));
                             builder.append(Text.of(TextColors.RED,
                                     TextActions.runCommand("/foxguard s c remove " + controller.getName()),
-                                    TextActions.showText(Text.of("Remove from Controller State Buffer")),
+                                    TextActions.showText(Text.of("Remove from controller state buffer")),
                                     "[c-]"));
                         } else {
                             builder.append(Text.of(TextColors.GREEN,
                                     TextActions.runCommand("/foxguard s c add " + controller.getName()),
-                                    TextActions.showText(Text.of("Add to Controller State Buffer")),
+                                    TextActions.showText(Text.of("Add to controller state buffer")),
                                     "[c+]"));
                             builder.append(Text.of(TextColors.GRAY, "[c-]"));
                         }
@@ -223,14 +223,14 @@ public class CommandDetail implements CommandCallable {
                                     TextActions.runCommand("/foxguard s r remove " +
                                             FGUtil.genWorldFlag(region) +
                                             region.getName()),
-                                    TextActions.showText(Text.of("Remove from State Buffer")),
+                                    TextActions.showText(Text.of("Remove from state buffer")),
                                     "[-]"));
                         } else {
                             builder.append(Text.of(TextColors.GREEN,
                                     TextActions.runCommand("/foxguard s r add " +
                                             FGUtil.genWorldFlag(region) +
                                             region.getName()),
-                                    TextActions.showText(Text.of("Add to State Buffer")),
+                                    TextActions.showText(Text.of("Add to state buffer")),
                                     "[+]"));
                             builder.append(Text.of(TextColors.GRAY, "[-]"));
                         }
@@ -269,12 +269,12 @@ public class CommandDetail implements CommandCallable {
                     builder.append(Text.of(TextColors.GRAY, "[h+]"));
                     builder.append(Text.of(TextColors.RED,
                             TextActions.runCommand("/foxguard s h remove " + handler.getName()),
-                            TextActions.showText(Text.of("Remove from Handler State Buffer")),
+                            TextActions.showText(Text.of("Remove from handler state buffer")),
                             "[h-]"));
                 } else {
                     builder.append(Text.of(TextColors.GREEN,
                             TextActions.runCommand("/foxguard s h add " + handler.getName()),
-                            TextActions.showText(Text.of("Add to Handler State Buffer")),
+                            TextActions.showText(Text.of("Add to handler state buffer")),
                             "[h+]"));
                     builder.append(Text.of(TextColors.GRAY, "[h-]"));
                 }
@@ -284,12 +284,12 @@ public class CommandDetail implements CommandCallable {
                         builder.append(Text.of(TextColors.GRAY, "[c+]"));
                         builder.append(Text.of(TextColors.RED,
                                 TextActions.runCommand("/foxguard s c remove " + controller.getName()),
-                                TextActions.showText(Text.of("Remove from Controller State Buffer")),
+                                TextActions.showText(Text.of("Remove from controller state buffer")),
                                 "[c-]"));
                     } else {
                         builder.append(Text.of(TextColors.GREEN,
                                 TextActions.runCommand("/foxguard s c add " + controller.getName()),
-                                TextActions.showText(Text.of("Add to Controller State Buffer")),
+                                TextActions.showText(Text.of("Add to controller state buffer")),
                                 "[c+]"));
                         builder.append(Text.of(TextColors.GRAY, "[c-]"));
                     }
@@ -300,7 +300,7 @@ public class CommandDetail implements CommandCallable {
             }
             builder.append(Text.of(FGUtil.getColorForObject(handler),
                     TextActions.runCommand("/foxguard det h " + handler.getName()),
-                    TextActions.showText(Text.of("View Details for " + (handler instanceof IController ? "controller" : "handler") + " \"" + handler.getName() + "\"")),
+                    TextActions.showText(Text.of("View details for " + (handler instanceof IController ? "controller" : "handler") + " \"" + handler.getName() + "\"")),
                     handler.getShortTypeName() + " : " + handler.getName()
             ));
         });

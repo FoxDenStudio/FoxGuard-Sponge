@@ -33,6 +33,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.plugin.command.*;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.LogicController;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.BasicHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GroupHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.PermissionHandler;
@@ -57,9 +58,11 @@ import org.spongepowered.api.event.EventManager;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.action.InteractEvent;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
+import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.entity.DisplaceEntityEvent;
+import org.spongepowered.api.event.entity.InteractEntityEvent;
 import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.event.game.state.*;
 import org.spongepowered.api.event.world.ExplosionEvent;
@@ -152,26 +155,25 @@ public final class FoxGuardMain {
 
     @Listener
     public void gameInit(GameInitializationEvent event) {
-        logger.info("Getting User Storage");
-        userStorage = game.getServiceManager().provide(UserStorageService.class).get();
         logger.info("Initializing FoxGuard manager instance");
         FGManager.init();
 
-        logger.info("Registering commands");
-        registerCommands();
-        logger.info("Registering event listeners");
-        registerListeners();
-        logger.info("Registering FoxGuard object factories");
-        registerFactories();
-        logger.info("Setting default player permissions");
-        configurePermissions();
         logger.info("Registering regions state field");
         FCStateManager.instance().registerStateFactory(new RegionsStateFieldFactory(), RegionsStateField.ID, RegionsStateField.ID, Aliases.REGIONS_ALIASES);
         logger.info("Registering handlers state field");
         FCStateManager.instance().registerStateFactory(new HandlersStateFieldFactory(), HandlersStateField.ID, HandlersStateField.ID, Aliases.HANDLERS_ALIASES);
         logger.info("Registering controllers state field");
         FCStateManager.instance().registerStateFactory(new ControllersStateFieldFactory(), ControllersStateField.ID, ControllersStateField.ID, Aliases.CONTROLLERS_ALIASES);
-        logger.info("Starting MCStats metrics extension");
+        logger.info("Registering FoxGuard object factories");
+        registerFactories();
+        logger.info("Registering commands");
+        registerCommands();
+        logger.info("Setting default player permissions");
+        configurePermissions();
+        logger.info("Getting User Storage");
+        userStorage = game.getServiceManager().provide(UserStorageService.class).get();
+        logger.info("Registering event listeners");
+        registerListeners();
     }
 
     @Listener
@@ -264,7 +266,6 @@ public final class FoxGuardMain {
 
     private void registerFactories() {
         FGFactoryManager manager = FGFactoryManager.getInstance();
-
         manager.registerWorldRegionFactory(new RectangularRegion.Factory());
         manager.registerWorldRegionFactory(new CuboidRegion.Factory());
         manager.registerWorldRegionFactory(new ElevationRegion.Factory());
@@ -281,8 +282,10 @@ public final class FoxGuardMain {
      * A private method that registers the Listener class and the corresponding event class.
      */
     private void registerListeners() {
+        eventManager.registerListeners(this, FlagRegistry.getInstance());
         eventManager.registerListener(this, ChangeBlockEvent.class, new BlockListener());
-        eventManager.registerListener(this, InteractEvent.class, new InteractListener());
+        eventManager.registerListener(this, InteractBlockEvent.class, new InteractBlockListener());
+        eventManager.registerListener(this, InteractEntityEvent.class, new InteractEntityListener());
         eventManager.registerListener(this, SpawnEntityEvent.class, new SpawnEntityListener());
         if (FGConfigManager.getInstance().getModules().get(FGConfigManager.Module.MOVEMENT)) {
             PlayerMoveListener pml = new PlayerMoveListener(true);

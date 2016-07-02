@@ -26,19 +26,18 @@
 package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.GenericMath;
-import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
+import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
-import org.spongepowered.api.event.action.InteractEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
-import org.spongepowered.api.event.entity.InteractEntityEvent;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
@@ -47,12 +46,18 @@ import org.spongepowered.api.world.World;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
-public class InteractListener implements EventListener<InteractEvent> {
+import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
+import static org.spongepowered.api.util.Tristate.FALSE;
+import static org.spongepowered.api.util.Tristate.TRUE;
+import static org.spongepowered.api.util.Tristate.UNDEFINED;
+
+public class InteractBlockListener implements EventListener<InteractBlockEvent> {
+
+    private static final FlagBitSet BASE_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, INTERACT, BLOCK);
 
     @Override
-    public void handle(InteractEvent event) throws Exception {
+    public void handle(InteractBlockEvent event) throws Exception {
         if (event.isCancelled()) return;
         User user;
         if (event.getCause().containsType(Player.class)) {
@@ -63,38 +68,22 @@ public class InteractListener implements EventListener<InteractEvent> {
             user = null;
         }
 
-        World world = null;
-        Flag typeFlag = null;
-        Vector3d loc = null;
-        if (event instanceof InteractEntityEvent) {
-            world = ((InteractEntityEvent) event).getTargetEntity().getWorld();
-            loc = ((InteractEntityEvent) event).getTargetEntity().getLocation().getPosition();
-            if (event instanceof InteractEntityEvent.Primary) {
-                typeFlag = Flag.ENTITY_INTERACT_PRIMARY;
-                if (((InteractEntityEvent.Primary) event).getTargetEntity() instanceof Player)
-                    typeFlag = Flag.PLAYER_INTERACT_PRIMARY;
-            } else if (event instanceof InteractEntityEvent.Secondary) {
-                typeFlag = Flag.ENTITY_INTERACT_SECONDARY;
-                if (((InteractEntityEvent.Secondary) event).getTargetEntity() instanceof Player)
-                    typeFlag = Flag.PLAYER_INTERACT_SECONDARY;
-            }
-        } else if (event instanceof InteractBlockEvent) {
-            if(((InteractBlockEvent) event).getTargetBlock().getState().getType().equals(BlockTypes.AIR)) return;
-            world = ((InteractBlockEvent) event).getTargetBlock().getLocation().get().getExtent();
-            loc = ((InteractBlockEvent) event).getTargetBlock().getPosition().toDouble();
-            if (event instanceof InteractBlockEvent.Primary) typeFlag = Flag.BLOCK_INTERACT_PRIMARY;
-            else if (event instanceof InteractBlockEvent.Secondary) typeFlag = Flag.BLOCK_INTERACT_SECONDARY;
-        }
-        if (typeFlag == null) return;
+        FlagBitSet flags = (FlagBitSet) BASE_FLAG_SET.clone();
+        BlockSnapshot block = event.getTargetBlock();
+        if (block.getState().getType().equals(BlockTypes.AIR)) return;
+        World world = block.getLocation().get().getExtent();
+        Vector3i loc = block.getPosition();
+        if (event instanceof InteractBlockEvent.Primary) flags.set(PRIMARY);
+        else if (event instanceof InteractBlockEvent.Secondary) flags.set(SECONDARY);
+
+
         List<IHandler> handlerList = new ArrayList<>();
         Vector3i chunk = new Vector3i(
                 GenericMath.floor(loc.getX() / 16.0),
                 GenericMath.floor(loc.getY() / 16.0),
                 GenericMath.floor(loc.getZ() / 16.0));
-        final Vector3d finalLoc = loc;
-        final World finalWorld = world;
         FGManager.getInstance().getAllRegions(world, chunk).stream()
-                .filter(region -> region.contains(finalLoc, finalWorld))
+                .filter(region -> region.contains(loc, world))
                 .forEach(region -> region.getHandlers().stream()
                         .filter(IFGObject::isEnabled)
                         .filter(handler -> !handlerList.contains(handler))
@@ -102,16 +91,17 @@ public class InteractListener implements EventListener<InteractEvent> {
 
         Collections.sort(handlerList);
         int currPriority = handlerList.get(0).getPriority();
-        Tristate flagState = Tristate.UNDEFINED;
+        Tristate flagState = UNDEFINED;
         for (IHandler handler : handlerList) {
-            if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
+            if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                 break;
             }
-            flagState = flagState.and(handler.handle(user, typeFlag, Optional.of(event)).getState());
+            //flagState = flagState.and(handler.handle(user, typeFlag, Optional.of(event)).getState());
+            flagState = flagState.and(handler.handle(user, flags, ExtraContext.of(event)).getState());
             currPriority = handler.getPriority();
         }
-        flagState = typeFlag.resolve(flagState);
-        if (flagState == Tristate.FALSE) {
+        if (flagState == UNDEFINED) flagState = TRUE;
+        if (flagState == FALSE) {
             if (user instanceof Player)
                 ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
             event.setCancelled(true);

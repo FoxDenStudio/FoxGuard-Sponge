@@ -36,4 +36,9 @@ public class FlagObject {
         this.name = name;
         this.id = id;
     }
+
+    @Override
+    public String toString() {
+        return "Flag{" + name + "," + id + "}";
+    }
 }

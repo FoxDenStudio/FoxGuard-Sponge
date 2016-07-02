@@ -30,7 +30,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.flag;
  */
 public class Flags {
 
-    private static final FlagRegistry REGISTRY = FlagRegistry.getInstance();
+    private static final FlagRegistry REGISTRY = FlagRegistry.getInstanceInternal();
 
     public static final FlagObject ROOT = REGISTRY.registerFlag("root");
     public static final FlagObject BUFF = REGISTRY.registerFlag("buff");
@@ -48,6 +48,7 @@ public class Flags {
     public static final FlagObject ENTITY = REGISTRY.registerFlag("entity");
     public static final FlagObject LIVING = REGISTRY.registerFlag("living");
     public static final FlagObject MOB = REGISTRY.registerFlag("mob");
+    public static final FlagObject HUMAN = REGISTRY.registerFlag("human");
     public static final FlagObject PLAYER = REGISTRY.registerFlag("player");
     public static final FlagObject PASSIVE = REGISTRY.registerFlag("passive");
     public static final FlagObject HOSTILE = REGISTRY.registerFlag("hostile");
@@ -61,6 +62,5 @@ public class Flags {
     public static final FlagObject EXPLOSION = REGISTRY.registerFlag("explosion");
     public static final FlagObject INVINCIBLE = REGISTRY.registerFlag("invincible");
     public static final FlagObject UNDYING = REGISTRY.registerFlag("undying");
-
 
 }

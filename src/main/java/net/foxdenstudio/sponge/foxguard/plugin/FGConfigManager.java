@@ -90,7 +90,7 @@ public final class FGConfigManager {
 
         root.getNode("storage", "saveWorldRegionsInWorldFolders").setComment("Whether or not FoxGuard should save world-region information in the world folder.\n" +
                 "In this case, the files are kept with their corresponding world/dimension.\n" +
-                "This makes it easier to copy and paste world data without causing de-synchronization between the world data and FoxGuard Data.")
+                "This makes it easier to copy and paste world data without causing de-synchronization between the world data and FoxGuard data.")
                 .setValue(saveWorldRegionsInWorldFolders);
         root.getNode("storage", "useConfigFolder").setComment("Whether or not to place the foxguard folder inside the config folder.\n" +
                 "Only applies if files are not kept inside the world folder.")

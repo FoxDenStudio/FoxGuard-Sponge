@@ -26,23 +26,29 @@
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
+import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagObject;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.util.EverythingSet;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
+import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColor;
@@ -56,14 +62,15 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
 public class BasicHandler extends HandlerBase {
 
-    public static final String[] INDEX_ALIASES = {"index", "i"};
-    public static final String[] COLOR_ALIASES = {"color", "colour", "col", "c"};
-    public static final String[] DISPLAY_NAME_ALIASES = {"displayname", "display", "disp", "dispname", "title", "d"};
+    private static final String[] INDEX_ALIASES = {"index", "i", "pos", "position"};
+    private static final String[] COLOR_ALIASES = {"color", "colour", "col", "c"};
+    private static final String[] DISPLAY_NAME_ALIASES = {"displayname", "display", "disp", "dispname", "title", "d"};
 
     private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
         map.put(key, value);
@@ -78,13 +85,16 @@ public class BasicHandler extends HandlerBase {
 
     private final List<Group> groups;
     private final Map<Group, List<Entry>> groupPermissions;
+    private final Group defaultGroup;
     private final List<Entry> defaultPermissions;
 
     private final Map<Group, Map<FlagBitSet, Tristate>> groupPermCache;
-    private final Map<User, Map<FlagBitSet, Tristate>> userPermCache;
     private final Map<FlagBitSet, Tristate> defaultPermCache;
+    private final Map<Set<Group>, Map<FlagBitSet, Tristate>> groupSetPermCache;
+    private final Map<UUID, Set<Group>> userGroupCache;
+    private final Map<UUID, Map<FlagBitSet, Tristate>> userPermCache;
 
-    private PassiveOptions passiveOption = PassiveOptions.PASSTHROUGH;
+    private PassiveOption passiveOption = PassiveOption.PASSTHROUGH;
     private Group passiveGroup;
     private Map<FlagBitSet, Tristate> passiveGroupCacheRef;
     private final Map<FlagBitSet, Tristate> passivePermCache;
@@ -93,15 +103,18 @@ public class BasicHandler extends HandlerBase {
         this(name, priority,
                 new ArrayList<>(),
                 new HashMap<>(),
+                new Group("default", EverythingSet.get(), TextColors.RED, "Default"),
                 new ArrayList<>());
     }
 
     public BasicHandler(String name, int priority,
                         List<Group> groups,
                         Map<Group, List<Entry>> groupPermissions,
+                        Group defaultGroup,
                         List<Entry> defaultPermissions) {
         super(name, priority);
         this.groups = groups;
+        this.defaultGroup = defaultGroup;
 
         this.groupPermissions = groupPermissions;
         this.defaultPermissions = defaultPermissions;
@@ -112,7 +125,7 @@ public class BasicHandler extends HandlerBase {
                 Map<FlagBitSet, Tristate> map = new CacheMap<>((k2, m2) -> {
                     if (k2 instanceof FlagBitSet) {
                         FlagBitSet flags = (FlagBitSet) k2;
-                        Tristate state = Tristate.UNDEFINED;
+                        Tristate state = null;
                         for (Entry entry : entries) {
                             if (flags.toFlagSet().containsAll(entry.set)) {
                                 state = entry.state;
@@ -141,17 +154,49 @@ public class BasicHandler extends HandlerBase {
                 return state;
             } else return null;
         });
-        this.userPermCache = new CacheMap<>((k, m) -> {
-            if (k instanceof User) {
-                for (Group g : groups) {
-                    if (FCUtil.isUserInCollection(g.users, (User) k)) {
-                        Map<FlagBitSet, Tristate> map = groupPermCache.get(g);
-                        m.put(((User) k), map);
-                        return map;
-                    }
+        this.groupSetPermCache = new CacheMap<>((k1, m1) -> {
+            if (k1 instanceof Set) {
+                for (Object o : (Set) k1) {
+                    if (!(o instanceof Group)) return null;
                 }
-                m.put((User) k, defaultPermCache);
-                return defaultPermCache;
+                Set<Group> set = (Set<Group>) k1;
+                Map<FlagBitSet, Tristate> map = new CacheMap<>((k2, m2) -> {
+                    if (k2 instanceof FlagBitSet) {
+                        Tristate state = null;
+                        FlagBitSet flags = (FlagBitSet) k2;
+                        for (Group group : set) {
+                            state = this.groupPermCache.get(group).get(flags);
+                            if (state != null) break;
+                        }
+                        if (state == null) state = this.defaultPermCache.get(flags);
+                        m2.put(flags, state);
+                        return state;
+                    } else return null;
+                });
+                m1.put(set, map);
+                return map;
+            } else return null;
+        });
+        this.userGroupCache = new CacheMap<>((k, m) -> {
+            if (k instanceof UUID) {
+                UUID user = ((UUID) k);
+                Set<Group> userGroups = this.groups.stream().filter(group -> group.users.contains(user)).collect(GuavaCollectors.toImmutableSet());
+                m.put(user, userGroups);
+                return userGroups;
+            } else return null;
+        });
+        this.userPermCache = new CacheMap<>((k, m) -> {
+            if (k instanceof UUID) {
+                UUID user = ((UUID) k);
+                Set<Group> userGroups = this.userGroupCache.get(user);
+                Map<FlagBitSet, Tristate> permCache;
+                if (userGroups.size() == 0)
+                    permCache = this.defaultPermCache;
+                else {
+                    permCache = this.groupSetPermCache.get(userGroups);
+                }
+                m.put(user, permCache);
+                return permCache;
             } else return null;
         });
         this.passivePermCache = new CacheMap<>((k, m) -> {
@@ -178,170 +223,6 @@ public class BasicHandler extends HandlerBase {
         });
     }
 
-    /* @Override
-    public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).parse();
-        if (parse.args.length > 0) {
-            if (isIn(GROUPS_ALIASES, parse.args[0])) {
-                if (parse.args.length > 1) {
-                    Set<User> set;
-                    if (isIn(OWNER_GROUP_ALIASES, parse.args[1])) {
-                        set = this.owners;
-                    } else if (isIn(MEMBER_GROUP_ALIASES, parse.args[1])) {
-                        set = this.members;
-                    } else {
-                        return ProcessResult.of(false, Text.of(TextColors.RED, "Not a valid group!"));
-                    }
-                    if (parse.args.length > 2) {
-                        Operation op;
-                        if (parse.args[2].equalsIgnoreCase("add")) {
-                            op = Operation.ADD;
-                        } else if (parse.args[2].equalsIgnoreCase("remove")) {
-                            op = Operation.REMOVE;
-                        } else if (parse.args[2].equalsIgnoreCase("set")) {
-                            op = Operation.SET;
-                        } else {
-                            return ProcessResult.of(false, Text.of("Not a valid operation!"));
-                        }
-                        if (parse.args.length > 3) {
-                            int successes = 0;
-                            int failures = 0;
-                            List<String> names = new ArrayList<>();
-                            Collections.addAll(names, Arrays.copyOfRange(parse.args, 3, parse.args.length));
-                            List<User> argUsers = new ArrayList<>();
-                            for (String name : names) {
-                                Optional<User> optUser = FoxGuardMain.instance().getUserStorage().get(name);
-                                if (optUser.isPresent() && !FCUtil.isUserInCollection(argUsers, optUser.get()))
-                                    argUsers.add(optUser.get());
-                                else failures++;
-                            }
-                            switch (op) {
-                                case ADD:
-                                    for (User user : argUsers) {
-                                        if (!FCUtil.isUserInCollection(set, user) && set.add(user))
-                                            successes++;
-                                        else failures++;
-                                    }
-                                    break;
-                                case REMOVE:
-                                    for (User user : argUsers) {
-                                        if (FCUtil.isUserInCollection(set, user)) {
-                                            set.removeIf(u -> u.getUniqueId().equals(user.getUniqueId()));
-                                            successes++;
-                                        } else failures++;
-                                    }
-                                    break;
-                                case SET:
-                                    set.clear();
-                                    for (User user : argUsers) {
-                                        set.add(user);
-                                        successes++;
-                                    }
-                            }
-                            return ProcessResult.of(true, Text.of("Modified list with " + successes + " successes and " + failures + " failures."));
-                        } else {
-                            return ProcessResult.of(false, Text.of("Must specify one or more users!"));
-                        }
-                    } else {
-                        return ProcessResult.of(false, Text.of("Must specify an operation!"));
-                    }
-                } else {
-                    return ProcessResult.of(false, Text.of("Must specify a group!"));
-                }
-            } else if (isIn(SET_ALIASES, parse.args[0])) {
-                Map<IFlag, Tristate> map;
-                if (parse.args.length > 1) {
-                    if (isIn(OWNER_GROUP_ALIASES, parse.args[1])) {
-                        map = ownerPermissions;
-                    } else if (isIn(MEMBER_GROUP_ALIASES, parse.args[1])) {
-                        map = memberPermissions;
-                    } else if (isIn(DEFAULT_GROUP_ALIASES, parse.args[1])) {
-                        map = defaultPermissions;
-                    } else {
-
-                        return ProcessResult.of(false, Text.of("Not a valid group!"));
-                    }
-                } else {
-                    return ProcessResult.of(false, Text.of("Must specify a group!"));
-                }
-                if (parse.args.length > 2) {
-                    IFlag flag;
-                    if (parse.args[2].equalsIgnoreCase("all")) {
-                        flag = null;
-                    } else {
-                        flag = Flag.flagFrom(parse.args[2]);
-                        if (flag == null) {
-                            return ProcessResult.of(false, Text.of("Not a valid flag!"));
-                        }
-                    }
-                    if (parse.args.length > 3) {
-                        if (isIn(CLEAR_ALIASES, parse.args[3])) {
-                            if (flag == null) {
-                                map.clear();
-                                clearCache();
-                                return ProcessResult.of(true, Text.of("Successfully cleared flags!"));
-                            } else {
-                                map.remove(flag);
-                                clearCache();
-                                return ProcessResult.of(true, Text.of("Successfully cleared flag!"));
-                            }
-                        } else {
-                            Tristate tristate = tristateFrom(parse.args[3]);
-                            if (tristate == null) {
-                                return ProcessResult.of(false, Text.of("Not a valid value!"));
-                            }
-                            if (flag == null) {
-                                for (IFlag thatExist : Flag.getFlags()) {
-                                    map.put(thatExist, tristate);
-                                }
-                                clearCache();
-                                return ProcessResult.of(true, Text.of("Successfully set flags!"));
-                            } else {
-                                map.put(flag, tristate);
-                                clearCache();
-                                return ProcessResult.of(true, Text.of("Successfully set flag!"));
-                            }
-                        }
-                    } else {
-                        return ProcessResult.of(false, Text.of("Must specify a value!"));
-                    }
-                } else {
-                    return ProcessResult.of(false, Text.of("Must specify a flag!"));
-                }
-            } else if (isIn(PASSIVE_ALIASES, parse.args[0])) {
-                if (parse.args.length > 1) {
-                    if (isIn(TRUE_ALIASES, parse.args[1])) {
-                        this.passiveOption = PassiveOptions.ALLOW;
-                        return ProcessResult.of(true, Text.of("Successfully set passive option!"));
-                    } else if (isIn(FALSE_ALIASES, parse.args[1])) {
-                        this.passiveOption = PassiveOptions.DENY;
-                        return ProcessResult.of(true, Text.of("Successfully set passive option!"));
-                    } else if (isIn(PASSTHROUGH_ALIASES, parse.args[1])) {
-                        this.passiveOption = PassiveOptions.PASSTHROUGH;
-                        return ProcessResult.of(true, Text.of("Successfully set passive option!"));
-                    } else if (isIn(OWNER_GROUP_ALIASES, parse.args[1])) {
-                        this.passiveOption = PassiveOptions.OWNER;
-                        return ProcessResult.of(true, Text.of("Successfully set passive option!"));
-                    } else if (isIn(MEMBER_GROUP_ALIASES, parse.args[1])) {
-                        this.passiveOption = PassiveOptions.MEMBER;
-                        return ProcessResult.of(true, Text.of("Successfully set passive option!"));
-                    } else if (isIn(DEFAULT_GROUP_ALIASES, parse.args[1])) {
-                        this.passiveOption = PassiveOptions.DEFAULT;
-                        return ProcessResult.of(true, Text.of("Successfully set passive option!"));
-                    } else {
-                        return ProcessResult.of(false, Text.of("Not a valid option!"));
-                    }
-                } else {
-                    return ProcessResult.of(false, Text.of("Must specify an option!"));
-                }
-            } else {
-                return ProcessResult.of(false, Text.of("Not a valid SimpleHandler command!"));
-            }
-        } else {
-            return ProcessResult.of(false, Text.of("Must specify a command!"));
-        }
-    }*/
-
     public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(MAPPER).parse();
 
@@ -350,190 +231,204 @@ public class BasicHandler extends HandlerBase {
         if (isIn(GROUPS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) return ProcessResult.of(false, Text.of("Must specify an operation!"));
 
-            if (parse.args[1].equalsIgnoreCase("add")) {
-                if (parse.args.length < 3)
-                    return ProcessResult.of(false, Text.of("Must specify a group name!"));
-                if (!isNameValid(parse.args[2]))
-                    return ProcessResult.of(false, Text.of("Not a valid group name!"));
-                Optional<Group> groupOptional = createGroup(parse.args[2]);
-                if (!groupOptional.isPresent())
-                    return ProcessResult.of(false, Text.of("Group already exists with this name!"));
+            switch (parse.args[1].toLowerCase()) {
+                case "add": {
+                    if (parse.args.length < 3)
+                        return ProcessResult.of(false, Text.of("Must specify a group name!"));
+                    if (name.equalsIgnoreCase("default"))
+                        return ProcessResult.of(false, Text.of("Default group already exists and its name is reserved!"));
+                    if (!isNameValid(parse.args[2]))
+                        return ProcessResult.of(false, Text.of("Not a valid group name!"));
+                    Optional<Group> groupOptional = createGroup(parse.args[2]);
+                    if (!groupOptional.isPresent())
+                        return ProcessResult.of(false, Text.of("Group already exists with this name!"));
 
-                Group group = groupOptional.get();
-                if (parse.flags.containsKey("color")) {
-                    String colorString = parse.flags.get("color");
-                    Optional<TextColor> colorOptional = FCUtil.textColorFromHex(colorString);
-                    if (!colorOptional.isPresent())
-                        colorOptional = FCUtil.textColorFromName(colorString);
-                    if (colorOptional.isPresent()) group.color = colorOptional.get();
-                }
-                if (parse.flags.containsKey("displayname")) {
-                    String name = parse.flags.get("displayname");
-                    if (!name.isEmpty()) {
-                        group.displayName = name;
-                    }
-                }
-                if (parse.flags.containsKey("index")) {
-                    String number = parse.flags.get("index");
-                    if (!number.isEmpty()) {
-                        try {
-                            int index = Integer.parseInt(number);
-                            moveGroup(group, index);
-                        } catch (NumberFormatException ignored) {
-                        }
-                    }
-                }
-                return ProcessResult.of(true, Text.of("Successfully made group!"));
-            } else if (parse.args[1].equalsIgnoreCase("remove")) {
-                if (parse.args.length <= 2)
-                    return ProcessResult.of(false, Text.of("Must specify a group to remove!"));
-                Optional<Group> groupOptional = getGroup(parse.args[2]);
-                if (!groupOptional.isPresent())
-                    return ProcessResult.of(false, Text.of("Not a valid group!"));
-
-                removeGroup(groupOptional.get());
-                return ProcessResult.of(true, Text.of("Successfully removed group!"));
-            } else if (parse.args[1].equalsIgnoreCase("modify")) {
-                if (parse.args.length < 3)
-                    return ProcessResult.of(false, Text.of("Must specify a group name!"));
-                Optional<Group> groupOptional = getGroup(parse.args[2]);
-                if (!groupOptional.isPresent())
-                    return ProcessResult.of(false, Text.of("No group exists with this name!"));
-
-                Group group = groupOptional.get();
-                if (parse.flags.containsKey("color")) {
-                    String colorString = parse.flags.get("color");
-                    if (!colorString.isEmpty()) {
+                    Group group = groupOptional.get();
+                    if (parse.flags.containsKey("color")) {
+                        String colorString = parse.flags.get("color");
                         Optional<TextColor> colorOptional = FCUtil.textColorFromHex(colorString);
                         if (!colorOptional.isPresent())
                             colorOptional = FCUtil.textColorFromName(colorString);
                         if (colorOptional.isPresent()) group.color = colorOptional.get();
-                    } else {
-                        group.color = TextColors.WHITE;
                     }
-                }
-                if (parse.flags.containsKey("displayname")) {
-                    String name = parse.flags.get("displayname");
-                    if (!name.isEmpty()) {
-                        group.displayName = name;
-                    } else group.displayName = group.name;
-                }
-                if (parse.flags.containsKey("index")) {
-                    String number = parse.flags.get("index");
-                    if (!number.isEmpty()) {
-                        try {
-                            int index = Integer.parseInt(number);
-                            moveGroup(group, index);
-                        } catch (NumberFormatException ignored) {
+                    if (parse.flags.containsKey("displayname")) {
+                        String name = parse.flags.get("displayname");
+                        if (!name.isEmpty()) {
+                            group.displayName = name;
                         }
                     }
-                }
-                return ProcessResult.of(true, Text.of("Successfully modified group!"));
-            } else if (parse.args[1].equalsIgnoreCase("rename")) {
-                if (parse.args.length < 3)
-                    return ProcessResult.of(false, Text.of("Must specify a group name!"));
-                Optional<Group> groupOptional = getGroup(parse.args[2]);
-                if (!groupOptional.isPresent())
-                    return ProcessResult.of(false, Text.of("No group exists with this name!"));
-                if (parse.args.length < 4)
-                    return ProcessResult.of(false, Text.of("Must specify a new group name!"));
-                if (!isNameValid(parse.args[3]))
-                    return ProcessResult.of(false, Text.of("New group name is not valid!"));
-                renameGroup(groupOptional.get(), parse.args[3]);
-                return ProcessResult.of(true, Text.of("Successfully renamed group!"));
-            } else if (parse.args[1].equalsIgnoreCase("move")) {
-                if (parse.args.length < 3)
-                    return ProcessResult.of(false, Text.of("Must specify a group name!"));
-                Optional<Group> groupOptional = getGroup(parse.args[2]);
-                Group group;
-                if (!groupOptional.isPresent())
-                    return ProcessResult.of(false, Text.of("No group exists with this name!"));
-                else group = groupOptional.get();
-                if (parse.args.length < 4)
-                    return ProcessResult.of(false, Text.of("Must specify a target index or direction!"));
-                String target = parse.args[3];
-                final int currentIndex = this.groups.indexOf(group);
-                int newIndex;
-                if (!target.isEmpty()) {
-                    if (target.equalsIgnoreCase("up")) {
-                        newIndex = currentIndex - 1;
-                    } else if (target.equalsIgnoreCase("down")) {
-                        newIndex = currentIndex + 1;
-                    } else if (target.equalsIgnoreCase("top") || target.equalsIgnoreCase("first")) {
-                        newIndex = 0;
-                    } else if (target.equalsIgnoreCase("bottom") || target.equalsIgnoreCase("last")) {
-                        newIndex = this.groups.size() - 1;
-                    } else if (target.matches("[0-9~]+")) {
-                        try {
-                            newIndex = FCUtil.parseCoordinate(currentIndex, target) - 1;
-                        } catch (NumberFormatException ignored) {
-                            return ProcessResult.of(false, Text.of("Target index number is not formatted correctly!"));
+                    if (parse.flags.containsKey("index")) {
+                        String number = parse.flags.get("index");
+                        if (!number.isEmpty()) {
+                            try {
+                                int index = Integer.parseInt(number);
+                                moveGroup(group, index);
+                            } catch (NumberFormatException ignored) {
+                            }
                         }
-                    } else {
-                        return ProcessResult.of(false, Text.of("Not a valid target position!"));
                     }
-                    moveGroup(group, newIndex);
+                    return ProcessResult.of(true, Text.of("Successfully made group!"));
                 }
-                return ProcessResult.of(true, Text.of("Successfully moved group!"));
-            } else return ProcessResult.of(false, Text.of("Not a valid operation!"));
-        } else if (isIn(USERS_ALIASES, parse.args[0])) {
-            if (parse.args.length < 2) return ProcessResult.of(false, Text.of("Must specify an operation!"));
-            Operation op;
-            if (parse.args[1].equalsIgnoreCase("add")) {
-                op = Operation.ADD;
-            } else if (parse.args[1].equalsIgnoreCase("remove")) {
-                op = Operation.REMOVE;
-            } else if (parse.args[1].equalsIgnoreCase("set")) {
-                op = Operation.SET;
-            } else {
-                return ProcessResult.of(false, Text.of("Not a valid operation!"));
-            }
-            if (parse.args.length < 3) return ProcessResult.of(false, Text.of("Must specify a group!"));
-            String[] newArgs = Arrays.copyOfRange(parse.args, 2, parse.args.length);
-            Set<Group> groups = new HashSet<>();
-            Set<User> users = new HashSet<>();
-            boolean multi = false;
-            for (String s : newArgs) {
-                if (s.contains(">")) {
-                    multi = true;
-                    break;
+                case "remove": {
+                    if (parse.args.length <= 2)
+                        return ProcessResult.of(false, Text.of("Must specify a group to remove!"));
+                    if (name.equalsIgnoreCase("default"))
+                        return ProcessResult.of(false, Text.of("Default group cannot be removed!"));
+                    Optional<Group> groupOptional = getGroup(parse.args[2]);
+                    if (!groupOptional.isPresent())
+                        return ProcessResult.of(false, Text.of("Not a valid group!"));
+                    removeGroup(groupOptional.get());
+                    return ProcessResult.of(true, Text.of("Successfully removed group!"));
                 }
-            }
-            int successes = 0, failures = 0;
-            if (multi) {
+                case "modify": {
+                    if (parse.args.length < 3)
+                        return ProcessResult.of(false, Text.of("Must specify a group name!"));
+                    Optional<Group> groupOptional = getGroup(parse.args[2]);
+                    if (!groupOptional.isPresent())
+                        return ProcessResult.of(false, Text.of("No group exists with this name!"));
 
-            } else {
-                Optional<Group> groupOptional = getGroup(parse.args[2]);
-                Group group;
-                if (!groupOptional.isPresent()) {
-                    return ProcessResult.of(false, Text.of("No group exists with this name!"));
-                } else {
-                    group = groupOptional.get();
-                    groups.add(group);
-                }
-                if (parse.args.length < 4) {
-                    if (op != Operation.SET) return ProcessResult.of(false, Text.of("Must specify a user!"));
-                    else {
-                        group.users.clear();
-                        return ProcessResult.of(true, Text.of("Successfully cleared group!"));
+                    Group group = groupOptional.get();
+                    if (parse.flags.containsKey("color")) {
+                        String colorString = parse.flags.get("color");
+                        if (!colorString.isEmpty()) {
+                            Optional<TextColor> colorOptional = FCUtil.textColorFromHex(colorString);
+                            if (!colorOptional.isPresent())
+                                colorOptional = FCUtil.textColorFromName(colorString);
+                            if (colorOptional.isPresent()) group.color = colorOptional.get();
+                        } else {
+                            group.color = TextColors.WHITE;
+                        }
                     }
+                    if (parse.flags.containsKey("displayname")) {
+                        String name = parse.flags.get("displayname");
+                        if (!name.isEmpty()) {
+                            group.displayName = name;
+                        } else group.displayName = group.name;
+                    }
+                    if (parse.flags.containsKey("index")) {
+                        String number = parse.flags.get("index");
+                        if (!number.isEmpty()) {
+                            try {
+                                int index = Integer.parseInt(number);
+                                moveGroup(group, index);
+                            } catch (NumberFormatException ignored) {
+                            }
+                        }
+                    }
+                    return ProcessResult.of(true, Text.of("Successfully modified group!"));
                 }
-                newArgs = Arrays.copyOfRange(parse.args, 3, parse.args.length);
-                for (String s : newArgs) {
-                    try {
-                        UUID uuid = UUID.fromString(s);
-                        Optional<User> userOptional = FoxGuardMain.instance().getUserStorage().get(uuid);
-                        if (userOptional.isPresent()) {
-                            users.add(userOptional.get());
+                case "rename": {
+                    if (parse.args.length < 3)
+                        return ProcessResult.of(false, Text.of("Must specify a group name!"));
+                    if (name.equalsIgnoreCase("default"))
+                        return ProcessResult.of(false, Text.of("Default group cannot be renamed!"));
+                    Optional<Group> groupOptional = getGroup(parse.args[2]);
+                    if (!groupOptional.isPresent())
+                        return ProcessResult.of(false, Text.of("No group exists with this name!"));
+                    if (parse.args.length < 4)
+                        return ProcessResult.of(false, Text.of("Must specify a new group name!"));
+                    if (!isNameValid(parse.args[3]))
+                        return ProcessResult.of(false, Text.of("New group name is not valid!"));
+                    renameGroup(groupOptional.get(), parse.args[3]);
+                    return ProcessResult.of(true, Text.of("Successfully renamed group!"));
+                }
+                case "move": {
+                    if (parse.args.length < 3)
+                        return ProcessResult.of(false, Text.of("Must specify a group name!"));
+                    if (name.equalsIgnoreCase("default"))
+                        return ProcessResult.of(false, Text.of("Default group cannot be moved!"));
+                    Optional<Group> groupOptional = getGroup(parse.args[2]);
+                    Group group;
+                    if (!groupOptional.isPresent())
+                        return ProcessResult.of(false, Text.of("No group exists with this name!"));
+                    else group = groupOptional.get();
+                    if (parse.args.length < 4)
+                        return ProcessResult.of(false, Text.of("Must specify a target index or direction!"));
+                    String target = parse.args[3];
+                    final int currentIndex = this.groups.indexOf(group);
+                    int newIndex;
+                    if (!target.isEmpty()) {
+                        if (target.equalsIgnoreCase("up")) {
+                            newIndex = currentIndex - 1;
+                        } else if (target.equalsIgnoreCase("down")) {
+                            newIndex = currentIndex + 1;
+                        } else if (target.equalsIgnoreCase("top") || target.equalsIgnoreCase("first")) {
+                            newIndex = 0;
+                        } else if (target.equalsIgnoreCase("bottom") || target.equalsIgnoreCase("last")) {
+                            newIndex = this.groups.size() - 1;
+                        } else if (target.matches("[0-9~]+")) {
+                            try {
+                                newIndex = FCUtil.parseCoordinate(currentIndex, target) - 1;
+                            } catch (NumberFormatException ignored) {
+                                return ProcessResult.of(false, Text.of("Target index number is not formatted correctly!"));
+                            }
+                        } else {
+                            return ProcessResult.of(false, Text.of("Not a valid target position!"));
+                        }
+                        moveGroup(group, newIndex);
+                    }
+                    return ProcessResult.of(true, Text.of("Successfully moved group!"));
+                }
+                default:
+                    return ProcessResult.of(false, Text.of("Not a valid operation!"));
+            }
+        } else if (isIn(USERS_ALIASES, parse.args[0])) {
+            if (parse.args.length < 2) return ProcessResult.of(false, Text.of("Must specify a group!"));
+            Optional<Group> groupOptional = getGroup(parse.args[1]);
+            Group group;
+            if (!groupOptional.isPresent()) {
+                return ProcessResult.of(false, Text.of("No group exists with this name!"));
+            } else {
+                group = groupOptional.get();
+            }
+            if (parse.args.length < 3) return ProcessResult.of(false, Text.of("Must specify an operation!"));
+            Operation op;
+            switch (parse.args[2].toLowerCase()) {
+                case "add":
+                    op = Operation.ADD;
+                    break;
+                case "remove":
+                    op = Operation.REMOVE;
+                    break;
+                case "set":
+                    op = Operation.SET;
+                    break;
+                default:
+                    return ProcessResult.of(false, Text.of("Not a valid operation!"));
+            }
+            if (parse.args.length < 4) {
+                if (op != Operation.SET)
+                    return ProcessResult.of(false, Text.of("Must specify a user or a group to add!"));
+                else {
+                    group.users.clear();
+                    return ProcessResult.of(true, Text.of("Successfully cleared group!"));
+                }
+            }
+            Set<UUID> users = new HashSet<>();
+            int successes = 0, failures = 0;
+            String[] newArgs = Arrays.copyOfRange(parse.args, 3, parse.args.length);
+            for (String s : newArgs) {
+                try {
+                    UUID uuid = UUID.fromString(s);
+                    users.add(uuid);
+                } catch (IllegalArgumentException e) {
+                    if (s.startsWith("#")) {
+                        s = s.substring(1);
+                        Optional<Group> groupOpt = getGroup(s);
+                        if (groupOpt.isPresent()) {
+                            Group argGroup = groupOpt.get();
+                            argGroup.users.stream()
+                                    .filter(user -> !users.contains(user))
+                                    .forEach(users::add);
                         } else if (newArgs.length == 1) {
-                            return ProcessResult.of(false, Text.of("No user exists with this UUID!"));
+                            return ProcessResult.of(false, Text.of("No group exists with this name!"));
                         } else {
                             failures++;
                         }
-                    } catch (IllegalArgumentException e) {
+                    } else {
                         Optional<User> userOptional = FoxGuardMain.instance().getUserStorage().get(s);
                         if (userOptional.isPresent()) {
-                            users.add(userOptional.get());
+                            users.add(userOptional.get().getUniqueId());
                         } else if (newArgs.length == 1) {
                             return ProcessResult.of(false, Text.of("No user exists with this name!"));
                         } else {
@@ -544,43 +439,30 @@ public class BasicHandler extends HandlerBase {
             }
             switch (op) {
                 case ADD:
-                    for (Group g : groups) {
-                        for (User u : users) {
-                            if (!FCUtil.isUserInCollection(g.users, u)) {
-                                g.users.add(u);
-                                successes++;
-                            } else {
-                                failures++;
-                            }
+                    for (UUID u : users) {
+                        if (addUser(group, u)) {
+                            successes++;
+                        } else {
+                            failures++;
                         }
                     }
                     break;
                 case REMOVE:
-                    for (Group g : groups) {
-                        for (User u : users) {
-                            User user = null;
-                            for (User scan : g.users) {
-                                if (u.getUniqueId().equals(scan.getUniqueId()))
-                                    user = scan;
-                            }
-                            if (user != null) {
-                                g.users.remove(user);
-                                successes++;
-                            } else {
-                                failures++;
-                            }
+                    for (UUID u : users) {
+                        if (removeUser(group, u)) {
+                            successes++;
+                        } else {
+                            failures++;
                         }
                     }
                     break;
                 case SET:
-                    for (Group g : groups) {
-                        g.users.clear();
-                        for (User u : users) {
-                            if (g.users.add(u)) {
-                                successes++;
-                            } else {
-                                failures++;
-                            }
+                    clearUsers(group);
+                    for (UUID u : users) {
+                        if (addUser(group, u)) {
+                            successes++;
+                        } else {
+                            failures++;
                         }
                     }
                     break;
@@ -598,17 +480,190 @@ public class BasicHandler extends HandlerBase {
                     return ProcessResult.of(false, Text.of("Failed to " + op.pastTense + " " + failures + " users!"));
                 }
             }
-        } else if (isIn(SET_ALIASES, parse.args[0])) {
+        } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
+            if (parse.args.length < 2) return ProcessResult.of(false, Text.of("Must specify a group!"));
+            Optional<Group> groupOptional = getGroup(parse.args[1]);
+            Group group;
+            if (!groupOptional.isPresent()) {
+                return ProcessResult.of(false, Text.of("No group exists with the name \"" + parse.args[1] + "\"!"));
+            } else {
+                group = groupOptional.get();
+            }
+            if (parse.args.length < 3) return ProcessResult.of(false, Text.of("Must specify an operation!"));
 
+            switch (parse.args[2].toLowerCase()) {
+                case "add": {
+                    Tristate state = null;
+                    Set<FlagObject> flags = new HashSet<>();
+                    boolean areFlagsSet = false;
+                    if (parse.args.length < 4)
+                        return ProcessResult.of(false, Text.of("Must specify flags and a tristate value!"));
+                    for (int i = 3; i < parse.args.length; i++) {
+                        String argument = parse.args[i];
+                        if (argument.startsWith("=")) {
+                            argument = argument.substring(1);
+                            if (argument.isEmpty())
+                                return ProcessResult.of(false, Text.of("Must supply a tristate value after \'=\'!"));
+                            Tristate newState = tristateFrom(argument);
+                            if (newState != null) {
+                                state = newState;
+                            } else {
+                                return ProcessResult.of(false, Text.of("\"" + argument + "\" is not a valid tristate value!"));
+                            }
+                        } else {
+                            FlagObject flag = FlagRegistry.getInstance().getFlag(argument);
+                            if (flag != null) {
+                                flags.add(flag);
+                                areFlagsSet = true;
+                            } else {
+                                return ProcessResult.of(false, Text.of("\"" + argument + "\" is not a valid flag!"));
+                            }
+                        }
+                    }
+                    if (!areFlagsSet) return ProcessResult.of(false, Text.of("Must specify flags!"));
+                    if (state == null) return ProcessResult.of(false, Text.of("Must specify a tristate value!"));
+                    List<Entry> permissions = getGroupPermissions(group);
+                    Entry entry = new Entry(flags, state);
+
+                    for (Entry existing : permissions) {
+                        if (existing.set.equals(entry.set))
+                            return ProcessResult.of(false, Text.of("Entry already exists with this flag set!"));
+                    }
+
+                    int index = permissions.size();
+                    if (parse.flags.containsKey("index")) {
+                        String number = parse.flags.get("index");
+                        if (!number.isEmpty()) {
+                            try {
+                                index = Integer.parseInt(number);
+                                if (index < 0) index = 0;
+                                else if (index > permissions.size()) index = permissions.size();
+                            } catch (NumberFormatException ignored) {
+                            }
+                        }
+                    }
+                    this.addFlagEntry(group, index, entry);
+                    return ProcessResult.of(true, Text.of("Successfully added flag entry!"));
+                }
+                case "remove": {
+                    List<Entry> permissions = getGroupPermissions(group);
+                    if (parse.args.length < 4)
+                        return ProcessResult.of(false, Text.of("Must specify flags or an index!"));
+                    Entry entry = null;
+                    try {
+                        int index = Integer.parseInt(parse.args[3]);
+                        if (index < 0) index = 0;
+                        else if (index >= permissions.size()) index = permissions.size() - 1;
+                        entry = permissions.get(index);
+                    } catch (NumberFormatException ignored) {
+                        Set<FlagObject> flags = new HashSet<>();
+                        for (int i = 3; i < parse.args.length; i++) {
+                            String argument = parse.args[i];
+                            FlagObject flag = FlagRegistry.getInstance().getFlag(argument);
+                            if (flag != null) {
+                                flags.add(flag);
+                            } else {
+                                return ProcessResult.of(false, Text.of("\"" + argument + "\" is not a valid flag!"));
+                            }
+                        }
+                        for (Entry existing : permissions) {
+                            if (existing.set.equals(flags)) {
+                                entry = existing;
+                                break;
+                            }
+                        }
+                        if (entry == null) return ProcessResult.of(false, Text.of("No flag entry with these flags!"));
+                    }
+                    removeFlagEntry(group, permissions.indexOf(entry));
+                    return ProcessResult.of(true, Text.of("Successfully removed flag entry!"));
+                }
+                case "set": {
+                    if (parse.args.length < 4)
+                        return ProcessResult.of(false, Text.of("Must specify an index or flags and then a tristate value!"));
+                    List<Entry> permissions = getGroupPermissions(group);
+                    try {
+                        int index = Integer.parseInt(parse.args[3]);
+                        if (index < 0) index = 0;
+                        else if (index >= permissions.size()) index = permissions.size() - 1;
+                        if (parse.args.length < 5)
+                            return ProcessResult.of(false, Text.of("Must specify a tristate value!"));
+                        String tristateArg = parse.args[4];
+                        if (tristateArg.startsWith("=")) tristateArg = tristateArg.substring(1);
+                        Tristate state = Aliases.tristateFrom(tristateArg);
+                        if (state == null)
+                            return ProcessResult.of(false, Text.of("\"" + tristateArg + "\" is not a valid tristate value!"));
+                        this.setFlagEntry(group, index, state);
+                        return ProcessResult.of(true, Text.of("Successfully set flag entry!"));
+                    } catch (NumberFormatException ignored) {
+                    }
+                    Tristate state = null;
+                    Set<FlagObject> flags = new HashSet<>();
+                    boolean areFlagsSet = false;
+
+                    for (int i = 3; i < parse.args.length; i++) {
+                        String argument = parse.args[i];
+                        if (argument.startsWith("=")) {
+                            argument = argument.substring(1);
+                            if (argument.isEmpty())
+                                return ProcessResult.of(false, Text.of("Must supply a tristate value after \'=\'!"));
+                            Tristate newState = tristateFrom(argument);
+                            if (newState != null) {
+                                state = newState;
+                            } else {
+                                return ProcessResult.of(false, Text.of("\"" + argument + "\" is not a valid tristate value!"));
+                            }
+                        } else {
+                            FlagObject flag = FlagRegistry.getInstance().getFlag(argument);
+                            if (flag != null) {
+                                flags.add(flag);
+                                areFlagsSet = true;
+                            } else {
+                                return ProcessResult.of(false, Text.of("\"" + argument + "\" is not a valid flag!"));
+                            }
+                        }
+                    }
+                    if (!areFlagsSet) return ProcessResult.of(false, Text.of("Must specify flags!"));
+                    if (state == null) return ProcessResult.of(false, Text.of("Must specify a tristate value!"));
+                    Entry entry = new Entry(flags, state);
+
+                    Entry original = null;
+                    for (Entry existing : permissions) {
+                        if (existing.set.equals(entry.set)) {
+                            original = existing;
+                            break;
+                        }
+                    }
+                    if (original != null) permissions.remove(original);
+
+                    int index = permissions.size();
+                    if (parse.flags.containsKey("index")) {
+                        String number = parse.flags.get("index");
+                        if (!number.isEmpty()) {
+                            try {
+                                index = Integer.parseInt(number);
+                                if (index < 0) index = 0;
+                                else if (index > permissions.size()) index = permissions.size();
+                            } catch (NumberFormatException ignored) {
+                            }
+                        }
+                    }
+                    this.setFlagEntry(group, index, entry);
+                    return ProcessResult.of(true, Text.of("Successfully set flag entry!"));
+                }
+                case "move":
+                    break;
+                default:
+                    break;
+            }
         } else if (isIn(PASSIVE_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) return ProcessResult.of(false, Text.of("Must specify an option!"));
 
             if (isIn(TRUE_ALIASES, parse.args[1])) {
-                this.passiveOption = PassiveOptions.ALLOW;
+                this.setPassiveOption(PassiveOption.ALLOW);
             } else if (isIn(FALSE_ALIASES, parse.args[1])) {
-                this.passiveOption = PassiveOptions.DENY;
+                this.setPassiveOption(PassiveOption.DENY);
             } else if (isIn(PASSTHROUGH_ALIASES, parse.args[1])) {
-                this.passiveOption = PassiveOptions.PASSTHROUGH;
+                this.passiveOption = PassiveOption.PASSTHROUGH;
             } else if (isIn(GROUPS_ALIASES, parse.args[1])) {
                 if (parse.args.length < 3)
                     return ProcessResult.of(false, Text.of("Must specify a group name!"));
@@ -616,10 +671,9 @@ public class BasicHandler extends HandlerBase {
                 if (!groupOptional.isPresent())
                     return ProcessResult.of(false, Text.of("No group exists with this name!"));
 
-                this.passiveOption = PassiveOptions.GROUP;
-                passiveGroup = groupOptional.get();
+                this.setPassiveOption(PassiveOption.GROUP, groupOptional.get());
             } else if (isIn(DEFAULT_GROUP_ALIASES, parse.args[1])) {
-                this.passiveOption = PassiveOptions.DEFAULT;
+                this.setPassiveOption(PassiveOption.DEFAULT);
             } else {
                 return ProcessResult.of(false, Text.of("Not a valid option!"));
             }
@@ -637,167 +691,152 @@ public class BasicHandler extends HandlerBase {
                 .autoCloseQuotes(true)
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
-            if (parse.args.length == 0) {
-                return ImmutableList.of("groups", "users", "set", "passive").stream()
+            if (parse.current.index == 0) {
+                return ImmutableList.of("groups", "users", "flags", "passive").stream()
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
-            } else if (parse.args.length == 1) {
+            } else if (parse.current.index == 1) {
                 if (isIn(GROUPS_ALIASES, parse.args[0])) {
                     return ImmutableList.of("add", "remove", "modify", "rename", "move").stream()
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(USERS_ALIASES, parse.args[0])) {
-                    return ImmutableList.of("add", "remove", "set").stream()
+                    return this.groups.stream()
+                            .map(Group::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
-                } else if (isIn(SET_ALIASES, parse.args[0])) {
+                } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
                 } else if (isIn(PASSIVE_ALIASES, parse.args[0])) {
                     return ImmutableList.of("allow", "deny", "pass", "group", "default").stream()
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 }
-            } else if (parse.args.length == 2) {
-
-            }
-        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY)) {
-
-        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGVALUE)) {
-
-        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
-            return ImmutableList.of(parse.current.prefix + " ");
-        return ImmutableList.of();
-    }
-
-    /*@Override
-    public List<String> modifySuggestions(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
-                .arguments(arguments)1
-                .excludeCurrent(true)
-                .autoCloseQuotes(true)
-                .parse();
-        if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
-            if (parse.current.index == 0) {
-                return ImmutableList.of("set", "group", "passive").stream()
-                        .filter(new StartsWithPredicate(parse.current.token))
-                        .map(args -> parse.current.prefix + args)
-                        .collect(GuavaCollectors.toImmutableList());
-            } else if (parse.current.index == 1) {
-                if (isIn(GROUPS_ALIASES, parse.args[0])) {
-                    return ImmutableList.of("owner", "member").stream()
-                            .filter(new StartsWithPredicate(parse.current.token))
-                            .map(args -> parse.current.prefix + args)
-                            .collect(GuavaCollectors.toImmutableList());
-                } else if (isIn(SET_ALIASES, parse.args[0])) {
-                    return ImmutableList.of("owner", "member").stream()
-                            .filter(new StartsWithPredicate(parse.current.token))
-                            .map(args -> parse.current.prefix + args)
-                            .collect(GuavaCollectors.toImmutableList());
-                } else if (isIn(PASSIVE_ALIASES, parse.args[0])) {
-                    return ImmutableList.of("true", "false", "passthrough", "owner", "member", "default").stream()
-                            .filter(new StartsWithPredicate(parse.current.token))
-                            .map(args -> parse.current.prefix + args)
-                            .collect(GuavaCollectors.toImmutableList());
-                }
             } else if (parse.current.index == 2) {
                 if (isIn(GROUPS_ALIASES, parse.args[0])) {
+                    if (parse.args[1].equalsIgnoreCase("add")) {
+                        if (!parse.current.token.isEmpty()) {
+                            Optional<Group> groupOptional = getGroup(parse.current.token);
+                            if (groupOptional.isPresent()) {
+                                source.sendMessage(Text.of(TextColors.RED, "Name is already taken!"));
+                            } else {
+                                source.sendMessage(Text.of(TextColors.GREEN, "Name is available!"));
+                            }
+                        }
+                    } else if (parse.args[1].equalsIgnoreCase("remove")
+                            || parse.args[1].equalsIgnoreCase("modify")
+                            || parse.args[1].equalsIgnoreCase("rename")
+                            || parse.args[1].equalsIgnoreCase("move")) {
+                        return this.groups.stream()
+                                .map(Group::getName)
+                                .filter(new StartsWithPredicate(parse.current.token))
+                                .map(args -> parse.current.prefix + args)
+                                .collect(GuavaCollectors.toImmutableList());
+                    }
+                } else if (isIn(USERS_ALIASES, parse.args[0])) {
                     return ImmutableList.of("add", "remove", "set").stream()
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
-                } else if (isIn(SET_ALIASES, parse.args[0])) {
-                    return Flag.getFlags().stream()
-                            .map(IFlag::flagName)
-                            .filter(new StartsWithPredicate(parse.current.token))
-                            .map(args -> parse.current.prefix + args)
-                            .collect(GuavaCollectors.toImmutableList());
+                } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
+
+                } else if (isIn(PASSIVE_ALIASES, parse.args[0])) {
+                    if (isIn(GROUPS_ALIASES, parse.args[1])) {
+                        return this.groups.stream()
+                                .map(Group::getName)
+                                .filter(new StartsWithPredicate(parse.current.token))
+                                .map(args -> parse.current.prefix + args)
+                                .collect(GuavaCollectors.toImmutableList());
+                    }
                 }
-            } else if (parse.current.index == 3) {
+            } else if (parse.current.index >= 3) {
                 if (isIn(GROUPS_ALIASES, parse.args[0])) {
-                    Set<User> set;
-                    if (isIn(OWNER_GROUP_ALIASES, parse.args[1])) {
-                        set = this.owners;
-                    } else if (isIn(MEMBER_GROUP_ALIASES, parse.args[1])) {
-                        set = this.members;
-                    } else {
-                        return ImmutableList.of();
+                    if (parse.current.index == 3) {
+                        if (parse.args[1].equalsIgnoreCase("rename")) {
+                            if (!parse.current.token.isEmpty()) {
+                                Optional<Group> groupOptional = getGroup(parse.current.token);
+                                if (groupOptional.isPresent()) {
+                                    source.sendMessage(Text.of(TextColors.RED, "Name is already taken!"));
+                                } else {
+                                    source.sendMessage(Text.of(TextColors.GREEN, "Name is available!"));
+                                }
+                            }
+                        }
                     }
-                    if (parse.args[2].equalsIgnoreCase("set")) {
-                        return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .map(Player::getName)
-                                .filter(new StartsWithPredicate(parse.current.token))
-                                .map(args -> parse.current.prefix + args)
-                                .collect(GuavaCollectors.toImmutableList());
-                    } else if (parse.args[2].equalsIgnoreCase("add")) {
-                        return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .filter(player -> !FCUtil.isUserInCollection(set, player))
-                                .map(Player::getName)
-                                .filter(new StartsWithPredicate(parse.current.token))
-                                .map(args -> parse.current.prefix + args)
-                                .collect(GuavaCollectors.toImmutableList());
-                    } else if (parse.args[2].equalsIgnoreCase("remove")) {
-                        return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .filter(player -> FCUtil.isUserInCollection(set, player))
-                                .map(Player::getName)
-                                .filter(new StartsWithPredicate(parse.current.token))
-                                .map(args -> parse.current.prefix + args)
-                                .collect(GuavaCollectors.toImmutableList());
-                    }
-                } else if (isIn(SET_ALIASES, parse.args[0])) {
-                    return ImmutableList.of("true", "false", "passthrough", "clear").stream()
-                            .filter(new StartsWithPredicate(parse.current.token))
-                            .map(args -> parse.current.prefix + args)
-                            .collect(GuavaCollectors.toImmutableList());
-                }
-            } else if (parse.current.index > 3) {
-                if (isIn(GROUPS_ALIASES, parse.args[0])) {
-                    Set<User> set;
-                    if (isIn(OWNER_GROUP_ALIASES, parse.args[1])) {
-                        set = this.owners;
-                    } else if (isIn(MEMBER_GROUP_ALIASES, parse.args[1])) {
-                        set = this.members;
-                    } else {
-                        return ImmutableList.of();
-                    }
-                    if (parse.args[2].equalsIgnoreCase("set")) {
-                        return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .map(Player::getName)
-                                .filter(new StartsWithPredicate(parse.current.token))
-                                .map(args -> parse.current.prefix + args)
-                                .collect(GuavaCollectors.toImmutableList());
-                    } else if (parse.args[2].equalsIgnoreCase("add")) {
-                        return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .filter(player -> !FCUtil.isUserInCollection(set, player))
-                                .map(Player::getName)
-                                .filter(alias -> !isIn(Arrays.copyOfRange(parse.args, 2, parse.args.length), alias))
-                                .filter(new StartsWithPredicate(parse.current.token))
-                                .map(args -> parse.current.prefix + args)
-                                .collect(GuavaCollectors.toImmutableList());
-                    } else if (parse.args[2].equalsIgnoreCase("remove")) {
-                        return Sponge.getGame().getServer().getOnlinePlayers().stream()
-                                .filter(player -> FCUtil.isUserInCollection(set, player))
-                                .map(Player::getName)
-                                .filter(alias -> !isIn(Arrays.copyOfRange(parse.args, 2, parse.args.length), alias))
+                } else if (isIn(USERS_ALIASES, parse.args[0])) {
+                    Optional<Group> groupOptional = getGroup(parse.args[1]);
+                    if (groupOptional.isPresent()) {
+                        Group group = groupOptional.get();
+                        String[] entries = Arrays.copyOfRange(parse.args, 2, parse.args.length);
+                        Operation op;
+                        switch (parse.args[2].toLowerCase()) {
+                            case "add":
+                                op = Operation.ADD;
+                                break;
+                            case "remove":
+                                op = Operation.REMOVE;
+                                break;
+                            case "set":
+                                op = Operation.SET;
+                                break;
+                            default:
+                                op = null;
+                        }
+                        return ImmutableList.<String>builder()
+                                .addAll(Sponge.getServer().getOnlinePlayers().stream()
+                                        .filter(player -> userFilter(op, group.users.contains(player.getUniqueId())))
+                                        .map(Player::getName)
+                                        .filter(entry -> !isIn(entries, entry))
+                                        .sorted(String.CASE_INSENSITIVE_ORDER)
+                                        .collect(Collectors.toList())
+                                )
+                                .addAll(this.groups.stream()
+                                        .filter(group1 -> {
+                                            for (UUID uuid : group1.users) {
+                                                if (userFilter(op, group.users.contains(uuid))) return true;
+                                            }
+                                            return false;
+                                        })
+                                        .map(Group::getName)
+                                        .filter(entry -> !isIn(entries, entry))
+                                        .sorted(String.CASE_INSENSITIVE_ORDER)
+                                        .map(name -> "#" + name)
+                                        .collect(Collectors.toList())
+                                )
+                                .build().stream()
                                 .filter(new StartsWithPredicate(parse.current.token))
                                 .map(args -> parse.current.prefix + args)
                                 .collect(GuavaCollectors.toImmutableList());
                     }
                 }
             }
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY)) {
+            if (isIn(GROUPS_ALIASES, parse.args[0])) {
+
+            } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
+
+            }
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGVALUE)) {
+            if (isIn(GROUPS_ALIASES, parse.args[0])) {
+
+            } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
+
+            }
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
             return ImmutableList.of(parse.current.prefix + " ");
         return ImmutableList.of();
-    }*/
+    }
 
     @Override
     public EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra) {
         if (user == null) return EventResult.of(this.passivePermCache.get(flags));
-        else return EventResult.of(this.userPermCache.get(user).get(flags));
+        else return EventResult.of(this.userPermCache.get(user.getUniqueId()).get(flags));
     }
 
+    @Deprecated
     @Override
     public EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra) {
         return EventResult.pass();
@@ -822,68 +861,85 @@ public class BasicHandler extends HandlerBase {
     public Text details(CommandSource source, String arguments) {
         Text.Builder builder = Text.builder();
         Text.Builder passiveBuilder = Text.builder()
-                .append(Text.of(TextColors.AQUA, "Passive setting: "))
+                .append(Text.of(TextColors.AQUA, "Passive: "))
                 .append(Text.of(TextColors.RESET, this.passiveOption.toString()));
-        if (this.passiveOption == PassiveOptions.GROUP)
+        if (this.passiveOption == PassiveOption.GROUP)
             passiveBuilder.append(Text.of(passiveGroup.color, passiveGroup.displayName));
         passiveBuilder
                 .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " passive "))
-                .onHover(TextActions.showText(Text.of("Click to Change Passive Setting")));
+                .onHover(TextActions.showText(Text.of("Click to change the passive config")));
         builder.append(passiveBuilder.build());
         builder.append(Text.NEW_LINE);
         builder.append(Text.of(TextColors.GOLD,
                 TextActions.suggestCommand("/foxguard md h " + this.getName() + " group add "),
-                TextActions.showText(Text.of("Click to Add a Group")),
+                TextActions.showText(Text.of("Click to add a group")),
                 "----- Group Members -----\n"));
         for (Group group : groups) {
             builder.append(Text.of(group.color,
-                    TextActions.suggestCommand("/foxguard md h " + this.getName() + " user add " + group.name + " "),
-                    TextActions.showText(Text.of("Click to Add a Player(s) to \"", group.color, group.displayName, TextColors.RESET, "\" (" + group.name + ")")),
+                    TextActions.suggestCommand("/foxguard md h " + this.getName() + " users " + group.name + " add "),
+                    TextActions.showText(Text.of("Click to add player(s) to \"", group.color, group.displayName, TextColors.RESET, "\"" + (group.name.equals(group.displayName) ? "" : " (" + group.name + ")"))),
                     group.displayName,
                     TextColors.RESET, ": "));
-            for (User u : group.users) {
-                TextColor color = TextColors.WHITE;
-                if (source instanceof Player && ((Player) source).getUniqueId().equals(u.getUniqueId()))
-                    color = TextColors.YELLOW;
-                builder.append(Text.of(TextColors.RESET,
-                        color,
-                        TextActions.suggestCommand("/foxguard md h " + this.getName() + " user remove " + group.name + " " + u.getName()),
-                        TextActions.showText(Text.of("Click to Remove Player \"" + u.getName() + "\" from \"", group.color, group.displayName, TextColors.RESET, "\" (" + group.name + ")")),
-                        u.getName())).append(Text.of(" "));
+            UserStorageService userStorageService = FoxGuardMain.instance().getUserStorage();
+            for (UUID uuid : group.users) {
+                Optional<User> userOptional = userStorageService.get(uuid);
+                if (userOptional.isPresent()) {
+                    TextColor color = TextColors.WHITE;
+                    User u = userOptional.get();
+                    if (source instanceof Player && ((Player) source).getUniqueId().equals(uuid))
+                        color = TextColors.YELLOW;
+                    builder.append(Text.of(color,
+                            TextActions.suggestCommand("/foxguard md h " + this.getName() + " users " + group.name + " remove " + u.getName()),
+                            TextActions.showText(Text.of("Click to remove player \"" + u.getName() + "\" from \"", group.color, group.displayName, TextColors.RESET, "\"" + (group.name.equals(group.displayName) ? "" : " (" + group.name + ")"))),
+                            u.getName())).append(Text.of(" "));
+                } else {
+                    builder.append(Text.of(TextColors.RESET,
+                            TextActions.suggestCommand("/foxguard md h " + this.getName() + " users " + group.name + " remove " + uuid.toString()),
+                            TextActions.showText(Text.of("Click to remove player \"" + uuid.toString() + "\" from \"", group.color, group.displayName, TextColors.RESET, "\"" + (group.name.equals(group.displayName) ? "" : " (" + group.name + ")"))),
+                            uuid.toString())).append(Text.of(" "));
+                }
             }
             builder.append(Text.NEW_LINE);
         }
         builder.append(Text.of(TextColors.GOLD,
-                TextActions.suggestCommand("/foxguard md h " + this.getName() + " group owners add "),
-                TextActions.showText(Text.of("Click to Add a Group")),
+                TextActions.suggestCommand("/foxguard md h " + this.getName() + " groups add "),
+                TextActions.showText(Text.of("Click to add a group")),
                 "----- Group Permissions -----\n"));
         for (Group group : groups) {
             builder.append(Text.of(group.color,
-                    TextActions.suggestCommand("/foxguard md h " + this.name + " set " + group.name + " "),
-                    TextActions.showText(Text.of("Click to Set a Flag")),
+                    TextActions.suggestCommand("/foxguard md h " + this.name + " flags " + group.name + " add "),
+                    TextActions.showText(Text.of("Click to add a flag entry")),
                     group.displayName + ":\n"));
+            int index = 0;
             for (Entry entry : this.groupPermissions.get(group)) {
                 StringBuilder stringBuilder = new StringBuilder();
                 for (FlagObject flag : entry.set) {
                     stringBuilder.append(flag.name).append(" ");
                 }
-                builder.append(Text.of(stringBuilder.toString(), TextColors.AQUA, ": "))
+                Text.Builder entryBuilder = Text.builder();
+                entryBuilder.append(Text.of("  " + stringBuilder.toString(), TextColors.AQUA, ": "))
                         .append(FCUtil.readableTristateText(entry.state))
-                        .append(Text.NEW_LINE);
+                        .onHover(TextActions.showText(Text.of("Click to change this flag entry")))
+                        .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " flags " + group.name + " set " + (index++) + " "));
+                builder.append(entryBuilder.build()).append(Text.NEW_LINE);
             }
         }
         builder.append(Text.of(TextColors.RED,
-                TextActions.suggestCommand("/foxguard md h " + this.name + " set default "),
-                TextActions.showText(Text.of("Click to Set a Flag")),
+                TextActions.suggestCommand("/foxguard md h " + this.name + " flags default add "),
+                TextActions.showText(Text.of("Click to add a flag entry")),
                 "Default:"));
+        int index = 0;
         for (Entry entry : this.defaultPermissions) {
             StringBuilder stringBuilder = new StringBuilder();
             for (FlagObject flag : entry.set) {
                 stringBuilder.append(flag.name).append(" ");
             }
-            builder.append(Text.NEW_LINE)
-                    .append(Text.of(stringBuilder.toString(), TextColors.AQUA, ": "))
-                    .append(FCUtil.readableTristateText(entry.state));
+            Text.Builder entryBuilder = Text.builder();
+            entryBuilder.append(Text.of("  " + stringBuilder.toString(), TextColors.AQUA, ": "))
+                    .append(FCUtil.readableTristateText(entry.state))
+                    .onHover(TextActions.showText(Text.of("Click to change this flag entry")))
+                    .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " flags default set " + (index++) + " "));
+            builder.append(Text.NEW_LINE).append(entryBuilder.build());
         }
         return builder.build();
     }
@@ -966,6 +1022,7 @@ public class BasicHandler extends HandlerBase {
     }
 
     public Optional<Group> getGroup(String name) {
+        if (name.equalsIgnoreCase("default")) return Optional.of(defaultGroup);
         for (Group g : this.groups) {
             if (g.name.equalsIgnoreCase(name)) return Optional.of(g);
         }
@@ -973,6 +1030,7 @@ public class BasicHandler extends HandlerBase {
     }
 
     public Optional<Group> getOrCreateGroup(String name) {
+        if (name.equalsIgnoreCase("default")) return Optional.of(defaultGroup);
         if (!isNameValid(name.toLowerCase())) return Optional.empty();
         for (Group g : this.groups) {
             if (g.name.equalsIgnoreCase(name)) return Optional.of(g);
@@ -983,7 +1041,12 @@ public class BasicHandler extends HandlerBase {
         return Optional.of(group);
     }
 
+    public Group getDefaultGroup() {
+        return defaultGroup;
+    }
+
     public boolean groupExists(String name) {
+        if (name.equalsIgnoreCase("default")) return true;
         for (Group g : this.groups) {
             if (g.name.equalsIgnoreCase(name)) return true;
         }
@@ -991,8 +1054,21 @@ public class BasicHandler extends HandlerBase {
     }
 
     public boolean removeGroup(Group group) {
-        this.groupPermissions.remove(group);
-        return this.groups.remove(group);
+        if (this.groups.contains(group)) {
+            this.groupPermissions.remove(group);
+            this.groupPermCache.remove(group);
+            group.users.forEach(this.userGroupCache::remove);
+            group.users.forEach(this.userPermCache::remove);
+            Set<Set<Group>> groupSuperSet = new HashSet<>();
+            for (Map.Entry<Set<Group>, Map<FlagBitSet, Tristate>> entry : this.groupSetPermCache.entrySet()) {
+                Set<Group> key = entry.getKey();
+                if (key.contains(group)) groupSuperSet.add(key);
+            }
+            groupSuperSet.forEach(this.groupSetPermCache::remove);
+            this.groups.remove(group);
+            return true;
+        }
+        return false;
     }
 
     public boolean removeGroup(String name) {
@@ -1005,16 +1081,25 @@ public class BasicHandler extends HandlerBase {
     }
 
     public boolean moveGroup(Group group, int index) {
+        if (group == defaultGroup) return false;
         if (this.groups.contains(group)) {
             this.groups.remove(group);
             if (index < 0) index = 0;
             if (index > this.groups.size()) index = this.groups.size();
             this.groups.add(index, group);
+            group.users.forEach(this.userPermCache::remove);
+            Set<Set<Group>> groupSuperSet = new HashSet<>();
+            for (Map.Entry<Set<Group>, Map<FlagBitSet, Tristate>> entry : this.groupSetPermCache.entrySet()) {
+                Set<Group> key = entry.getKey();
+                if (key.contains(group)) groupSuperSet.add(key);
+            }
+            groupSuperSet.forEach(this.groupSetPermCache::remove);
             return true;
         } else return false;
     }
 
     public boolean renameGroup(Group group, String newName) {
+        if (group == defaultGroup) return false;
         if (this.groups.contains(group)) {
             if (groupExists(newName)) return false;
             group.name = newName.toLowerCase();
@@ -1022,18 +1107,184 @@ public class BasicHandler extends HandlerBase {
         } else return false;
     }
 
-    public PassiveOptions getPassiveOption() {
+    public boolean addUser(Group group, User user) {
+        return this.addUser(group, user.getUniqueId());
+    }
+
+    public boolean addUser(Group group, UUID user) {
+        if (group.users.contains(user)) {
+            return false;
+        } else {
+            group.users.add(user);
+            this.userPermCache.remove(user);
+            this.userGroupCache.remove(user);
+            return true;
+        }
+    }
+
+    public boolean removeUser(Group group, User user) {
+        return this.removeUser(group, user.getUniqueId());
+    }
+
+    public boolean removeUser(Group group, UUID user) {
+        if (!group.users.contains(user)) {
+            return false;
+        } else if (group.users.remove(user)) {
+            this.userGroupCache.remove(user);
+            this.userPermCache.remove(user);
+            return true;
+        } else return false;
+    }
+
+    public void clearUsers(Group group) {
+        for (UUID user : group.users) {
+            this.userGroupCache.remove(user);
+            this.userPermCache.remove(user);
+        }
+        group.users.clear();
+    }
+
+    public boolean addFlagEntry(Group group, Entry entry) {
+        return addFlagEntry(group, group.users.size(), entry);
+    }
+
+    public boolean addFlagEntry(Group group, int index, Entry entry) {
+        List<Entry> groupEntries = getGroupPermissions(group);
+        if (index < 0 || index > groupEntries.size())
+            throw new IndexOutOfBoundsException("Index out of bounds: " + index + " Range: 0-" + groupEntries.size());
+        for (Entry groupEntry : groupEntries) {
+            if (groupEntry.set.equals(entry.set)) return false;
+        }
+        groupEntries.add(index, entry);
+        clearFlagCacheForGroup(group);
+        return true;
+    }
+
+    public void setFlagEntry(Group group, Entry entry) {
+        List<Entry> groupEntries = getGroupPermissions(group);
+        for (Entry groupEntry : groupEntries) {
+            if (groupEntry.set.equals(entry.set)) {
+                groupEntry.state = entry.state;
+                return;
+            }
+        }
+        groupEntries.add(entry);
+        clearFlagCacheForGroup(group);
+    }
+
+    public void setFlagEntry(Group group, int index, Entry entry) {
+        List<Entry> groupEntries = getGroupPermissions(group);
+        Entry original = null;
+        for (Entry groupEntry : groupEntries) {
+            if (groupEntry.set.equals(entry.set)) {
+                original = groupEntry;
+                break;
+            }
+        }
+        if (original != null) groupEntries.remove(original);
+        groupEntries.add(index, entry);
+        clearFlagCacheForGroup(group);
+    }
+
+    public void setFlagEntry(Group group, int index, Tristate state) {
+        List<Entry> groupEntries = getGroupPermissions(group);
+        if (index < 0 || index >= groupEntries.size())
+            throw new IndexOutOfBoundsException("Index out of bounds: " + index + " Range: 0-" + (groupEntries.size() - 1));
+        Entry entry = groupEntries.get(index);
+        entry.state = state;
+        clearFlagCacheForGroup(group);
+    }
+
+    public boolean removeFlagEntry(Group group, Set<FlagObject> flags) {
+        List<Entry> groupEntries = getGroupPermissions(group);
+        Entry toRemove = null;
+        for (Entry groupEntry : groupEntries) {
+            if (groupEntry.set.equals(flags)) {
+                toRemove = groupEntry;
+            }
+        }
+        if (toRemove == null) return false;
+        groupEntries.remove(toRemove);
+        if (group == defaultGroup) {
+            this.defaultPermCache.clear();
+            this.userPermCache.clear();
+        } else {
+            this.groupPermCache.get(group).clear();
+            group.users.forEach(this.userPermCache::remove);
+        }
+        Set<Set<Group>> groupSuperSet = new HashSet<>();
+        for (Map.Entry<Set<Group>, Map<FlagBitSet, Tristate>> cacheEntry : this.groupSetPermCache.entrySet()) {
+            Set<Group> key = cacheEntry.getKey();
+            if (key.contains(group)) groupSuperSet.add(key);
+        }
+        groupSuperSet.forEach(this.groupSetPermCache::remove);
+        return true;
+    }
+
+    public void removeFlagEntry(Group group, int index) {
+        List<Entry> groupEntries = getGroupPermissions(group);
+        if (index < 0 || index >= groupEntries.size())
+            throw new IndexOutOfBoundsException("Index out of bounds: " + index + " Range: 0-" + (groupEntries.size() - 1));
+        groupEntries.remove(index);
+        clearFlagCacheForGroup(group);
+    }
+
+    public PassiveOption getPassiveOption() {
         return passiveOption;
     }
 
-    public void setPassiveOption(PassiveOptions passiveOption) {
-        this.passiveOption = passiveOption;
+    public void setPassiveOption(PassiveOption passiveOption) {
+        setPassiveOption(passiveOption, null);
     }
 
-    private void clearCache() {
-        this.groupPermCache.clear();
-        this.defaultPermCache.clear();
-        this.userPermCache.clear();
+    public void setPassiveOption(PassiveOption passiveOption, Group group) {
+        if (passiveOption == null) return;
+        if (passiveOption != PassiveOption.GROUP)
+            this.passiveOption = passiveOption;
+        else if (group != null) {
+            this.passiveOption = PassiveOption.GROUP;
+            if (group == this.defaultGroup) {
+                this.passiveOption = PassiveOption.DEFAULT;
+            } else {
+                this.passiveGroup = group;
+                this.passiveGroupCacheRef = this.groupPermCache.get(group);
+            }
+        } else return;
+        this.passivePermCache.clear();
+    }
+
+    private void clearFlagCacheForGroup(Group group) {
+        if (group == defaultGroup) {
+            this.defaultPermCache.clear();
+            this.userPermCache.clear();
+        } else {
+            this.groupPermCache.get(group).clear();
+            group.users.forEach(this.userPermCache::remove);
+        }
+        Set<Set<Group>> groupSuperSet = new HashSet<>();
+        for (Map.Entry<Set<Group>, Map<FlagBitSet, Tristate>> cacheEntry : this.groupSetPermCache.entrySet()) {
+            Set<Group> key = cacheEntry.getKey();
+            if (key.contains(group)) groupSuperSet.add(key);
+        }
+        groupSuperSet.forEach(this.groupSetPermCache::remove);
+    }
+
+    private List<Entry> getGroupPermissions(Group group) {
+        if (group == this.defaultGroup) return this.defaultPermissions;
+        else return this.groupPermissions.get(group);
+    }
+
+    private boolean userFilter(Operation op, boolean isPresent) {
+        switch (op) {
+            case ADD:
+                return !isPresent;
+            case REMOVE:
+                return isPresent;
+            case SET:
+                return true;
+            default:
+                return false;
+        }
     }
 
     public static boolean isNameValid(String name) {
@@ -1045,7 +1296,7 @@ public class BasicHandler extends HandlerBase {
         return true;
     }
 
-    public enum PassiveOptions {
+    public enum PassiveOption {
         ALLOW, DENY, PASSTHROUGH, GROUP, DEFAULT;
 
         public String toString() {
@@ -1092,19 +1343,19 @@ public class BasicHandler extends HandlerBase {
         private String name;
         private String displayName;
         private TextColor color;
-        private final Set<User> users;
+        private final Set<UUID> users;
 
         private Group(String name) {
             this(name, new HashSet<>());
         }
 
-        private Group(String name, Set<User> users) {
-            this(name, users, TextColors.WHITE);
+        private Group(String name, Set<UUID> users) {
+            this(name, users, TextColors.WHITE, name);
         }
 
-        private Group(String name, Set<User> users, TextColor color) {
+        private Group(String name, Set<UUID> users, TextColor color, String displayName) {
             this.name = name.toLowerCase();
-            this.displayName = name;
+            this.displayName = displayName;
             this.color = color;
             this.users = users;
         }
@@ -1129,8 +1380,8 @@ public class BasicHandler extends HandlerBase {
             this.color = color;
         }
 
-        public Set<User> getUsers() {
-            return users;
+        public Set<UUID> getUsers() {
+            return ImmutableSet.copyOf(users);
         }
     }
 
@@ -1142,6 +1393,10 @@ public class BasicHandler extends HandlerBase {
         public IHandler create(String name, int priority, String arguments, CommandSource source) {
             BasicHandler handler = new BasicHandler(name, priority);
 //            if (source instanceof Player) handler.addOwner((Player) source);
+            Group owners = handler.createGroup("owners").get();
+            owners.displayName = "Owners";
+            owners.color = TextColors.GOLD;
+            if (source instanceof Player) owners.users.add(((Player) source).getUniqueId());
             return handler;
         }
 

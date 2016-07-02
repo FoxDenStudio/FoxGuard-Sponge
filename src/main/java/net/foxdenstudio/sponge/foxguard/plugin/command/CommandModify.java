@@ -88,7 +88,7 @@ public class CommandModify implements CommandCallable {
                     .build());
             return CommandResult.empty();
         } else if (isIn(REGIONS_ALIASES, parse.args[0])) {
-            if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
+            if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a region name!"));
             IRegion region = null;
             if (!parse.flags.keySet().contains("world"))
                 region = FGManager.getInstance().getRegion(parse.args[1]);
@@ -149,7 +149,7 @@ public class CommandModify implements CommandCallable {
                 }
             }
         } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
-            if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
+            if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a handler name!"));
             IHandler handler = FGManager.getInstance().gethandler(parse.args[1]);
             if (handler == null)
                 throw new CommandException(Text.of("No handler with name \"" + parse.args[1] + "\"!"));
@@ -225,17 +225,20 @@ public class CommandModify implements CommandCallable {
                     if (world == null) return FGManager.getInstance().getRegions().stream()
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
+                            .sorted(String.CASE_INSENSITIVE_ORDER)
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                     return FGManager.getInstance().getAllRegions(world).stream()
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
+                            .sorted(String.CASE_INSENSITIVE_ORDER)
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
                     return FGManager.getInstance().getHandlers().stream()
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
+                            .sorted(String.CASE_INSENSITIVE_ORDER)
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 }

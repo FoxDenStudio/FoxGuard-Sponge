@@ -81,7 +81,7 @@ public class SimpleHandler extends HandlerBase {
     private final Map<IFlag, Tristate> memberPermCache;
     private final Map<IFlag, Tristate> defaultPermCache;
 
-    private PassiveOptions passiveOption = PassiveOptions.PASSTHROUGH;
+    private PassiveOption passiveOption = PassiveOption.PASSTHROUGH;
     private Set<User> owners = new HashSet<>();
     private Set<User> members = new HashSet<>();
 
@@ -198,7 +198,7 @@ public class SimpleHandler extends HandlerBase {
                 } else {
                     return ProcessResult.of(false, Text.of("Must specify a group!"));
                 }
-            } else if (isIn(SET_ALIASES, parse.args[0])) {
+            } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
                 Map<IFlag, Tristate> map;
                 if (parse.args.length > 1) {
                     if (isIn(OWNER_GROUP_ALIASES, parse.args[1])) {
@@ -261,22 +261,22 @@ public class SimpleHandler extends HandlerBase {
             } else if (isIn(PASSIVE_ALIASES, parse.args[0])) {
                 if (parse.args.length > 1) {
                     if (isIn(TRUE_ALIASES, parse.args[1])) {
-                        this.passiveOption = PassiveOptions.ALLOW;
+                        this.passiveOption = PassiveOption.ALLOW;
                         return ProcessResult.of(true, Text.of("Successfully set passive option!"));
                     } else if (isIn(FALSE_ALIASES, parse.args[1])) {
-                        this.passiveOption = PassiveOptions.DENY;
+                        this.passiveOption = PassiveOption.DENY;
                         return ProcessResult.of(true, Text.of("Successfully set passive option!"));
                     } else if (isIn(PASSTHROUGH_ALIASES, parse.args[1])) {
-                        this.passiveOption = PassiveOptions.PASSTHROUGH;
+                        this.passiveOption = PassiveOption.PASSTHROUGH;
                         return ProcessResult.of(true, Text.of("Successfully set passive option!"));
                     } else if (isIn(OWNER_GROUP_ALIASES, parse.args[1])) {
-                        this.passiveOption = PassiveOptions.OWNER;
+                        this.passiveOption = PassiveOption.OWNER;
                         return ProcessResult.of(true, Text.of("Successfully set passive option!"));
                     } else if (isIn(MEMBER_GROUP_ALIASES, parse.args[1])) {
-                        this.passiveOption = PassiveOptions.MEMBER;
+                        this.passiveOption = PassiveOption.MEMBER;
                         return ProcessResult.of(true, Text.of("Successfully set passive option!"));
                     } else if (isIn(DEFAULT_GROUP_ALIASES, parse.args[1])) {
-                        this.passiveOption = PassiveOptions.DEFAULT;
+                        this.passiveOption = PassiveOption.DEFAULT;
                         return ProcessResult.of(true, Text.of("Successfully set passive option!"));
                     } else {
                         return ProcessResult.of(false, Text.of("Not a valid option!"));
@@ -311,7 +311,7 @@ public class SimpleHandler extends HandlerBase {
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
-                } else if (isIn(SET_ALIASES, parse.args[0])) {
+                } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
                     return ImmutableList.of("owner", "member").stream()
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
@@ -328,7 +328,7 @@ public class SimpleHandler extends HandlerBase {
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
-                } else if (isIn(SET_ALIASES, parse.args[0])) {
+                } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
                     return Flag.getFlags().stream()
                             .map(IFlag::flagName)
                             .filter(new StartsWithPredicate(parse.current.token))
@@ -366,7 +366,7 @@ public class SimpleHandler extends HandlerBase {
                                 .map(args -> parse.current.prefix + args)
                                 .collect(GuavaCollectors.toImmutableList());
                     }
-                } else if (isIn(SET_ALIASES, parse.args[0])) {
+                } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
                     return ImmutableList.of("true", "false", "passthrough", "clear").stream()
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
@@ -633,15 +633,15 @@ public class SimpleHandler extends HandlerBase {
         return members.remove(player);
     }
 
-    public PassiveOptions getPassiveOption() {
+    public PassiveOption getPassiveOption() {
         return passiveOption;
     }
 
-    public void setPassiveOption(PassiveOptions passiveOption) {
+    public void setPassiveOption(PassiveOption passiveOption) {
         this.passiveOption = passiveOption;
     }
 
-    public enum PassiveOptions {
+    public enum PassiveOption {
         ALLOW, DENY, PASSTHROUGH, OWNER, MEMBER, DEFAULT;
 
         public String toString() {
@@ -686,7 +686,7 @@ public class SimpleHandler extends HandlerBase {
             Map<IFlag, Tristate> ownerPermissions = new CacheMap<>((k, m) -> Tristate.UNDEFINED);
             Map<IFlag, Tristate> memberPermissions = new CacheMap<>((k, m) -> Tristate.UNDEFINED);
             Map<IFlag, Tristate> defaultPermissions = new CacheMap<>((k, m) -> Tristate.UNDEFINED);
-            PassiveOptions option = PassiveOptions.PASSTHROUGH;
+            PassiveOption option = PassiveOption.PASSTHROUGH;
             try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.db").normalize().toString()).make()) {
                 Map<String, String> ownerStorageFlagMap = flagMapDB.hashMap("owners", Serializer.STRING, Serializer.STRING).createOrOpen();
                 for (Map.Entry<String, String> entry : ownerStorageFlagMap.entrySet()) {
@@ -720,7 +720,7 @@ public class SimpleHandler extends HandlerBase {
                 }
                 Atomic.String passiveOptionString = flagMapDB.atomicString("passive").createOrOpen();
                 try {
-                    PassiveOptions po = PassiveOptions.valueOf(passiveOptionString.get());
+                    PassiveOption po = PassiveOption.valueOf(passiveOptionString.get());
                     if (po != null) option = po;
                 } catch (IllegalArgumentException ignored) {
                 }

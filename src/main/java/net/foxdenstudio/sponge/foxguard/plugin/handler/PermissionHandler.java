@@ -51,6 +51,7 @@ public class PermissionHandler extends HandlerBase {
         super(name, priority);
     }
 
+    @Deprecated
     @Override
     public EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra) {
         if (user == null) return EventResult.pass();

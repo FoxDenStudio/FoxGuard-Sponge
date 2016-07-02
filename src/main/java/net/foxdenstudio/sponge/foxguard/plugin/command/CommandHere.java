@@ -155,14 +155,14 @@ public class CommandHere implements CommandCallable {
                                 TextActions.runCommand("/foxguard s r remove " +
                                         (region instanceof IWorldRegion ? ("--w:" + ((IWorldRegion) region).getWorld() + " ") : "") +
                                         region.getName()),
-                                TextActions.showText(Text.of("Remove from State Buffer")),
+                                TextActions.showText(Text.of("Remove from state buffer")),
                                 "[-]"));
                     } else {
                         output.append(Text.of(TextColors.GREEN,
                                 TextActions.runCommand("/foxguard s r add " +
                                         (region instanceof IWorldRegion ? ("--w:" + ((IWorldRegion) region).getWorld().getName() + " ") : "") +
                                         region.getName()),
-                                TextActions.showText(Text.of("Add to State Buffer")),
+                                TextActions.showText(Text.of("Add to state buffer")),
                                 "[+]"));
                         output.append(Text.of(TextColors.GRAY, "[-]"));
                     }
@@ -170,7 +170,7 @@ public class CommandHere implements CommandCallable {
                 }
                 output.append(Text.of(FGUtil.getColorForObject(region),
                         TextActions.runCommand("/foxguard detail region" + (region instanceof IWorldRegion ? (" --w:" + ((IWorldRegion) region).getWorld().getName() + " ") : "") + region.getName()),
-                        TextActions.showText(Text.of("View Details")),
+                        TextActions.showText(Text.of("View details")),
                         FGUtil.getRegionName(region, false)));
                 if (regionListIterator.hasNext()) output.append(Text.NEW_LINE);
             }
@@ -200,12 +200,12 @@ public class CommandHere implements CommandCallable {
                         output.append(Text.of(TextColors.GRAY, "[h+]"));
                         output.append(Text.of(TextColors.RED,
                                 TextActions.runCommand("/foxguard s h remove " + handler.getName()),
-                                TextActions.showText(Text.of("Remove from Handler State Buffer")),
+                                TextActions.showText(Text.of("Remove from handler state buffer")),
                                 "[h-]"));
                     } else {
                         output.append(Text.of(TextColors.GREEN,
                                 TextActions.runCommand("/foxguard s h add " + handler.getName()),
-                                TextActions.showText(Text.of("Add to Handler State Buffer")),
+                                TextActions.showText(Text.of("Add to handler state buffer")),
                                 "[h+]"));
                         output.append(Text.of(TextColors.GRAY, "[h-]"));
                     }
@@ -215,12 +215,12 @@ public class CommandHere implements CommandCallable {
                             output.append(Text.of(TextColors.GRAY, "[c+]"));
                             output.append(Text.of(TextColors.RED,
                                     TextActions.runCommand("/foxguard s c remove " + controller.getName()),
-                                    TextActions.showText(Text.of("Remove from Controller State Buffer")),
+                                    TextActions.showText(Text.of("Remove from controller state buffer")),
                                     "[c-]"));
                         } else {
                             output.append(Text.of(TextColors.GREEN,
                                     TextActions.runCommand("/foxguard s c add " + controller.getName()),
-                                    TextActions.showText(Text.of("Add to Controller State Buffer")),
+                                    TextActions.showText(Text.of("Add to controller state buffer")),
                                     "[c+]"));
                             output.append(Text.of(TextColors.GRAY, "[c-]"));
                         }
@@ -231,7 +231,7 @@ public class CommandHere implements CommandCallable {
                 }
                 output.append(Text.of(FGUtil.getColorForObject(handler),
                         TextActions.runCommand("/foxguard detail handler " + handler.getName()),
-                        TextActions.showText(Text.of("View Details")),
+                        TextActions.showText(Text.of("View details")),
                         handler.getShortTypeName() + " : " + handler.getName()));
                 if (handlerListIterator.hasNext()) output.append(Text.NEW_LINE);
             }

@@ -160,7 +160,6 @@ public class ControllersStateField extends ListStateFieldBase<IController> {
         if (this.list.contains(controller))
             throw new ArgumentParseException(Text.of("Controller is already in your state buffer!"), parse.args[0], 1);
         this.list.add(controller);
-        sourceState.updateScoreboard();
         return ProcessResult.of(true, Text.of("Successfully added controller to your state buffer!"));
     }
 
@@ -183,7 +182,6 @@ public class ControllersStateField extends ListStateFieldBase<IController> {
             if (!this.list.contains(controller))
                 throw new ArgumentParseException(Text.of("Controller is not in your state buffer!"), parse.args[0], 1);
             this.list.remove(controller);
-            sourceState.updateScoreboard();
             return ProcessResult.of(true, Text.of("Successfully removed controller from your state buffer!"));
         } else {
             int successes = 0, failures = 0;

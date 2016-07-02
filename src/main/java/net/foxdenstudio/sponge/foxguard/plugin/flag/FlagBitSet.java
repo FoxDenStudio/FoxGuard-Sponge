@@ -53,15 +53,15 @@ public class FlagBitSet extends BitSet {
         }
     }
 
-    public boolean getFlag(FlagObject flag){
+    public boolean get(FlagObject flag){
         return this.get(flag.id);
     }
 
-    public void setFlag(FlagObject flag) {
+    public void set(FlagObject flag) {
         this.set(flag.id);
     }
 
-    public void setFlag(FlagObject flag, boolean value) {
+    public void set(FlagObject flag, boolean value) {
         this.set(flag.id, value);
     }
 

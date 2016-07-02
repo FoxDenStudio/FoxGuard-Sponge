@@ -26,7 +26,6 @@
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
@@ -103,7 +102,7 @@ public class GroupHandler extends HandlerBase {
     public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).parse();
         if (parse.args.length > 0) {
-            if (isIn(SET_ALIASES, parse.args[0])) {
+            if (isIn(FLAGS_ALIASES, parse.args[0])) {
                 Map<IFlag, Tristate> map;
                 if (parse.args.length > 1) {
                     if (isIn(GROUPS_ALIASES, parse.args[1])) {
@@ -205,7 +204,7 @@ public class GroupHandler extends HandlerBase {
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             } else if (parse.current.index == 1) {
-                if (isIn(SET_ALIASES, parse.args[0])) {
+                if (isIn(FLAGS_ALIASES, parse.args[0])) {
                     return Flag.getFlags().stream()
                             .map(IFlag::flagName)
                             .filter(new StartsWithPredicate(parse.current.token))
@@ -218,7 +217,7 @@ public class GroupHandler extends HandlerBase {
                             .collect(GuavaCollectors.toImmutableList());
                 }
             } else if (parse.current.index == 2) {
-                if (isIn(SET_ALIASES, parse.args[0])) {
+                if (isIn(FLAGS_ALIASES, parse.args[0])) {
                     return ImmutableList.of("true", "false", "passthrough", "clear").stream()
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
@@ -230,6 +229,7 @@ public class GroupHandler extends HandlerBase {
         return ImmutableList.of();
     }
 
+    @Deprecated
     @Override
     public EventResult handle(User user, IFlag flag, Optional<Event> event, Object... extra) {
         if (user == null) {
