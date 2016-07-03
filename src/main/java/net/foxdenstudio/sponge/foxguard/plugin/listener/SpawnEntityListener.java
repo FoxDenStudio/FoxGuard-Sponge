@@ -29,7 +29,7 @@ import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagOld;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import org.spongepowered.api.entity.Entity;
@@ -67,10 +67,10 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
             user = null;
         }
 
-        Flag typeFlag = null;
+        FlagOld typeFlag = null;
         Entity oneEntity = event.getEntities().get(0);
-        if (oneEntity instanceof Agent) typeFlag = Flag.SPAWN_MOB_PASSIVE;
-        if (oneEntity instanceof Hostile) typeFlag = Flag.SPAWN_MOB_HOSTILE;
+        if (oneEntity instanceof Agent) typeFlag = FlagOld.SPAWN_MOB_PASSIVE;
+        if (oneEntity instanceof Hostile) typeFlag = FlagOld.SPAWN_MOB_HOSTILE;
         if (typeFlag == null) return;
 
         List<IHandler> handlerList = new ArrayList<>();

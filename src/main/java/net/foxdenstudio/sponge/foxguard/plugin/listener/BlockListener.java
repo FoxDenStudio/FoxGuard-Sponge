@@ -75,12 +75,12 @@ public class BlockListener implements EventListener<ChangeBlockEvent> {
             user = null;
         }
         //DebugHelper.printBlockEvent(event);
-        /*Flag typeFlag;
-        if (event instanceof ChangeBlockEvent.Modify) typeFlag = Flag.BLOCK_MODIFY;
-        else if (event instanceof ChangeBlockEvent.Break) typeFlag = Flag.BLOCK_BREAK;
-        else if (event instanceof ChangeBlockEvent.Place) typeFlag = Flag.BLOCK_PLACE;
-        else if (event instanceof ChangeBlockEvent.Decay) typeFlag = Flag.BLOCK_DECAY;
-        else if (event instanceof ChangeBlockEvent.Grow) typeFlag = Flag.BLOCK_GROW;
+        /*FlagOld typeFlag;
+        if (event instanceof ChangeBlockEvent.Modify) typeFlag = FlagOld.BLOCK_MODIFY;
+        else if (event instanceof ChangeBlockEvent.Break) typeFlag = FlagOld.BLOCK_BREAK;
+        else if (event instanceof ChangeBlockEvent.Place) typeFlag = FlagOld.BLOCK_PLACE;
+        else if (event instanceof ChangeBlockEvent.Decay) typeFlag = FlagOld.BLOCK_DECAY;
+        else if (event instanceof ChangeBlockEvent.Grow) typeFlag = FlagOld.BLOCK_GROW;
         else return;*/
 
         FlagBitSet flags = (FlagBitSet) BASE_FLAG_SET.clone();

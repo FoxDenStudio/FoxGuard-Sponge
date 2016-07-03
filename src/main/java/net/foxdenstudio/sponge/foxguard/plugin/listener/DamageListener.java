@@ -29,7 +29,7 @@ import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagOld;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
@@ -53,7 +53,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flag.*;
+import static net.foxdenstudio.sponge.foxguard.plugin.flag.FlagOld.*;
 
 /**
  * Created by Fox on 5/9/2016.
@@ -74,7 +74,7 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
 
         World world = event.getTargetEntity().getWorld();
         Vector3d loc = event.getTargetEntity().getLocation().getPosition();
-        Flag flag, secondaryFlag = null;
+        FlagOld flag, secondaryFlag = null;
         Entity entity = event.getTargetEntity();
 
         if (entity instanceof Living) {

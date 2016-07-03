@@ -123,14 +123,4 @@ public class EverythingSet<E> implements Set<E> {
     public void clear() {
 
     }
-
-    @Override
-    public int hashCode() {
-        return 0;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return true;
-    }
 }

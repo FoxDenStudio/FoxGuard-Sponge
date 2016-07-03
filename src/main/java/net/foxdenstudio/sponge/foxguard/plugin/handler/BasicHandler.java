@@ -34,8 +34,8 @@ import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagObject;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
@@ -370,7 +370,7 @@ public class BasicHandler extends HandlerBase {
                     return ProcessResult.of(true, Text.of("Successfully moved group!"));
                 }
                 default:
-                    return ProcessResult.of(false, Text.of("Not a valid operation!"));
+                    return ProcessResult.of(false, Text.of("Not a valid group operation!"));
             }
         } else if (isIn(USERS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) return ProcessResult.of(false, Text.of("Must specify a group!"));
@@ -494,7 +494,7 @@ public class BasicHandler extends HandlerBase {
             switch (parse.args[2].toLowerCase()) {
                 case "add": {
                     Tristate state = null;
-                    Set<FlagObject> flags = new HashSet<>();
+                    Set<Flag> flags = new HashSet<>();
                     boolean areFlagsSet = false;
                     if (parse.args.length < 4)
                         return ProcessResult.of(false, Text.of("Must specify flags and a tristate value!"));
@@ -511,7 +511,7 @@ public class BasicHandler extends HandlerBase {
                                 return ProcessResult.of(false, Text.of("\"" + argument + "\" is not a valid tristate value!"));
                             }
                         } else {
-                            FlagObject flag = FlagRegistry.getInstance().getFlag(argument);
+                            Flag flag = FlagRegistry.getInstance().getFlag(argument);
                             if (flag != null) {
                                 flags.add(flag);
                                 areFlagsSet = true;
@@ -546,26 +546,27 @@ public class BasicHandler extends HandlerBase {
                     return ProcessResult.of(true, Text.of("Successfully added flag entry!"));
                 }
                 case "remove": {
-                    List<Entry> permissions = getGroupPermissions(group);
                     if (parse.args.length < 4)
-                        return ProcessResult.of(false, Text.of("Must specify flags or an index!"));
-                    Entry entry = null;
+                        return ProcessResult.of(false, Text.of("Must specify flags or an index to remove!"));
+                    List<Entry> permissions = getGroupPermissions(group);
                     try {
                         int index = Integer.parseInt(parse.args[3]);
                         if (index < 0) index = 0;
                         else if (index >= permissions.size()) index = permissions.size() - 1;
-                        entry = permissions.get(index);
+                        removeFlagEntry(group, index);
+                        return ProcessResult.of(true, Text.of("Successfully removed flag entry!"));
                     } catch (NumberFormatException ignored) {
-                        Set<FlagObject> flags = new HashSet<>();
+                        Set<Flag> flags = new HashSet<>();
                         for (int i = 3; i < parse.args.length; i++) {
                             String argument = parse.args[i];
-                            FlagObject flag = FlagRegistry.getInstance().getFlag(argument);
+                            Flag flag = FlagRegistry.getInstance().getFlag(argument);
                             if (flag != null) {
                                 flags.add(flag);
                             } else {
                                 return ProcessResult.of(false, Text.of("\"" + argument + "\" is not a valid flag!"));
                             }
                         }
+                        Entry entry = null;
                         for (Entry existing : permissions) {
                             if (existing.set.equals(flags)) {
                                 entry = existing;
@@ -573,9 +574,9 @@ public class BasicHandler extends HandlerBase {
                             }
                         }
                         if (entry == null) return ProcessResult.of(false, Text.of("No flag entry with these flags!"));
+                        removeFlagEntry(group, permissions.indexOf(entry));
+                        return ProcessResult.of(true, Text.of("Successfully removed flag entry!"));
                     }
-                    removeFlagEntry(group, permissions.indexOf(entry));
-                    return ProcessResult.of(true, Text.of("Successfully removed flag entry!"));
                 }
                 case "set": {
                     if (parse.args.length < 4)
@@ -597,7 +598,7 @@ public class BasicHandler extends HandlerBase {
                     } catch (NumberFormatException ignored) {
                     }
                     Tristate state = null;
-                    Set<FlagObject> flags = new HashSet<>();
+                    Set<Flag> flags = new HashSet<>();
                     boolean areFlagsSet = false;
 
                     for (int i = 3; i < parse.args.length; i++) {
@@ -613,7 +614,7 @@ public class BasicHandler extends HandlerBase {
                                 return ProcessResult.of(false, Text.of("\"" + argument + "\" is not a valid tristate value!"));
                             }
                         } else {
-                            FlagObject flag = FlagRegistry.getInstance().getFlag(argument);
+                            Flag flag = FlagRegistry.getInstance().getFlag(argument);
                             if (flag != null) {
                                 flags.add(flag);
                                 areFlagsSet = true;
@@ -650,10 +651,64 @@ public class BasicHandler extends HandlerBase {
                     this.setFlagEntry(group, index, entry);
                     return ProcessResult.of(true, Text.of("Successfully set flag entry!"));
                 }
-                case "move":
-                    break;
+                case "move": {
+                    List<Entry> permissions = getGroupPermissions(group);
+                    if (parse.args.length < 4)
+                        return ProcessResult.of(false, Text.of("Must specify flags or an index to move!"));
+                    try {
+                        int from = Integer.parseInt(parse.args[3]);
+                        if (from < 0) from = 0;
+                        else if (from >= permissions.size()) from = permissions.size() - 1;
+                        if (parse.args.length < 5)
+                            return ProcessResult.of(false, Text.of("Must specify a target index to move to!"));
+                        int to = FCUtil.parseCoordinate(from, parse.args[4]);
+                        if (to < 0) to = 0;
+                        else if (to >= permissions.size()) to = permissions.size() - 1;
+                        moveFlagEntry(group, from, to);
+                        return ProcessResult.of(true, Text.of("Successfully moved flag entry!"));
+                    } catch (NumberFormatException ignored) {
+                        Set<Flag> flags = new HashSet<>();
+                        int index = 0;
+                        boolean set = false;
+                        boolean relative = false;
+                        for (int i = 3; i < parse.args.length; i++) {
+                            String argument = parse.args[i];
+                            Flag flag = FlagRegistry.getInstance().getFlag(argument);
+                            if (flag != null) {
+                                flags.add(flag);
+                                continue;
+                            }
+                            try {
+                                String arg = argument;
+                                if (arg.startsWith("~")) {
+                                    arg = arg.substring(1);
+                                    relative = true;
+                                }
+                                index = Integer.parseInt(arg);
+                                set = true;
+                                continue;
+                            } catch (NumberFormatException ignored2) {
+                            }
+                            return ProcessResult.of(false, Text.of("\"" + argument + "\" is not a valid flag!"));
+                        }
+                        if(!set) return ProcessResult.of(false, Text.of("Must specify a target index!"));
+                        Entry entry = null;
+                        for (Entry existing : permissions) {
+                            if (existing.set.equals(flags)) {
+                                entry = existing;
+                                break;
+                            }
+                        }
+
+                        if (entry == null) return ProcessResult.of(false, Text.of("No flag entry with these flags!"));
+                        if (relative) index += permissions.indexOf(entry);
+                        moveFlagEntry(group, entry.set, index);
+                    }
+//                    removeFlagEntry(group, permissions.indexOf(entry));
+                    return ProcessResult.of(true, Text.of("Successfully removed flag entry!"));
+                }
                 default:
-                    break;
+                    return ProcessResult.of(false, Text.of("Not a valid flag operation!"));
             }
         } else if (isIn(PASSIVE_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) return ProcessResult.of(false, Text.of("Must specify an option!"));
@@ -913,7 +968,7 @@ public class BasicHandler extends HandlerBase {
             int index = 0;
             for (Entry entry : this.groupPermissions.get(group)) {
                 StringBuilder stringBuilder = new StringBuilder();
-                for (FlagObject flag : entry.set) {
+                for (Flag flag : entry.set) {
                     stringBuilder.append(flag.name).append(" ");
                 }
                 Text.Builder entryBuilder = Text.builder();
@@ -931,7 +986,7 @@ public class BasicHandler extends HandlerBase {
         int index = 0;
         for (Entry entry : this.defaultPermissions) {
             StringBuilder stringBuilder = new StringBuilder();
-            for (FlagObject flag : entry.set) {
+            for (Flag flag : entry.set) {
                 stringBuilder.append(flag.name).append(" ");
             }
             Text.Builder entryBuilder = Text.builder();
@@ -1195,7 +1250,7 @@ public class BasicHandler extends HandlerBase {
         clearFlagCacheForGroup(group);
     }
 
-    public boolean removeFlagEntry(Group group, Set<FlagObject> flags) {
+    public boolean removeFlagEntry(Group group, Set<Flag> flags) {
         List<Entry> groupEntries = getGroupPermissions(group);
         Entry toRemove = null;
         for (Entry groupEntry : groupEntries) {
@@ -1205,19 +1260,7 @@ public class BasicHandler extends HandlerBase {
         }
         if (toRemove == null) return false;
         groupEntries.remove(toRemove);
-        if (group == defaultGroup) {
-            this.defaultPermCache.clear();
-            this.userPermCache.clear();
-        } else {
-            this.groupPermCache.get(group).clear();
-            group.users.forEach(this.userPermCache::remove);
-        }
-        Set<Set<Group>> groupSuperSet = new HashSet<>();
-        for (Map.Entry<Set<Group>, Map<FlagBitSet, Tristate>> cacheEntry : this.groupSetPermCache.entrySet()) {
-            Set<Group> key = cacheEntry.getKey();
-            if (key.contains(group)) groupSuperSet.add(key);
-        }
-        groupSuperSet.forEach(this.groupSetPermCache::remove);
+        clearFlagCacheForGroup(group);
         return true;
     }
 
@@ -1226,6 +1269,33 @@ public class BasicHandler extends HandlerBase {
         if (index < 0 || index >= groupEntries.size())
             throw new IndexOutOfBoundsException("Index out of bounds: " + index + " Range: 0-" + (groupEntries.size() - 1));
         groupEntries.remove(index);
+        clearFlagCacheForGroup(group);
+    }
+
+    public boolean moveFlagEntry(Group group, Set<Flag> flags, int destination) {
+        List<Entry> groupEntries = getGroupPermissions(group);
+        if (destination < 0 || destination >= groupEntries.size())
+            throw new IndexOutOfBoundsException("Destination index out of bounds: " + destination + " Range: 0-" + (groupEntries.size() - 1));
+        Entry toMove = null;
+        for (Entry groupEntry : groupEntries) {
+            if (groupEntry.set.equals(flags)) {
+                toMove = groupEntry;
+            }
+        }
+        if (toMove == null) return false;
+        groupEntries.remove(toMove);
+        clearFlagCacheForGroup(group);
+        return true;
+    }
+
+    public void moveFlagEntry(Group group, int source, int destination) {
+        List<Entry> groupEntries = getGroupPermissions(group);
+        if (source < 0 || source >= groupEntries.size())
+            throw new IndexOutOfBoundsException("Source index out of bounds: " + source + " Range: 0-" + (groupEntries.size() - 1));
+        if (destination < 0 || destination >= groupEntries.size())
+            throw new IndexOutOfBoundsException("Destination index out of bounds: " + destination + " Range: 0-" + (groupEntries.size() - 1));
+        Entry entry = groupEntries.remove(source);
+        groupEntries.add(destination, entry);
         clearFlagCacheForGroup(group);
     }
 
@@ -1330,10 +1400,10 @@ public class BasicHandler extends HandlerBase {
     }
 
     public static class Entry {
-        public Set<FlagObject> set;
+        public Set<Flag> set;
         public Tristate state;
 
-        public Entry(Set<FlagObject> set, Tristate state) {
+        public Entry(Set<Flag> set, Tristate state) {
             this.set = set;
             this.state = state;
         }

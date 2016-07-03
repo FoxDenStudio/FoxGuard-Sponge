@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagOld;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
@@ -71,9 +71,9 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
         super(NAME, Integer.MIN_VALUE / 2);
         this.map = new CacheMap<>((key, map) -> Tristate.UNDEFINED);
         this.mapCache = new CacheMap<>((o, m) -> {
-            if (o instanceof Flag) {
-                Tristate state = map.get(FGUtil.nearestParent((Flag) o, map.keySet()));
-                m.put((Flag) o, state);
+            if (o instanceof FlagOld) {
+                Tristate state = map.get(FGUtil.nearestParent((FlagOld) o, map.keySet()));
+                m.put((FlagOld) o, state);
                 return state;
             } else return Tristate.UNDEFINED;
         });
@@ -129,7 +129,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
                     if (parse.args[1].equalsIgnoreCase("all")) {
                         flag = null;
                     } else {
-                        flag = Flag.flagFrom(parse.args[1]);
+                        flag = FlagOld.flagFrom(parse.args[1]);
                         if (flag == null) {
                             return ProcessResult.of(false, Text.of("Not a valid flag!"));
                         }
@@ -153,7 +153,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
                                 return ProcessResult.of(false, Text.of("Not a valid value!"));
                             }
                             if (flag == null) {
-                                for (IFlag thatExist : Flag.getFlags()) {
+                                for (IFlag thatExist : FlagOld.getFlags()) {
                                     this.map.put(thatExist, tristate);
                                 }
                                 this.mapCache.clear();
@@ -195,7 +195,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             } else if (parse.current.index == 1) {
-                return Flag.getFlags().stream()
+                return FlagOld.getFlags().stream()
                         .map(IFlag::flagName)
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
@@ -216,7 +216,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
         Text.Builder builder = Text.builder();
         builder.append(Text.of(TextColors.GOLD,
                 TextActions.suggestCommand("/foxguard md h " + NAME + " set "),
-                TextActions.showText(Text.of("Click to Set a Flag")),
+                TextActions.showText(Text.of("Click to Set a FlagOld")),
                 "Global Flags:\n"));
 
         for (IFlag f : this.map.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
@@ -226,7 +226,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
                             .append(Text.NEW_LINE)
                             .onClick(TextActions.suggestCommand("/foxguard md h " + NAME + " set " +
                                     "" + f.flagName() + " "))
-                            .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
+                            .onHover(TextActions.showText(Text.of("Click to Change This FlagOld")))
                             .build()
             );
         }
@@ -254,7 +254,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
             Map<String, String> storageFlagMap = flagMapDB.hashMap("flags", Serializer.STRING, Serializer.STRING).createOrOpen();
             map.clear();
             for (Map.Entry<String, String> entry : storageFlagMap.entrySet()) {
-                map.put(Flag.flagFrom(entry.getKey()), Tristate.valueOf(entry.getValue()));
+                map.put(FlagOld.flagFrom(entry.getKey()), Tristate.valueOf(entry.getValue()));
             }
         }
     }

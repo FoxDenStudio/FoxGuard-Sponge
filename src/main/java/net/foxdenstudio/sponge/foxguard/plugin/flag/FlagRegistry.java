@@ -40,8 +40,8 @@ public class FlagRegistry {
 
     private static FlagRegistry instance;
 
-    private final List<FlagObject> flagList = new ArrayList<>();
-    private final HashMap<String, FlagObject> flagMap = new HashMap<>();
+    private final List<Flag> flagList = new ArrayList<>();
+    private final HashMap<String, Flag> flagMap = new HashMap<>();
     private int nextAvailableIndex = 0;
     private boolean locked = false;
 
@@ -65,31 +65,31 @@ public class FlagRegistry {
         return instance;
     }
 
-    public FlagObject registerFlag(String name) {
+    public Flag registerFlag(String name) {
         if (locked) throw new IllegalStateException("Server is starting! It is now too late to register flags!");
         name = name.toLowerCase();
         if (!name.matches("[a-z$_]+"))
-            throw new IllegalArgumentException("Flag name contains illegal characters. Only alphabetic characters allowed, including \'$\' and \'_\'");
+            throw new IllegalArgumentException("FlagOld name contains illegal characters. Only alphabetic characters allowed, including \'$\' and \'_\'");
         for (int i = 0; i < 2 && flagMap.containsKey(name); i++) {
             name += "_";
         }
         if (flagMap.containsKey(name)) return null;
-        FlagObject flag = new FlagObject(name, nextAvailableIndex);
+        Flag flag = new Flag(name, nextAvailableIndex);
         nextAvailableIndex++;
         flagList.add(flag);
         flagMap.put(name, flag);
         return flag;
     }
 
-    public FlagObject getFlag(int id) {
+    public Flag getFlag(int id) {
         return flagList.get(id);
     }
 
-    public FlagObject getFlag(String name) {
+    public Flag getFlag(String name) {
         return flagMap.get(name.toLowerCase());
     }
 
-    public List<FlagObject> getFlagList() {
+    public List<Flag> getFlagList() {
         return ImmutableList.copyOf(flagList);
     }
 

@@ -32,7 +32,7 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.CommandHUD;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagOld;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
@@ -166,13 +166,13 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
                                 break;
                             }
                             if (wrap.type == Type.FROM) {
-                                flagState = flagState.and(wrap.handler.handle(player, Flag.PLAYER_EXIT, Optional.of(event)).getState());
+                                flagState = flagState.and(wrap.handler.handle(player, FlagOld.PLAYER_EXIT, Optional.of(event)).getState());
                             } else {
-                                flagState = flagState.and(wrap.handler.handle(player, Flag.PLAYER_ENTER, Optional.of(event)).getState());
+                                flagState = flagState.and(wrap.handler.handle(player, FlagOld.PLAYER_ENTER, Optional.of(event)).getState());
                             }
                             currPriority = wrap.handler.getPriority();
                         }
-                        flagState = Flag.PLAYER_PASS.resolve(flagState);
+                        flagState = FlagOld.PLAYER_PASS.resolve(flagState);
 
                         if (flagState == Tristate.FALSE) {
                             player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission to pass!"));

@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagOld;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
@@ -83,16 +83,16 @@ public class GroupHandler extends HandlerBase {
         this.defaultPermissions = defaultPermissions;
 
         this.groupPermCache = new CacheMap<>((o, m) -> {
-            if (o instanceof Flag) {
-                Tristate state = groupPermissions.get(FGUtil.nearestParent((Flag) o, groupPermissions.keySet()));
-                m.put((Flag) o, state);
+            if (o instanceof FlagOld) {
+                Tristate state = groupPermissions.get(FGUtil.nearestParent((FlagOld) o, groupPermissions.keySet()));
+                m.put((FlagOld) o, state);
                 return state;
             } else return Tristate.UNDEFINED;
         });
         this.defaultPermCache = new CacheMap<>((o, m) -> {
-            if (o instanceof Flag) {
-                Tristate state = defaultPermissions.get(FGUtil.nearestParent((Flag) o, defaultPermissions.keySet()));
-                m.put((Flag) o, state);
+            if (o instanceof FlagOld) {
+                Tristate state = defaultPermissions.get(FGUtil.nearestParent((FlagOld) o, defaultPermissions.keySet()));
+                m.put((FlagOld) o, state);
                 return state;
             } else return Tristate.UNDEFINED;
         });
@@ -120,7 +120,7 @@ public class GroupHandler extends HandlerBase {
                     if (parse.args[2].equalsIgnoreCase("all")) {
                         flag = null;
                     } else {
-                        flag = Flag.flagFrom(parse.args[2]);
+                        flag = FlagOld.flagFrom(parse.args[2]);
                         if (flag == null) {
                             return ProcessResult.of(false, Text.of("Not a valid flag!"));
                         }
@@ -142,7 +142,7 @@ public class GroupHandler extends HandlerBase {
                                 return ProcessResult.of(false, Text.of("Not a valid value!"));
                             }
                             if (flag == null) {
-                                for (IFlag thatExist : Flag.getFlags()) {
+                                for (IFlag thatExist : FlagOld.getFlags()) {
                                     map.put(thatExist, tristate);
                                 }
                                 clearCache();
@@ -205,7 +205,7 @@ public class GroupHandler extends HandlerBase {
                         .collect(GuavaCollectors.toImmutableList());
             } else if (parse.current.index == 1) {
                 if (isIn(FLAGS_ALIASES, parse.args[0])) {
-                    return Flag.getFlags().stream()
+                    return FlagOld.getFlags().stream()
                             .map(IFlag::flagName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
@@ -286,7 +286,7 @@ public class GroupHandler extends HandlerBase {
                 .append(Text.NEW_LINE);
         builder.append(Text.of(TextColors.GOLD,
                 TextActions.suggestCommand("/foxguard md h " + this.name + " set group "),
-                TextActions.showText(Text.of("Click to Set a Flag")),
+                TextActions.showText(Text.of("Click to Set a FlagOld")),
                 "Group permissions:\n"));
         for (IFlag f : this.groupPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
@@ -294,13 +294,13 @@ public class GroupHandler extends HandlerBase {
                             .append(FGUtil.readableTristateText(groupPermissions.get(f)))
                             .append(Text.NEW_LINE)
                             .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set group " + f.flagName() + " "))
-                            .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
+                            .onHover(TextActions.showText(Text.of("Click to Change This FlagOld")))
                             .build()
             );
         }
         builder.append(Text.of(TextColors.RED,
                 TextActions.suggestCommand("/foxguard md h " + this.name + " set default "),
-                TextActions.showText(Text.of("Click to Set a Flag")),
+                TextActions.showText(Text.of("Click to Set a FlagOld")),
                 "Default permissions:\n"));
         for (IFlag f : this.defaultPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
@@ -308,7 +308,7 @@ public class GroupHandler extends HandlerBase {
                             .append(FGUtil.readableTristateText(defaultPermissions.get(f)))
                             .append(Text.NEW_LINE)
                             .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set default " + f.flagName() + " "))
-                            .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
+                            .onHover(TextActions.showText(Text.of("Click to Change This FlagOld")))
                             .build()
             );
         }
@@ -397,7 +397,7 @@ public class GroupHandler extends HandlerBase {
             try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.db").normalize().toString()).make()) {
                 Map<String, String> groupStorageFlagMap = flagMapDB.hashMap("group", Serializer.STRING, Serializer.STRING).createOrOpen();
                 for (Map.Entry<String, String> entry : groupStorageFlagMap.entrySet()) {
-                    IFlag flag = Flag.flagFrom(entry.getKey());
+                    IFlag flag = FlagOld.flagFrom(entry.getKey());
                     if (flag != null) {
                         Tristate state = Tristate.valueOf(entry.getValue());
                         if (state != null) {
@@ -407,7 +407,7 @@ public class GroupHandler extends HandlerBase {
                 }
                 Map<String, String> defaultStorageFlagMap = flagMapDB.hashMap("default", Serializer.STRING, Serializer.STRING).createOrOpen();
                 for (Map.Entry<String, String> entry : defaultStorageFlagMap.entrySet()) {
-                    IFlag flag = Flag.flagFrom(entry.getKey());
+                    IFlag flag = FlagOld.flagFrom(entry.getKey());
                     if (flag != null) {
                         Tristate state = Tristate.valueOf(entry.getValue());
                         if (state != null) {

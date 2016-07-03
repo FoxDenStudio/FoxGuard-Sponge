@@ -32,7 +32,7 @@ import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagOld;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
@@ -102,23 +102,23 @@ public class SimpleHandler extends HandlerBase {
         this.defaultPermissions = defaultPermissions;
 
         this.ownerPermCache = new CacheMap<>((o, m) -> {
-            if (o instanceof Flag) {
-                Tristate state = ownerPermissions.get(FGUtil.nearestParent((Flag) o, ownerPermissions.keySet()));
-                m.put((Flag) o, state);
+            if (o instanceof FlagOld) {
+                Tristate state = ownerPermissions.get(FGUtil.nearestParent((FlagOld) o, ownerPermissions.keySet()));
+                m.put((FlagOld) o, state);
                 return state;
             } else return Tristate.UNDEFINED;
         });
         this.memberPermCache = new CacheMap<>((o, m) -> {
-            if (o instanceof Flag) {
-                Tristate state = memberPermissions.get(FGUtil.nearestParent((Flag) o, memberPermissions.keySet()));
-                m.put((Flag) o, state);
+            if (o instanceof FlagOld) {
+                Tristate state = memberPermissions.get(FGUtil.nearestParent((FlagOld) o, memberPermissions.keySet()));
+                m.put((FlagOld) o, state);
                 return state;
             } else return Tristate.UNDEFINED;
         });
         this.defaultPermCache = new CacheMap<>((o, m) -> {
-            if (o instanceof Flag) {
-                Tristate state = defaultPermissions.get(FGUtil.nearestParent((Flag) o, defaultPermissions.keySet()));
-                m.put((Flag) o, state);
+            if (o instanceof FlagOld) {
+                Tristate state = defaultPermissions.get(FGUtil.nearestParent((FlagOld) o, defaultPermissions.keySet()));
+                m.put((FlagOld) o, state);
                 return state;
             } else return Tristate.UNDEFINED;
         });
@@ -219,7 +219,7 @@ public class SimpleHandler extends HandlerBase {
                     if (parse.args[2].equalsIgnoreCase("all")) {
                         flag = null;
                     } else {
-                        flag = Flag.flagFrom(parse.args[2]);
+                        flag = FlagOld.flagFrom(parse.args[2]);
                         if (flag == null) {
                             return ProcessResult.of(false, Text.of("Not a valid flag!"));
                         }
@@ -241,7 +241,7 @@ public class SimpleHandler extends HandlerBase {
                                 return ProcessResult.of(false, Text.of("Not a valid value!"));
                             }
                             if (flag == null) {
-                                for (IFlag thatExist : Flag.getFlags()) {
+                                for (IFlag thatExist : FlagOld.getFlags()) {
                                     map.put(thatExist, tristate);
                                 }
                                 clearCache();
@@ -329,7 +329,7 @@ public class SimpleHandler extends HandlerBase {
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
-                    return Flag.getFlags().stream()
+                    return FlagOld.getFlags().stream()
                             .map(IFlag::flagName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
@@ -490,7 +490,7 @@ public class SimpleHandler extends HandlerBase {
         builder.append(Text.NEW_LINE);
         builder.append(Text.of(TextColors.GOLD,
                 TextActions.suggestCommand("/foxguard md h " + this.name + " set owners "),
-                TextActions.showText(Text.of("Click to Set a Flag")),
+                TextActions.showText(Text.of("Click to Set a FlagOld")),
                 "Owner permissions:\n"));
         for (IFlag f : this.ownerPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
@@ -498,13 +498,13 @@ public class SimpleHandler extends HandlerBase {
                             .append(FGUtil.readableTristateText(ownerPermissions.get(f)))
                             .append(Text.NEW_LINE)
                             .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set owners " + f.flagName() + " "))
-                            .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
+                            .onHover(TextActions.showText(Text.of("Click to Change This FlagOld")))
                             .build()
             );
         }
         builder.append(Text.of(TextColors.GREEN,
                 TextActions.suggestCommand("/foxguard md h " + this.name + " set members "),
-                TextActions.showText(Text.of("Click to Set a Flag")),
+                TextActions.showText(Text.of("Click to Set a FlagOld")),
                 "Member permissions:\n"));
         for (IFlag f : this.memberPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
@@ -512,13 +512,13 @@ public class SimpleHandler extends HandlerBase {
                             .append(FGUtil.readableTristateText(memberPermissions.get(f)))
                             .append(Text.NEW_LINE)
                             .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set members " + f.flagName() + " "))
-                            .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
+                            .onHover(TextActions.showText(Text.of("Click to Change This FlagOld")))
                             .build()
             );
         }
         builder.append(Text.of(TextColors.RED,
                 TextActions.suggestCommand("/foxguard md h " + this.name + " set default "),
-                TextActions.showText(Text.of("Click to Set a Flag")),
+                TextActions.showText(Text.of("Click to Set a FlagOld")),
                 "Default permissions:\n"));
         for (IFlag f : this.defaultPermissions.keySet().stream().sorted().collect(GuavaCollectors.toImmutableList())) {
             builder.append(
@@ -526,7 +526,7 @@ public class SimpleHandler extends HandlerBase {
                             .append(FGUtil.readableTristateText(defaultPermissions.get(f)))
                             .append(Text.NEW_LINE)
                             .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set default " + f.flagName() + " "))
-                            .onHover(TextActions.showText(Text.of("Click to Change This Flag")))
+                            .onHover(TextActions.showText(Text.of("Click to Change This FlagOld")))
                             .build()
             );
         }
@@ -690,7 +690,7 @@ public class SimpleHandler extends HandlerBase {
             try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.db").normalize().toString()).make()) {
                 Map<String, String> ownerStorageFlagMap = flagMapDB.hashMap("owners", Serializer.STRING, Serializer.STRING).createOrOpen();
                 for (Map.Entry<String, String> entry : ownerStorageFlagMap.entrySet()) {
-                    IFlag flag = Flag.flagFrom(entry.getKey());
+                    IFlag flag = FlagOld.flagFrom(entry.getKey());
                     if (flag != null) {
                         Tristate state = Tristate.valueOf(entry.getValue());
                         if (state != null) {
@@ -700,7 +700,7 @@ public class SimpleHandler extends HandlerBase {
                 }
                 Map<String, String> memberStorageFlagMap = flagMapDB.hashMap("members", Serializer.STRING, Serializer.STRING).createOrOpen();
                 for (Map.Entry<String, String> entry : memberStorageFlagMap.entrySet()) {
-                    IFlag flag = Flag.flagFrom(entry.getKey());
+                    IFlag flag = FlagOld.flagFrom(entry.getKey());
                     if (flag != null) {
                         Tristate state = Tristate.valueOf(entry.getValue());
                         if (state != null) {
@@ -710,7 +710,7 @@ public class SimpleHandler extends HandlerBase {
                 }
                 Map<String, String> defaultStorageFlagMap = flagMapDB.hashMap("default", Serializer.STRING, Serializer.STRING).createOrOpen();
                 for (Map.Entry<String, String> entry : defaultStorageFlagMap.entrySet()) {
-                    IFlag flag = Flag.flagFrom(entry.getKey());
+                    IFlag flag = FlagOld.flagFrom(entry.getKey());
                     if (flag != null) {
                         Tristate state = Tristate.valueOf(entry.getValue());
                         if (state != null) {

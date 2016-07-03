@@ -29,7 +29,7 @@ import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagOld;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import org.spongepowered.api.entity.living.player.Player;
@@ -63,9 +63,9 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
 
         World world = event.getTargetWorld();
         Vector3d loc = event.getExplosion().getOrigin();
-        Flag typeFlag = null;
+        FlagOld typeFlag = null;
         if (event instanceof ExplosionEvent.Pre)
-            typeFlag = Flag.EXPLOSION;
+            typeFlag = FlagOld.EXPLOSION;
         if (typeFlag == null) return;
         List<IHandler> handlerList = new ArrayList<>();
         final Vector3d finalLoc = loc;
