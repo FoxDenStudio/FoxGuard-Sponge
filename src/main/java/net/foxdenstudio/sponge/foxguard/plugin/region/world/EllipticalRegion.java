@@ -47,8 +47,8 @@ public class EllipticalRegion extends WorldRegionBase {
     private final double centerX, centerY, width, height;
     private final double widthSq, heightSq;
 
-    public EllipticalRegion(String name, double centerX, double centerY, double height, double width) {
-        super(name);
+    public EllipticalRegion(String name, boolean isEnabled, double centerX, double centerY, double height, double width) {
+        super(name, isEnabled);
         this.centerX = centerX;
         this.centerY = centerY;
         this.width = width;

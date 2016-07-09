@@ -9,6 +9,7 @@ buildscript {
     dependencies {
         classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
         classpath 'org.spongepowered:spongegradle:0.5.2-SNAPSHOT'
+        classpath 'org.spongepowered:event-impl-gen:2.0.0-SNAPSHOT'
     }
 }
 
@@ -73,6 +74,23 @@ artifacts {
     archives shadowJar
 }
 
+apply plugin: 'event-impl-gen'
+
+// Compile time code generator for the event factory
+genEventImpl {
+    includeSrc = [
+            'src/main/java/net/foxdenstudio/sponge/foxguard/plugin/event'
+    ]
+    excludeSrc = []
+    outputDir = 'src/main/java/'
+    outputFactory = 'net.foxdenstudio.sponge.foxguard.util.FoxGuardEventFactory'
+    eventImplCreateMethod = 'net.foxdenstudio.sponge.foxguard.util.FGUtil.createEventImpl'
+    sortPriorityPrefix = 'original'
+    groupingPrefixes = ['from': 'to']
+    validateCode = false
+}
+
+
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.13'
+    gradleVersion = '2.14'
 }

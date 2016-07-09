@@ -41,7 +41,7 @@ public class GlobalWorldRegion extends WorldRegionBase implements IGlobal {
     public static final String NAME = "_wglobal";
 
     public GlobalWorldRegion() {
-        super(NAME);
+        super(NAME, true);
     }
 
     @Override

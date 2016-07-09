@@ -31,8 +31,8 @@ public abstract class HandlerBase extends FGObjectBase implements IHandler {
 
     int priority;
 
-    protected HandlerBase(String name, int priority) {
-        super(name);
+    public HandlerBase(String name, boolean isEnabled, int priority) {
+        super(name, isEnabled);
         setPriority(priority);
     }
 
@@ -43,6 +43,8 @@ public abstract class HandlerBase extends FGObjectBase implements IHandler {
 
     @Override
     public void setPriority(int priority) {
+        if (priority < Integer.MIN_VALUE / 2 + 1) priority = Integer.MIN_VALUE / 2 + 1;
+        else if (priority > Integer.MAX_VALUE / 2) priority = Integer.MAX_VALUE / 2;
         this.priority = priority > Integer.MIN_VALUE ? priority : Integer.MIN_VALUE + 1;
     }
 

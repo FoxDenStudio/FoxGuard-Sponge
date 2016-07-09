@@ -32,11 +32,13 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.CommandHUD;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagOld;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagOld;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.Player;
@@ -57,12 +59,16 @@ import org.spongepowered.api.world.World;
 
 import java.util.*;
 
+import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
+
 /**
  * Created by Fox on 1/4/2016.
  * Project: SpongeForge
  */
 public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
 
+    private static final FlagBitSet ENTER_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, PASS, ENTER);
+    private static final FlagBitSet EXIT_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, PASS, EXIT);
     private static final LastWrapper EMPTY_LAST_WRAPPER = new LastWrapper(null, null);
 
     private static PlayerMoveListener instance;
@@ -93,7 +99,7 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
         if (event.isCancelled() || event.getTargetEntity().getVehicle().isPresent()) return;
 
         World world = event.getTargetEntity().getWorld();
-        boolean cancel = false;
+        //boolean cancel = false;
 
         getPassengerStack(event.getTargetEntity()).stream()
                 .filter(entity -> entity instanceof Player)
@@ -166,9 +172,9 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
                                 break;
                             }
                             if (wrap.type == Type.FROM) {
-                                flagState = flagState.and(wrap.handler.handle(player, FlagOld.PLAYER_EXIT, Optional.of(event)).getState());
+                                flagState = flagState.and(wrap.handler.handle(player, (FlagBitSet) EXIT_FLAG_SET.clone(), ExtraContext.of(event)).getState());
                             } else {
-                                flagState = flagState.and(wrap.handler.handle(player, FlagOld.PLAYER_ENTER, Optional.of(event)).getState());
+                                flagState = flagState.and(wrap.handler.handle(player, (FlagBitSet) ENTER_FLAG_SET.clone(), ExtraContext.of(event)).getState());
                             }
                             currPriority = wrap.handler.getPriority();
                         }
@@ -275,12 +281,12 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
         return instance;
     }
 
-    private static Set<Entity> getPassengerStack(Entity e){
+    private static Set<Entity> getPassengerStack(Entity e) {
         Set<Entity> set = new HashSet<>();
         set.add(e);
         Optional<Entity> po = e.getPassenger();
-        if(po.isPresent())
-        set.addAll(getPassengerStack(po.get()));
+        if (po.isPresent())
+            set.addAll(getPassengerStack(po.get()));
         return set;
     }
 

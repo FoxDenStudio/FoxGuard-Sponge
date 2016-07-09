@@ -28,10 +28,11 @@ package net.foxdenstudio.sponge.foxguard.plugin.region.world;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.common.FCUtil;
+import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.BoundingBox2;
+import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IWorldRegionFactory;
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
@@ -52,29 +53,29 @@ import java.util.List;
 
 public class RectangularRegion extends WorldRegionBase {
 
-    private final BoundingBox2 boundingBox;
+    private BoundingBox2 boundingBox;
 
 
-    public RectangularRegion(String name, BoundingBox2 boundingBox) {
-        super(name);
+    public RectangularRegion(String name, boolean isEnabled, BoundingBox2 boundingBox) {
+        super(name, isEnabled);
         this.boundingBox = boundingBox;
     }
 
     public RectangularRegion(String name, List<Vector3i> positions, String[] args, CommandSource source)
             throws CommandException {
-        super(name);
+        super(name, true);
         List<Vector3i> allPositions = new ArrayList<>(positions);
         for (int i = 0; i < args.length - 1; i += 2) {
             int x, z;
             try {
-                x = FCUtil.parseCoordinate(source instanceof Player ?
+                x = FCCUtil.parseCoordinate(source instanceof Player ?
                         ((Player) source).getLocation().getBlockX() : 0, args[i]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(
                         Text.of("Unable to parse \"" + args[i] + "\"!"), e, args[i], i);
             }
             try {
-                z = FCUtil.parseCoordinate(source instanceof Player ?
+                z = FCCUtil.parseCoordinate(source instanceof Player ?
                         ((Player) source).getLocation().getBlockZ() : 0, args[i + 1]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(
@@ -173,7 +174,13 @@ public class RectangularRegion extends WorldRegionBase {
         }
     }
 
+    public BoundingBox2 getBoundingBox() {
+        return boundingBox;
+    }
 
+    public void setBoundingBox(BoundingBox2 boundingBox) {
+        this.boundingBox = boundingBox;
+    }
 
     public static class Factory implements IWorldRegionFactory {
 
@@ -184,7 +191,7 @@ public class RectangularRegion extends WorldRegionBase {
             AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                     .arguments(arguments)
                     .parse();
-            return new RectangularRegion(name, FCUtil.getPositions(source), parse.args, source);
+            return new RectangularRegion(name, FCPUtil.getPositions(source), parse.args, source);
         }
 
         @Override
@@ -206,7 +213,7 @@ public class RectangularRegion extends WorldRegionBase {
             int z1 = root.getNode("lowerZ").getInt(0);
             int x2 = root.getNode("upperX").getInt(0);
             int z2 = root.getNode("upperZ").getInt(0);
-            return new RectangularRegion(name, new BoundingBox2(new Vector2i(x1, z1), new Vector2i(x2, z2)));
+            return new RectangularRegion(name, isEnabled, new BoundingBox2(new Vector2i(x1, z1), new Vector2i(x2, z2)));
         }
 
         @Override

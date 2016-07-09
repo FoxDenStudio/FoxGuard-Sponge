@@ -146,7 +146,7 @@ public interface IFGObject {
      * <p>
      * The only really important thing to note is that it is important that an object report a modify result of success if and only if the object was actually modified.
      * "Actually modified" implies that the object needs to be saved again.
-     *
+     * <p>
      * This contract is less important if an object implements the {@link IFGObject#shouldSave()} method.
      *
      * @param source    The {@link CommandSource} of the modify command

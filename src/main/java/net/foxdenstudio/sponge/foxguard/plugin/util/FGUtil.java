@@ -26,8 +26,12 @@
 package net.foxdenstudio.sponge.foxguard.plugin.util;
 
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
+import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
+import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateObjectEvent;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
@@ -37,13 +41,17 @@ import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.state.ControllersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.event.SpongeEventFactoryUtils;
+import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public final class FGUtil {
@@ -105,7 +113,7 @@ public final class FGUtil {
     public static Text readableTristateText(Tristate state) {
         switch (state) {
             case UNDEFINED:
-                return Text.of(TextColors.YELLOW, "Passthrough");
+                return Text.of(TextColors.YELLOW, "Pass");
             case TRUE:
                 return Text.of(TextColors.GREEN, "True");
             case FALSE:
@@ -113,5 +121,40 @@ public final class FGUtil {
             default:
                 return Text.of(TextColors.LIGHT_PURPLE, "Wait wat?");
         }
+    }
+
+    public static void markRegionDirty(IRegion region) {
+        FGManager.getInstance().markDirty(region, RegionCache.DirtyType.MODIFIED);
+        FGStorageManager.getInstance().defaultModifiedMap.put(region, true);
+        Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
+            @Override
+            public IFGObject getTarget() {
+                return region;
+            }
+
+            @Override
+            public Cause getCause() {
+                return FoxGuardMain.getCause();
+            }
+        });
+    }
+
+    public static void markHandlerDirty(IHandler handler) {
+        FGStorageManager.getInstance().defaultModifiedMap.put(handler, true);
+        Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
+            @Override
+            public IFGObject getTarget() {
+                return handler;
+            }
+
+            @Override
+            public Cause getCause() {
+                return FoxGuardMain.getCause();
+            }
+        });
+    }
+
+    public static <T> T createEventImpl(Class<T> type, Map<String, Object> values) {
+        return SpongeEventFactoryUtils.createEventImpl(type, values);
     }
 }

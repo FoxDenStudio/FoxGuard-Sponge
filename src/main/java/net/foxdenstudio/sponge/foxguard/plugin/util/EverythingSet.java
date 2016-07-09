@@ -38,10 +38,10 @@ public class EverythingSet<E> implements Set<E> {
 
     private static final EverythingSet instance = new EverythingSet();
 
-    private EverythingSet(){
+    private EverythingSet() {
     }
 
-    public static <T> EverythingSet<T> get(){
+    public static <T> EverythingSet<T> get() {
         //noinspection unchecked
         return instance;
     }

@@ -29,12 +29,12 @@ import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagOld;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
-import org.spongepowered.api.event.Cancellable;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.world.ExplosionEvent;
 import org.spongepowered.api.text.Text;
@@ -45,13 +45,17 @@ import org.spongepowered.api.world.World;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
-public class ExplosionListener implements EventListener<ExplosionEvent> {
+import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
+
+public class ExplosionListener implements EventListener<ExplosionEvent.Detonate> {
+
+    private static final FlagBitSet FLAG_SET = new FlagBitSet(ROOT, DEBUFF, EXPLOSION);
+
+
     @Override
-    public void handle(ExplosionEvent event) throws Exception {
-        if (!(event instanceof Cancellable)) return;
-        if (((Cancellable) event).isCancelled()) return;
+    public void handle(ExplosionEvent.Detonate event) throws Exception {
+        if (event.isCancelled()) return;
         User user;
         if (event.getCause().containsType(Player.class)) {
             user = event.getCause().first(Player.class).get();
@@ -63,10 +67,7 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
 
         World world = event.getTargetWorld();
         Vector3d loc = event.getExplosion().getOrigin();
-        FlagOld typeFlag = null;
-        if (event instanceof ExplosionEvent.Pre)
-            typeFlag = FlagOld.EXPLOSION;
-        if (typeFlag == null) return;
+        FlagBitSet flags = (FlagBitSet) FLAG_SET.clone();
         List<IHandler> handlerList = new ArrayList<>();
         final Vector3d finalLoc = loc;
         final World finalWorld = world;
@@ -87,17 +88,16 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
             if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
                 break;
             }
-            flagState = flagState.and(handler.handle(user, typeFlag, Optional.of(event)).getState());
+            flagState = flagState.and(handler.handle(user, flags, ExtraContext.of(event)).getState());
             currPriority = handler.getPriority();
         }
-        flagState = typeFlag.resolve(flagState);
         if (flagState == Tristate.FALSE) {
             if (user instanceof Player)
                 ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
-            ((Cancellable) event).setCancelled(true);
+            event.setCancelled(true);
         } else {
             //makes sure that handlers are unable to cancel the event directly.
-            ((Cancellable) event).setCancelled(false);
+            event.setCancelled(false);
         }
     }
 }

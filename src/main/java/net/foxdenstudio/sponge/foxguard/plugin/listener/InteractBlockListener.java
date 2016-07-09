@@ -49,7 +49,6 @@ import java.util.List;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 import static org.spongepowered.api.util.Tristate.FALSE;
-import static org.spongepowered.api.util.Tristate.TRUE;
 import static org.spongepowered.api.util.Tristate.UNDEFINED;
 
 public class InteractBlockListener implements EventListener<InteractBlockEvent> {
@@ -100,7 +99,7 @@ public class InteractBlockListener implements EventListener<InteractBlockEvent> 
             flagState = flagState.and(handler.handle(user, flags, ExtraContext.of(event)).getState());
             currPriority = handler.getPriority();
         }
-        if (flagState == UNDEFINED) flagState = TRUE;
+//        if (flagState == UNDEFINED) flagState = TRUE;
         if (flagState == FALSE) {
             if (user instanceof Player)
                 ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));

@@ -29,12 +29,15 @@ import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagOld;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.Agent;
 import org.spongepowered.api.entity.living.Hostile;
+import org.spongepowered.api.entity.living.Human;
+import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
@@ -47,9 +50,12 @@ import org.spongepowered.api.world.World;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+
+import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 
 public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
+
+    private static final FlagBitSet BASE_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, SPAWN, ENTITY);
 
     @Override
     public void handle(SpawnEntityEvent event) throws Exception {
@@ -67,11 +73,21 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
             user = null;
         }
 
-        FlagOld typeFlag = null;
         Entity oneEntity = event.getEntities().get(0);
-        if (oneEntity instanceof Agent) typeFlag = FlagOld.SPAWN_MOB_PASSIVE;
-        if (oneEntity instanceof Hostile) typeFlag = FlagOld.SPAWN_MOB_HOSTILE;
-        if (typeFlag == null) return;
+        FlagBitSet flags = (FlagBitSet) BASE_FLAG_SET.clone();
+        if (oneEntity instanceof Living) {
+            flags.set(LIVING);
+            if (oneEntity instanceof Agent) {
+                flags.set(MOB);
+                if (oneEntity instanceof Hostile) {
+                    flags.set(HOSTILE);
+                } else if (oneEntity instanceof Human) {
+                    flags.set(HUMAN);
+                } else {
+                    flags.set(PASSIVE);
+                }
+            }
+        }
 
         List<IHandler> handlerList = new ArrayList<>();
         World world = event.getTargetWorld();
@@ -96,7 +112,7 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
             if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
                 break;
             }
-            flagState = flagState.and(handler.handle(user, typeFlag, Optional.of(event)).getState());
+            flagState = flagState.and(handler.handle(user, flags, ExtraContext.of(event)).getState());
             currPriority = handler.getPriority();
         }
         if (flagState == Tristate.FALSE) {

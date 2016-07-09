@@ -25,46 +25,20 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
-import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
-import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
-import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.command.link.LinkEntry;
 import net.foxdenstudio.sponge.foxguard.plugin.command.link.LinkageParser;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
-import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
-import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
-import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.world.World;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
-import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.WORLD_ALIASES;
-import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isIn;
 
 public class CommandLink2 implements CommandCallable {
-
-    private static final Function<Map<String, String>, Function<String, Consumer<String>>> mapper = map -> key -> value -> {
-        map.put(key, value);
-        if (isIn(WORLD_ALIASES, key) && !map.containsKey("world")) {
-            map.put("world", value);
-        }
-    };
 
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {

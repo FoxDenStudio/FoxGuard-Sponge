@@ -27,27 +27,36 @@ package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import net.foxdenstudio.sponge.foxcore.common.FCUtil;
+import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
+import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Entry;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Operation;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.util.EverythingSet;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
+import ninja.leaping.configurate.commented.CommentedConfigurationNode;
+import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
+import ninja.leaping.configurate.loader.ConfigurationLoader;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+import org.mapdb.Serializer;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
-import org.spongepowered.api.event.Event;
 import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
@@ -58,21 +67,16 @@ import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
 public class BasicHandler extends HandlerBase {
 
-    private static final String[] INDEX_ALIASES = {"index", "i", "pos", "position"};
-    private static final String[] COLOR_ALIASES = {"color", "colour", "col", "c"};
-    private static final String[] DISPLAY_NAME_ALIASES = {"displayname", "display", "disp", "dispname", "title", "d"};
-
-    private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
+    private static final FlagMapper MAPPER = map -> key -> value -> {
         map.put(key, value);
         if (isIn(INDEX_ALIASES, key) && !map.containsKey("index")) {
             map.put("index", value);
@@ -94,25 +98,25 @@ public class BasicHandler extends HandlerBase {
     private final Map<UUID, Set<Group>> userGroupCache;
     private final Map<UUID, Map<FlagBitSet, Tristate>> userPermCache;
 
-    private PassiveOption passiveOption = PassiveOption.PASSTHROUGH;
+    private PassiveSetting passiveSetting = PassiveSetting.PASSTHROUGH;
     private Group passiveGroup;
     private Map<FlagBitSet, Tristate> passiveGroupCacheRef;
     private final Map<FlagBitSet, Tristate> passivePermCache;
 
     public BasicHandler(String name, int priority) {
-        this(name, priority,
+        this(name, true, priority,
                 new ArrayList<>(),
                 new HashMap<>(),
                 new Group("default", EverythingSet.get(), TextColors.RED, "Default"),
                 new ArrayList<>());
     }
 
-    public BasicHandler(String name, int priority,
+    public BasicHandler(String name, boolean isEnabled, int priority,
                         List<Group> groups,
                         Map<Group, List<Entry>> groupPermissions,
                         Group defaultGroup,
                         List<Entry> defaultPermissions) {
-        super(name, priority);
+        super(name, isEnabled, priority);
         this.groups = groups;
         this.defaultGroup = defaultGroup;
 
@@ -203,7 +207,7 @@ public class BasicHandler extends HandlerBase {
             if (k instanceof FlagBitSet) {
                 FlagBitSet flags = (FlagBitSet) k;
                 Tristate state = Tristate.UNDEFINED;
-                switch (passiveOption) {
+                switch (passiveSetting) {
                     case ALLOW:
                         state = Tristate.TRUE;
                         break;
@@ -246,9 +250,9 @@ public class BasicHandler extends HandlerBase {
                     Group group = groupOptional.get();
                     if (parse.flags.containsKey("color")) {
                         String colorString = parse.flags.get("color");
-                        Optional<TextColor> colorOptional = FCUtil.textColorFromHex(colorString);
+                        Optional<TextColor> colorOptional = FCPUtil.textColorFromHex(colorString);
                         if (!colorOptional.isPresent())
-                            colorOptional = FCUtil.textColorFromName(colorString);
+                            colorOptional = FCPUtil.textColorFromName(colorString);
                         if (colorOptional.isPresent()) group.color = colorOptional.get();
                     }
                     if (parse.flags.containsKey("displayname")) {
@@ -291,9 +295,9 @@ public class BasicHandler extends HandlerBase {
                     if (parse.flags.containsKey("color")) {
                         String colorString = parse.flags.get("color");
                         if (!colorString.isEmpty()) {
-                            Optional<TextColor> colorOptional = FCUtil.textColorFromHex(colorString);
+                            Optional<TextColor> colorOptional = FCPUtil.textColorFromHex(colorString);
                             if (!colorOptional.isPresent())
-                                colorOptional = FCUtil.textColorFromName(colorString);
+                                colorOptional = FCPUtil.textColorFromName(colorString);
                             if (colorOptional.isPresent()) group.color = colorOptional.get();
                         } else {
                             group.color = TextColors.WHITE;
@@ -358,7 +362,7 @@ public class BasicHandler extends HandlerBase {
                             newIndex = this.groups.size() - 1;
                         } else if (target.matches("[0-9~]+")) {
                             try {
-                                newIndex = FCUtil.parseCoordinate(currentIndex, target) - 1;
+                                newIndex = FCCUtil.parseCoordinate(currentIndex, target) - 1;
                             } catch (NumberFormatException ignored) {
                                 return ProcessResult.of(false, Text.of("Target index number is not formatted correctly!"));
                             }
@@ -471,13 +475,13 @@ public class BasicHandler extends HandlerBase {
                 if (successes == 1)
                     return ProcessResult.of(true, Text.of("Successfully " + op.pastTense + " user!"));
                 else {
-                    return ProcessResult.of(true, Text.of("Successfully " + op.pastTense + " " + successes + " users!"));
+                    return ProcessResult.of(true, Text.of("Successfully " + op.pastTense + " " + successes + " members!"));
                 }
             } else {
                 if (successes > 0) {
-                    return ProcessResult.of(true, Text.of("Successfully " + op.pastTense + " " + successes + " users with " + failures + " failures!"));
+                    return ProcessResult.of(true, Text.of("Successfully " + op.pastTense + " " + successes + " members with " + failures + " failures!"));
                 } else {
-                    return ProcessResult.of(false, Text.of("Failed to " + op.pastTense + " " + failures + " users!"));
+                    return ProcessResult.of(false, Text.of("Failed to " + op.pastTense + " " + failures + " members!"));
                 }
             }
         } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
@@ -511,9 +515,9 @@ public class BasicHandler extends HandlerBase {
                                 return ProcessResult.of(false, Text.of("\"" + argument + "\" is not a valid tristate value!"));
                             }
                         } else {
-                            Flag flag = FlagRegistry.getInstance().getFlag(argument);
-                            if (flag != null) {
-                                flags.add(flag);
+                            Optional<Flag> flagOptional = FlagRegistry.getInstance().getFlag(argument);
+                            if (flagOptional.isPresent()) {
+                                flags.add(flagOptional.get());
                                 areFlagsSet = true;
                             } else {
                                 return ProcessResult.of(false, Text.of("\"" + argument + "\" is not a valid flag!"));
@@ -530,7 +534,7 @@ public class BasicHandler extends HandlerBase {
                             return ProcessResult.of(false, Text.of("Entry already exists with this flag set!"));
                     }
 
-                    int index = permissions.size();
+                    int index = 0;
                     if (parse.flags.containsKey("index")) {
                         String number = parse.flags.get("index");
                         if (!number.isEmpty()) {
@@ -559,9 +563,9 @@ public class BasicHandler extends HandlerBase {
                         Set<Flag> flags = new HashSet<>();
                         for (int i = 3; i < parse.args.length; i++) {
                             String argument = parse.args[i];
-                            Flag flag = FlagRegistry.getInstance().getFlag(argument);
-                            if (flag != null) {
-                                flags.add(flag);
+                            Optional<Flag> flagOptional = FlagRegistry.getInstance().getFlag(argument);
+                            if (flagOptional.isPresent()) {
+                                flags.add(flagOptional.get());
                             } else {
                                 return ProcessResult.of(false, Text.of("\"" + argument + "\" is not a valid flag!"));
                             }
@@ -590,33 +594,43 @@ public class BasicHandler extends HandlerBase {
                             return ProcessResult.of(false, Text.of("Must specify a tristate value!"));
                         String tristateArg = parse.args[4];
                         if (tristateArg.startsWith("=")) tristateArg = tristateArg.substring(1);
-                        Tristate state = Aliases.tristateFrom(tristateArg);
-                        if (state == null)
-                            return ProcessResult.of(false, Text.of("\"" + tristateArg + "\" is not a valid tristate value!"));
-                        this.setFlagEntry(group, index, state);
-                        return ProcessResult.of(true, Text.of("Successfully set flag entry!"));
+                        if (isIn(CLEAR_ALIASES, tristateArg)) {
+                            this.removeFlagEntry(group, index);
+                            return ProcessResult.of(true, Text.of("Successfully cleared flag entry!"));
+                        } else {
+                            Tristate state = Aliases.tristateFrom(tristateArg);
+                            if (state == null)
+                                return ProcessResult.of(false, Text.of("\"" + tristateArg + "\" is not a valid tristate value!"));
+                            this.setFlagEntry(group, index, state);
+                            return ProcessResult.of(true, Text.of("Successfully set flag entry!"));
+                        }
                     } catch (NumberFormatException ignored) {
                     }
                     Tristate state = null;
                     Set<Flag> flags = new HashSet<>();
                     boolean areFlagsSet = false;
-
+                    boolean clear = false;
                     for (int i = 3; i < parse.args.length; i++) {
                         String argument = parse.args[i];
                         if (argument.startsWith("=")) {
                             argument = argument.substring(1);
                             if (argument.isEmpty())
                                 return ProcessResult.of(false, Text.of("Must supply a tristate value after \'=\'!"));
-                            Tristate newState = tristateFrom(argument);
-                            if (newState != null) {
-                                state = newState;
+                            if (isIn(CLEAR_ALIASES, argument)) {
+                                clear = true;
                             } else {
-                                return ProcessResult.of(false, Text.of("\"" + argument + "\" is not a valid tristate value!"));
+                                Tristate newState = tristateFrom(argument);
+                                if (newState != null) {
+                                    state = newState;
+                                    clear = false;
+                                } else {
+                                    return ProcessResult.of(false, Text.of("\"" + argument + "\" is not a valid tristate value!"));
+                                }
                             }
                         } else {
-                            Flag flag = FlagRegistry.getInstance().getFlag(argument);
-                            if (flag != null) {
-                                flags.add(flag);
+                            Optional<Flag> flagOptional = FlagRegistry.getInstance().getFlag(argument);
+                            if (flagOptional.isPresent()) {
+                                flags.add(flagOptional.get());
                                 areFlagsSet = true;
                             } else {
                                 return ProcessResult.of(false, Text.of("\"" + argument + "\" is not a valid flag!"));
@@ -624,7 +638,8 @@ public class BasicHandler extends HandlerBase {
                         }
                     }
                     if (!areFlagsSet) return ProcessResult.of(false, Text.of("Must specify flags!"));
-                    if (state == null) return ProcessResult.of(false, Text.of("Must specify a tristate value!"));
+                    if (state == null && !clear)
+                        return ProcessResult.of(false, Text.of("Must specify a tristate value!"));
                     Entry entry = new Entry(flags, state);
 
                     Entry original = null;
@@ -634,22 +649,31 @@ public class BasicHandler extends HandlerBase {
                             break;
                         }
                     }
-                    if (original != null) permissions.remove(original);
 
-                    int index = permissions.size();
-                    if (parse.flags.containsKey("index")) {
-                        String number = parse.flags.get("index");
-                        if (!number.isEmpty()) {
-                            try {
-                                index = Integer.parseInt(number);
-                                if (index < 0) index = 0;
-                                else if (index > permissions.size()) index = permissions.size();
-                            } catch (NumberFormatException ignored) {
+                    if (clear) {
+                        if (original != null) {
+                            this.removeFlagEntry(group, permissions.indexOf(entry));
+                            return ProcessResult.of(true, Text.of("Successfully cleared flag entry!"));
+                        } else {
+                            return ProcessResult.of(false, Text.of("No entry exists with these flags to be cleared!"));
+                        }
+                    } else {
+                        if (original != null) permissions.remove(original);
+                        int index = 0;
+                        if (parse.flags.containsKey("index")) {
+                            String number = parse.flags.get("index");
+                            if (!number.isEmpty()) {
+                                try {
+                                    index = Integer.parseInt(number);
+                                    if (index < 0) index = 0;
+                                    else if (index > permissions.size()) index = permissions.size();
+                                } catch (NumberFormatException ignored) {
+                                }
                             }
                         }
+                        this.setFlagEntry(group, index, entry);
+                        return ProcessResult.of(true, Text.of("Successfully set flag entry!"));
                     }
-                    this.setFlagEntry(group, index, entry);
-                    return ProcessResult.of(true, Text.of("Successfully set flag entry!"));
                 }
                 case "move": {
                     List<Entry> permissions = getGroupPermissions(group);
@@ -661,7 +685,7 @@ public class BasicHandler extends HandlerBase {
                         else if (from >= permissions.size()) from = permissions.size() - 1;
                         if (parse.args.length < 5)
                             return ProcessResult.of(false, Text.of("Must specify a target index to move to!"));
-                        int to = FCUtil.parseCoordinate(from, parse.args[4]);
+                        int to = FCCUtil.parseCoordinate(from, parse.args[4]);
                         if (to < 0) to = 0;
                         else if (to >= permissions.size()) to = permissions.size() - 1;
                         moveFlagEntry(group, from, to);
@@ -673,9 +697,9 @@ public class BasicHandler extends HandlerBase {
                         boolean relative = false;
                         for (int i = 3; i < parse.args.length; i++) {
                             String argument = parse.args[i];
-                            Flag flag = FlagRegistry.getInstance().getFlag(argument);
-                            if (flag != null) {
-                                flags.add(flag);
+                            Optional<Flag> flagOptional = FlagRegistry.getInstance().getFlag(argument);
+                            if (flagOptional.isPresent()) {
+                                flags.add(flagOptional.get());
                                 continue;
                             }
                             try {
@@ -691,7 +715,7 @@ public class BasicHandler extends HandlerBase {
                             }
                             return ProcessResult.of(false, Text.of("\"" + argument + "\" is not a valid flag!"));
                         }
-                        if(!set) return ProcessResult.of(false, Text.of("Must specify a target index!"));
+                        if (!set) return ProcessResult.of(false, Text.of("Must specify a target index!"));
                         Entry entry = null;
                         for (Entry existing : permissions) {
                             if (existing.set.equals(flags)) {
@@ -714,11 +738,11 @@ public class BasicHandler extends HandlerBase {
             if (parse.args.length < 2) return ProcessResult.of(false, Text.of("Must specify an option!"));
 
             if (isIn(TRUE_ALIASES, parse.args[1])) {
-                this.setPassiveOption(PassiveOption.ALLOW);
+                this.setPassiveSetting(PassiveSetting.ALLOW);
             } else if (isIn(FALSE_ALIASES, parse.args[1])) {
-                this.setPassiveOption(PassiveOption.DENY);
+                this.setPassiveSetting(PassiveSetting.DENY);
             } else if (isIn(PASSTHROUGH_ALIASES, parse.args[1])) {
-                this.passiveOption = PassiveOption.PASSTHROUGH;
+                this.passiveSetting = PassiveSetting.PASSTHROUGH;
             } else if (isIn(GROUPS_ALIASES, parse.args[1])) {
                 if (parse.args.length < 3)
                     return ProcessResult.of(false, Text.of("Must specify a group name!"));
@@ -726,15 +750,16 @@ public class BasicHandler extends HandlerBase {
                 if (!groupOptional.isPresent())
                     return ProcessResult.of(false, Text.of("No group exists with this name!"));
 
-                this.setPassiveOption(PassiveOption.GROUP, groupOptional.get());
+                this.setPassiveSetting(PassiveSetting.GROUP, groupOptional.get());
             } else if (isIn(DEFAULT_GROUP_ALIASES, parse.args[1])) {
-                this.setPassiveOption(PassiveOption.DEFAULT);
+                this.setPassiveSetting(PassiveSetting.DEFAULT);
             } else {
                 return ProcessResult.of(false, Text.of("Not a valid option!"));
             }
             return ProcessResult.of(true, Text.of("Successfully set passive option!"));
+        } else {
+            return ProcessResult.of(false, Text.of("Not a valid basic handler command!"));
         }
-        return ProcessResult.failure();
     }
 
     @Override
@@ -764,6 +789,12 @@ public class BasicHandler extends HandlerBase {
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
+                    List<String> list = this.groups.stream()
+                            .map(Group::getName)
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(Collectors.toList());
+                    list.add("default");
                 } else if (isIn(PASSIVE_ALIASES, parse.args[0])) {
                     return ImmutableList.of("allow", "deny", "pass", "group", "default").stream()
                             .filter(new StartsWithPredicate(parse.current.token))
@@ -772,24 +803,35 @@ public class BasicHandler extends HandlerBase {
                 }
             } else if (parse.current.index == 2) {
                 if (isIn(GROUPS_ALIASES, parse.args[0])) {
-                    if (parse.args[1].equalsIgnoreCase("add")) {
-                        if (!parse.current.token.isEmpty()) {
-                            Optional<Group> groupOptional = getGroup(parse.current.token);
-                            if (groupOptional.isPresent()) {
-                                source.sendMessage(Text.of(TextColors.RED, "Name is already taken!"));
-                            } else {
-                                source.sendMessage(Text.of(TextColors.GREEN, "Name is available!"));
+                    switch (parse.args[1].toLowerCase()) {
+                        case "add": {
+                            if (!parse.current.token.isEmpty()) {
+                                Optional<Group> groupOptional = getGroup(parse.current.token);
+                                if (groupOptional.isPresent()) {
+                                    source.sendMessage(Text.of(TextColors.RED, "Name is already taken!"));
+                                } else {
+                                    source.sendMessage(Text.of(TextColors.GREEN, "Name is available!"));
+                                }
                             }
                         }
-                    } else if (parse.args[1].equalsIgnoreCase("remove")
-                            || parse.args[1].equalsIgnoreCase("modify")
-                            || parse.args[1].equalsIgnoreCase("rename")
-                            || parse.args[1].equalsIgnoreCase("move")) {
-                        return this.groups.stream()
-                                .map(Group::getName)
-                                .filter(new StartsWithPredicate(parse.current.token))
-                                .map(args -> parse.current.prefix + args)
-                                .collect(GuavaCollectors.toImmutableList());
+                        case "modify": {
+                            List<String> list = this.groups.stream()
+                                    .map(Group::getName)
+                                    .filter(new StartsWithPredicate(parse.current.token))
+                                    .map(args -> parse.current.prefix + args)
+                                    .collect(Collectors.toList());
+                            list.add("default");
+                            return list;
+                        }
+                        case "remove":
+                        case "rename":
+                        case "move": {
+                            return this.groups.stream()
+                                    .map(Group::getName)
+                                    .filter(new StartsWithPredicate(parse.current.token))
+                                    .map(args -> parse.current.prefix + args)
+                                    .collect(GuavaCollectors.toImmutableList());
+                        }
                     }
                 } else if (isIn(USERS_ALIASES, parse.args[0])) {
                     return ImmutableList.of("add", "remove", "set").stream()
@@ -797,7 +839,10 @@ public class BasicHandler extends HandlerBase {
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
-
+                    return ImmutableList.of("add", "remove", "set", "move").stream()
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(PASSIVE_ALIASES, parse.args[0])) {
                     if (isIn(GROUPS_ALIASES, parse.args[1])) {
                         return this.groups.stream()
@@ -819,6 +864,72 @@ public class BasicHandler extends HandlerBase {
                                     source.sendMessage(Text.of(TextColors.GREEN, "Name is available!"));
                                 }
                             }
+                        }
+                    }
+                } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
+                    switch (parse.args[2].toLowerCase()) {
+                        case "add": {
+                            if (parse.current.token.startsWith("=")) {
+                                return ImmutableList.of("=allow", "=deny", "=pass").stream()
+                                        .filter(new StartsWithPredicate(parse.current.token))
+                                        .map(args -> parse.current.prefix + args)
+                                        .collect(GuavaCollectors.toImmutableList());
+                            } else {
+                                String[] flagArgs = Arrays.copyOfRange(parse.args, 3, parse.args.length);
+                                return FlagRegistry.getInstance().getFlagList().stream()
+                                        .map(Flag::getName)
+                                        .filter(arg -> !isIn(flagArgs, arg))
+                                        .filter(new StartsWithPredicate(parse.current.token))
+                                        .map(args -> parse.current.prefix + args)
+                                        .collect(GuavaCollectors.toImmutableList());
+                            }
+                        }
+                        case "set": {
+                            if (parse.current.index == 3) {
+                                if (parse.current.token.startsWith("=")) {
+                                    return ImmutableList.of("=allow", "=deny", "=pass", "=clear").stream()
+                                            .filter(new StartsWithPredicate(parse.current.token))
+                                            .map(args -> parse.current.prefix + args)
+                                            .collect(GuavaCollectors.toImmutableList());
+                                } else {
+                                    return FlagRegistry.getInstance().getFlagList().stream()
+                                            .map(Flag::getName)
+                                            .filter(new StartsWithPredicate(parse.current.token))
+                                            .map(args -> parse.current.prefix + args)
+                                            .collect(GuavaCollectors.toImmutableList());
+                                }
+                            } else if (parse.current.index == 4) try {
+                                Integer.parseInt(parse.args[3]);
+                                return ImmutableList.of("allow", "deny", "pass", "clear").stream()
+                                        .filter(new StartsWithPredicate(parse.current.token))
+                                        .map(args -> parse.current.prefix + args)
+                                        .collect(GuavaCollectors.toImmutableList());
+                            } catch (NumberFormatException ignored) {
+                            }
+                            if (parse.current.token.startsWith("=")) {
+                                return ImmutableList.of("=allow", "=deny", "=pass", "=clear").stream()
+                                        .filter(new StartsWithPredicate(parse.current.token))
+                                        .map(args -> parse.current.prefix + args)
+                                        .collect(GuavaCollectors.toImmutableList());
+                            } else {
+                                String[] flagArgs = Arrays.copyOfRange(parse.args, 3, parse.args.length);
+                                return FlagRegistry.getInstance().getFlagList().stream()
+                                        .map(Flag::getName)
+                                        .filter(arg -> !isIn(flagArgs, arg))
+                                        .filter(new StartsWithPredicate(parse.current.token))
+                                        .map(args -> parse.current.prefix + args)
+                                        .collect(GuavaCollectors.toImmutableList());
+                            }
+                        }
+                        case "move":
+                        case "remove": {
+                            String[] flagArgs = Arrays.copyOfRange(parse.args, 3, parse.args.length);
+                            return FlagRegistry.getInstance().getFlagList().stream()
+                                    .map(Flag::getName)
+                                    .filter(arg -> !isIn(flagArgs, arg))
+                                    .filter(new StartsWithPredicate(parse.current.token))
+                                    .map(args -> parse.current.prefix + args)
+                                    .collect(GuavaCollectors.toImmutableList());
                         }
                     }
                 } else if (isIn(USERS_ALIASES, parse.args[0])) {
@@ -870,15 +981,24 @@ public class BasicHandler extends HandlerBase {
             }
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY)) {
             if (isIn(GROUPS_ALIASES, parse.args[0])) {
-
+                return ImmutableList.of("index", "color", "displayname").stream()
+                        .filter(new StartsWithPredicate(parse.current.token))
+                        .map(args -> parse.current.prefix + args)
+                        .collect(GuavaCollectors.toImmutableList());
             } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
-
+                ImmutableList.of("index").stream()
+                        .filter(new StartsWithPredicate(parse.current.token))
+                        .map(args -> parse.current.prefix + args)
+                        .collect(GuavaCollectors.toImmutableList());
             }
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGVALUE)) {
             if (isIn(GROUPS_ALIASES, parse.args[0])) {
-
-            } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
-
+                if(isIn(COLOR_ALIASES, parse.current.key)){
+                    return Arrays.stream(FCCUtil.colorNames)
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                }
             }
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
             return ImmutableList.of(parse.current.prefix + " ");
@@ -889,12 +1009,6 @@ public class BasicHandler extends HandlerBase {
     public EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra) {
         if (user == null) return EventResult.of(this.passivePermCache.get(flags));
         else return EventResult.of(this.userPermCache.get(user.getUniqueId()).get(flags));
-    }
-
-    @Deprecated
-    @Override
-    public EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra) {
-        return EventResult.pass();
     }
 
     @Override
@@ -914,11 +1028,12 @@ public class BasicHandler extends HandlerBase {
 
     @Override
     public Text details(CommandSource source, String arguments) {
+        UserStorageService userStorageService = FoxGuardMain.instance().getUserStorage();
         Text.Builder builder = Text.builder();
         Text.Builder passiveBuilder = Text.builder()
                 .append(Text.of(TextColors.AQUA, "Passive: "))
-                .append(Text.of(TextColors.RESET, this.passiveOption.toString()));
-        if (this.passiveOption == PassiveOption.GROUP)
+                .append(Text.of(TextColors.RESET, this.passiveSetting.toString()));
+        if (this.passiveSetting == PassiveSetting.GROUP)
             passiveBuilder.append(Text.of(passiveGroup.color, passiveGroup.displayName));
         passiveBuilder
                 .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " passive "))
@@ -935,7 +1050,6 @@ public class BasicHandler extends HandlerBase {
                     TextActions.showText(Text.of("Click to add player(s) to \"", group.color, group.displayName, TextColors.RESET, "\"" + (group.name.equals(group.displayName) ? "" : " (" + group.name + ")"))),
                     group.displayName,
                     TextColors.RESET, ": "));
-            UserStorageService userStorageService = FoxGuardMain.instance().getUserStorage();
             for (UUID uuid : group.users) {
                 Optional<User> userOptional = userStorageService.get(uuid);
                 if (userOptional.isPresent()) {
@@ -959,7 +1073,7 @@ public class BasicHandler extends HandlerBase {
         builder.append(Text.of(TextColors.GOLD,
                 TextActions.suggestCommand("/foxguard md h " + this.getName() + " groups add "),
                 TextActions.showText(Text.of("Click to add a group")),
-                "----- Group Permissions -----\n"));
+                "----- Group Flags -----\n"));
         for (Group group : groups) {
             builder.append(Text.of(group.color,
                     TextActions.suggestCommand("/foxguard md h " + this.name + " flags " + group.name + " add "),
@@ -973,16 +1087,16 @@ public class BasicHandler extends HandlerBase {
                 }
                 Text.Builder entryBuilder = Text.builder();
                 entryBuilder.append(Text.of("  " + stringBuilder.toString(), TextColors.AQUA, ": "))
-                        .append(FCUtil.readableTristateText(entry.state))
+                        .append(FGUtil.readableTristateText(entry.state))
                         .onHover(TextActions.showText(Text.of("Click to change this flag entry")))
                         .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " flags " + group.name + " set " + (index++) + " "));
                 builder.append(entryBuilder.build()).append(Text.NEW_LINE);
             }
         }
-        builder.append(Text.of(TextColors.RED,
+        builder.append(Text.of(this.defaultGroup.color,
                 TextActions.suggestCommand("/foxguard md h " + this.name + " flags default add "),
                 TextActions.showText(Text.of("Click to add a flag entry")),
-                "Default:"));
+                this.defaultGroup.displayName + ":"));
         int index = 0;
         for (Entry entry : this.defaultPermissions) {
             StringBuilder stringBuilder = new StringBuilder();
@@ -991,7 +1105,7 @@ public class BasicHandler extends HandlerBase {
             }
             Text.Builder entryBuilder = Text.builder();
             entryBuilder.append(Text.of("  " + stringBuilder.toString(), TextColors.AQUA, ": "))
-                    .append(FCUtil.readableTristateText(entry.state))
+                    .append(FGUtil.readableTristateText(entry.state))
                     .onHover(TextActions.showText(Text.of("Click to change this flag entry")))
                     .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " flags default set " + (index++) + " "));
             builder.append(Text.NEW_LINE).append(entryBuilder.build());
@@ -1004,65 +1118,66 @@ public class BasicHandler extends HandlerBase {
         return ImmutableList.of();
     }
 
-    /*@Override
-    public void save(Path directory) {
-        try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.db").normalize().toString()).make()) {
-            Map<String, String> ownerStorageFlagMap = flagMapDB.hashMap("owners", Serializer.STRING, Serializer.STRING).createOrOpen();
-            ownerStorageFlagMap.clear();
-            for (Map.Entry<IFlag, Tristate> entry : ownerPermissions.entrySet()) {
-                ownerStorageFlagMap.put(entry.getKey().flagName(), entry.getValue().name());
-            }
-            Map<String, String> memberStorageFlagMap = flagMapDB.hashMap("members", Serializer.STRING, Serializer.STRING).createOrOpen();
-            memberStorageFlagMap.clear();
-            for (Map.Entry<IFlag, Tristate> entry : memberPermissions.entrySet()) {
-                memberStorageFlagMap.put(entry.getKey().flagName(), entry.getValue().name());
-            }
-            Map<String, String> defaultStorageFlagMap = flagMapDB.hashMap("default", Serializer.STRING, Serializer.STRING).createOrOpen();
-            defaultStorageFlagMap.clear();
-            for (Map.Entry<IFlag, Tristate> entry : defaultPermissions.entrySet()) {
-                defaultStorageFlagMap.put(entry.getKey().flagName(), entry.getValue().name());
-            }
-            Atomic.String passiveOptionString = flagMapDB.atomicString("passive").createOrOpen();
-            passiveOptionString.set(passiveOption.name());
-        }
-        Path usersFile = directory.resolve("users.cfg");
-        CommentedConfigurationNode root;
-        ConfigurationLoader<CommentedConfigurationNode> loader =
-                HoconConfigurationLoader.builder().setPath(usersFile).build();
-        if (Files.exists(usersFile)) {
-            try {
-                root = loader.load();
-            } catch (IOException e) {
-                root = loader.createEmptyNode(ConfigurationOptions.defaults());
-            }
-        } else {
-            root = loader.createEmptyNode(ConfigurationOptions.defaults());
-        }
-        List<CommentedConfigurationNode> ownerNodes = new ArrayList<>();
-        for (User user : owners) {
-            CommentedConfigurationNode node = loader.createEmptyNode(ConfigurationOptions.defaults());
-            node.getNode("username").setValue(user.getName());
-            node.getNode("uuid").setValue(user.getUniqueId().toString());
-            ownerNodes.add(node);
-        }
-        root.getNode("owners").setValue(ownerNodes);
-        List<CommentedConfigurationNode> memberNodes = new ArrayList<>();
-        for (User user : members) {
-            CommentedConfigurationNode node = loader.createEmptyNode(ConfigurationOptions.defaults());
-            node.getNode("username").setValue(user.getName());
-            node.getNode("uuid").setValue(user.getUniqueId().toString());
-            memberNodes.add(node);
-        }
-        root.getNode("members").setValue(memberNodes);
-        try {
-            loader.save(root);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }*/
-
     @Override
     public void save(Path directory) {
+        FGStorageManager storageManager = FGStorageManager.getInstance();
+        UserStorageService userStorageService = FoxGuardMain.instance().getUserStorage();
+        try (DB flagMapDB = DBMaker.fileDB(directory.resolve("groups.db").normalize().toString()).make()) {
+            List<String> groupNames = flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen();
+            groupNames.clear();
+            groupNames.addAll(this.groups.stream().map(group -> group.name).collect(Collectors.toList()));
+        }
+        try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.db").normalize().toString()).make()) {
+            for (Group group : this.groups) {
+                List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
+                stringEntries.clear();
+                stringEntries.addAll(this.groupPermissions.get(group).stream().map(Entry::serialize).collect(Collectors.toList()));
+            }
+            List<String> stringEntries = flagMapDB.indexTreeList("default", Serializer.STRING).createOrOpen();
+            stringEntries.clear();
+            stringEntries.addAll(this.defaultPermissions.stream().map(Entry::serialize).collect(Collectors.toList()));
+        }
+        Path groupsDirectory = directory.resolve("groups");
+        storageManager.constructDirectory(groupsDirectory);
+        for (Group group : this.groups) {
+            Path groupFile = groupsDirectory.resolve(group.name + ".cfg");
+            ConfigurationLoader<CommentedConfigurationNode> loader =
+                    HoconConfigurationLoader.builder().setPath(groupFile).build();
+            CommentedConfigurationNode root = FCPUtil.getHOCONConfiguration(groupFile, loader);
+            List<Map<String, Object>> members = new ArrayList<>();
+            for (UUID uuid : group.users) {
+                Optional<User> userOptional = userStorageService.get(uuid);
+                Map<String, Object> map = new HashMap<>();
+                if (userOptional.isPresent()) map.put("username", userOptional.get().getName());
+                map.put("uuid", uuid.toString());
+                members.add(map);
+            }
+            root.getNode("members").setValue(members);
+            root.getNode("displayname").setValue(group.displayName);
+            root.getNode("color").setValue(group.color.getName());
+            try {
+                loader.save(root);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        {
+            Path basicFile = directory.resolve("basic.cfg");
+            ConfigurationLoader<CommentedConfigurationNode> loader =
+                    HoconConfigurationLoader.builder().setPath(basicFile).build();
+            CommentedConfigurationNode root = FCPUtil.getHOCONConfiguration(basicFile, loader);
+            CommentedConfigurationNode defaultNode = root.getNode("default");
+            defaultNode.getNode("displayname").setValue(this.defaultGroup.displayName);
+            defaultNode.getNode("color").setValue(this.defaultGroup.color.getName());
+            CommentedConfigurationNode passiveNode = root.getNode("passive");
+            passiveNode.getNode("setting").setValue(this.passiveSetting.name());
+            passiveNode.getNode("group").setValue(this.passiveGroup == null ? "" : this.passiveGroup.name);
+            try {
+                loader.save(root);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public Optional<Group> createGroup(String name) {
@@ -1121,6 +1236,7 @@ public class BasicHandler extends HandlerBase {
             }
             groupSuperSet.forEach(this.groupSetPermCache::remove);
             this.groups.remove(group);
+            if (this.passiveGroup.equals(group)) this.setPassiveSetting(PassiveSetting.PASSTHROUGH);
             return true;
         }
         return false;
@@ -1200,7 +1316,7 @@ public class BasicHandler extends HandlerBase {
     }
 
     public boolean addFlagEntry(Group group, Entry entry) {
-        return addFlagEntry(group, group.users.size(), entry);
+        return addFlagEntry(group, 0, entry);
     }
 
     public boolean addFlagEntry(Group group, int index, Entry entry) {
@@ -1299,28 +1415,31 @@ public class BasicHandler extends HandlerBase {
         clearFlagCacheForGroup(group);
     }
 
-    public PassiveOption getPassiveOption() {
-        return passiveOption;
+    public PassiveSetting getPassiveSetting() {
+        return passiveSetting;
     }
 
-    public void setPassiveOption(PassiveOption passiveOption) {
-        setPassiveOption(passiveOption, null);
+    public void setPassiveSetting(PassiveSetting passiveSetting) {
+        setPassiveSetting(passiveSetting, null);
     }
 
-    public void setPassiveOption(PassiveOption passiveOption, Group group) {
-        if (passiveOption == null) return;
-        if (passiveOption != PassiveOption.GROUP)
-            this.passiveOption = passiveOption;
-        else if (group != null) {
-            this.passiveOption = PassiveOption.GROUP;
+    public void setPassiveSetting(PassiveSetting passiveSetting, Group group) {
+        if (passiveSetting == null) return;
+        if (passiveSetting != PassiveSetting.GROUP) {
+            this.passiveSetting = passiveSetting;
+            this.passiveGroup = null;
+            this.passivePermCache.clear();
+        } else if (group != null) {
+            this.passiveSetting = PassiveSetting.GROUP;
             if (group == this.defaultGroup) {
-                this.passiveOption = PassiveOption.DEFAULT;
+                this.passiveSetting = PassiveSetting.DEFAULT;
+                this.passiveGroup = null;
             } else {
                 this.passiveGroup = group;
                 this.passiveGroupCacheRef = this.groupPermCache.get(group);
             }
-        } else return;
-        this.passivePermCache.clear();
+            this.passivePermCache.clear();
+        }
     }
 
     private void clearFlagCacheForGroup(Group group) {
@@ -1366,7 +1485,7 @@ public class BasicHandler extends HandlerBase {
         return true;
     }
 
-    public enum PassiveOption {
+    public enum PassiveSetting {
         ALLOW, DENY, PASSTHROUGH, GROUP, DEFAULT;
 
         public String toString() {
@@ -1384,28 +1503,6 @@ public class BasicHandler extends HandlerBase {
                 default:
                     return "Awut...?";
             }
-        }
-    }
-
-    private enum Operation {
-        ADD("added"),
-        REMOVE("removed"),
-        SET("set");
-
-        public final String pastTense;
-
-        Operation(String pastTense) {
-            this.pastTense = pastTense;
-        }
-    }
-
-    public static class Entry {
-        public Set<Flag> set;
-        public Tristate state;
-
-        public Entry(Set<Flag> set, Tristate state) {
-            this.set = set;
-            this.state = state;
         }
     }
 
@@ -1457,28 +1554,105 @@ public class BasicHandler extends HandlerBase {
 
     public static class Factory implements IHandlerFactory {
 
-        private static final String[] basicAliases = {"basic", "base"};
+        private static final String[] ALIASES = {"basic", "base"};
 
         @Override
-        public IHandler create(String name, int priority, String arguments, CommandSource source) {
+        public IHandler create(String name, int priority, String arguments, CommandSource source) throws CommandException {
+            AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).parse();
             BasicHandler handler = new BasicHandler(name, priority);
-//            if (source instanceof Player) handler.addOwner((Player) source);
-            Group owners = handler.createGroup("owners").get();
-            owners.displayName = "Owners";
-            owners.color = TextColors.GOLD;
-            if (source instanceof Player) owners.users.add(((Player) source).getUniqueId());
+            if (parse.args.length < 1 || !parse.args[0].equalsIgnoreCase("bare")) {
+                Group owners = handler.createGroup("owners").get();
+                owners.displayName = "Owners";
+                owners.color = TextColors.GOLD;
+                if (source instanceof Player) owners.users.add(((Player) source).getUniqueId());
+                Group members = handler.createGroup("members").get();
+                members.displayName = "Members";
+                members.color = TextColors.GREEN;
+            }
             return handler;
         }
 
         @Override
         public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
-            BasicHandler handler = new BasicHandler(name, priority);
+            FGStorageManager storageManager = FGStorageManager.getInstance();
+            List<String> groupNames = new ArrayList<>();
+            try (DB flagMapDB = DBMaker.fileDB(directory.resolve("groups.db").normalize().toString()).make()) {
+                groupNames.addAll(flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen());
+            }
+            Path groupsDirectory = directory.resolve("groups");
+            storageManager.constructDirectory(groupsDirectory);
+            List<Group> groups = new ArrayList<>();
+            for (String groupName : groupNames) {
+                Path groupFile = groupsDirectory.resolve(groupName + ".cfg");
+                ConfigurationLoader<CommentedConfigurationNode> loader =
+                        HoconConfigurationLoader.builder().setPath(groupFile).build();
+                CommentedConfigurationNode root = FCPUtil.getHOCONConfiguration(groupFile, loader);
+                List<Optional<UUID>> optionalMemberUUIDsList = root.getNode("members").getList(o -> {
+                    if (o instanceof HashMap) {
+                        HashMap map = (HashMap) o;
+                        return Optional.of(UUID.fromString((String) map.get("uuid")));
+                    } else return Optional.empty();
+                });
+                Set<UUID> members = optionalMemberUUIDsList.stream()
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
+                        .collect(Collectors.toSet());
+                String displayName = root.getNode("displayname").getString(groupName);
+                TextColor color = Sponge.getRegistry().getType(TextColor.class, root.getNode("color").getString("white")).orElse(TextColors.WHITE);
+                groups.add(new Group(groupName, members, color, displayName));
+            }
+            Map<Group, List<Entry>> groupPermissions = new HashMap<>();
+            List<Entry> defaultPermissions;
+            try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.db").normalize().toString()).make()) {
+                for (Group group : groups) {
+                    List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
+                    groupPermissions.put(group, stringEntries.stream()
+                            .map(Entry::deserialize)
+                            .collect(Collectors.toList()));
+                }
+                List<String> stringEntries = flagMapDB.indexTreeList("default", Serializer.STRING).createOrOpen();
+                defaultPermissions = stringEntries.stream().map(Entry::deserialize).collect(Collectors.toList());
+            }
+
+            Path basicFile = directory.resolve("basic.cfg");
+            ConfigurationLoader<CommentedConfigurationNode> loader =
+                    HoconConfigurationLoader.builder().setPath(basicFile).build();
+            CommentedConfigurationNode root = FCPUtil.getHOCONConfiguration(basicFile, loader);
+            CommentedConfigurationNode defaultNode = root.getNode("default");
+            String defaultDisplayName = defaultNode.getNode("displayname").getString("Default");
+            TextColor defaultColor = Sponge.getRegistry().getType(TextColor.class, defaultNode.getNode("color").getString("red")).orElse(TextColors.RED);
+
+            BasicHandler handler = new BasicHandler(name, isEnabled, priority,
+                    groups,
+                    groupPermissions,
+                    new Group("default", EverythingSet.get(), defaultColor, defaultDisplayName),
+                    defaultPermissions);
+
+            CommentedConfigurationNode passiveNode = root.getNode("passive");
+            String passiveSettingString = passiveNode.getNode("setting").getString("PASSTHROUGH");
+            PassiveSetting passiveSetting;
+            try {
+                passiveSetting = PassiveSetting.valueOf(passiveSettingString);
+            } catch (IllegalArgumentException ignored) {
+                passiveSetting = PassiveSetting.PASSTHROUGH;
+            }
+            if (passiveSetting == PassiveSetting.GROUP) {
+                Optional<Group> groupOptional = handler.getGroup(passiveNode.getNode("group").getString(""));
+                if (groupOptional.isPresent()) {
+                    handler.setPassiveSetting(PassiveSetting.GROUP, groupOptional.get());
+                } else {
+                    handler.setPassiveSetting(PassiveSetting.PASSTHROUGH);
+                }
+            } else {
+                handler.setPassiveSetting(passiveSetting);
+            }
+
             return handler;
         }
 
         @Override
         public String[] getAliases() {
-            return basicAliases;
+            return ALIASES;
         }
 
         @Override
@@ -1488,11 +1662,23 @@ public class BasicHandler extends HandlerBase {
 
         @Override
         public String getPrimaryAlias() {
-            return "basic";
+            return getType();
         }
 
         @Override
         public List<String> createSuggestions(CommandSource source, String arguments, String type) throws CommandException {
+            AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
+                    .arguments(arguments)
+                    .excludeCurrent(true)
+                    .autoCloseQuotes(true)
+                    .parse();
+            if (parse.current.type == AdvCmdParser.CurrentElement.ElementType.ARGUMENT &&
+                    parse.current.index == 0) {
+                return ImmutableList.of("bare").stream()
+                        .filter(new StartsWithPredicate(parse.current.token))
+                        .map(args -> parse.current.prefix + args)
+                        .collect(GuavaCollectors.toImmutableList());
+            }
             return ImmutableList.of();
         }
     }

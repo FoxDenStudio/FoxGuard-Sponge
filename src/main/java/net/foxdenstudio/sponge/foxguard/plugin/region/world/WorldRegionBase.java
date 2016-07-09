@@ -25,22 +25,15 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.region.world;
 
-import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectBase;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.region.RegionBase;
 import org.spongepowered.api.world.World;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public abstract class WorldRegionBase extends RegionBase implements IWorldRegion {
 
     protected World world;
 
-    protected WorldRegionBase(String name) {
-        super(name);
+    protected WorldRegionBase(String name, boolean isEnabled) {
+        super(name, isEnabled);
     }
 
     @Override

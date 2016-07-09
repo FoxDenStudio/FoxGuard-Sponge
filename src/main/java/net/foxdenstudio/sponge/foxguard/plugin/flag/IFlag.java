@@ -42,12 +42,12 @@ public interface IFlag {
     /**
      * Gets the hierarchy of the flag. This behavior is very specific, and is already implemented in
      * {@link FlagOld#getHierarchyStatic(IFlag)} for use by other plugins wishing to implement {@code IFlag}.
+     *
      * @return A list of ordered sets representing the hierarchy of the flag.
      */
     List<Set<IFlag>> getHierarchy();
 
     /**
-     *
      * @param input
      * @return
      */

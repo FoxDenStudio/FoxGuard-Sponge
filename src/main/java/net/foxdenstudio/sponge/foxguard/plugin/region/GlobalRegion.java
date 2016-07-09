@@ -44,7 +44,7 @@ public class GlobalRegion extends RegionBase {
     public static final String NAME = "_sglobal";
 
     public GlobalRegion() {
-        super(NAME);
+        super(NAME, true);
     }
 
     @Override

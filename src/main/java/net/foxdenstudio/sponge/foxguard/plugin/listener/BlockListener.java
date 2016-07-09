@@ -45,11 +45,12 @@ import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 import static org.spongepowered.api.util.Tristate.FALSE;
-import static org.spongepowered.api.util.Tristate.TRUE;
 import static org.spongepowered.api.util.Tristate.UNDEFINED;
 
 public class BlockListener implements EventListener<ChangeBlockEvent> {
@@ -90,7 +91,6 @@ public class BlockListener implements EventListener<ChangeBlockEvent> {
         else if (event instanceof ChangeBlockEvent.Place) flags.set(PLACE);
         else if (event instanceof ChangeBlockEvent.Decay) flags.set(DECAY);
         else if (event instanceof ChangeBlockEvent.Grow) flags.set(GROW);
-        else return;
 
         //FoxGuardMain.instance().getLogger().info(player.getName());
 
@@ -122,7 +122,7 @@ public class BlockListener implements EventListener<ChangeBlockEvent> {
             flagState = flagState.and(handler.handle(user, flags, ExtraContext.of(event)).getState());
             currPriority = handler.getPriority();
         }
-        if(flagState == UNDEFINED) flagState = TRUE;
+//        if(flagState == UNDEFINED) flagState = TRUE;
 
         if (flagState == FALSE) {
             if (user instanceof Player) {
@@ -131,7 +131,6 @@ public class BlockListener implements EventListener<ChangeBlockEvent> {
                     ((Player) user).sendMessage(Text.of("Block action denied at (" + vec.getX() + ", " + vec.getY() + ", " + vec.getZ() + ")"
                             + (event.getTransactions().size() > 1 ? " and " + (event.getTransactions().size() - 1) + " other positions" : "") + "!"));
                 } else {
-
                     Player player = (Player) user;
                     Vector3i pos = player.getLocation().getPosition().toInt();
                     Response r = Response.NONE;

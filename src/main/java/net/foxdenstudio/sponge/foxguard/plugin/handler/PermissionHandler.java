@@ -47,12 +47,11 @@ import java.util.Set;
 
 public class PermissionHandler extends HandlerBase {
 
-    public PermissionHandler(String name, int priority) {
-        super(name, priority);
+    public PermissionHandler(String name, boolean isEnabled, int priority) {
+        super(name, isEnabled, priority);
     }
 
     @Deprecated
-    @Override
     public EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra) {
         if (user == null) return EventResult.pass();
         /*while (flag != null) {
@@ -148,13 +147,12 @@ public class PermissionHandler extends HandlerBase {
 
         @Override
         public IHandler create(String name, int priority, String arguments, CommandSource source) {
-            return new PermissionHandler(name, priority);
+            return new PermissionHandler(name, true, priority);
         }
 
         @Override
         public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
-            PermissionHandler handler = new PermissionHandler(name, priority);
-            handler.setIsEnabled(isEnabled);
+            PermissionHandler handler = new PermissionHandler(name, isEnabled, priority);
             return handler;
         }
 

@@ -30,8 +30,9 @@ public abstract class FGObjectBase implements IFGObject {
     protected String name;
     protected boolean isEnabled = true;
 
-    protected FGObjectBase(String name) {
+    public FGObjectBase(String name, boolean isEnabled) {
         this.name = name;
+        this.isEnabled = isEnabled;
     }
 
     @Override

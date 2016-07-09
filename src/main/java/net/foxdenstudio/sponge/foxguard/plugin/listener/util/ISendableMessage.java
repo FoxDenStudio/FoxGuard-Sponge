@@ -38,5 +38,4 @@ public interface ISendableMessage {
     Text preview();
 
 
-
 }

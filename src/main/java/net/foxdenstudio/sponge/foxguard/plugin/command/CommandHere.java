@@ -27,9 +27,10 @@ package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.common.FCUtil;
+import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.CommandHUD;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
@@ -52,8 +53,6 @@ import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.world.World;
 
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
@@ -62,7 +61,7 @@ public class CommandHere implements CommandCallable {
 
     private static final String[] PRIORITY_ALIASES = {"priority", "prio", "p"};
 
-    private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
+    private static final FlagMapper MAPPER = map -> key -> value -> {
         map.put(key, value);
         if (isIn(REGIONS_ALIASES, key) && !map.containsKey("region")) {
             map.put("region", value);
@@ -115,17 +114,17 @@ public class CommandHere implements CommandCallable {
             if (pPos == null)
                 pPos = Vector3d.ZERO;
             try {
-                x = FCUtil.parseCoordinate(pPos.getX(), parse.args[0]);
+                x = FCCUtil.parseCoordinate(pPos.getX(), parse.args[0]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(Text.of("Unable to parse \"" + parse.args[0] + "\"!"), e, parse.args[0], 0);
             }
             try {
-                y = FCUtil.parseCoordinate(pPos.getY(), parse.args[1]);
+                y = FCCUtil.parseCoordinate(pPos.getY(), parse.args[1]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(Text.of("Unable to parse \"" + parse.args[1] + "\"!"), e, parse.args[1], 1);
             }
             try {
-                z = FCUtil.parseCoordinate(pPos.getZ(), parse.args[2]);
+                z = FCCUtil.parseCoordinate(pPos.getZ(), parse.args[2]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(Text.of("Unable to parse \"" + parse.args[2] + "\"!"), e, parse.args[2], 2);
             }

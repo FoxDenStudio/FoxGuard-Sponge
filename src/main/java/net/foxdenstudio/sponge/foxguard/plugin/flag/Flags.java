@@ -35,9 +35,11 @@ public class Flags {
     public static final Flag ROOT = REGISTRY.registerFlag("root");
     public static final Flag BUFF = REGISTRY.registerFlag("buff");
     public static final Flag DEBUFF = REGISTRY.registerFlag("debuff");
+
     public static final Flag INTERACT = REGISTRY.registerFlag("interact");
     public static final Flag PRIMARY = REGISTRY.registerFlag("primary");
     public static final Flag SECONDARY = REGISTRY.registerFlag("secondary");
+
     public static final Flag BLOCK = REGISTRY.registerFlag("block");
     public static final Flag CHANGE = REGISTRY.registerFlag("change");
     public static final Flag PLACE = REGISTRY.registerFlag("place");
@@ -45,21 +47,26 @@ public class Flags {
     public static final Flag MODIFY = REGISTRY.registerFlag("modify");
     public static final Flag DECAY = REGISTRY.registerFlag("decay");
     public static final Flag GROW = REGISTRY.registerFlag("grow");
-    public static final Flag ENTITY = REGISTRY.registerFlag("entity");
-    public static final Flag LIVING = REGISTRY.registerFlag("living");
-    public static final Flag MOB = REGISTRY.registerFlag("mob");
-    public static final Flag HUMAN = REGISTRY.registerFlag("human");
-    public static final Flag PLAYER = REGISTRY.registerFlag("player");
-    public static final Flag PASSIVE = REGISTRY.registerFlag("passive");
-    public static final Flag HOSTILE = REGISTRY.registerFlag("hostile");
-    public static final Flag SPAWN = REGISTRY.registerFlag("spawn");
-    public static final Flag PASS = REGISTRY.registerFlag("pass");
-    public static final Flag ENTER = REGISTRY.registerFlag("enter");
-    public static final Flag EXIT = REGISTRY.registerFlag("exit");
+
     public static final Flag DAMAGE = REGISTRY.registerFlag("damage");
     public static final Flag KILL = REGISTRY.registerFlag("kill");
     public static final Flag IGNITE = REGISTRY.registerFlag("ignite");
+    public static final Flag SPAWN = REGISTRY.registerFlag("spawn");
+
+    public static final Flag ENTITY = REGISTRY.registerFlag("entity");
+    public static final Flag LIVING = REGISTRY.registerFlag("living");
+    public static final Flag PASSIVE = REGISTRY.registerFlag("passive");
+    public static final Flag HOSTILE = REGISTRY.registerFlag("hostile");
+    public static final Flag MOB = REGISTRY.registerFlag("mob");
+    public static final Flag HUMAN = REGISTRY.registerFlag("human");
+    public static final Flag PLAYER = REGISTRY.registerFlag("player");
+
+    public static final Flag PASS = REGISTRY.registerFlag("pass");
+    public static final Flag ENTER = REGISTRY.registerFlag("enter");
+    public static final Flag EXIT = REGISTRY.registerFlag("exit");
+
     public static final Flag EXPLOSION = REGISTRY.registerFlag("explosion");
+
     public static final Flag INVINCIBLE = REGISTRY.registerFlag("invincible");
     public static final Flag UNDYING = REGISTRY.registerFlag("undying");
 

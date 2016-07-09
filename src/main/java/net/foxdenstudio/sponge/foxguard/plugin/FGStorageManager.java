@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin;
 
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
+import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
@@ -99,8 +100,8 @@ public final class FGStorageManager {
             Path dir = directory.resolve("regions");
             constructDirectory(dir);
             FGManager.getInstance().getRegions().forEach(fgObject -> {
+                String name = fgObject.getName();
                 if (fgObject.autoSave()) {
-                    String name = fgObject.getName();
                     Path singleDir = dir.resolve(name.toLowerCase());
                     if (force || fgObject.shouldSave()) {
                         logger.info("Saving region \"" + name + "\" in directory: " + singleDir);
@@ -128,11 +129,15 @@ public final class FGStorageManager {
                     mainMap.put(name, FGUtil.getCategory(fgObject));
                     typeMap.put(name, fgObject.getUniqueTypeString());
                     enabledMap.put(name, fgObject.isEnabled());
-                    linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
 
                     defaultModifiedMap.put(fgObject, false);
                 } else {
                     logger.info("Region " + fgObject.getName() + " does not need saving. Skipping...");
+                }
+                if (fgObject.saveLinks()) {
+                    linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
+                } else {
+                    logger.info("Region " + fgObject.getName() + " does not need its links saved. Skipping...");
                 }
             });
         } catch (DBException.DataCorruption e) {
@@ -163,8 +168,8 @@ public final class FGStorageManager {
             Path dir = worldDirectories.get(world.getName()).resolve("wregions");
             constructDirectory(dir);
             FGManager.getInstance().getWorldRegions(world).forEach(fgObject -> {
+                String name = fgObject.getName();
                 if (fgObject.autoSave()) {
-                    String name = fgObject.getName();
                     Path singleDir = dir.resolve(name.toLowerCase());
                     if (force || fgObject.shouldSave()) {
                         logger.info("Saving world region \"" + name + "\" in directory: " + singleDir);
@@ -193,11 +198,15 @@ public final class FGStorageManager {
                     mainMap.put(name, FGUtil.getCategory(fgObject));
                     typeMap.put(name, fgObject.getUniqueTypeString());
                     enabledMap.put(name, fgObject.isEnabled());
-                    linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
 
                     defaultModifiedMap.put(fgObject, false);
                 } else {
                     logger.info("World region " + fgObject.getName() + " does not need saving. Skipping...");
+                }
+                if (fgObject.saveLinks()) {
+                    linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
+                } else {
+                    logger.info("World region " + fgObject.getName() + " does not need its links saved. Skipping...");
                 }
             });
         } catch (DBException.DataCorruption e) {
@@ -781,18 +790,21 @@ public final class FGStorageManager {
     }
 
     public synchronized void loadRegionLinks() {
+        logger.info("Loading region links");
         try (DB mainDB = DBMaker.fileDB(directory.resolve("regions.db").normalize().toString()).make()) {
             Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
             linksMap.entrySet().forEach(entry -> {
                 IRegion region = FGManager.getInstance().getRegion(entry.getKey());
                 if (region != null) {
+                    logger.info("Loading links for region \"" + region.getName() + "\"");
                     String handlersString = entry.getValue();
                     if (handlersString != null && !handlersString.isEmpty()) {
                         String[] handlersNames = handlersString.split(",");
                         Arrays.stream(handlersNames).forEach(handlerName -> {
                             IHandler handler = FGManager.getInstance().gethandler(handlerName);
                             if (handler != null) {
-                                FGManager.getInstance().link(region, handler);
+                                if (FGManager.getInstance().link(region, handler))
+                                    logger.info("Linked region \"" + region.getName() + "\" to handler \"" + handler.getName() + "\"");
                             }
                         });
                     }
@@ -802,18 +814,21 @@ public final class FGStorageManager {
     }
 
     public synchronized void loadWorldRegionLinks(World world) {
+        logger.info("Loading world region links for world \"" + world.getName() + "\"");
         try (DB mainDB = DBMaker.fileDB(worldDirectories.get(world.getName()).resolve("wregions.db").normalize().toString()).make()) {
             Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
             linksMap.entrySet().forEach(entry -> {
                 IRegion region = FGManager.getInstance().getWorldRegion(world, entry.getKey());
                 if (region != null) {
+                    logger.info("Loading links for world region \"" + region.getName() + "\"");
                     String handlersString = entry.getValue();
                     if (handlersString != null && !handlersString.isEmpty()) {
                         String[] handlersNames = handlersString.split(",");
                         Arrays.stream(handlersNames).forEach(handlerName -> {
                             IHandler handler = FGManager.getInstance().gethandler(handlerName);
                             if (handler != null) {
-                                FGManager.getInstance().link(region, handler);
+                                if (FGManager.getInstance().link(region, handler))
+                                    logger.info("Linked world region \"" + region.getName() + "\" to handler \"" + handler.getName() + "\"");
                             }
                         });
                     }
@@ -823,8 +838,12 @@ public final class FGStorageManager {
     }
 
     public synchronized void loadControllerLinks() {
+        logger.info("Loading controller links");
         Path dir = directory.resolve("handlers");
-        FGManager.getInstance().getControllers().forEach(controller -> controller.loadLinks(dir.resolve(controller.getName().toLowerCase())));
+        for (IController controller : FGManager.getInstance().getControllers()) {
+            logger.info("Loading links for controller \"" + controller.getName() + "\"");
+            controller.loadLinks(dir.resolve(controller.getName().toLowerCase()));
+        }
     }
 
     public synchronized void addObject(IFGObject object) {
@@ -859,6 +878,64 @@ public final class FGStorageManager {
             }
         } else if (object instanceof IHandler) {
             this.removeHandler((IHandler) object);
+        }
+    }
+
+    public void constructDirectory(Path directory) {
+        if (!Files.exists(directory)) {
+            try {
+                int counter = 1;
+                while (true) {
+                    try {
+                        Files.createDirectory(directory);
+                        break;
+                    } catch (AccessDeniedException e) {
+                        if (counter > 5) throw e;
+                        else {
+                            logger.error("Unable to create directory: " + directory + "  Trying again in " + counter + " second(s)");
+                            try {
+                                Thread.sleep(1000 * counter);
+                            } catch (InterruptedException e1) {
+                                e1.printStackTrace();
+                            }
+                        }
+                    }
+                    counter++;
+                }
+                logger.info("Created directory: " + directory);
+            } catch (IOException e) {
+                logger.error("There was an error creating the directory: " + directory, e);
+            }
+        } else if (!Files.isDirectory(directory)) {
+            logger.warn("There is a file at " + directory + " where a directory was expected. Deleting and replacing with a directory...");
+            try {
+                Files.delete(directory);
+                try {
+                    int counter = 1;
+                    while (true) {
+                        try {
+                            Files.createDirectory(directory);
+                            break;
+                        } catch (AccessDeniedException e) {
+                            if (counter > 5) throw e;
+                            else {
+                                logger.error("Unable to create directory: " + directory + "  Trying again in " + counter + " second(s)");
+                                try {
+                                    Thread.sleep(1000 * counter);
+                                } catch (InterruptedException e1) {
+                                    e1.printStackTrace();
+                                }
+                            }
+                        }
+                        counter++;
+                    }
+                    logger.info("Created directory: " + directory);
+                } catch (IOException e) {
+                    logger.error("Error creating the directory: " + directory, e);
+                }
+            } catch (IOException e) {
+                logger.error("Error deleting the file: " + directory, e);
+            }
         }
     }
 
@@ -934,64 +1011,6 @@ public final class FGStorageManager {
                 Files.delete(directory);
             } catch (IOException e) {
                 logger.error("There was an error deleting the file: " + directory, e);
-            }
-        }
-    }
-
-    private void constructDirectory(Path directory) {
-        if (!Files.exists(directory)) {
-            try {
-                int counter = 1;
-                while (true) {
-                    try {
-                        Files.createDirectory(directory);
-                        break;
-                    } catch (AccessDeniedException e) {
-                        if (counter > 5) throw e;
-                        else {
-                            logger.error("Unable to create directory: " + directory + "  Trying again in " + counter + " second(s)");
-                            try {
-                                Thread.sleep(1000 * counter);
-                            } catch (InterruptedException e1) {
-                                e1.printStackTrace();
-                            }
-                        }
-                    }
-                    counter++;
-                }
-                logger.info("Created directory: " + directory);
-            } catch (IOException e) {
-                logger.error("There was an error creating the directory: " + directory, e);
-            }
-        } else if (!Files.isDirectory(directory)) {
-            logger.warn("There is a file at " + directory + " where a directory was expected. Deleting and replacing with a directory...");
-            try {
-                Files.delete(directory);
-                try {
-                    int counter = 1;
-                    while (true) {
-                        try {
-                            Files.createDirectory(directory);
-                            break;
-                        } catch (AccessDeniedException e) {
-                            if (counter > 5) throw e;
-                            else {
-                                logger.error("Unable to create directory: " + directory + "  Trying again in " + counter + " second(s)");
-                                try {
-                                    Thread.sleep(1000 * counter);
-                                } catch (InterruptedException e1) {
-                                    e1.printStackTrace();
-                                }
-                            }
-                        }
-                        counter++;
-                    }
-                    logger.info("Created directory: " + directory);
-                } catch (IOException e) {
-                    logger.error("Error creating the directory: " + directory, e);
-                }
-            } catch (IOException e) {
-                logger.error("Error deleting the file: " + directory, e);
             }
         }
     }

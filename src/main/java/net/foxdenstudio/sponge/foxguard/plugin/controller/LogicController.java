@@ -71,18 +71,17 @@ public class LogicController extends ControllerBase {
     private boolean shortCircuit = false;
 
     public LogicController(String name, int priority) {
-        super(name, priority);
+        super(name, true, priority);
     }
 
-    public LogicController(String name, int priority, Operator operator, Tristate mode, boolean shortCircuit) {
-        super(name, priority);
+    public LogicController(String name, boolean isEnabled, int priority, Operator operator, Tristate mode, boolean shortCircuit) {
+        super(name, isEnabled, priority);
         this.operator = operator;
         this.mode = mode;
         this.shortCircuit = shortCircuit;
     }
 
     @Deprecated
-    @Override
     public EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra) {
         return EventResult.pass();
     }
@@ -337,7 +336,7 @@ public class LogicController extends ControllerBase {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            return new LogicController(name, priority, operator, mode, shortCircuit);
+            return new LogicController(name, isEnabled, priority, operator, mode, shortCircuit);
         }
 
         @Override

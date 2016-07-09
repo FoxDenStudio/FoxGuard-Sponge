@@ -34,4 +34,8 @@ import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
  */
 public interface IRegion extends IFGObject, ILinkable, IBounded {
 
+    default boolean saveLinks() {
+        return true;
+    }
+
 }

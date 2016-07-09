@@ -46,14 +46,14 @@ public class FlagBitSet extends BitSet {
         }
     }
 
-    public FlagBitSet(Set<Flag> flags){
+    public FlagBitSet(Set<Flag> flags) {
         this();
         for (Flag flag : flags) {
             this.set(flag.id);
         }
     }
 
-    public boolean get(Flag flag){
+    public boolean get(Flag flag) {
         return this.get(flag.id);
     }
 
@@ -69,7 +69,7 @@ public class FlagBitSet extends BitSet {
         ImmutableSet.Builder<Flag> builder = ImmutableSet.builder();
         FlagRegistry registry = FlagRegistry.getInstance();
         int index = -1;
-        while((index = this.nextSetBit(index + 1)) >= 0){
+        while ((index = this.nextSetBit(index + 1)) >= 0) {
             builder.add(registry.getFlag(index));
         }
         return builder.build();

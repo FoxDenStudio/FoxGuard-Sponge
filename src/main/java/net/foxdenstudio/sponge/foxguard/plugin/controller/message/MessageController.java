@@ -28,10 +28,10 @@ package net.foxdenstudio.sponge.foxguard.plugin.controller.message;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.ControllerBase;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.util.HandlerWrapper;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.ISendableMessage;
@@ -40,7 +40,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.User;
-import org.spongepowered.api.event.Event;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.Tristate;
 
@@ -49,7 +48,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class MessageController extends ControllerBase {
 
@@ -58,17 +56,11 @@ public class MessageController extends ControllerBase {
     private Map<Config, String> configs;
 
 
-    public MessageController(String name, int priority) {
-        super(name, priority);
+    public MessageController(String name, boolean isEnabled, int priority) {
+        super(name, isEnabled, priority);
         slot = HandlerWrapper.PASSTHROUGH;
         messages = new HashMap<>();
         configs = new HashMap<>();
-    }
-
-    @Deprecated
-    @Override
-    public EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra) {
-        return EventResult.pass();
     }
 
     @Override

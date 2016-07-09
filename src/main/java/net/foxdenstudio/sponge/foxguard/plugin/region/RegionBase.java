@@ -27,8 +27,9 @@ package net.foxdenstudio.sponge.foxguard.plugin.region;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectBase;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectBase;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 
 import java.util.HashSet;
 import java.util.List;
@@ -38,8 +39,8 @@ public abstract class RegionBase extends FGObjectBase implements IRegion {
 
     private final Set<IHandler> handlers;
 
-    protected RegionBase(String name) {
-        super(name);
+    protected RegionBase(String name, boolean isEnabled) {
+        super(name, isEnabled);
         this.handlers = new HashSet<>();
     }
 
@@ -61,6 +62,10 @@ public abstract class RegionBase extends FGObjectBase implements IRegion {
     @Override
     public void clearHandlers() {
         this.handlers.clear();
+    }
+
+    public void markDirty() {
+        FGUtil.markRegionDirty(this);
     }
 
 }

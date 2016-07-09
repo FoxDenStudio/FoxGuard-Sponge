@@ -28,7 +28,8 @@ package net.foxdenstudio.sponge.foxguard.plugin.flag;
 /**
  * Created by Fox on 5/25/2016.
  */
-public class Flag {
+public class Flag implements Comparable<Flag> {
+
     public final String name;
     public final int id;
 
@@ -40,5 +41,18 @@ public class Flag {
     @Override
     public String toString() {
         return "FlagOld{" + name + "," + id + "}";
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    @Override
+    public int compareTo(Flag flag) {
+        return this.id - flag.id;
     }
 }

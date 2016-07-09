@@ -26,16 +26,13 @@
 package net.foxdenstudio.sponge.foxguard.plugin.controller.util;
 
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.living.player.User;
-import org.spongepowered.api.event.Event;
 import org.spongepowered.api.util.Tristate;
 
 import javax.annotation.Nullable;
-import java.util.Optional;
 
 public class HandlerWrapper {
 

@@ -26,18 +26,16 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.common.FCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
+import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
-import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
-import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateObjectEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
-import net.foxdenstudio.sponge.foxguard.plugin.util.RegionCache;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
@@ -45,7 +43,6 @@ import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
@@ -54,16 +51,13 @@ import org.spongepowered.api.world.World;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
 public class CommandModify implements CommandCallable {
 
-    private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
+    private static final FlagMapper MAPPER = map -> key -> value -> {
         map.put(key, value);
         if (isIn(WORLD_ALIASES, key) && !map.containsKey("world")) {
             map.put("world", value);
@@ -113,23 +107,10 @@ public class CommandModify implements CommandCallable {
             ProcessResult result = region.modify(source, parse.args.length < 3 ? "" : parse.args[2]);
             Optional<Text> messageOptional = result.getMessage();
             if (result.isSuccess()) {
-                FGManager.getInstance().markDirty(region, RegionCache.DirtyType.MODIFIED);
-                FGStorageManager.getInstance().defaultModifiedMap.put(region, true);
-                final IRegion finalRegion = region;
-                Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
-                    @Override
-                    public IFGObject getTarget() {
-                        return finalRegion;
-                    }
-
-                    @Override
-                    public Cause getCause() {
-                        return FoxGuardMain.getCause();
-                    }
-                });
+                FGUtil.markRegionDirty(region);
 
                 if (messageOptional.isPresent()) {
-                    if (!FCUtil.hasColor(messageOptional.get())) {
+                    if (!FCPUtil.hasColor(messageOptional.get())) {
                         source.sendMessage(messageOptional.get().toBuilder().color(TextColors.GREEN).build());
                     } else {
                         source.sendMessage(messageOptional.get());
@@ -139,7 +120,7 @@ public class CommandModify implements CommandCallable {
                 }
             } else {
                 if (messageOptional.isPresent()) {
-                    if (!FCUtil.hasColor(messageOptional.get())) {
+                    if (!FCPUtil.hasColor(messageOptional.get())) {
                         source.sendMessage(messageOptional.get().toBuilder().color(TextColors.RED).build());
                     } else {
                         source.sendMessage(messageOptional.get());
@@ -156,20 +137,9 @@ public class CommandModify implements CommandCallable {
             ProcessResult result = handler.modify(source, parse.args.length < 3 ? "" : parse.args[2]);
             Optional<Text> messageOptional = result.getMessage();
             if (result.isSuccess()) {
-                FGStorageManager.getInstance().defaultModifiedMap.put(handler, true);
-                Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
-                    @Override
-                    public IFGObject getTarget() {
-                        return handler;
-                    }
-
-                    @Override
-                    public Cause getCause() {
-                        return FoxGuardMain.getCause();
-                    }
-                });
+                FGUtil.markHandlerDirty(handler);
                 if (messageOptional.isPresent()) {
-                    if (!FCUtil.hasColor(messageOptional.get())) {
+                    if (!FCPUtil.hasColor(messageOptional.get())) {
                         source.sendMessage(messageOptional.get().toBuilder().color(TextColors.GREEN).build());
                     } else {
                         source.sendMessage(messageOptional.get());
@@ -179,7 +149,7 @@ public class CommandModify implements CommandCallable {
                 }
             } else {
                 if (messageOptional.isPresent()) {
-                    if (!FCUtil.hasColor(messageOptional.get())) {
+                    if (!FCPUtil.hasColor(messageOptional.get())) {
                         source.sendMessage(messageOptional.get().toBuilder().color(TextColors.RED).build());
                     } else {
                         source.sendMessage(messageOptional.get());

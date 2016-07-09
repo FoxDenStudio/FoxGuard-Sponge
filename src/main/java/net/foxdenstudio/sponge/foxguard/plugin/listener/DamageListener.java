@@ -29,13 +29,15 @@ import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagOld;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.Agent;
 import org.spongepowered.api.entity.living.Hostile;
+import org.spongepowered.api.entity.living.Human;
 import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
@@ -51,14 +53,18 @@ import org.spongepowered.api.world.World;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
-import static net.foxdenstudio.sponge.foxguard.plugin.flag.FlagOld.*;
+import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
+import static org.spongepowered.api.util.Tristate.*;
 
 /**
  * Created by Fox on 5/9/2016.
  */
 public class DamageListener implements EventListener<DamageEntityEvent> {
+
+    private static final FlagBitSet BASE_FLAG_SET_SOURCE = new FlagBitSet(ROOT, DEBUFF, DAMAGE, ENTITY);
+    private static final FlagBitSet INVINCIBLE_FLAG_SET = new FlagBitSet(ROOT, BUFF, INVINCIBLE);
+    private static final FlagBitSet UNDYING_FLAG_SET = new FlagBitSet(ROOT, BUFF, INVINCIBLE, UNDYING);
 
     @Override
     public void handle(DamageEntityEvent event) throws Exception {
@@ -74,37 +80,25 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
 
         World world = event.getTargetEntity().getWorld();
         Vector3d loc = event.getTargetEntity().getLocation().getPosition();
-        FlagOld flag, secondaryFlag = null;
         Entity entity = event.getTargetEntity();
+        FlagBitSet flags = (FlagBitSet) BASE_FLAG_SET_SOURCE.clone();
 
         if (entity instanceof Living) {
+            flags.set(LIVING);
             if (entity instanceof Agent) {
-                //noinspection ConstantConditions
+                flags.set(MOB);
                 if (entity instanceof Hostile) {
-                    flag = DAMAGE_MOB_HOSTILE;
-                    if (event.willCauseDeath()) {
-                        secondaryFlag = KILL_MOB_HOSTILE;
-                    }
+                    flags.set(HOSTILE);
+                } else if (entity instanceof Human) {
+                    flags.set(HUMAN);
                 } else {
-                    flag = DAMAGE_MOB_PASSIVE;
-                    if (event.willCauseDeath()) {
-                        secondaryFlag = KILL_MOB_PASSIVE;
-                    }
+                    flags.set(PASSIVE);
                 }
             } else if (entity instanceof Player) {
-                flag = DAMAGE_PLAYER;
-                if (event.willCauseDeath()) {
-                    secondaryFlag = KILL_PLAYER;
-                }
-            } else {
-                flag = DAMAGE_LIVING;
-                if (event.willCauseDeath()) {
-                    secondaryFlag = KILL_LIVING;
-                }
+                flags.set(PLAYER);
             }
-        } else {
-            flag = DAMAGE_ENTITY;
         }
+
 
         List<IHandler> handlerList = new ArrayList<>();
         final Vector3d finalLoc = loc;
@@ -121,83 +115,83 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
 
         Collections.sort(handlerList);
         int currPriority;
-        Tristate flagState = Tristate.UNDEFINED;
+        Tristate flagState = UNDEFINED;
         boolean invincible = false;
         if (entity instanceof Player) {
             currPriority = handlerList.get(0).getPriority();
             for (IHandler handler : handlerList) {
-                if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
+                if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                     break;
                 }
-                flagState = flagState.and(handler.handle((Player) entity, INVINCIBLE, Optional.of(event)).getState());
+                flagState = flagState.and(handler.handle((Player) entity, INVINCIBLE_FLAG_SET, ExtraContext.of(event)).getState());
                 currPriority = handler.getPriority();
             }
-            flagState = INVINCIBLE.resolve(flagState);
-            if (flagState == Tristate.TRUE) {
+//            if(flagState == UNDEFINED) flagState = FALSE;
+            if (flagState == TRUE) {
                 invincible = true;
-                flagState = Tristate.FALSE;
+                flagState = FALSE;
             }
         }
         if (!invincible) {
             currPriority = handlerList.get(0).getPriority();
-            flagState = Tristate.UNDEFINED;
+            flagState = UNDEFINED;
             for (IHandler handler : handlerList) {
-                if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
+                if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                     break;
                 }
-                flagState = flagState.and(handler.handle(user, flag, Optional.of(event)).getState());
+                flagState = flagState.and(handler.handle(user, flags, ExtraContext.of(event)).getState());
                 currPriority = handler.getPriority();
             }
-            flagState = flag.resolve(flagState);
+//            if(flagState == UNDEFINED) flagState = TRUE;
         }
-        if (flagState == Tristate.FALSE) {
+        if (flagState == FALSE) {
             if (user instanceof Player && !invincible) {
                 ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
             }
             event.setCancelled(true);
         } else {
             if (event.willCauseDeath()) {
-                flagState = Tristate.UNDEFINED;
+                flags.set(KILL);
+                flagState = UNDEFINED;
                 invincible = false;
                 if (entity instanceof Player) {
                     currPriority = handlerList.get(0).getPriority();
                     for (IHandler handler : handlerList) {
-                        if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
+                        if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                             break;
                         }
-                        flagState = flagState.and(handler.handle((Player) entity, UNDYING, Optional.of(event)).getState());
+                        flagState = flagState.and(handler.handle((Player) entity, UNDYING_FLAG_SET, ExtraContext.of(event)).getState());
                         currPriority = handler.getPriority();
                     }
-                    flagState = UNDYING.resolve(flagState);
-                    if (flagState == Tristate.TRUE) {
+//                    if(flagState == UNDEFINED) flagState = FALSE;
+                    if (flagState == TRUE) {
                         invincible = true;
-                        flagState = Tristate.FALSE;
+                        flagState = FALSE;
                     }
                 }
                 if (!invincible) {
                     currPriority = handlerList.get(0).getPriority();
-                    flagState = Tristate.UNDEFINED;
+                    flagState = UNDEFINED;
                     for (IHandler handler : handlerList) {
-                        if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
+                        if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                             break;
                         }
-                        flagState = flagState.and(handler.handle(user, secondaryFlag, Optional.of(event)).getState());
+                        flagState = flagState.and(handler.handle(user, flags, ExtraContext.of(event)).getState());
                         currPriority = handler.getPriority();
                     }
-                    flagState = flag.resolve(flagState);
+//                    if(flagState == UNDEFINED) flagState = TRUE;
                 }
-                if (flagState == Tristate.FALSE) {
+                if (flagState == FALSE) {
                     DamageModifier.Builder builder = DamageModifier.builder();
                     builder.type(DamageModifierTypes.ABSORPTION);
                     builder.cause(FoxGuardMain.getCause());
                     event.setDamage(builder.build(), damage -> ((Living) event.getTargetEntity()).getHealthData().health().get() - damage - 1);
                     if (user instanceof Player && !invincible)
-                        ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
+                        ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission to kill!"));
                 }
             }
             //makes sure that handlers are unable to cancel the event directly.
             event.setCancelled(false);
         }
     }
-
 }

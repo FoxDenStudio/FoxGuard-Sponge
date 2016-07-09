@@ -32,6 +32,7 @@ import org.spongepowered.api.event.game.state.GameStartingServerEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by Fox on 5/25/2016.
@@ -85,8 +86,8 @@ public class FlagRegistry {
         return flagList.get(id);
     }
 
-    public Flag getFlag(String name) {
-        return flagMap.get(name.toLowerCase());
+    public Optional<Flag> getFlag(String name) {
+        return Optional.ofNullable(flagMap.get(name.toLowerCase()));
     }
 
     public List<Flag> getFlagList() {

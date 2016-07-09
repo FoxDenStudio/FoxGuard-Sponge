@@ -27,9 +27,10 @@ package net.foxdenstudio.sponge.foxguard.plugin.region.world;
 
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.common.FCUtil;
+import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
+import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IWorldRegionFactory;
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
@@ -53,20 +54,20 @@ public class ElevationRegion extends WorldRegionBase {
     private int upperBound;
     private int lowerBound;
 
-    public ElevationRegion(String name, int lowerBound, int upperBound) {
-        super(name);
+    public ElevationRegion(String name, boolean isEnabled, int lowerBound, int upperBound) {
+        super(name, isEnabled);
         this.upperBound = upperBound;
         this.lowerBound = lowerBound;
     }
 
     public ElevationRegion(String name, List<Vector3i> positions, String[] args, CommandSource source)
             throws CommandException {
-        super(name);
+        super(name, true);
         List<Vector3i> allPositions = new ArrayList<>(positions);
         for (String arg : args) {
             int y;
             try {
-                y = (int) FCUtil.parseCoordinate(source instanceof Player ?
+                y = FCCUtil.parseCoordinate(source instanceof Player ?
                         ((Player) source).getLocation().getBlockY() : 0, arg);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(
@@ -189,7 +190,7 @@ public class ElevationRegion extends WorldRegionBase {
             AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                     .arguments(arguments)
                     .parse();
-            return new ElevationRegion(name, FCUtil.getPositions(source), parse.args, source);
+            return new ElevationRegion(name, FCPUtil.getPositions(source), parse.args, source);
         }
 
         @Override
@@ -209,7 +210,7 @@ public class ElevationRegion extends WorldRegionBase {
             }
             int lower = root.getNode("lower").getInt(0);
             int upper = root.getNode("upper").getInt(0);
-            return new ElevationRegion(name, lower, upper);
+            return new ElevationRegion(name, isEnabled, lower, upper);
         }
 
         @Override

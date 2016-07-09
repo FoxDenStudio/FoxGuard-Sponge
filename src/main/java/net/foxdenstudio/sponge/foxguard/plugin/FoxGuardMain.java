@@ -35,7 +35,8 @@ import net.foxdenstudio.sponge.foxguard.plugin.command.*;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.LogicController;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.BasicHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.GroupHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.DebugHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.GroupHandlerOld;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.PermissionHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.*;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
@@ -56,7 +57,6 @@ import org.spongepowered.api.command.CommandMapping;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.event.EventManager;
 import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.action.InteractEvent;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.cause.Cause;
@@ -177,7 +177,7 @@ public final class FoxGuardMain {
     }
 
     @Listener
-    public void serverStarted(GameStartedServerEvent event) {
+    public void serverStarting(GameStartingServerEvent event) {
         logger.info("Loading regions");
         FGStorageManager.getInstance().loadRegions();
         logger.info("Loading global handler");
@@ -193,10 +193,6 @@ public final class FoxGuardMain {
     public void serverStopping(GameStoppingServerEvent event) {
         FGStorageManager.getInstance().saveRegions();
         FGStorageManager.getInstance().saveHandlers();
-    }
-
-    @Listener
-    public void serverStopped(GameStoppedServerEvent event) {
         logger.info("Saving configs");
         FGConfigManager.getInstance().save();
     }
@@ -271,8 +267,9 @@ public final class FoxGuardMain {
         manager.registerWorldRegionFactory(new ElevationRegion.Factory());
 
         manager.registerHandlerFactory(new BasicHandler.Factory());
-        manager.registerHandlerFactory(new GroupHandler.Factory());
+        manager.registerHandlerFactory(new GroupHandlerOld.Factory());
         manager.registerHandlerFactory(new PermissionHandler.Factory());
+        manager.registerHandlerFactory(new DebugHandler.Factory());
 
         //manager.registerControllerFactory(new MessageController.Factory());
         manager.registerControllerFactory(new LogicController.Factory());
@@ -292,7 +289,7 @@ public final class FoxGuardMain {
             eventManager.registerListener(this, DisplaceEntityEvent.class, pml);
             eventManager.registerListeners(this, pml.new Listeners());
         }
-        eventManager.registerListener(this, ExplosionEvent.class, new ExplosionListener());
+        eventManager.registerListener(this, ExplosionEvent.Detonate.class, new ExplosionListener());
         eventManager.registerListener(this, DamageEntityEvent.class, new DamageListener());
     }
 

@@ -26,9 +26,11 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.common.FCUtil;
+import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
+import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
@@ -49,15 +51,13 @@ import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.world.World;
 
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
 public class CommandList implements CommandCallable {
 
-    private static final Function<Map<String, String>, Function<String, Consumer<String>>> MAPPER = map -> key -> value -> {
+    private static final FlagMapper MAPPER = map -> key -> value -> {
         map.put(key, value);
         if (isIn(WORLD_ALIASES, key) && !map.containsKey("world")) {
             map.put("world", value);
@@ -108,7 +108,7 @@ public class CommandList implements CommandCallable {
             if (parse.flags.containsKey("query")) {
                 String query = parse.flags.get("query");
                 if (query.startsWith("/")) {
-                    FCUtil.FCPattern pattern = FCUtil.parseUserRegex(query);
+                    FCCUtil.FCPattern pattern = FCCUtil.parseUserRegex(query);
                     regionList = regionList.stream()
                             .filter(region -> pattern.matches(region.getName()))
                             .collect(Collectors.toList());
@@ -184,7 +184,7 @@ public class CommandList implements CommandCallable {
                 if (regionIterator.hasNext() && count < number) builder.append(Text.NEW_LINE);
             }
             if (maxPage > 1)
-                builder.append(Text.NEW_LINE).append(FCUtil.pageFooter(page, maxPage, "/fg ls " + arguments, null));
+                builder.append(Text.NEW_LINE).append(FCPUtil.pageFooter(page, maxPage, "/fg ls " + arguments, null));
             source.sendMessage(builder.build());
 
             //----------------------------------------------------------------------------------------------------------
@@ -194,7 +194,7 @@ public class CommandList implements CommandCallable {
             if (parse.flags.containsKey("query")) {
                 String query = parse.flags.get("query");
                 if (query.startsWith("/")) {
-                    FCUtil.FCPattern pattern = FCUtil.parseUserRegex(query);
+                    FCCUtil.FCPattern pattern = FCCUtil.parseUserRegex(query);
                     handlerList = handlerList.stream()
                             .filter(handler -> pattern.matches(handler.getName()))
                             .collect(Collectors.toList());
@@ -300,7 +300,7 @@ public class CommandList implements CommandCallable {
                 if (handlerIterator.hasNext() && count < number) builder.append(Text.NEW_LINE);
             }
             if (maxPage > 1)
-                builder.append(Text.NEW_LINE).append(FCUtil.pageFooter(page, maxPage, "/fg ls " + arguments, null));
+                builder.append(Text.NEW_LINE).append(FCPUtil.pageFooter(page, maxPage, "/fg ls " + arguments, null));
             source.sendMessage(builder.build());
 
             //----------------------------------------------------------------------------------------------------------
@@ -309,7 +309,7 @@ public class CommandList implements CommandCallable {
             if (parse.flags.containsKey("query")) {
                 String query = parse.flags.get("query");
                 if (query.startsWith("/")) {
-                    FCUtil.FCPattern pattern = FCUtil.parseUserRegex(query);
+                    FCCUtil.FCPattern pattern = FCCUtil.parseUserRegex(query);
                     controllerList = controllerList.stream()
                             .filter(controller -> pattern.matches(controller.getName()))
                             .collect(Collectors.toList());
@@ -394,7 +394,7 @@ public class CommandList implements CommandCallable {
                 if (controllerIterator.hasNext() && count < number) builder.append(Text.NEW_LINE);
             }
             if (maxPage > 1)
-                builder.append(Text.NEW_LINE).append(FCUtil.pageFooter(page, maxPage, "/fg ls " + arguments, null));
+                builder.append(Text.NEW_LINE).append(FCPUtil.pageFooter(page, maxPage, "/fg ls " + arguments, null));
 
             source.sendMessage(builder.build());
         } else {

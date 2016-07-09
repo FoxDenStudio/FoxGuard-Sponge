@@ -53,7 +53,6 @@ import java.util.List;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 import static org.spongepowered.api.util.Tristate.FALSE;
-import static org.spongepowered.api.util.Tristate.TRUE;
 import static org.spongepowered.api.util.Tristate.UNDEFINED;
 
 public class InteractEntityListener implements EventListener<InteractEntityEvent> {
@@ -121,7 +120,7 @@ public class InteractEntityListener implements EventListener<InteractEntityEvent
             flagState = flagState.and(handler.handle(user, flags, ExtraContext.of(event)).getState());
             currPriority = handler.getPriority();
         }
-        if(flagState == UNDEFINED) flagState = TRUE;
+//        if(flagState == UNDEFINED) flagState = TRUE;
         if (flagState == FALSE) {
             if (user instanceof Player)
                 ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
@@ -130,5 +129,10 @@ public class InteractEntityListener implements EventListener<InteractEntityEvent
             //makes sure that handlers are unable to cancel the event directly.
             event.setCancelled(false);
         }
+    }
+
+    {
+        ArrayList<String> strings = new ArrayList<String>();
+
     }
 }

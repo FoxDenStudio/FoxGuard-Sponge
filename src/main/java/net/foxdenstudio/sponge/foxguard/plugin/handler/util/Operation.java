@@ -23,13 +23,19 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.flag;
+package net.foxdenstudio.sponge.foxguard.plugin.handler.util;
 
 /**
- * Created by Fox on 5/19/2016.
+ * Created by Fox on 7/8/2016.
  */
-public interface IFlag2 {
+public enum Operation {
+    ADD("added"),
+    REMOVE("removed"),
+    SET("set");
 
-    String flagName();
+    public final String pastTense;
 
+    Operation(String pastTense) {
+        this.pastTense = pastTense;
+    }
 }

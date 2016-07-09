@@ -28,7 +28,6 @@ package net.foxdenstudio.sponge.foxguard.plugin.controller.message;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.ISendableMessage;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.title.Title;
 
@@ -51,11 +50,11 @@ public class TitleMessage implements ISendableMessage {
     @Override
     public Text preview() {
         Text.Builder builder = Text.builder();
-        if(title.getTitle().isPresent()){
+        if (title.getTitle().isPresent()) {
             builder.append(title.getTitle().get());
-            if(title.getSubtitle().isPresent()) builder.append(Text.of(TextColors.RESET, " - "));
+            if (title.getSubtitle().isPresent()) builder.append(Text.of(TextColors.RESET, " - "));
         }
-        if(title.getSubtitle().isPresent()) builder.append(title.getSubtitle().get());
+        if (title.getSubtitle().isPresent()) builder.append(title.getSubtitle().get());
         return builder.build();
     }
 }
