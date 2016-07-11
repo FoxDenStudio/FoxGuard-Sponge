@@ -81,10 +81,12 @@ genEventImpl {
     includeSrc = [
             'src/main/java/net/foxdenstudio/sponge/foxguard/plugin/event'
     ]
-    excludeSrc = []
+    excludeSrc = [
+            'src/main/java/net/foxdenstudio/sponge/foxguard/plugin/event/util'
+    ]
     outputDir = 'src/main/java/'
-    outputFactory = 'net.foxdenstudio.sponge.foxguard.util.FoxGuardEventFactory'
-    eventImplCreateMethod = 'net.foxdenstudio.sponge.foxguard.util.FGUtil.createEventImpl'
+    outputFactory = 'net.foxdenstudio.sponge.foxguard.plugin.event.util.FGEventFactory'
+    eventImplCreateMethod = 'org.spongepowered.api.event.SpongeEventFactoryUtils.createEventImpl'
     sortPriorityPrefix = 'original'
     groupingPrefixes = ['from': 'to']
     validateCode = false

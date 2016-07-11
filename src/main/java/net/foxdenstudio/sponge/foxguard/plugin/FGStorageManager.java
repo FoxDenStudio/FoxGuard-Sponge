@@ -544,7 +544,7 @@ public final class FGStorageManager {
                     logger.info("Region info loaded!  Name: \"" + name +
                             "\",  Category: \"" + category +
                             "\",  Type: \"" + type +
-                            "\",  Enabled: \"" + enabled + "\"");
+                            "\",  Enabled: " + enabled);
                     if (name.equalsIgnoreCase(GlobalRegion.NAME)) {
                         logger.info("Global region found! Skipping...");
                         return;
@@ -626,10 +626,10 @@ public final class FGStorageManager {
                         type = metaDB.exists("type") ? metaDB.atomicString("type").createOrOpen().get() : typeMap.get(name);
                         enabled = metaDB.exists("enabled") ? metaDB.atomicBoolean("enabled").createOrOpen().get() : enabledMap.get(name);
                     }
-                    logger.info("World region info loaded!  Name: " + name +
+                    logger.info("World region info loaded!  Name: \"" + name +
                             "\",  Category: \"" + category +
                             "\",  Type: \"" + type +
-                            "\",  Enabled: \"" + enabled + "\"");
+                            "\",  Enabled: " + enabled);
                     if (name.equalsIgnoreCase(GlobalWorldRegion.NAME)) {
                         logger.info("Global world region found! Skipping...");
                         return;
@@ -714,11 +714,11 @@ public final class FGStorageManager {
                         enabled = metaDB.exists("enabled") ? metaDB.atomicBoolean("enabled").createOrOpen().get() : enabledMap.get(name);
                         priority = metaDB.exists("priority") ? metaDB.atomicInteger("priority").createOrOpen().get() : priorityMap.get(name);
                     }
-                    logger.info("Handler info loaded!  Name: " + name +
+                    logger.info("Handler info loaded!  Name: \"" + name +
                             "\",  Category: \"" + category +
                             "\",  Type: \"" + type +
-                            "\",  Enabled: \"" + enabled +
-                            "\",  Priority: \"" + priority + "\"");
+                            "\",  Enabled: " + enabled +
+                            ",  Priority: " + priority);
                     if (name.equalsIgnoreCase(GlobalHandler.NAME)) {
                         logger.info("Global handler found! Skipping...");
                         return;

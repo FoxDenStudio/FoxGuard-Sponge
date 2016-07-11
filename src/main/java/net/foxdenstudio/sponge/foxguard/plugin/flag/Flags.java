@@ -47,6 +47,7 @@ public class Flags {
     public static final Flag MODIFY = REGISTRY.registerFlag("modify");
     public static final Flag DECAY = REGISTRY.registerFlag("decay");
     public static final Flag GROW = REGISTRY.registerFlag("grow");
+    public static final Flag POST = REGISTRY.registerFlag("post");
 
     public static final Flag DAMAGE = REGISTRY.registerFlag("damage");
     public static final Flag KILL = REGISTRY.registerFlag("kill");

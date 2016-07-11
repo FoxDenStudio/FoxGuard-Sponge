@@ -111,7 +111,9 @@ public class CommandDetail implements CommandCallable {
             builder.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
             if (parse.args.length < 3 || parse.args[2].isEmpty() || parse.flags.containsKey("all")) {
                 builder.append(Text.of(TextColors.GREEN, "------- General -------\n"));
-                builder.append(Text.of(TextColors.GOLD, "Name: "), Text.of(TextColors.RESET, region.getName() + "\n"));
+                builder.append(Text.of(TextActions.runCommand("/foxguard detail region " + FGUtil.genWorldFlag(region) + region.getName()),
+                        TextActions.showText(Text.of("View details for region \"" + region.getName() + "\"")),
+                        TextColors.GOLD, "Name: ", TextColors.RESET, region.getName() + "\n"));
                 builder.append(Text.of(TextColors.GOLD, "Type: "), Text.of(TextColors.RESET, region.getLongTypeName() + "\n"));
                 builder.append(Text.builder()
                         .append(Text.of(TextColors.GOLD, "Enabled: "))
@@ -122,7 +124,9 @@ public class CommandDetail implements CommandCallable {
                         .build());
                 if (region instanceof IWorldRegion)
                     builder.append(Text.of(TextColors.GOLD, "World: "), Text.of(TextColors.RESET, ((IWorldRegion) region).getWorld().getName() + "\n"));
-                builder.append(Text.of(TextColors.GREEN, "------- Details -------\n"));
+                builder.append(Text.of(TextActions.suggestCommand("/foxguard modify region " + FGUtil.genWorldFlag(region) + region.getName() + " "),
+                        TextActions.showText(Text.of("Click to modify region \"" + region.getName() + "\"")),
+                        TextColors.GREEN, "------- Details -------\n"));
                 builder.append(region.details(source, parse.args.length < 3 ? "" : parse.args[2]));
                 outboundLinks(builder, region, source);
             } else {
@@ -143,7 +147,9 @@ public class CommandDetail implements CommandCallable {
             builder.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
             if (parse.args.length <= 2 || parse.args[2].isEmpty() || parse.flags.containsKey("all")) {
                 builder.append(Text.of(TextColors.GREEN, "------- General -------\n"));
-                builder.append(Text.of(TextColors.GOLD, "Name: "), Text.of(TextColors.RESET, handler.getName() + "\n"));
+                builder.append(Text.of(TextActions.runCommand("/foxguard detail handler " + handler.getName()),
+                        TextActions.showText(Text.of("View details for handler \"" + handler.getName() + "\"")),
+                        TextColors.GOLD, "Name: ", TextColors.RESET, handler.getName() + "\n"));
                 builder.append(Text.of(TextColors.GOLD, "Type: "), Text.of(TextColors.RESET, handler.getLongTypeName() + "\n"));
                 builder.append(Text.builder()
                         .append(Text.of(TextColors.GOLD, "Enabled: "))
@@ -157,7 +163,9 @@ public class CommandDetail implements CommandCallable {
                         .onClick(TextActions.suggestCommand("/foxguard prio " + handler.getName() + " "))
                         .onHover(TextActions.showText(Text.of("Click to change priority")))
                         .build());
-                builder.append(Text.of(TextColors.GREEN, "------- Details -------\n"));
+                builder.append(Text.of(TextActions.suggestCommand("/foxguard modify handler " + handler.getName() + " "),
+                        TextActions.showText(Text.of("Click to modify handler \"" + handler.getName() + "\"")),
+                        TextColors.GREEN, "------- Details -------\n"));
                 Text objectDetails = handler.details(source, parse.args.length < 3 ? "" : parse.args[2]);
                 if (objectDetails == null) objectDetails = Text.of();
                 builder.append(objectDetails);

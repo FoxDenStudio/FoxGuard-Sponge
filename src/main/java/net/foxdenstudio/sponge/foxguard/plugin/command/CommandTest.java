@@ -125,40 +125,13 @@ public class CommandTest implements CommandCallable {
                     "command!"));
             return CommandResult.empty();
         }
-        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).parse();
-        if (parse.args.length > 0) {
-            Text.Builder builder = Text.builder();
-            builder.append(Text.of(TextColors.GOLD, "\n-----------------------------\n"));
-            IFlag flag = FlagOld.flagFrom(parse.args[0]);
-            if (flag != null) {
-                for (Set<IFlag> level : flag.getHierarchy()) {
-                    for (IFlag f : level) {
-                        builder.append(Text.of(f.flagName() + " "));
-                    }
-                    builder.append(Text.NEW_LINE);
-                }
-                source.sendMessage(builder.build());
-            }
-        }
-
         return CommandResult.empty();
     }
 
 
     @Override
-    public List<String> getSuggestions(CommandSource source, String arguments) throws
-            CommandException {
-        if (!testPermission(source)) return ImmutableList.of();
-        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
-                .arguments(arguments)
-                .excludeCurrent(true)
-                .autoCloseQuotes(true)
-                .parse();
-        return FlagOld.getFlags().stream()
-                .map(IFlag::flagName)
-                .filter(new StartsWithPredicate(parse.current.token))
-                .map(args -> parse.current.prefix + args)
-                .collect(GuavaCollectors.toImmutableList());
+    public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
+        return ImmutableList.of();
     }
 
     /*@Override

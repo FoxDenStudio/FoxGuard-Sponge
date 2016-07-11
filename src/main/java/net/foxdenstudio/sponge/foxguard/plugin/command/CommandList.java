@@ -415,7 +415,7 @@ public class CommandList implements CommandCallable {
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0)
-                return Arrays.asList(FGManager.TYPES).stream()
+                return Arrays.asList("regions", "handlers", "controllers").stream()
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());

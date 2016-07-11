@@ -178,7 +178,6 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
                             }
                             currPriority = wrap.handler.getPriority();
                         }
-                        flagState = FlagOld.PLAYER_PASS.resolve(flagState);
 
                         if (flagState == Tristate.FALSE) {
                             player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission to pass!"));

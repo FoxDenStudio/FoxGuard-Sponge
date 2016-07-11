@@ -91,6 +91,7 @@ public class BlockListener implements EventListener<ChangeBlockEvent> {
         else if (event instanceof ChangeBlockEvent.Place) flags.set(PLACE);
         else if (event instanceof ChangeBlockEvent.Decay) flags.set(DECAY);
         else if (event instanceof ChangeBlockEvent.Grow) flags.set(GROW);
+        else if (event instanceof ChangeBlockEvent.Post) flags.set(POST);
 
         //FoxGuardMain.instance().getLogger().info(player.getName());
 
@@ -153,12 +154,6 @@ public class BlockListener implements EventListener<ChangeBlockEvent> {
                                 (event.getTransactions().size() > 1 ? "..." : "")));
                 }
             }
-        } else {
-
-        }
-
-        if (flagState == FALSE) {
-
             event.setCancelled(true);
         } else {
             //makes sure that handlers are unable to cancel the event directly.

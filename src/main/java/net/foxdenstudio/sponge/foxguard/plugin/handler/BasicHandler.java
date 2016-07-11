@@ -795,6 +795,7 @@ public class BasicHandler extends HandlerBase {
                             .map(args -> parse.current.prefix + args)
                             .collect(Collectors.toList());
                     list.add("default");
+                    return list;
                 } else if (isIn(PASSIVE_ALIASES, parse.args[0])) {
                     return ImmutableList.of("allow", "deny", "pass", "group", "default").stream()
                             .filter(new StartsWithPredicate(parse.current.token))

@@ -33,6 +33,8 @@ import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateObjectEvent;
+import net.foxdenstudio.sponge.foxguard.plugin.event.FoxGuardEvent;
+import net.foxdenstudio.sponge.foxguard.plugin.event.util.FGEventFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
@@ -139,17 +141,7 @@ public final class FGManager {
         this.worldRegions.get(world).add(region);
         this.regionCache.markDirty(region, RegionCache.DirtyType.ADDED);
         FGStorageManager.getInstance().addObject(region);
-        Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
-            @Override
-            public IFGObject getTarget() {
-                return region;
-            }
-
-            @Override
-            public Cause getCause() {
-                return FoxGuardMain.getCause();
-            }
-        });
+        Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), region));
         return true;
     }
 
@@ -158,17 +150,7 @@ public final class FGManager {
         this.regions.add(region);
         this.regionCache.markDirty(region, RegionCache.DirtyType.ADDED);
         FGStorageManager.getInstance().addObject(region);
-        Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
-            @Override
-            public IFGObject getTarget() {
-                return region;
-            }
-
-            @Override
-            public Cause getCause() {
-                return FoxGuardMain.getCause();
-            }
-        });
+        Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), region));
         return true;
     }
 
@@ -280,17 +262,7 @@ public final class FGManager {
         if (gethandler(handler.getName()) != null) return false;
         handlers.add(handler);
         FGStorageManager.getInstance().addObject(handler);
-        Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
-            @Override
-            public IFGObject getTarget() {
-                return handler;
-            }
-
-            @Override
-            public Cause getCause() {
-                return FoxGuardMain.getCause();
-            }
-        });
+        Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), handler));
         return true;
     }
 
@@ -323,17 +295,7 @@ public final class FGManager {
             return false;
         }
         FGStorageManager.getInstance().removeObject(handler);
-        Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
-            @Override
-            public IFGObject getTarget() {
-                return handler;
-            }
-
-            @Override
-            public Cause getCause() {
-                return FoxGuardMain.getCause();
-            }
-        });
+        Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), handler));
         handlers.remove(handler);
         return true;
     }
@@ -346,17 +308,7 @@ public final class FGManager {
             if (!this.regions.contains(region)) return false;
             this.regions.remove(region);
             FGStorageManager.getInstance().removeObject(region);
-            Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
-                @Override
-                public IFGObject getTarget() {
-                    return region;
-                }
-
-                @Override
-                public Cause getCause() {
-                    return FoxGuardMain.getCause();
-                }
-            });
+            Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), region));
             this.regionCache.markDirty(region, RegionCache.DirtyType.REMOVED);
             return true;
         }
@@ -381,18 +333,7 @@ public final class FGManager {
         }
         if (removed) {
             FGStorageManager.getInstance().removeObject(region);
-            Sponge.getGame().getEventManager().post(new FGUpdateObjectEvent() {
-                @Override
-                public IFGObject getTarget() {
-                    return region;
-                }
-
-                @Override
-                public Cause getCause() {
-                    return FoxGuardMain.getCause();
-                }
-            });
-//        FGStorageManager.getInstance().markForDeletion(region);
+            Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), region));
             this.regionCache.markDirty(region, RegionCache.DirtyType.REMOVED);
         }
         return removed;
@@ -400,23 +341,13 @@ public final class FGManager {
 
     public boolean link(ILinkable linkable, IHandler handler) {
         if (linkable == null || handler == null || linkable.getHandlers().contains(handler)) return false;
-        Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
-            @Override
-            public Cause getCause() {
-                return FoxGuardMain.getCause();
-            }
-        });
+        Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateEvent(FoxGuardMain.getCause()));
         return !(handler instanceof GlobalHandler && !(linkable instanceof GlobalWorldRegion || linkable instanceof GlobalRegion)) && linkable.addHandler(handler);
     }
 
     public boolean unlink(ILinkable linkable, IHandler handler) {
         if (linkable == null || handler == null || !linkable.getHandlers().contains(handler)) return false;
-        Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
-            @Override
-            public Cause getCause() {
-                return FoxGuardMain.getCause();
-            }
-        });
+        Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateEvent(FoxGuardMain.getCause()));
         return !(handler instanceof GlobalHandler) && linkable.removeHandler(handler);
     }
 
@@ -463,4 +394,5 @@ public final class FGManager {
     public void markDirty(IRegion region, RegionCache.DirtyType type) {
         regionCache.markDirty(region, type);
     }
+
 }

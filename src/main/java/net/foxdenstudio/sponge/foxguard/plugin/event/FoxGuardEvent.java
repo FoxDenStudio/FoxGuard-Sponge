@@ -26,6 +26,18 @@
 package net.foxdenstudio.sponge.foxguard.plugin.event;
 
 import org.spongepowered.api.event.Event;
+import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.eventgencore.annotation.AbsoluteSortPosition;
 
 public interface FoxGuardEvent extends Event {
+
+    /**
+     * Get the cause for the event.
+     *
+     * @return The last cause
+     */
+    @Override
+    @AbsoluteSortPosition(0)
+    Cause getCause();
+
 }

@@ -196,6 +196,7 @@ public final class FoxGuardMain {
 
     @Listener
     public void worldUnload(UnloadWorldEvent event) {
+        logger.info("Unloading world \"" + event.getTargetWorld().getName() + "\"");
         FGStorageManager.getInstance().saveWorldRegions(event.getTargetWorld());
         FGManager.getInstance().unloadWorld(event.getTargetWorld());
     }
@@ -268,7 +269,7 @@ public final class FoxGuardMain {
         manager.registerHandlerFactory(new DebugHandler.Factory());
 
         //manager.registerControllerFactory(new MessageController.Factory());
-        manager.registerControllerFactory(new LogicController.Factory());
+        //manager.registerControllerFactory(new LogicController.Factory());
     }
 
     /**

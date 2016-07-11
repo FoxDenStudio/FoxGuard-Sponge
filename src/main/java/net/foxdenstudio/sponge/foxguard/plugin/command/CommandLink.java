@@ -109,7 +109,7 @@ public class CommandLink implements CommandCallable {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a handler!"));
             IHandler handler = FGManager.getInstance().gethandler(parse.args[1]);
             if (handler == null)
-                throw new CommandException(Text.of("No handler with name \"" + parse.args[0] + "\"!"));
+                throw new CommandException(Text.of("No handler with name \"" + parse.args[1] + "\"!"));
             if (region.getHandlers().contains(handler))
                 throw new CommandException(Text.of("Already linked!"));
             boolean success = FGManager.getInstance().link(region, handler);
