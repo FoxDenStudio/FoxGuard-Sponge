@@ -180,6 +180,7 @@ public class RectangularRegion extends WorldRegionBase {
 
     public void setBoundingBox(BoundingBox2 boundingBox) {
         this.boundingBox = boundingBox;
+        markDirty();
     }
 
     public static class Factory implements IWorldRegionFactory {

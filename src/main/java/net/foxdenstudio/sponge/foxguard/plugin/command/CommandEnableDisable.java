@@ -31,16 +31,18 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
-import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
+import net.foxdenstudio.sponge.foxguard.plugin.event.util.FGEventFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.GlobalWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
+import net.foxdenstudio.sponge.foxguard.plugin.util.RegionCache;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
@@ -48,7 +50,6 @@ import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
@@ -108,21 +109,11 @@ public class CommandEnableDisable implements CommandCallable {
                 }
                 FCStateManager.instance().getStateMap().get(source).flush(RegionsStateField.ID, HandlersStateField.ID);
                 if (successes == 1 && failures == 0) {
-                    Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
-                        @Override
-                        public Cause getCause() {
-                            return FoxGuardMain.getCause();
-                        }
-                    });
+                    Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateEvent(FoxGuardMain.getCause()));
                     source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " object!"));
                     return CommandResult.success();
                 } else if (successes > 0) {
-                    Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
-                        @Override
-                        public Cause getCause() {
-                            return FoxGuardMain.getCause();
-                        }
-                    });
+                    Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateEvent(FoxGuardMain.getCause()));
                     source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " objects with "
                             + successes + " successes" + (failures > 0 ? " and " + failures + " failures!" : "!")));
                     return CommandResult.builder().successCount(successes).build();
@@ -158,7 +149,7 @@ public class CommandEnableDisable implements CommandCallable {
             }
             if (regions.isEmpty()) throw new CommandException(Text.of("Must specify at least one region!"));
             for (IRegion region : regions) {
-                if (region instanceof GlobalWorldRegion || region.isEnabled() == this.enableState) failures++;
+                if (region instanceof IGlobal || region.isEnabled() == this.enableState) failures++;
                 else {
                     region.setIsEnabled(this.enableState);
                     successes++;
@@ -166,21 +157,11 @@ public class CommandEnableDisable implements CommandCallable {
             }
             FCStateManager.instance().getStateMap().get(source).flush(RegionsStateField.ID);
             if (successes == 1 && failures == 0) {
-                Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
-                    @Override
-                    public Cause getCause() {
-                        return FoxGuardMain.getCause();
-                    }
-                });
+                Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateEvent(FoxGuardMain.getCause()));
                 source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " region!"));
                 return CommandResult.success();
             } else if (successes > 0) {
-                Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
-                    @Override
-                    public Cause getCause() {
-                        return FoxGuardMain.getCause();
-                    }
-                });
+                Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateEvent(FoxGuardMain.getCause()));
                 source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " regions with "
                         + successes + " successes" + (failures > 0 ? " and " + failures + " failures!" : "!")));
                 return CommandResult.builder().successCount(successes).build();
@@ -205,7 +186,7 @@ public class CommandEnableDisable implements CommandCallable {
             }
             if (handlers.isEmpty()) throw new CommandException(Text.of("Must specify at least one handler!"));
             for (IHandler handler : handlers) {
-                if (handler instanceof GlobalHandler || handler.isEnabled() == this.enableState) failures++;
+                if (handler instanceof IGlobal || handler.isEnabled() == this.enableState) failures++;
                 else {
                     handler.setIsEnabled(this.enableState);
                     successes++;
@@ -213,21 +194,11 @@ public class CommandEnableDisable implements CommandCallable {
             }
             FCStateManager.instance().getStateMap().get(source).flush(HandlersStateField.ID);
             if (successes == 1 && failures == 0) {
-                Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
-                    @Override
-                    public Cause getCause() {
-                        return FoxGuardMain.getCause();
-                    }
-                });
+                Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateEvent(FoxGuardMain.getCause()));
                 source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handler!"));
                 return CommandResult.success();
             } else if (successes > 0) {
-                Sponge.getGame().getEventManager().post(new FGUpdateEvent() {
-                    @Override
-                    public Cause getCause() {
-                        return FoxGuardMain.getCause();
-                    }
-                });
+                Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateEvent(FoxGuardMain.getCause()));
                 source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " handlers with "
                         + successes + " successes" + (failures > 0 ? " and " + failures + " failures!" : "!")));
                 return CommandResult.builder().successCount(successes).build();
@@ -266,14 +237,14 @@ public class CommandEnableDisable implements CommandCallable {
                         }
                     }
                     if (world == null) return FGManager.getInstance().getRegions().stream()
-                            .filter(region -> region.isEnabled() != this.enableState && !(region instanceof GlobalWorldRegion))
+                            .filter(region -> region.isEnabled() != this.enableState && !(region instanceof IGlobal))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .filter(alias -> !isIn(parse.args, alias))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                     return FGManager.getInstance().getAllRegions(world).stream()
-                            .filter(region -> region.isEnabled() != this.enableState && !(region instanceof GlobalWorldRegion))
+                            .filter(region -> region.isEnabled() != this.enableState && !(region instanceof IGlobal))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .filter(alias -> !isIn(parse.args, alias))
@@ -281,7 +252,7 @@ public class CommandEnableDisable implements CommandCallable {
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
                     return FGManager.getInstance().getHandlers().stream()
-                            .filter(handler -> handler.isEnabled() != this.enableState && !(handler instanceof GlobalHandler))
+                            .filter(handler -> handler.isEnabled() != this.enableState && !(handler instanceof IGlobal))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .filter(alias -> !isIn(parse.args, alias))

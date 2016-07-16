@@ -777,17 +777,17 @@ public class GroupHandler extends HandlerBase {
 
     @Override
     public String getShortTypeName() {
-        return "Basic";
+        return "Group";
     }
 
     @Override
     public String getLongTypeName() {
-        return "Basic";
+        return "Group";
     }
 
     @Override
     public String getUniqueTypeString() {
-        return "basic";
+        return "group";
     }
 
     @Override
@@ -1207,7 +1207,7 @@ public class GroupHandler extends HandlerBase {
 
     public static class Factory implements IHandlerFactory {
 
-        private static final String[] ALIASES = {"basic", "base"};
+        private static final String[] ALIASES = {"group", "permgroup"};
 
         @Override
         public IHandler create(String name, int priority, String arguments, CommandSource source) throws CommandException {
@@ -1271,7 +1271,7 @@ public class GroupHandler extends HandlerBase {
 
         @Override
         public String getType() {
-            return "basic";
+            return "group";
         }
 
         @Override

@@ -196,6 +196,7 @@ public class CuboidRegion extends WorldRegionBase {
 
     public void setBoundingBox(BoundingBox3 boundingBox) {
         this.boundingBox = boundingBox;
+        markDirty();
     }
 
     public static class Factory implements IWorldRegionFactory {

@@ -395,4 +395,8 @@ public final class FGManager {
         regionCache.markDirty(region, type);
     }
 
+    public void clearRegionCache(){
+        this.regionCache.clearCaches();
+    }
+
 }

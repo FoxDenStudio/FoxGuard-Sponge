@@ -156,6 +156,7 @@ public class ElevationRegion extends WorldRegionBase {
 
     public void setUpperBound(int upperBound) {
         this.upperBound = upperBound;
+        markDirty();
     }
 
     public int getLowerBound() {
@@ -164,6 +165,7 @@ public class ElevationRegion extends WorldRegionBase {
 
     public void setLowerBound(int lowerBound) {
         this.lowerBound = lowerBound;
+        markDirty();
     }
 
     @Override

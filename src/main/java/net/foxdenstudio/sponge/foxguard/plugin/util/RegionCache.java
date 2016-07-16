@@ -82,6 +82,10 @@ public class RegionCache {
         }
     }
 
+    public void clearCaches() {
+        this.chunks.values().forEach(Map::clear);
+    }
+
     public ChunkData getData(World world, Vector3i chunk) {
         return this.chunks.get(world).get(chunk);
     }

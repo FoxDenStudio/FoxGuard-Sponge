@@ -110,9 +110,9 @@ public class CommandDetail implements CommandCallable {
             Text.Builder builder = Text.builder();
             builder.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
             if (parse.args.length < 3 || parse.args[2].isEmpty() || parse.flags.containsKey("all")) {
-                builder.append(Text.of(TextColors.GREEN, "------- General -------\n"));
                 builder.append(Text.of(TextActions.runCommand("/foxguard detail region " + FGUtil.genWorldFlag(region) + region.getName()),
                         TextActions.showText(Text.of("View details for region \"" + region.getName() + "\"")),
+                        TextColors.GREEN, "------- General -------\n",
                         TextColors.GOLD, "Name: ", TextColors.RESET, region.getName() + "\n"));
                 builder.append(Text.of(TextColors.GOLD, "Type: "), Text.of(TextColors.RESET, region.getLongTypeName() + "\n"));
                 builder.append(Text.builder()
@@ -146,9 +146,9 @@ public class CommandDetail implements CommandCallable {
             Text.Builder builder = Text.builder();
             builder.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
             if (parse.args.length <= 2 || parse.args[2].isEmpty() || parse.flags.containsKey("all")) {
-                builder.append(Text.of(TextColors.GREEN, "------- General -------\n"));
                 builder.append(Text.of(TextActions.runCommand("/foxguard detail handler " + handler.getName()),
                         TextActions.showText(Text.of("View details for handler \"" + handler.getName() + "\"")),
+                        TextColors.GREEN, "------- General -------\n",
                         TextColors.GOLD, "Name: ", TextColors.RESET, handler.getName() + "\n"));
                 builder.append(Text.of(TextColors.GOLD, "Type: "), Text.of(TextColors.RESET, handler.getLongTypeName() + "\n"));
                 builder.append(Text.builder()
