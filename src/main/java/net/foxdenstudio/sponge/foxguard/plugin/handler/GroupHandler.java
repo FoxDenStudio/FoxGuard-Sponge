@@ -863,12 +863,12 @@ public class GroupHandler extends HandlerBase {
 
     @Override
     public void save(Path directory) {
-        try (DB flagMapDB = DBMaker.fileDB(directory.resolve("groups.db").normalize().toString()).make()) {
+        try (DB flagMapDB = DBMaker.fileDB(directory.resolve("groups.foxdb").normalize().toString()).make()) {
             List<String> groupNames = flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen();
             groupNames.clear();
             groupNames.addAll(this.groups.stream().map(group -> group.name).collect(Collectors.toList()));
         }
-        try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.db").normalize().toString()).make()) {
+        try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.foxdb").normalize().toString()).make()) {
             for (Group group : this.groups) {
                 List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
                 stringEntries.clear();
@@ -1224,7 +1224,7 @@ public class GroupHandler extends HandlerBase {
         @Override
         public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
             List<String> groupNames = new ArrayList<>();
-            try (DB flagMapDB = DBMaker.fileDB(directory.resolve("groups.db").normalize().toString()).make()) {
+            try (DB flagMapDB = DBMaker.fileDB(directory.resolve("groups.foxdb").normalize().toString()).make()) {
                 groupNames.addAll(flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen());
             }
             List<Group> groups = new ArrayList<>();
@@ -1246,7 +1246,7 @@ public class GroupHandler extends HandlerBase {
 
             Map<Group, List<Entry>> groupPermissions = new HashMap<>();
             List<Entry> defaultPermissions;
-            try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.db").normalize().toString()).make()) {
+            try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.foxdb").normalize().toString()).make()) {
                 for (Group group : groups) {
                     List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
                     groupPermissions.put(group, stringEntries.stream()
