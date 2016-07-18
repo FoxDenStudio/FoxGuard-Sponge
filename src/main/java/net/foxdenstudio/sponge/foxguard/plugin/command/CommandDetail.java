@@ -133,7 +133,7 @@ public class CommandDetail extends FCCommandBase {
                     if (objectDetails == null) objectDetails = Text.of();
                     builder.append(objectDetails);
                 } catch (Exception e) {
-                    builder.append(Text.of(TextColors.RED, TextStyles.ITALIC, "There was an error getting details for handler \"" + handler.getName() + "\"."));
+                    builder.append(Text.of(TextColors.RED, TextStyles.ITALIC, "There was an error getting details for region \"" + region.getName() + "\"."));
                 }
                 outboundLinks(builder, region, source);
             } else {
@@ -145,7 +145,7 @@ public class CommandDetail extends FCCommandBase {
                     if (objectDetails == null) objectDetails = Text.of();
                     builder.append(objectDetails);
                 } catch (Exception e) {
-                    builder.append(Text.of(TextColors.RED, TextStyles.ITALIC, "There was an error getting details for handler \"" + handler.getName() + "\"."));
+                    builder.append(Text.of(TextColors.RED, TextStyles.ITALIC, "There was an error getting details for region \"" + region.getName() + "\"."));
                 }
             }
             source.sendMessage(builder.build());
