@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
+import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
@@ -44,7 +45,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class CommandUnlink implements CommandCallable {
+public class CommandUnlink extends FCCommandBase {
 
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
@@ -63,7 +64,7 @@ public class CommandUnlink implements CommandCallable {
             if (FGUtil.getSelectedHandlers(source).size() == 0)
                 throw new CommandException(Text.of("You don't have any handlers in your state buffer!"));
             int[] count = {0};
-            FGUtil.getSelectedRegions(source).stream().forEach(
+            FGUtil.getSelectedRegions(source).forEach(
                     region -> FGUtil.getSelectedHandlers(source).stream()
                             .filter(handler -> !(handler instanceof GlobalHandler))
                             .forEach(handler -> count[0] += FGManager.getInstance().unlink(region, handler) ? 1 : 0));
@@ -75,17 +76,17 @@ public class CommandUnlink implements CommandCallable {
                     FGUtil.getSelectedHandlers(source).size() == 0)
                 throw new CommandException(Text.of("You don't have any regions or handlers in your state buffer!"));
             int[] count = {0};
-            FGUtil.getSelectedRegions(source).stream().forEach(
+            FGUtil.getSelectedRegions(source).forEach(
                     region -> {
                         List<IHandler> handlers = new ArrayList<>();
                         region.getHandlers().stream()
                                 .filter(handler -> !(handler instanceof GlobalHandler))
                                 .forEach(handlers::add);
-                        handlers.stream().forEach(handler -> count[0] += FGManager.getInstance().unlink(region, handler) ? 1 : 0);
+                        handlers.forEach(handler -> count[0] += FGManager.getInstance().unlink(region, handler) ? 1 : 0);
                     });
             FGUtil.getSelectedHandlers(source).stream()
                     .filter(handler -> !(handler instanceof GlobalHandler)).forEach(
-                    handler -> FGManager.getInstance().getAllRegions().stream().forEach(
+                    handler -> FGManager.getInstance().getAllRegions().forEach(
                             region -> count[0] += FGManager.getInstance().unlink(region, handler) ? 1 : 0));
             source.sendMessage(Text.of(TextColors.GREEN, "Successfully unlinked " + count[0] + "!"));
             FCStateManager.instance().getStateMap().get(source).flush(RegionsStateField.ID, HandlersStateField.ID);

@@ -25,6 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
+import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
 import net.foxdenstudio.sponge.foxguard.plugin.command.link.LinkEntry;
 import net.foxdenstudio.sponge.foxguard.plugin.command.link.LinkageParser;
 import org.spongepowered.api.command.CommandCallable;
@@ -38,7 +39,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public class CommandLink2 implements CommandCallable {
+public class CommandLink2 extends FCCommandBase {
 
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {

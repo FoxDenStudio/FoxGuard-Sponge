@@ -32,9 +32,10 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandDispatcher;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.plugin.command.*;
-import net.foxdenstudio.sponge.foxguard.plugin.controller.LogicController;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.*;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.BasicHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.DebugHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.GroupHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.*;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.CuboidRegion;
@@ -311,6 +312,10 @@ public final class FoxGuardMain {
      * @return UserStorageService object.
      */
     public UserStorageService getUserStorage() {
+        if (userStorage == null) {
+            logger.info("Getting User Storage");
+            userStorage = game.getServiceManager().provide(UserStorageService.class).get();
+        }
         return userStorage;
     }
 

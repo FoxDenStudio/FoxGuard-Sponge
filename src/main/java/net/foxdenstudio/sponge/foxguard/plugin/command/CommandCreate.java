@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
+import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
@@ -56,7 +57,7 @@ import java.util.Optional;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
-public class CommandCreate implements CommandCallable {
+public class CommandCreate extends FCCommandBase {
 
     private static final String[] PRIORITY_ALIASES = {"priority", "prio", "p", "order", "level", "rank"};
     private static final String[] STATE_ALIASES = {"state", "s", "buffer"};

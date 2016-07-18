@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
+import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
@@ -57,7 +58,7 @@ import java.util.Optional;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
-public class CommandDetail implements CommandCallable {
+public class CommandDetail extends FCCommandBase {
 
     private static final FlagMapper MAPPER = map -> key -> value -> {
         map.put(key, value);
@@ -166,9 +167,13 @@ public class CommandDetail implements CommandCallable {
                 builder.append(Text.of(TextActions.suggestCommand("/foxguard modify handler " + handler.getName() + " "),
                         TextActions.showText(Text.of("Click to modify handler \"" + handler.getName() + "\"")),
                         TextColors.GREEN, "------- Details -------\n"));
-                Text objectDetails = handler.details(source, parse.args.length < 3 ? "" : parse.args[2]);
-                if (objectDetails == null) objectDetails = Text.of();
-                builder.append(objectDetails);
+                try {
+                    Text objectDetails = handler.details(source, parse.args.length < 3 ? "" : parse.args[2]);
+                    if (objectDetails == null) objectDetails = Text.of();
+                    builder.append(objectDetails);
+                } catch (Exception e) {
+                    builder.append(Text.of(TextColors.RED, TextStyles.ITALIC, "There was an error getting details for handler \"" + handler.getName() + "\"."));
+                }
                 builder.append(Text.of(TextColors.GREEN, "\n------- Inbound Links -------"));
                 List<IController> controllerList = FGManager.getInstance().getControllers().stream()
                         .filter(controller -> controller.getHandlers().contains(handler))

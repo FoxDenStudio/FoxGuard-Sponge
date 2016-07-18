@@ -27,6 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 
 import com.google.common.collect.ImmutableList;
+import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagOld;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
@@ -43,7 +44,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public class CommandTest implements CommandCallable {
+public class CommandTest extends FCCommandBase {
 
     /*
     public CommandResult process(CommandSource source, String arguments) throws CommandException {

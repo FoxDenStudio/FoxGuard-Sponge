@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
+import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
@@ -52,7 +53,7 @@ import java.util.Optional;
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.WORLD_ALIASES;
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isIn;
 
-public class CommandLink implements CommandCallable {
+public class CommandLink extends FCCommandBase {
 
     private static final FlagMapper mapper = map -> key -> value -> {
         map.put(key, value);

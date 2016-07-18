@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
+import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
@@ -63,7 +64,7 @@ import java.util.Optional;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
-public class CommandEnableDisable implements CommandCallable {
+public class CommandEnableDisable extends FCCommandBase {
 
     private static final FlagMapper MAPPER = map -> key -> value -> {
         map.put(key, value);
