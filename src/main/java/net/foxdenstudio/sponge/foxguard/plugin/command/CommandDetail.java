@@ -128,13 +128,25 @@ public class CommandDetail extends FCCommandBase {
                 builder.append(Text.of(TextActions.suggestCommand("/foxguard modify region " + FGUtil.genWorldFlag(region) + region.getName() + " "),
                         TextActions.showText(Text.of("Click to modify region \"" + region.getName() + "\"")),
                         TextColors.GREEN, "------- Details -------\n"));
-                builder.append(region.details(source, parse.args.length < 3 ? "" : parse.args[2]));
+                try {
+                    Text objectDetails = region.details(source, parse.args.length < 3 ? "" : parse.args[2]);
+                    if (objectDetails == null) objectDetails = Text.of();
+                    builder.append(objectDetails);
+                } catch (Exception e) {
+                    builder.append(Text.of(TextColors.RED, TextStyles.ITALIC, "There was an error getting details for handler \"" + handler.getName() + "\"."));
+                }
                 outboundLinks(builder, region, source);
             } else {
                 builder.append(Text.of(TextColors.GREEN, "------- Details for Region \"" + region.getName() + "\"" +
                         (region instanceof IWorldRegion ? (" in World \"" + ((IWorldRegion) region).getWorld().getName() + "\"") : "") +
                         " -------\n"));
-                builder.append(region.details(source, parse.args.length < 3 ? "" : parse.args[2]));
+                try {
+                    Text objectDetails = region.details(source, parse.args.length < 3 ? "" : parse.args[2]);
+                    if (objectDetails == null) objectDetails = Text.of();
+                    builder.append(objectDetails);
+                } catch (Exception e) {
+                    builder.append(Text.of(TextColors.RED, TextStyles.ITALIC, "There was an error getting details for handler \"" + handler.getName() + "\"."));
+                }
             }
             source.sendMessage(builder.build());
             return CommandResult.empty();
@@ -258,7 +270,13 @@ public class CommandDetail extends FCCommandBase {
                 }
             } else {
                 builder.append(Text.of(TextColors.GREEN, "------- Details for Handler \"" + handler.getName() + "\" -------\n"));
-                builder.append(handler.details(source, parse.args[2]));
+                try {
+                    Text objectDetails = handler.details(source, parse.args[2]);
+                    if (objectDetails == null) objectDetails = Text.of();
+                    builder.append(objectDetails);
+                } catch (Exception e) {
+                    builder.append(Text.of(TextColors.RED, TextStyles.ITALIC, "There was an error getting details for handler \"" + handler.getName() + "\"."));
+                }
             }
             source.sendMessage(builder.build());
             return CommandResult.empty();
