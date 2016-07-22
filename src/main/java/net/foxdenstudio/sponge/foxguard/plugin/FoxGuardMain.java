@@ -338,5 +338,4 @@ public final class FoxGuardMain {
     public static Cause getCause() {
         return instance().pluginCause;
     }
-
 }
