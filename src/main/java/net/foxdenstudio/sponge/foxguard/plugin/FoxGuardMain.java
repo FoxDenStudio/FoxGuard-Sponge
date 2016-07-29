@@ -59,8 +59,8 @@ import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
-import org.spongepowered.api.event.entity.DisplaceEntityEvent;
 import org.spongepowered.api.event.entity.InteractEntityEvent;
+import org.spongepowered.api.event.entity.MoveEntityEvent;
 import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.event.game.state.*;
 import org.spongepowered.api.event.world.ExplosionEvent;
@@ -284,7 +284,7 @@ public final class FoxGuardMain {
         eventManager.registerListener(this, SpawnEntityEvent.class, new SpawnEntityListener());
         if (FGConfigManager.getInstance().getModules().get(FGConfigManager.Module.MOVEMENT)) {
             PlayerMoveListener pml = new PlayerMoveListener(true);
-            eventManager.registerListener(this, DisplaceEntityEvent.class, pml);
+            eventManager.registerListener(this, MoveEntityEvent.class, pml);
             eventManager.registerListeners(this, pml.new Listeners());
         }
         eventManager.registerListener(this, ExplosionEvent.Detonate.class, new ExplosionListener());
@@ -295,8 +295,8 @@ public final class FoxGuardMain {
      * A private method that sets up the permissions.
      */
     private void configurePermissions() {
-        game.getServiceManager().provide(PermissionService.class).get()
-                .getDefaultData().setPermission(SubjectData.GLOBAL_CONTEXT, "foxguard.override", Tristate.FALSE);
+        game.getServiceManager().provide(PermissionService.class).get().getDefaults()
+        .getSubjectData().setPermission(SubjectData.GLOBAL_CONTEXT, "foxguard.override", Tristate.FALSE);
     }
 
     /**

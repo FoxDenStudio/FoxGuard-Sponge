@@ -28,21 +28,14 @@ package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
-import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagOld;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
-import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.util.GuavaCollectors;
-import org.spongepowered.api.util.StartsWithPredicate;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public class CommandTest extends FCCommandBase {
 
@@ -105,12 +98,12 @@ public class CommandTest extends FCCommandBase {
     }
 
     @Override
-    public Optional<? extends Text> getShortDescription(CommandSource source) {
+    public Optional<Text> getShortDescription(CommandSource source) {
         return Optional.empty();
     }
 
     @Override
-    public Optional<? extends Text> getHelp(CommandSource source) {
+    public Optional<Text> getHelp(CommandSource source) {
         return Optional.empty();
     }
 
