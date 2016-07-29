@@ -37,7 +37,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.GlobalWorldRegion;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -190,12 +189,12 @@ public class CommandDelete extends FCCommandBase {
     }
 
     @Override
-    public Optional<? extends Text> getShortDescription(CommandSource source) {
+    public Optional<Text> getShortDescription(CommandSource source) {
         return Optional.empty();
     }
 
     @Override
-    public Optional<? extends Text> getHelp(CommandSource source) {
+    public Optional<Text> getHelp(CommandSource source) {
         return Optional.empty();
     }
 

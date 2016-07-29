@@ -34,7 +34,6 @@ import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagOld;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
@@ -44,7 +43,7 @@ import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.entity.DisplaceEntityEvent;
+import org.spongepowered.api.event.entity.MoveEntityEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.scoreboard.Score;
 import org.spongepowered.api.scoreboard.Scoreboard;
@@ -65,7 +64,7 @@ import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
  * Created by Fox on 1/4/2016.
  * Project: SpongeForge
  */
-public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
+public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
 
     private static final FlagBitSet ENTER_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, PASS, ENTER);
     private static final FlagBitSet EXIT_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, PASS, EXIT);
@@ -94,7 +93,7 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
     }
 
     @Override
-    public void handle(DisplaceEntityEvent event) throws Exception {
+    public void handle(MoveEntityEvent event) throws Exception {
 
         if (event.isCancelled() || event.getTargetEntity().getVehicle().isPresent()) return;
 
@@ -283,9 +282,12 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
     private static Set<Entity> getPassengerStack(Entity e) {
         Set<Entity> set = new HashSet<>();
         set.add(e);
-        Optional<Entity> po = e.getPassenger();
-        if (po.isPresent())
-            set.addAll(getPassengerStack(po.get()));
+        List<Entity> po = e.getPassengers();
+        if (!po.isEmpty()) {
+            for(Entity ent : po){
+                set.add(ent);
+            }
+        }
         return set;
     }
 

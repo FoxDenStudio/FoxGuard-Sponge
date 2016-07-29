@@ -37,7 +37,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -338,13 +337,13 @@ public class CommandCreate extends FCCommandBase {
 
     @Nonnull
     @Override
-    public Optional<? extends Text> getShortDescription(@Nonnull CommandSource source) {
+    public Optional<Text> getShortDescription(@Nonnull CommandSource source) {
         return Optional.empty();
     }
 
     @Nonnull
     @Override
-    public Optional<? extends Text> getHelp(@Nonnull CommandSource source) {
+    public Optional<Text> getHelp(@Nonnull CommandSource source) {
         return Optional.empty();
     }
 
