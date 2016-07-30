@@ -34,6 +34,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.BoundingBox2;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IWorldRegionFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.region.IIterableRegion;
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
@@ -49,9 +50,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
-public class RectangularRegion extends WorldRegionBase {
+public class RectangularRegion extends WorldRegionBase implements IIterableRegion {
 
     private BoundingBox2 boundingBox;
 
@@ -181,6 +183,36 @@ public class RectangularRegion extends WorldRegionBase {
     public void setBoundingBox(BoundingBox2 boundingBox) {
         this.boundingBox = boundingBox;
         markDirty();
+    }
+
+    @Override
+    public Iterator<Vector3i> iterator() {
+        return null;
+    }
+
+    public class RegionIterator implements Iterator<Vector3i> {
+
+        Iterator<Vector2i> bbIterator = boundingBox.iterator();
+        Vector2i vec2 = bbIterator.next();
+        int y = 0;
+
+        @Override
+        public boolean hasNext() {
+            return vec2 != null;
+        }
+
+        @Override
+        public Vector3i next() {
+            if (hasNext()) {
+                Vector3i vec3 = new Vector3i(vec2.getX(), y, vec2.getY());
+                y++;
+                if (y > 255) {
+                    y = 0;
+                    vec2 = bbIterator.next();
+                }
+                return vec3;
+            } else return null;
+        }
     }
 
     public static class Factory implements IWorldRegionFactory {

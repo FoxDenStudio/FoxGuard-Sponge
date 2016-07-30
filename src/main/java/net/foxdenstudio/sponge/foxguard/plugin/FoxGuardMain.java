@@ -86,7 +86,7 @@ import java.util.Set;
         dependencies = {
                 @Dependency(id = "foxcore")
         },
-        description = "A world protection plugin built for SpongeAPI. Highly extensible with many features. Requires FoxCore.",
+        description = "A world protection plugin built for SpongeAPI. Requires FoxCore.",
         authors = {"gravityfox"},
         url = "https://github.com/FoxDenStudio/FoxGuard")
 public final class FoxGuardMain {

@@ -33,6 +33,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.BoundingBox3;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IWorldRegionFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.region.IIterableRegion;
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
@@ -48,9 +49,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
-public class CuboidRegion extends WorldRegionBase {
+public class CuboidRegion extends WorldRegionBase implements IIterableRegion {
 
     private BoundingBox3 boundingBox;
 
@@ -197,6 +199,11 @@ public class CuboidRegion extends WorldRegionBase {
     public void setBoundingBox(BoundingBox3 boundingBox) {
         this.boundingBox = boundingBox;
         markDirty();
+    }
+
+    @Override
+    public Iterator<Vector3i> iterator() {
+        return boundingBox.iterator();
     }
 
     public static class Factory implements IWorldRegionFactory {
