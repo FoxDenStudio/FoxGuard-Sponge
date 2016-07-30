@@ -44,6 +44,8 @@ import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -202,8 +204,23 @@ public class CuboidRegion extends WorldRegionBase implements IIterableRegion {
     }
 
     @Override
-    public Iterator<Vector3i> iterator() {
-        return boundingBox.iterator();
+    public Iterator<Location<World>> iterator() {
+        return new RegionIterator();
+    }
+
+    private class RegionIterator implements Iterator<Location<World>> {
+
+        Iterator<Vector3i> bbIterator = boundingBox.iterator();
+
+        @Override
+        public boolean hasNext() {
+            return bbIterator.hasNext();
+        }
+
+        @Override
+        public Location<World> next() {
+            return new Location<>(world, bbIterator.next());
+        }
     }
 
     public static class Factory implements IWorldRegionFactory {

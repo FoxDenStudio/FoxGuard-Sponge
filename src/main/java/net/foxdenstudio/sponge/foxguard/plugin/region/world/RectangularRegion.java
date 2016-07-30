@@ -45,6 +45,8 @@ import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -186,11 +188,11 @@ public class RectangularRegion extends WorldRegionBase implements IIterableRegio
     }
 
     @Override
-    public Iterator<Vector3i> iterator() {
-        return null;
+    public Iterator<Location<World>> iterator() {
+        return new RegionIterator();
     }
 
-    public class RegionIterator implements Iterator<Vector3i> {
+    private class RegionIterator implements Iterator<Location<World>> {
 
         Iterator<Vector2i> bbIterator = boundingBox.iterator();
         Vector2i vec2 = bbIterator.next();
@@ -202,15 +204,15 @@ public class RectangularRegion extends WorldRegionBase implements IIterableRegio
         }
 
         @Override
-        public Vector3i next() {
+        public Location<World> next() {
             if (hasNext()) {
-                Vector3i vec3 = new Vector3i(vec2.getX(), y, vec2.getY());
+                Location<World> loc = new Location<>(world, vec2.getX(), y, vec2.getY());
                 y++;
                 if (y > 255) {
                     y = 0;
                     vec2 = bbIterator.next();
                 }
-                return vec3;
+                return loc;
             } else return null;
         }
     }
