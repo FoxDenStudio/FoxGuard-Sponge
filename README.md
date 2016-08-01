@@ -26,7 +26,10 @@ It also allows other plugins to add their own regions and handlers for plugin in
 
 ## Building from source
 ### Downloading
-Make sure you have git installed and then run:
+Make sure you have git installed. If you don't have it installed, you can find downloads for it [here](https://git-scm.com/downloads).
+Recommended settings in the wizard should be fine. I would personally add git to the commandline though (Second option out of three on one of the wizard screens).
+
+Then run:
 
 `git clone --recursive https://github.com/foxdenstudio/FoxGuard.git`
 
