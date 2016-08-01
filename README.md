@@ -30,6 +30,11 @@ Make sure you have git installed and then run:
 
 `git clone --recursive https://github.com/foxdenstudio/FoxGuard.git`
 
+If there's a specific branch or commit that you want to build run these commands as well:
+
+`git checkout <yourbranchorcommit>`
+`git submodule update`
+
 ### Building
 Open a command line inside the directory.
 
@@ -39,11 +44,13 @@ If you have gradle installed:
 
 If you don't have gradle installed:
 
-`gradlew build`
+`./gradlew build`
 
 ### Build Location
 The built jarfile can be found under `./build/libs`
 It should be named something like FoxGuard-SNAPSHOT.jar with some version info and whatnot.
+
+FoxCore is also built in the process, and can be found under `./FoxCore/build/libs`
 
 ## Note from the author about the plugin 
 When I started writing this plugin it was meant as a one-off compile and forget plugin to protect a spawn area for a friend.
