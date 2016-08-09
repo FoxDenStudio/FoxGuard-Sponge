@@ -31,9 +31,12 @@ import net.foxdenstudio.sponge.foxguard.plugin.command.CommandDetail;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -110,7 +113,7 @@ public interface IFGObject {
      */
     Text details(CommandSource source, String arguments);
 
-    List<String> detailsSuggestions(CommandSource source, String arguments);
+    List<String> detailsSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition);
 
     /**
      * Called when the object is being saved.
@@ -157,7 +160,7 @@ public interface IFGObject {
 
     ProcessResult modify(CommandSource source, String arguments) throws CommandException;
 
-    List<String> modifySuggestions(CommandSource source, String arguments) throws CommandException;
+    List<String> modifySuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException;
 
     default boolean shouldSave() {
         return FGStorageManager.getInstance().defaultModifiedMap.get(this);

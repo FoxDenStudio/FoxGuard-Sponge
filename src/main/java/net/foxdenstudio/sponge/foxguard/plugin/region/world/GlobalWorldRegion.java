@@ -30,8 +30,11 @@ import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -70,7 +73,7 @@ public class GlobalWorldRegion extends WorldRegionBase implements IGlobal {
     }
 
     @Override
-    public List<String> detailsSuggestions(CommandSource source, String arguments) {
+    public List<String> detailsSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) {
         return ImmutableList.of();
     }
 
@@ -95,7 +98,7 @@ public class GlobalWorldRegion extends WorldRegionBase implements IGlobal {
     }
 
     @Override
-    public List<String> modifySuggestions(CommandSource source, String arguments) {
+    public List<String> modifySuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) {
         return ImmutableList.of();
     }
 

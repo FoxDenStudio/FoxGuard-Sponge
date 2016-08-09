@@ -144,7 +144,7 @@ public final class FGFactoryManager {
     public List<String> regionSuggestions(CommandSource source, String arguments, String type) throws CommandException {
         for (IRegionFactory rf : regionFactories) {
             if (rf.getType().equalsIgnoreCase(type)) {
-                return rf.createSuggestions(source, arguments, type);
+                return rf.createSuggestions(source, arguments, type, null);
             }
         }
         return ImmutableList.of();
@@ -153,7 +153,7 @@ public final class FGFactoryManager {
     public List<String> worldRegionSuggestions(CommandSource source, String arguments, String type) throws CommandException {
         for (IWorldRegionFactory wrf : worldRegionFactories) {
             if (wrf.getType().equalsIgnoreCase(type)) {
-                return wrf.createSuggestions(source, arguments, type);
+                return wrf.createSuggestions(source, arguments, type, null);
             }
         }
         return ImmutableList.of();
@@ -162,7 +162,7 @@ public final class FGFactoryManager {
     public List<String> handlerSuggestions(CommandSource source, String arguments, String type) throws CommandException {
         for (IHandlerFactory hf : handlerFactories) {
             if (hf.getType().equalsIgnoreCase(type)) {
-                return hf.createSuggestions(source, arguments, type);
+                return hf.createSuggestions(source, arguments, type, null);
             }
         }
         return ImmutableList.of();
@@ -171,7 +171,7 @@ public final class FGFactoryManager {
     public List<String> controllerSuggestions(CommandSource source, String arguments, String type) throws CommandException {
         for (IControllerFactory cf : controllerFactories) {
             if (cf.getType().equalsIgnoreCase(type)) {
-                return cf.createSuggestions(source, arguments, type);
+                return cf.createSuggestions(source, arguments, type, null);
             }
         }
         return ImmutableList.of();
