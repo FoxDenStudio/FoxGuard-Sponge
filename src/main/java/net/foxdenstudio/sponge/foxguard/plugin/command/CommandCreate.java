@@ -121,12 +121,12 @@ public class CommandCreate extends FCCommandBase {
                 if (!FGManager.getInstance().isRegionNameAvailable(parse.args[1]))
                     throw new ArgumentParseException(Text.of("That name is already taken!"), parse.args[1], 1);
             }
-            if (parse.args.length < 3) throw new CommandException(Text.of("Must specify a type!"));
+            if (parse.args.length < 3) throw new CommandException(Text.of("Must specify a direction!"));
             IRegion newRegion;
             if (isWorldRegion) {
                 List<String> aliases = FGFactoryManager.getInstance().getWorldRegionTypeAliases();
                 if (!isIn(aliases.toArray(new String[aliases.size()]), parse.args[2])) {
-                    throw new CommandException(Text.of("The type \"" + parse.args[2] + "\" is invalid!"));
+                    throw new CommandException(Text.of("The direction \"" + parse.args[2] + "\" is invalid!"));
                 }
                 newRegion = FGFactoryManager.getInstance().createWorldRegion(
                         parse.args[1], parse.args[2],
@@ -135,7 +135,7 @@ public class CommandCreate extends FCCommandBase {
             } else {
                 List<String> aliases = FGFactoryManager.getInstance().getRegionTypeAliases();
                 if (!isIn(aliases.toArray(new String[aliases.size()]), parse.args[2])) {
-                    throw new CommandException(Text.of("The type \"" + parse.args[2] + "\" is invalid!"));
+                    throw new CommandException(Text.of("The direction \"" + parse.args[2] + "\" is invalid!"));
                 }
                 newRegion = FGFactoryManager.getInstance().createRegion(
                         parse.args[1], parse.args[2],
@@ -143,7 +143,7 @@ public class CommandCreate extends FCCommandBase {
                         source);
             }
             if (newRegion == null)
-                throw new CommandException(Text.of("Failed to create region! Perhaps the type is invalid?"));
+                throw new CommandException(Text.of("Failed to create region! Perhaps the direction is invalid?"));
             boolean success = FGManager.getInstance().addRegion(newRegion, world);
             if (!success)
                 throw new CommandException(Text.of("There was an error trying to create the " + (isWorldRegion ? "World" : "") + "Region!"));
@@ -171,12 +171,12 @@ public class CommandCreate extends FCCommandBase {
             } catch (NumberFormatException ignored) {
             }
 
-            if (parse.args.length < 3) throw new CommandException(Text.of("Must specify a type!"));
+            if (parse.args.length < 3) throw new CommandException(Text.of("Must specify a direction!"));
             IHandler newHandler;
             if (isController) {
                 List<String> aliases = FGFactoryManager.getInstance().getControllerTypeAliases();
                 if (!isIn(aliases.toArray(new String[aliases.size()]), parse.args[2])) {
-                    throw new CommandException(Text.of("The type \"" + parse.args[2] + "\" is invalid!"));
+                    throw new CommandException(Text.of("The direction \"" + parse.args[2] + "\" is invalid!"));
                 }
                 newHandler = FGFactoryManager.getInstance().createController(
                         parse.args[1], parse.args[2], priority,
@@ -185,7 +185,7 @@ public class CommandCreate extends FCCommandBase {
             } else {
                 List<String> aliases = FGFactoryManager.getInstance().getHandlerTypeAliases();
                 if (!isIn(aliases.toArray(new String[aliases.size()]), parse.args[2])) {
-                    throw new CommandException(Text.of("The type \"" + parse.args[2] + "\" is invalid!"));
+                    throw new CommandException(Text.of("The direction \"" + parse.args[2] + "\" is invalid!"));
                 }
                 newHandler = FGFactoryManager.getInstance().createHandler(
                         parse.args[1], parse.args[2], priority,
@@ -193,7 +193,7 @@ public class CommandCreate extends FCCommandBase {
                         source);
             }
             if (newHandler == null)
-                throw new CommandException(Text.of("Failed to create " + (isController ? "controller" : "handler") + "! Perhaps the type is invalid?"));
+                throw new CommandException(Text.of("Failed to create " + (isController ? "controller" : "handler") + "! Perhaps the direction is invalid?"));
             boolean success = FGManager.getInstance().addHandler(newHandler);
             if (!success)
                 throw new ArgumentParseException(Text.of("That name is already taken!"), parse.args[1], 1);
@@ -351,6 +351,6 @@ public class CommandCreate extends FCCommandBase {
     @Nonnull
     @Override
     public Text getUsage(@Nonnull CommandSource source) {
-        return Text.of("create <region [--w:<world>] | handler> <name> [--priority:<num>] <type> [args...]");
+        return Text.of("create <region [--w:<world>] | handler> <name> [--priority:<num>] <direction> [args...]");
     }
 }

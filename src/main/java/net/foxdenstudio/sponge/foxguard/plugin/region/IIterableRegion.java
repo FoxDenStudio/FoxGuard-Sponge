@@ -25,13 +25,12 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.region;
 
-import com.flowpowered.math.vector.Vector3i;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
-import org.spongepowered.api.world.extent.Extent;
 
 /**
  * Created by Fox on 7/30/2016.
  */
 public interface IIterableRegion extends IRegion, Iterable<Location<World>> {
+
 }
