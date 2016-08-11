@@ -33,7 +33,10 @@ import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 
@@ -124,7 +127,7 @@ public class CommandTest extends FCCommandBase {
 
 
     @Override
-    public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
+    public List<String> getSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
         return ImmutableList.of();
     }
 
