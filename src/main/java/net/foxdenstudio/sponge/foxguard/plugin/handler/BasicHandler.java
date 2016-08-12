@@ -1449,16 +1449,18 @@ public class BasicHandler extends HandlerBase {
         if (group == defaultGroup) {
             this.defaultPermCache.clear();
             this.userPermCache.clear();
+            this.groupSetPermCache.clear();
         } else {
             this.groupPermCache.get(group).clear();
             group.users.forEach(this.userPermCache::remove);
+            Set<Set<Group>> groupSuperSet = new HashSet<>();
+            for (Map.Entry<Set<Group>, Map<FlagBitSet, Tristate>> cacheEntry : this.groupSetPermCache.entrySet()) {
+                Set<Group> key = cacheEntry.getKey();
+                if (key.contains(group)) groupSuperSet.add(key);
+            }
+            groupSuperSet.forEach(this.groupSetPermCache::remove);
         }
-        Set<Set<Group>> groupSuperSet = new HashSet<>();
-        for (Map.Entry<Set<Group>, Map<FlagBitSet, Tristate>> cacheEntry : this.groupSetPermCache.entrySet()) {
-            Set<Group> key = cacheEntry.getKey();
-            if (key.contains(group)) groupSuperSet.add(key);
-        }
-        groupSuperSet.forEach(this.groupSetPermCache::remove);
+
     }
 
     private List<Entry> getGroupPermissions(Group group) {
