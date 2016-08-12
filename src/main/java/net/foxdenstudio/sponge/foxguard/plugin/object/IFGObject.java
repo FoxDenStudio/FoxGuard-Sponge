@@ -31,9 +31,12 @@ import net.foxdenstudio.sponge.foxguard.plugin.command.CommandDetail;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -60,18 +63,18 @@ public interface IFGObject {
     void setName(String name);
 
     /**
-     * Gets the short type name for this object. It should be around four letters. It should be human readable.
+     * Gets the short direction name for this object. It should be around four letters. It should be human readable.
      * It is used in object lists, such as when using the list or detail commands.
      *
-     * @return The human readable short type name.
+     * @return The human readable short direction name.
      */
     String getShortTypeName();
 
     /**
-     * Gets the long type name for this object. It should be human readable. Avoid abbreviating.
+     * Gets the long direction name for this object. It should be human readable. Avoid abbreviating.
      * It is used in the general information section of the detail command.
      *
-     * @return The human readable long type name.
+     * @return The human readable long direction name.
      */
     String getLongTypeName();
 
@@ -79,7 +82,7 @@ public interface IFGObject {
      * Gets the unique ID for this object. It should be alphabetic only. This return must be static.
      * This is used for SQL storage. It is the same identifier used in the object factories. This return should be static.
      *
-     * @return The unique identifier for this type of object.
+     * @return The unique identifier for this direction of object.
      */
     String getUniqueTypeString();
 
@@ -110,7 +113,7 @@ public interface IFGObject {
      */
     Text details(CommandSource source, String arguments);
 
-    List<String> detailsSuggestions(CommandSource source, String arguments);
+    List<String> detailsSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition);
 
     /**
      * Called when the object is being saved.
@@ -157,7 +160,7 @@ public interface IFGObject {
 
     ProcessResult modify(CommandSource source, String arguments) throws CommandException;
 
-    List<String> modifySuggestions(CommandSource source, String arguments) throws CommandException;
+    List<String> modifySuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException;
 
     default boolean shouldSave() {
         return FGStorageManager.getInstance().defaultModifiedMap.get(this);

@@ -36,12 +36,15 @@ import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -91,7 +94,7 @@ public class ElevationRegion extends WorldRegionBase {
     }
 
     @Override
-    public List<String> modifySuggestions(CommandSource source, String arguments) {
+    public List<String> modifySuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) {
         return ImmutableList.of();
     }
 
@@ -122,7 +125,7 @@ public class ElevationRegion extends WorldRegionBase {
     }
 
     @Override
-    public List<String> detailsSuggestions(CommandSource source, String arguments) {
+    public List<String> detailsSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) {
         return ImmutableList.of();
     }
 
@@ -231,7 +234,7 @@ public class ElevationRegion extends WorldRegionBase {
         }
 
         @Override
-        public List<String> createSuggestions(CommandSource source, String arguments, String type) throws CommandException {
+        public List<String> createSuggestions(CommandSource source, String arguments, String type, @Nullable Location<World> targetPosition) throws CommandException {
             AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                     .arguments(arguments)
                     .excludeCurrent(true)

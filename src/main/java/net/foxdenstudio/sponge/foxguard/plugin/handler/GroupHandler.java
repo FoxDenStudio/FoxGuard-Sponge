@@ -41,7 +41,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Entry;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Operation;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
-import net.foxdenstudio.sponge.foxguard.plugin.util.EverythingSet;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
@@ -61,6 +60,8 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -586,7 +587,7 @@ public class GroupHandler extends HandlerBase {
     }
 
     @Override
-    public List<String> modifySuggestions(CommandSource source, String arguments) throws CommandException {
+    public List<String> modifySuggestions(CommandSource source, String arguments, @org.jetbrains.annotations.Nullable Location<World> targetPosition) throws CommandException {
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
                 .flagMapper(MAPPER)
@@ -857,7 +858,7 @@ public class GroupHandler extends HandlerBase {
     }
 
     @Override
-    public List<String> detailsSuggestions(CommandSource source, String arguments) {
+    public List<String> detailsSuggestions(CommandSource source, String arguments, @org.jetbrains.annotations.Nullable Location<World> targetPosition) {
         return ImmutableList.of();
     }
 
@@ -1280,7 +1281,7 @@ public class GroupHandler extends HandlerBase {
         }
 
         @Override
-        public List<String> createSuggestions(CommandSource source, String arguments, String type) throws CommandException {
+        public List<String> createSuggestions(CommandSource source, String arguments, String type, @org.jetbrains.annotations.Nullable Location<World> targetPosition) throws CommandException {
             AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                     .arguments(arguments)
                     .excludeCurrent(true)

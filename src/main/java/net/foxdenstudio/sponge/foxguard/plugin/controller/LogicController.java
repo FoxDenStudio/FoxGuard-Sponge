@@ -50,6 +50,8 @@ import org.spongepowered.api.event.Event;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -124,7 +126,7 @@ public class LogicController extends ControllerBase {
     }
 
     @Override
-    public List<String> detailsSuggestions(CommandSource source, String arguments) {
+    public List<String> detailsSuggestions(CommandSource source, String arguments, @org.jetbrains.annotations.Nullable Location<World> targetPosition) {
         return null;
     }
 
@@ -134,7 +136,7 @@ public class LogicController extends ControllerBase {
     }
 
     @Override
-    public List<String> modifySuggestions(CommandSource source, String arguments) throws CommandException {
+    public List<String> modifySuggestions(CommandSource source, String arguments, @org.jetbrains.annotations.Nullable Location<World> targetPosition) throws CommandException {
         return ImmutableList.of();
     }
 
@@ -304,7 +306,7 @@ public class LogicController extends ControllerBase {
         }
 
         @Override
-        public List<String> createSuggestions(CommandSource source, String arguments, String type) throws CommandException {
+        public List<String> createSuggestions(CommandSource source, String arguments, String type, @org.jetbrains.annotations.Nullable Location<World> targetPosition) throws CommandException {
             return ImmutableList.of();
         }
 

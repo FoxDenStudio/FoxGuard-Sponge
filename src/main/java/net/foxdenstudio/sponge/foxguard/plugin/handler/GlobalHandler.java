@@ -53,6 +53,8 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -367,7 +369,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
     }
 
     @Override
-    public List<String> modifySuggestions(CommandSource source, String arguments) throws CommandException {
+    public List<String> modifySuggestions(CommandSource source, String arguments, @org.jetbrains.annotations.Nullable Location<World> targetPosition) throws CommandException {
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
                 .excludeCurrent(true)
@@ -475,7 +477,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
     }
 
     @Override
-    public List<String> detailsSuggestions(CommandSource source, String arguments) {
+    public List<String> detailsSuggestions(CommandSource source, String arguments, @org.jetbrains.annotations.Nullable Location<World> targetPosition) {
         return ImmutableList.of();
     }
 

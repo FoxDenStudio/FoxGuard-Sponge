@@ -241,14 +241,14 @@ public class CommandModify extends FCCommandBase {
                 if (world == null) return ImmutableList.of();
                 IWorldRegion region = FGManager.getInstance().getWorldRegion(world, parse.args[1]);
                 if (region == null) return ImmutableList.of();
-                return region.modifySuggestions(source, parse.current.token).stream()
+                return region.modifySuggestions(source, parse.current.token, null).stream()
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
                 if (parse.args.length < 2) return ImmutableList.of();
                 IHandler handler = FGManager.getInstance().gethandler(parse.args[1]);
                 if (handler == null) return ImmutableList.of();
-                return handler.modifySuggestions(source, parse.current.token).stream()
+                return handler.modifySuggestions(source, parse.current.token, null).stream()
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             }

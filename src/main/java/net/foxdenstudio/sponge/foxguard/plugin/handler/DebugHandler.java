@@ -44,9 +44,10 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -139,7 +140,7 @@ public class DebugHandler extends HandlerBase {
     }
 
     @Override
-    public List<String> detailsSuggestions(CommandSource source, String arguments) {
+    public List<String> detailsSuggestions(CommandSource source, String arguments, @org.jetbrains.annotations.Nullable Location<World> targetPosition) {
         return ImmutableList.of();
     }
 
@@ -174,7 +175,7 @@ public class DebugHandler extends HandlerBase {
     }
 
     @Override
-    public List<String> modifySuggestions(CommandSource source, String arguments) throws CommandException {
+    public List<String> modifySuggestions(CommandSource source, String arguments, @org.jetbrains.annotations.Nullable Location<World> targetPosition) throws CommandException {
         return ImmutableList.of();
     }
 
@@ -232,7 +233,7 @@ public class DebugHandler extends HandlerBase {
         }
 
         @Override
-        public List<String> createSuggestions(CommandSource source, String arguments, String type) throws CommandException {
+        public List<String> createSuggestions(CommandSource source, String arguments, String type, @org.jetbrains.annotations.Nullable Location<World> targetPosition) throws CommandException {
             return ImmutableList.of();
         }
     }

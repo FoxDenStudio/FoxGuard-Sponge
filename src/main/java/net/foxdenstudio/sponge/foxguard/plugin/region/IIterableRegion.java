@@ -23,24 +23,14 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.object.factory;
+package net.foxdenstudio.sponge.foxguard.plugin.region;
 
-import org.jetbrains.annotations.Nullable;
-import org.spongepowered.api.command.CommandException;
-import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import java.util.List;
-
-public interface IFGFactory {
-
-    String[] getAliases();
-
-    String getType();
-
-    String getPrimaryAlias();
-
-    List<String> createSuggestions(CommandSource source, String arguments, String type, @Nullable Location<World> targetPosition) throws CommandException;
+/**
+ * Created by Fox on 7/30/2016.
+ */
+public interface IIterableRegion extends IRegion, Iterable<Location<World>> {
 
 }

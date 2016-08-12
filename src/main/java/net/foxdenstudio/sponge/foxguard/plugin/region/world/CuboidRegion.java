@@ -33,24 +33,29 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.BoundingBox3;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IWorldRegionFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.region.IIterableRegion;
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
-public class CuboidRegion extends WorldRegionBase {
+public class CuboidRegion extends WorldRegionBase implements IIterableRegion {
 
     private BoundingBox3 boundingBox;
 
@@ -104,7 +109,7 @@ public class CuboidRegion extends WorldRegionBase {
     }
 
     @Override
-    public List<String> modifySuggestions(CommandSource source, String arguments) {
+    public List<String> modifySuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) {
         return null;
     }
 
@@ -152,7 +157,7 @@ public class CuboidRegion extends WorldRegionBase {
     }
 
     @Override
-    public List<String> detailsSuggestions(CommandSource source, String arguments) {
+    public List<String> detailsSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) {
         return ImmutableList.of();
     }
 
@@ -197,6 +202,26 @@ public class CuboidRegion extends WorldRegionBase {
     public void setBoundingBox(BoundingBox3 boundingBox) {
         this.boundingBox = boundingBox;
         markDirty();
+    }
+
+    @Override
+    public Iterator<Location<World>> iterator() {
+        return new RegionIterator();
+    }
+
+    private class RegionIterator implements Iterator<Location<World>> {
+
+        Iterator<Vector3i> bbIterator = boundingBox.iterator();
+
+        @Override
+        public boolean hasNext() {
+            return bbIterator.hasNext();
+        }
+
+        @Override
+        public Location<World> next() {
+            return new Location<>(world, bbIterator.next());
+        }
     }
 
     public static class Factory implements IWorldRegionFactory {
@@ -252,7 +277,7 @@ public class CuboidRegion extends WorldRegionBase {
         }
 
         @Override
-        public List<String> createSuggestions(CommandSource source, String arguments, String type) throws CommandException {
+        public List<String> createSuggestions(CommandSource source, String arguments, String type, @Nullable Location<World> targetPosition) throws CommandException {
             AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                     .arguments(arguments)
                     .excludeCurrent(true)
