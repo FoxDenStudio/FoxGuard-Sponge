@@ -116,7 +116,7 @@ public final class FGStorageManager {
                         try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
                             Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
                             Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
-                            Atomic.String metaType = metaDB.atomicString("direction").createOrOpen();
+                            Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
                             Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
                             metaName.set(name);
                             metaCategory.set(FGUtil.getCategory(fgObject));
@@ -184,7 +184,7 @@ public final class FGStorageManager {
                         try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
                             Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
                             Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
-                            Atomic.String metaType = metaDB.atomicString("direction").createOrOpen();
+                            Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
                             Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
                             metaName.set(name);
                             metaCategory.set(FGUtil.getCategory(fgObject));
@@ -252,7 +252,7 @@ public final class FGStorageManager {
                         try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
                             Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
                             Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
-                            Atomic.String metaType = metaDB.atomicString("direction").createOrOpen();
+                            Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
                             Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
                             Atomic.Integer metaPriority = metaDB.atomicInteger("priority").createOrOpen();
                             metaName.set(name);
@@ -309,7 +309,7 @@ public final class FGStorageManager {
             try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
                 Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
                 Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
-                Atomic.String metaType = metaDB.atomicString("direction").createOrOpen();
+                Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
                 Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
                 metaName.set(name);
                 metaCategory.set(FGUtil.getCategory(fgObject));
@@ -356,7 +356,7 @@ public final class FGStorageManager {
             try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
                 Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
                 Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
-                Atomic.String metaType = metaDB.atomicString("direction").createOrOpen();
+                Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
                 Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
                 metaName.set(name);
                 metaCategory.set(FGUtil.getCategory(fgObject));
@@ -403,7 +403,7 @@ public final class FGStorageManager {
             try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
                 Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
                 Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
-                Atomic.String metaType = metaDB.atomicString("direction").createOrOpen();
+                Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
                 Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
                 Atomic.Integer metaPriority = metaDB.atomicInteger("priority").createOrOpen();
                 metaName.set(name);
@@ -538,7 +538,7 @@ public final class FGStorageManager {
                     Boolean enabled;
                     try (DB metaDB = DBMaker.fileDB(metaDataFile.normalize().toString()).make()) {
                         category = metaDB.exists("category") ? metaDB.atomicString("category").createOrOpen().get() : entry.getValue();
-                        type = metaDB.exists("direction") ? metaDB.atomicString("direction").createOrOpen().get() : typeMap.get(name);
+                        type = metaDB.exists("type") ? metaDB.atomicString("type").createOrOpen().get() : typeMap.get(name);
                         enabled = metaDB.exists("enabled") ? metaDB.atomicBoolean("enabled").createOrOpen().get() : enabledMap.get(name);
                     }
                     logger.info("Region info loaded!  Name: \"" + name +
@@ -623,7 +623,7 @@ public final class FGStorageManager {
                     Boolean enabled;
                     try (DB metaDB = DBMaker.fileDB(metaDataFile.normalize().toString()).make()) {
                         category = metaDB.exists("category") ? metaDB.atomicString("category").createOrOpen().get() : entry.getValue();
-                        type = metaDB.exists("direction") ? metaDB.atomicString("direction").createOrOpen().get() : typeMap.get(name);
+                        type = metaDB.exists("type") ? metaDB.atomicString("type").createOrOpen().get() : typeMap.get(name);
                         enabled = metaDB.exists("enabled") ? metaDB.atomicBoolean("enabled").createOrOpen().get() : enabledMap.get(name);
                     }
                     logger.info("World region info loaded!  Name: \"" + name +
@@ -710,7 +710,7 @@ public final class FGStorageManager {
                     Integer priority;
                     try (DB metaDB = DBMaker.fileDB(metaDataFile.normalize().toString()).make()) {
                         category = metaDB.exists("category") ? metaDB.atomicString("category").createOrOpen().get() : entry.getValue();
-                        type = metaDB.exists("direction") ? metaDB.atomicString("direction").createOrOpen().get() : typeMap.get(name);
+                        type = metaDB.exists("type") ? metaDB.atomicString("type").createOrOpen().get() : typeMap.get(name);
                         enabled = metaDB.exists("enabled") ? metaDB.atomicBoolean("enabled").createOrOpen().get() : enabledMap.get(name);
                         priority = metaDB.exists("priority") ? metaDB.atomicInteger("priority").createOrOpen().get() : priorityMap.get(name);
                     }
