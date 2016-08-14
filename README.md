@@ -6,10 +6,10 @@ Requires [FoxCore](https://github.com/FoxDenStudio/FoxCore).
 ## Why not WorldGuard?
 While I am aware that WorldGuard is being ported to Sponge, the way this plugin handles the protection is different.
 Also, at the time of it's creation, there really wasn't a flexible and powerful solution in protecting places like spawn areas.
-
+rom handlers, in that you create them separately and then link them as needed.
+Regions define areas of effec
 ## How it works
-This plugin separates regions from handlers, in that you create them separately and then link them as needed.
-Regions define areas of effect, with some being contained within a world, and others spanning multiple worlds.
+This plugin separates regions ft, with some being contained within a world, and others spanning multiple worlds.
 Handlers are instructions for how events should be handled. They are global for the server.
 
 When events are fired, they are checked to see if they fall within one or more regions. 
