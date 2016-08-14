@@ -53,7 +53,7 @@ If you don't have gradle installed (Or if you just want to use the wrapper for s
 The built jarfile can be found under `./build/libs`
 It should be named something like FoxGuard-SNAPSHOT.jar with some version info and whatnot.
 
-FoxCore is also built in the process, and can be found under `./FoxCore/build/libs`
+The required version of FoxCore is also (conveniently) built in the process, and can be found under `./FoxCore/build/libs`
 
 ## Note from the author about the plugin 
 When I started writing this plugin it was meant as a one-off compile and forget plugin to protect a spawn area for a friend.
