@@ -103,8 +103,9 @@ public final class FGStorageManager {
                 String name = fgObject.getName();
                 if (fgObject.autoSave()) {
                     Path singleDir = dir.resolve(name.toLowerCase());
-                    if (force || fgObject.shouldSave()) {
-                        logger.info("Saving region \"" + name + "\" in directory: " + singleDir);
+                    boolean shouldSave = fgObject.shouldSave();
+                    if (force || shouldSave) {
+                        logger.info((shouldSave ? "S" : "Force s") + "aving region \"" + name + "\" in directory: " + singleDir);
                         constructDirectory(singleDir);
                         try {
                             fgObject.save(singleDir);
@@ -171,8 +172,9 @@ public final class FGStorageManager {
                 String name = fgObject.getName();
                 if (fgObject.autoSave()) {
                     Path singleDir = dir.resolve(name.toLowerCase());
-                    if (force || fgObject.shouldSave()) {
-                        logger.info("Saving world region \"" + name + "\" in directory: " + singleDir);
+                    boolean shouldSave = fgObject.shouldSave();
+                    if (force || shouldSave) {
+                        logger.info((shouldSave ? "S" : "Force s") + "aving world region \"" + name + "\" in directory: " + singleDir);
                         constructDirectory(singleDir);
                         try {
                             fgObject.save(singleDir);
@@ -239,8 +241,9 @@ public final class FGStorageManager {
                 if (fgObject.autoSave()) {
                     String name = fgObject.getName();
                     Path singleDir = dir.resolve(name.toLowerCase());
-                    if (force || fgObject.shouldSave()) {
-                        logger.info("Saving handler \"" + name + "\" in directory: " + singleDir);
+                    boolean shouldSave = fgObject.shouldSave();
+                    if (force || shouldSave) {
+                        logger.info((shouldSave ? "S" : "Force s") + "aving handler \"" + name + "\" in directory: " + singleDir);
                         constructDirectory(singleDir);
                         try {
                             fgObject.save(singleDir);

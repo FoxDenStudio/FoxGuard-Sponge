@@ -98,7 +98,6 @@ public final class FoxGuardMain {
      */
     private static FoxGuardMain instanceField;
 
-
     @Inject
     private Logger logger;
 

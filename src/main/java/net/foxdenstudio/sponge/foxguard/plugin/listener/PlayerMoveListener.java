@@ -160,6 +160,10 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
 
                     if (finalList.size() == 0) {
                         this.last.put(player, new LastWrapper(toComplete, event.getToTransform().getPosition()));
+                        if (hud) {
+                            renderHUD(player, regionList, toComplete, config);
+                            player.setScoreboard(this.scoreboardMap.get(player));
+                        }
                         return;
                     }
 
