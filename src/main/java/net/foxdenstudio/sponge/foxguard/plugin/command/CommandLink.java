@@ -79,7 +79,7 @@ public class CommandLink extends FCCommandBase {
             if (FGUtil.getSelectedHandlers(source).size() == 0)
                 throw new CommandException(Text.of("You don't have any handlers in your state buffer!"));
             int[] successes = {0};
-            FGUtil.getSelectedRegions(source).stream().forEach(
+            FGUtil.getSelectedRegions(source).forEach(
                     region -> FGUtil.getSelectedHandlers(source).stream()
                             .filter(handler -> !(handler instanceof GlobalHandler))
                             .forEach(handler -> successes[0] += FGManager.getInstance().link(region, handler) ? 1 : 0));

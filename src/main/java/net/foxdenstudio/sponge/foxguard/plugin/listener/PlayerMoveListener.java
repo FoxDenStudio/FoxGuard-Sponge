@@ -105,7 +105,7 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
                 .filter(entity -> entity instanceof Player)
                 .map(entity -> (Player) entity)
                 .forEach(player -> {
-                    final boolean hud = CommandHUD.instance().getIsHUDEnabled().get(player) && player.getScoreboard() == scoreboardMap.get(player);
+                    final boolean hud = player.getScoreboard() == scoreboardMap.get(player) && CommandHUD.instance().getIsHUDEnabled().get(player);
                     final HUDConfig config = this.hudConfigMap.get(player);
                     final boolean regionHUD = hud && config.regions;
 
@@ -160,7 +160,7 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
 
                     if (finalList.size() == 0) {
                         this.last.put(player, new LastWrapper(toComplete, event.getToTransform().getPosition()));
-                        if (hud) {
+                        if (hud ) {
                             renderHUD(player, regionList, toComplete, config);
                             player.setScoreboard(this.scoreboardMap.get(player));
                         }
