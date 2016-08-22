@@ -25,7 +25,6 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
-import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxcore.plugin.command.CommandDebug;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
@@ -100,13 +99,9 @@ public class BlockListener implements EventListener<ChangeBlockEvent> {
         World world = event.getTargetWorld();
 
         for (Transaction<BlockSnapshot> trans : event.getTransactions()) {
-            Vector3i loc = trans.getOriginal().getLocation().get().getBlockPosition();
-            Vector3i chunk = new Vector3i(
-                    GenericMath.floor((loc.getX()) / 16.0),
-                    GenericMath.floor((loc.getY()) / 16.0),
-                    GenericMath.floor((loc.getZ()) / 16.0));
-            FGManager.getInstance().getAllRegions(world, chunk).stream()
-                    .filter(region -> region.contains(loc, world))
+            Vector3i pos = trans.getFinal().getLocation().get().getBlockPosition();
+            FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
+                    .filter(region -> region.contains(pos, world))
                     .forEach(region -> region.getHandlers().stream()
                             .filter(IFGObject::isEnabled)
                             .filter(handler -> !handlerList.contains(handler))
@@ -135,16 +130,13 @@ public class BlockListener implements EventListener<ChangeBlockEvent> {
                     Player player = (Player) user;
                     Vector3i pos = player.getLocation().getPosition().toInt();
                     Response r = Response.NONE;
-                    for (Transaction<BlockSnapshot> trans : event.getTransactions()) {
-                        int dist = trans.getOriginal().getPosition().distanceSquared(pos);
-                        if (dist < 64) {
-                            r = Response.BASIC;
-                            break;
-                        }
-                        if (dist < 4096) {
-                            r = Response.LOCATION;
-                            break;
-                        }
+                    // Using the first transaction is good enough. No one cares if the tooltip is off a little.
+                    int dist = event.getTransactions().get(0).getOriginal().getPosition().distanceSquared(pos);
+                    if (dist < 64) {
+                        r = Response.BASIC;
+                    }
+                    if (dist < 4096) {
+                        r = Response.LOCATION;
                     }
                     if (r == Response.BASIC)
                         player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));

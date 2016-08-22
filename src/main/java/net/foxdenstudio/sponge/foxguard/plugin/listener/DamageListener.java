@@ -79,7 +79,7 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
         }
 
         World world = event.getTargetEntity().getWorld();
-        Vector3d loc = event.getTargetEntity().getLocation().getPosition();
+        Vector3d pos = event.getTargetEntity().getLocation().getPosition();
         Entity entity = event.getTargetEntity();
         FlagBitSet flags = (FlagBitSet) BASE_FLAG_SET_SOURCE.clone();
 
@@ -101,13 +101,8 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
 
 
         List<IHandler> handlerList = new ArrayList<>();
-        final Vector3d finalLoc = loc;
-        final World finalWorld = world;
-        FGManager.getInstance().getAllRegions(world, new Vector3i(
-                GenericMath.floor(loc.getX() / 16.0),
-                GenericMath.floor(loc.getY() / 16.0),
-                GenericMath.floor(loc.getZ() / 16.0))).stream()
-                .filter(region -> region.contains(finalLoc, finalWorld))
+        FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
+                .filter(region -> region.contains(pos, world))
                 .forEach(region -> region.getHandlers().stream()
                         .filter(IFGObject::isEnabled)
                         .filter(handler -> !handlerList.contains(handler))

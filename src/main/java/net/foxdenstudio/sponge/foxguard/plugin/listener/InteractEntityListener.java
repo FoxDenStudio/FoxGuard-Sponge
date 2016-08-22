@@ -73,7 +73,7 @@ public class InteractEntityListener implements EventListener<InteractEntityEvent
 
         FlagBitSet flags = (FlagBitSet) BASE_FLAG_SET.clone();
         World world = event.getTargetEntity().getWorld();
-        Vector3d loc = event.getTargetEntity().getLocation().getPosition();
+        Vector3d pos = event.getTargetEntity().getLocation().getPosition();
         if (event instanceof InteractEntityEvent.Primary) {
             flags.set(PRIMARY);
         } else if (event instanceof InteractEntityEvent.Secondary) {
@@ -98,12 +98,8 @@ public class InteractEntityListener implements EventListener<InteractEntityEvent
         }
 
         List<IHandler> handlerList = new ArrayList<>();
-        Vector3i chunk = new Vector3i(
-                GenericMath.floor(loc.getX() / 16.0),
-                GenericMath.floor(loc.getY() / 16.0),
-                GenericMath.floor(loc.getZ() / 16.0));
-        FGManager.getInstance().getAllRegions(world, chunk).stream()
-                .filter(region -> region.contains(loc, world))
+        FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
+                .filter(region -> region.contains(pos, world))
                 .forEach(region -> region.getHandlers().stream()
                         .filter(IFGObject::isEnabled)
                         .filter(handler -> !handlerList.contains(handler))

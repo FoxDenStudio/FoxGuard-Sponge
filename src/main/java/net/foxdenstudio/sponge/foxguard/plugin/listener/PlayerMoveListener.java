@@ -116,10 +116,7 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
                         fromList = new ArrayList<>();
                         final List<IHandler> temp = fromList;
                         Vector3d from = event.getFromTransform().getPosition().add(0, 0.1, 0);
-                        FGManager.getInstance().getAllRegions(world, new Vector3i(
-                                GenericMath.floor(from.getX() / 16.0),
-                                GenericMath.floor(from.getY() / 16.0),
-                                GenericMath.floor(from.getZ() / 16.0))).stream()
+                        FGManager.getInstance().getRegionsInChunkAtPos(world, from).stream()
                                 .filter(region -> region.contains(from, world))
                                 .forEach(region -> region.getHandlers().stream()
                                         .filter(IFGObject::isEnabled)
@@ -128,10 +125,7 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
                     } else {
                         fromList = new ArrayList<>(fromList);
                     }
-                    FGManager.getInstance().getAllRegions(world, new Vector3i(
-                            GenericMath.floor(to.getX() / 16.0),
-                            GenericMath.floor(to.getY() / 16.0),
-                            GenericMath.floor(to.getZ() / 16.0))).stream()
+                    FGManager.getInstance().getRegionsInChunkAtPos(world, to).stream()
                             .filter(region -> region.contains(to, world))
                             .forEach(region -> {
                                 if (regionHUD) regionList.add(region);
