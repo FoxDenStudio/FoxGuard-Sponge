@@ -406,7 +406,7 @@ public class BasicHandler extends HandlerBase {
                 if (op != Operation.SET)
                     return ProcessResult.of(false, Text.of("Must specify a user or a group to add!"));
                 else {
-                    group.users.clear();
+                    clearUsers(group);
                     return ProcessResult.of(true, Text.of("Successfully cleared group!"));
                 }
             }
@@ -477,13 +477,13 @@ public class BasicHandler extends HandlerBase {
                 if (successes == 1)
                     return ProcessResult.of(true, Text.of("Successfully " + op.pastTense + " user!"));
                 else {
-                    return ProcessResult.of(true, Text.of("Successfully " + op.pastTense + " " + successes + " members!"));
+                    return ProcessResult.of(true, Text.of("Successfully " + op.pastTense + " " + successes + " users!"));
                 }
             } else {
                 if (successes > 0) {
-                    return ProcessResult.of(true, Text.of("Successfully " + op.pastTense + " " + successes + " members with " + failures + " failures!"));
+                    return ProcessResult.of(true, Text.of("Successfully " + op.pastTense + " " + successes + " users with " + failures + " failures!"));
                 } else {
-                    return ProcessResult.of(false, Text.of("Failed to " + op.pastTense + " " + failures + " members!"));
+                    return ProcessResult.of(false, Text.of("Failed to " + op.pastTense + " " + failures + " users!"));
                 }
             }
         } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
@@ -765,7 +765,7 @@ public class BasicHandler extends HandlerBase {
     }
 
     @Override
-    public List<String> modifySuggestions(CommandSource source, String arguments, @org.jetbrains.annotations.Nullable Location<World> targetPosition) throws CommandException {
+    public List<String> modifySuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
                 .flagMapper(MAPPER)
@@ -996,7 +996,7 @@ public class BasicHandler extends HandlerBase {
             }
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGVALUE)) {
             if (isIn(GROUPS_ALIASES, parse.args[0])) {
-                if(isIn(COLOR_ALIASES, parse.current.key)){
+                if (isIn(COLOR_ALIASES, parse.current.key)) {
                     return Arrays.stream(FCCUtil.colorNames)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
@@ -1117,7 +1117,7 @@ public class BasicHandler extends HandlerBase {
     }
 
     @Override
-    public List<String> detailsSuggestions(CommandSource source, String arguments, @org.jetbrains.annotations.Nullable Location<World> targetPosition) {
+    public List<String> detailsSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) {
         return ImmutableList.of();
     }
 
@@ -1239,7 +1239,7 @@ public class BasicHandler extends HandlerBase {
             }
             groupSuperSet.forEach(this.groupSetPermCache::remove);
             this.groups.remove(group);
-            if (this.passiveGroup.equals(group)) this.setPassiveSetting(PassiveSetting.PASSTHROUGH);
+            if (group.equals(passiveGroup)) this.setPassiveSetting(PassiveSetting.PASSTHROUGH);
             return true;
         }
         return false;
@@ -1671,7 +1671,7 @@ public class BasicHandler extends HandlerBase {
         }
 
         @Override
-        public List<String> createSuggestions(CommandSource source, String arguments, String type, @org.jetbrains.annotations.Nullable Location<World> targetPosition) throws CommandException {
+        public List<String> createSuggestions(CommandSource source, String arguments, String type, @Nullable Location<World> targetPosition) throws CommandException {
             AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                     .arguments(arguments)
                     .excludeCurrent(true)

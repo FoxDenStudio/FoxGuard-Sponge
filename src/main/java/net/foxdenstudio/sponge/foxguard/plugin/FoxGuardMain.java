@@ -237,7 +237,8 @@ public final class FoxGuardMain {
         fgDispatcher.register(new CommandPriority(), "priority", "prio", "level", "rank");
 
         fgDispatcher.register(new CommandTest(), "test");
-        fgDispatcher.register(new CommandLink2(), "link2");
+        fgDispatcher.register(new CommandLink2(true), "link2", "connect2", "attach2");
+        fgDispatcher.register(new CommandLink2(false), "unlink2", "disconnect2", "detach2");
 
         game.getCommandManager().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
     }
@@ -277,7 +278,7 @@ public final class FoxGuardMain {
      */
     private void registerListeners() {
         eventManager.registerListeners(this, FlagRegistry.getInstance());
-        eventManager.registerListener(this, ChangeBlockEvent.class, new BlockListener());
+        eventManager.registerListener(this, ChangeBlockEvent.class, new BlockChangeListener());
         eventManager.registerListener(this, InteractBlockEvent.class, new InteractBlockListener());
         eventManager.registerListener(this, InteractEntityEvent.class, new InteractEntityListener());
         eventManager.registerListener(this, SpawnEntityEvent.class, new SpawnEntityListener());

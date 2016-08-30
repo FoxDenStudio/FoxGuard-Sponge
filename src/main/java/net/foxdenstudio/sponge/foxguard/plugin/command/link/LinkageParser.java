@@ -292,7 +292,7 @@ public class LinkageParser {
 
     }
 
-    public class Result{
+    public class Result {
 
     }
 

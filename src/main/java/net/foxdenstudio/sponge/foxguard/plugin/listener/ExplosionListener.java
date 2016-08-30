@@ -25,9 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
-import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3d;
-import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
@@ -50,7 +48,7 @@ import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 
 public class ExplosionListener implements EventListener<ExplosionEvent.Detonate> {
 
-    private static final FlagBitSet FLAG_SET = new FlagBitSet(ROOT, DEBUFF, EXPLOSION);
+    private static final FlagBitSet FLAG_SET = new FlagBitSet(ROOT, DEBUFF, BLOCK, CHANGE, EXPLOSION);
 
 
     @Override

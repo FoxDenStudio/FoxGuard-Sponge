@@ -27,7 +27,6 @@ package net.foxdenstudio.sponge.foxguard.plugin.handler.util;
 
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.BasicHandler;
 import org.spongepowered.api.util.Tristate;
 
 import java.util.HashSet;

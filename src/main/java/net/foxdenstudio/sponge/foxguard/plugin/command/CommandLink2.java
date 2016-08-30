@@ -26,9 +26,11 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.command.link.LinkEntry;
 import net.foxdenstudio.sponge.foxguard.plugin.command.link.LinkageParser;
-import org.spongepowered.api.command.CommandCallable;
+import net.foxdenstudio.sponge.foxguard.plugin.event.util.FGEventFactory;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -41,15 +43,38 @@ import java.util.Set;
 
 public class CommandLink2 extends FCCommandBase {
 
+    private final boolean link;
+
+    public CommandLink2(boolean link) {
+        this.link = link;
+    }
+
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
+        if (arguments.trim().isEmpty()) {
+            source.sendMessage(getHelp(source).orElse(getUsage(source)));
+        }
         Set<LinkEntry> set = LinkageParser.parseLinkageExpression(arguments, source);
-        System.out.println(set);
-        return CommandResult.empty();
+        int[] successes = {0};
+        set.forEach(entry -> {
+            if (link) {
+                if (entry.linkable.addHandler(entry.handler)) successes[0]++;
+            } else {
+                if (entry.linkable.removeHandler(entry.handler)) successes[0]++;
+            }
+        });
+        if (successes[0] > 0) {
+            Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateEvent(FoxGuardMain.getCause()));
+            source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.link ? "linked" : "unlinked") + " objects with "
+                    + successes[0] + " successes!"));
+            return CommandResult.builder().successCount(successes[0]).build();
+        } else {
+            throw new CommandException(Text.of("Failed to " + (this.link ? "link" : "unlink") + " any objects!"));
+        }
     }
 
     @Override
@@ -59,21 +84,21 @@ public class CommandLink2 extends FCCommandBase {
 
     @Override
     public boolean testPermission(CommandSource source) {
-        return source.hasPermission("foxguard.command.modify.link.link");
+        return source.hasPermission("foxguard.command.modify.link." + (this.link ? "link" : "unlink") + "2");
     }
 
     @Override
-    public Optional<? extends Text> getShortDescription(CommandSource source) {
+    public Optional<Text> getShortDescription(CommandSource source) {
         return Optional.empty();
     }
 
     @Override
-    public Optional<? extends Text> getHelp(CommandSource source) {
+    public Optional<Text> getHelp(CommandSource source) {
         return Optional.empty();
     }
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Text.of("link [ [--w:<worldname>] <region name> <handler name> ]");
+        return Text.of("link2 [args]...");
     }
 }

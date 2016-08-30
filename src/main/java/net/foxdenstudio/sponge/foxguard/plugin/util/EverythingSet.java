@@ -25,8 +25,8 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.util;
 
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
@@ -61,7 +61,7 @@ public class EverythingSet<E> implements Set<E> {
         return true;
     }
 
-    @NotNull
+    @Nonnull
     @Override
     public Iterator<E> iterator() {
         return new Iterator<E>() {
@@ -77,13 +77,13 @@ public class EverythingSet<E> implements Set<E> {
         };
     }
 
-    @NotNull
+    @Nonnull
     @Override
     public Object[] toArray() {
         return new Object[0];
     }
 
-    @NotNull
+    @Nonnull
     @Override
     public <T> T[] toArray(T[] a) {
         return a;

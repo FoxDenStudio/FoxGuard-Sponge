@@ -31,7 +31,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
-import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -105,12 +104,12 @@ public class CommandPriority extends FCCommandBase {
     }
 
     @Override
-    public Optional<? extends Text> getShortDescription(CommandSource source) {
+    public Optional<Text> getShortDescription(CommandSource source) {
         return Optional.of(Text.of("Sets or changes the priority of one or more handlers."));
     }
 
     @Override
-    public Optional<? extends Text> getHelp(CommandSource source) {
+    public Optional<Text> getHelp(CommandSource source) {
         return Optional.of(Text.of("This command will modify the priorities of all handlers currently in your state buffer.\n" +
                 "This command takes a minimum of one parameter, which is the priority that all handlers will be set to.\n" +
                 "Prefixing this value with a tilde (\" ~ \") instead increments or decrements the priority of each handler by that value.\n" +

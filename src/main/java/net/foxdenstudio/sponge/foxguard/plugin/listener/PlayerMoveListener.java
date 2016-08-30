@@ -25,16 +25,13 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
-import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3d;
-import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.CommandHUD;
 import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagOld;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
@@ -154,7 +151,7 @@ public class PlayerMoveListener implements EventListener<DisplaceEntityEvent> {
 
                     if (finalList.size() == 0) {
                         this.last.put(player, new LastWrapper(toComplete, event.getToTransform().getPosition()));
-                        if (hud ) {
+                        if (hud) {
                             renderHUD(player, regionList, toComplete, config);
                             player.setScoreboard(this.scoreboardMap.get(player));
                         }

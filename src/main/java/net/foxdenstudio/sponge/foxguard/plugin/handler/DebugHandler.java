@@ -26,10 +26,12 @@
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Operation;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
@@ -54,6 +56,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
 /**
  * Created by Fox on 7/4/2016.
@@ -122,9 +126,9 @@ public class DebugHandler extends HandlerBase {
         UserStorageService userStorageService = FoxGuardMain.instance().getUserStorage();
         Text.Builder builder = Text.builder();
         builder.append(Text.of(TextColors.AQUA, "Color: ")).append(Text.of(this.color, this.color.getName(), "\n"));
-        builder.append(Text.of(TextColors.AQUA, "Console: ")).append(Text.of(console ? TextColors.GREEN: TextColors.RED, Boolean.toString(console), "\n"));
+        builder.append(Text.of(TextColors.AQUA, "Console: ")).append(Text.of(console ? TextColors.GREEN : TextColors.RED, Boolean.toString(console), "\n"));
         builder.append(Text.of(TextColors.GREEN, "Members: "));
-        for(UUID uuid : this.members){
+        for (UUID uuid : this.members) {
             Optional<User> userOptional = userStorageService.get(uuid);
             if (userOptional.isPresent()) {
                 TextColor color = TextColors.WHITE;
@@ -140,7 +144,136 @@ public class DebugHandler extends HandlerBase {
     }
 
     @Override
-    public List<String> detailsSuggestions(CommandSource source, String arguments, @org.jetbrains.annotations.Nullable Location<World> targetPosition) {
+    public List<String> detailsSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) {
+        return ImmutableList.of();
+    }
+
+    @Override
+    public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
+                .arguments(arguments)
+                .parse();
+        if (parse.args.length > 0) {
+            if (parse.args[0].equalsIgnoreCase("members")) {
+                if (parse.args.length < 2) return ProcessResult.of(false, Text.of("Must specify an operation!"));
+                Operation op;
+                switch (parse.args[2].toLowerCase()) {
+                    case "add":
+                        op = Operation.ADD;
+                        break;
+                    case "remove":
+                        op = Operation.REMOVE;
+                        break;
+                    case "set":
+                        op = Operation.SET;
+                        break;
+                    default:
+                        return ProcessResult.of(false, Text.of("Not a valid operation!"));
+                }
+                if (parse.args.length < 3) {
+                    if (op != Operation.SET) {
+                        return ProcessResult.of(false, Text.of("Must specify a user or a group to add!"));
+                    } else {
+                        this.members.clear();
+                        return ProcessResult.of(true, Text.of("Successfully cleared members!"));
+                    }
+                }
+                Set<UUID> users = new HashSet<>();
+                int successes = 0, failures = 0;
+                String[] newArgs = Arrays.copyOfRange(parse.args, 3, parse.args.length);
+                for (String s : newArgs) {
+                    try {
+                        UUID uuid = UUID.fromString(s);
+                        users.add(uuid);
+                    } catch (IllegalArgumentException e) {
+                        Optional<User> userOptional = FoxGuardMain.instance().getUserStorage().get(s);
+                        if (userOptional.isPresent()) {
+                            users.add(userOptional.get().getUniqueId());
+                        } else if (newArgs.length == 1) {
+                            return ProcessResult.of(false, Text.of("No user exists with this name!"));
+                        } else {
+                            failures++;
+                        }
+                    }
+                }
+                switch (op) {
+                    case ADD:
+                        for (UUID u : users) {
+                            if (this.members.add(u)) {
+                                successes++;
+                            } else {
+                                failures++;
+                            }
+                        }
+                        break;
+                    case REMOVE:
+                        for (UUID u : users) {
+                            if (this.members.remove(u)) {
+                                successes++;
+                            } else {
+                                failures++;
+                            }
+                        }
+                        break;
+                    case SET:
+                        this.members.clear();
+                        for (UUID u : users) {
+                            if (this.members.add(u)) {
+                                successes++;
+                            } else {
+                                failures++;
+                            }
+                        }
+                        break;
+                }
+                if (failures == 0) {
+                    if (successes == 1)
+                        return ProcessResult.of(true, Text.of("Successfully " + op.pastTense + " user!"));
+                    else {
+                        return ProcessResult.of(true, Text.of("Successfully " + op.pastTense + " " + successes + " users!"));
+                    }
+                } else {
+                    if (successes > 0) {
+                        return ProcessResult.of(true, Text.of("Successfully " + op.pastTense + " " + successes + " users with " + failures + " failures!"));
+                    } else {
+                        return ProcessResult.of(false, Text.of("Failed to " + op.pastTense + " " + failures + " users!"));
+                    }
+                }
+            } else if (parse.args[0].equalsIgnoreCase("console")) {
+                if (parse.args.length > 1) {
+                    if (isIn(TRUE_ALIASES, parse.args[1])) {
+                        this.console = true;
+                    } else if (isIn(FALSE_ALIASES, parse.args[1])) {
+                        this.console = false;
+                    } else {
+                        return ProcessResult.of(false, Text.of("Not a valid boolean value!"));
+                    }
+                    return ProcessResult.of(true, Text.of("Successfully turned " + (this.console ? "on" : "off") + " output!"));
+                } else {
+                    return ProcessResult.of(false, Text.of("Must specify a boolean value!"));
+                }
+            } else if (parse.args[0].equalsIgnoreCase("color")) {
+                if (parse.args.length > 1) {
+                    Optional<TextColor> colorOptional = FCPUtil.textColorFromHex(parse.args[1]);
+                    if (!colorOptional.isPresent())
+                        colorOptional = FCPUtil.textColorFromName(parse.args[1]);
+                    if (colorOptional.isPresent()) {
+                        this.color = colorOptional.get();
+                        return ProcessResult.of(true, Text.of("Successfuly set color!"));
+                    } else return ProcessResult.of(false, Text.of("Not a valid color!"));
+                } else {
+                    return ProcessResult.of(false, Text.of("Must specify a color!"));
+                }
+            } else {
+                return ProcessResult.of(false, Text.of("Not a valid debug handler command!"));
+            }
+        } else {
+            return ProcessResult.of(false, Text.of("Must specify a debug handler command!"));
+        }
+    }
+
+    @Override
+    public List<String> modifySuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
         return ImmutableList.of();
     }
 
@@ -169,16 +302,6 @@ public class DebugHandler extends HandlerBase {
         }
     }
 
-    @Override
-    public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
-        return ProcessResult.failure();
-    }
-
-    @Override
-    public List<String> modifySuggestions(CommandSource source, String arguments, @org.jetbrains.annotations.Nullable Location<World> targetPosition) throws CommandException {
-        return ImmutableList.of();
-    }
-
     public void setColor(TextColor color) {
         if (color != null) this.color = color;
     }
@@ -191,7 +314,7 @@ public class DebugHandler extends HandlerBase {
         public IHandler create(String name, int priority, String arguments, CommandSource source) throws CommandException {
             DebugHandler handler = new DebugHandler(name, priority);
             if (source instanceof Player) handler.members.add(((Player) source).getUniqueId());
-            else if(source instanceof ConsoleSource) handler.console = true;
+            else if (source instanceof ConsoleSource) handler.console = true;
             return handler;
         }
 
@@ -233,7 +356,7 @@ public class DebugHandler extends HandlerBase {
         }
 
         @Override
-        public List<String> createSuggestions(CommandSource source, String arguments, String type, @org.jetbrains.annotations.Nullable Location<World> targetPosition) throws CommandException {
+        public List<String> createSuggestions(CommandSource source, String arguments, String type, @Nullable Location<World> targetPosition) throws CommandException {
             return ImmutableList.of();
         }
     }

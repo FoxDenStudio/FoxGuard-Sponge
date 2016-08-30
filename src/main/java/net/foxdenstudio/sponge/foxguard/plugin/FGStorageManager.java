@@ -288,8 +288,12 @@ public final class FGStorageManager {
         }
     }
 
-    public synchronized void saveRegion(IRegion fgObject) {
-        if (fgObject instanceof IWorldRegion) saveWorldRegion((IWorldRegion) fgObject);
+    public void saveRegion(IRegion fgObject) {
+        saveRegion(fgObject, false);
+    }
+
+    public synchronized void saveRegion(IRegion fgObject, boolean force) {
+        if (fgObject instanceof IWorldRegion) saveWorldRegion((IWorldRegion) fgObject, force);
         else try (DB mainDB = DBMaker.fileDB(directory.resolve("regions.foxdb").normalize().toString()).make()) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
@@ -299,33 +303,45 @@ public final class FGStorageManager {
             Path dir = directory.resolve("regions");
             constructDirectory(dir);
             String name = fgObject.getName();
-            Path singleDir = dir.resolve(name.toLowerCase());
-            logger.info("Saving region \"" + name + "\" in directory: " + singleDir);
-            constructDirectory(singleDir);
-            try {
-                fgObject.save(singleDir);
-            } catch (Exception e) {
-                logger.error("There was an error while saving region \"" + name + "\"!", e);
+            if (fgObject.autoSave()) {
+                Path singleDir = dir.resolve(name.toLowerCase());
+                boolean shouldSave = fgObject.shouldSave();
+                if (force || shouldSave) {
+                    logger.info((shouldSave ? "S" : "Force s") + "aving region \"" + name + "\" in directory: " + singleDir);
+                    constructDirectory(singleDir);
+                    try {
+                        fgObject.save(singleDir);
+                    } catch (Exception e) {
+                        logger.error("There was an error while saving region \"" + name + "\"!", e);
+                    }
+
+                    logger.info("Saving metadata for region \"" + name + "\"");
+                    try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
+                        Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
+                        Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
+                        Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
+                        Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
+                        metaName.set(name);
+                        metaCategory.set(FGUtil.getCategory(fgObject));
+                        metaType.set(fgObject.getUniqueTypeString());
+                        metaEnabled.set(fgObject.isEnabled());
+                    }
+                } else {
+                    logger.info("Region \"" + name + "\" is already up to date. Skipping...");
+                }
+                mainMap.put(name, FGUtil.getCategory(fgObject));
+                typeMap.put(name, fgObject.getUniqueTypeString());
+                enabledMap.put(name, fgObject.isEnabled());
+
+                defaultModifiedMap.put(fgObject, false);
+            } else {
+                logger.info("Region " + fgObject.getName() + " does not need saving. Skipping...");
             }
-
-            logger.info("Saving metadata for region \"" + name + "\"");
-            try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
-                Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
-                Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
-                Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
-                Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
-                metaName.set(name);
-                metaCategory.set(FGUtil.getCategory(fgObject));
-                metaType.set(fgObject.getUniqueTypeString());
-                metaEnabled.set(fgObject.isEnabled());
+            if (fgObject.saveLinks()) {
+                linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
+            } else {
+                logger.info("Region " + fgObject.getName() + " does not need its links saved. Skipping...");
             }
-
-            mainMap.put(name, FGUtil.getCategory(fgObject));
-            typeMap.put(name, fgObject.getUniqueTypeString());
-            enabledMap.put(name, fgObject.isEnabled());
-            linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
-
-            defaultModifiedMap.put(fgObject, false);
         } catch (DBException.DataCorruption e) {
             try {
                 Files.deleteIfExists(directory.resolve("regions.foxdb"));
@@ -336,43 +352,61 @@ public final class FGStorageManager {
         }
     }
 
-    public synchronized void saveWorldRegion(IWorldRegion fgObject) {
-        try (DB mainDB = DBMaker.fileDB(worldDirectories.get(fgObject.getWorld().getName()).resolve("wregions.foxdb").normalize().toString()).make()) {
+    public void saveWorldRegion(IWorldRegion fgObject) {
+        saveWorldRegion(fgObject, false);
+    }
+
+    public synchronized void saveWorldRegion(IWorldRegion fgObject, boolean force) {
+        World world = fgObject.getWorld();
+        try (DB mainDB = DBMaker.fileDB(worldDirectories.get(world.getName()).resolve("wregions.foxdb").normalize().toString()).make()) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
             Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
 
-            Path dir = worldDirectories.get(fgObject.getWorld().getName()).resolve("wregions");
+            Path dir = worldDirectories.get(world.getName()).resolve("wregions");
             constructDirectory(dir);
             String name = fgObject.getName();
-            Path singleDir = dir.resolve(name.toLowerCase());
-            logger.info("Saving world region \"" + name + "\" in directory: " + singleDir);
-            constructDirectory(singleDir);
-            try {
-                fgObject.save(singleDir);
-            } catch (Exception e) {
-                logger.error("There was an error while saving world region \"" + name + "\" in world \"" + fgObject.getWorld().getName() + "\"!", e);
+            if (fgObject.autoSave()) {
+                Path singleDir = dir.resolve(name.toLowerCase());
+                boolean shouldSave = fgObject.shouldSave();
+                if (force || shouldSave) {
+                    logger.info((shouldSave ? "S" : "Force s") + "aving world region \"" + name + "\" in directory: " + singleDir);
+                    constructDirectory(singleDir);
+                    try {
+                        fgObject.save(singleDir);
+                    } catch (Exception e) {
+                        logger.error("There was an error while saving world region \"" + name + "\" in world \"" + world.getName() + "\"!", e);
+                    }
+
+                    logger.info("Saving metadata for world region \"" + name + "\"");
+                    try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
+                        Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
+                        Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
+                        Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
+                        Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
+                        metaName.set(name);
+                        metaCategory.set(FGUtil.getCategory(fgObject));
+                        metaType.set(fgObject.getUniqueTypeString());
+                        metaEnabled.set(fgObject.isEnabled());
+                    }
+                } else {
+                    logger.info("Region \"" + name + "\" is already up to date. Skipping...");
+                }
+
+                mainMap.put(name, FGUtil.getCategory(fgObject));
+                typeMap.put(name, fgObject.getUniqueTypeString());
+                enabledMap.put(name, fgObject.isEnabled());
+
+                defaultModifiedMap.put(fgObject, false);
+            } else {
+                logger.info("World region " + fgObject.getName() + " does not need saving. Skipping...");
             }
-
-            logger.info("Saving metadata for world region \"" + name + "\"");
-            try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
-                Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
-                Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
-                Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
-                Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
-                metaName.set(name);
-                metaCategory.set(FGUtil.getCategory(fgObject));
-                metaType.set(fgObject.getUniqueTypeString());
-                metaEnabled.set(fgObject.isEnabled());
+            if (fgObject.saveLinks()) {
+                linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
+            } else {
+                logger.info("World region " + fgObject.getName() + " does not need its links saved. Skipping...");
             }
-
-            mainMap.put(name, FGUtil.getCategory(fgObject));
-            typeMap.put(name, fgObject.getUniqueTypeString());
-            enabledMap.put(name, fgObject.isEnabled());
-            linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
-
-            defaultModifiedMap.put(fgObject, false);
         } catch (DBException.DataCorruption e) {
             try {
                 Files.deleteIfExists(directory.resolve("regions.foxdb"));
@@ -383,7 +417,11 @@ public final class FGStorageManager {
         }
     }
 
-    public synchronized void saveHandler(IHandler fgObject) {
+    public void saveHandler(IHandler fgObject) {
+        saveHandler(fgObject, false);
+    }
+
+    public synchronized void saveHandler(IHandler fgObject, boolean force) {
         try (DB mainDB = DBMaker.fileDB(directory.resolve("handlers.foxdb").normalize().toString()).make()) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
@@ -392,36 +430,45 @@ public final class FGStorageManager {
 
             Path dir = directory.resolve("handlers");
             constructDirectory(dir);
-            String name = fgObject.getName();
-            Path singleDir = dir.resolve(name.toLowerCase());
-            logger.info("Saving handler \"" + name + "\" in directory: " + singleDir);
-            constructDirectory(singleDir);
-            try {
-                fgObject.save(singleDir);
-            } catch (Exception e) {
-                logger.error("There was an error while saving handler \"" + name + "\"!", e);
+            if (fgObject.autoSave()) {
+                String name = fgObject.getName();
+                Path singleDir = dir.resolve(name.toLowerCase());
+                boolean shouldSave = fgObject.shouldSave();
+                if (force || shouldSave) {
+                    logger.info((shouldSave ? "S" : "Force s") + "aving handler \"" + name + "\" in directory: " + singleDir);
+                    constructDirectory(singleDir);
+                    try {
+                        fgObject.save(singleDir);
+                    } catch (Exception e) {
+                        logger.error("There was an error while saving handler \"" + name + "\"!", e);
+                    }
+
+                    logger.info("Saving metadata for handler \"" + name + "\"");
+                    try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
+                        Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
+                        Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
+                        Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
+                        Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
+                        Atomic.Integer metaPriority = metaDB.atomicInteger("priority").createOrOpen();
+                        metaName.set(name);
+                        metaCategory.set(FGUtil.getCategory(fgObject));
+                        metaType.set(fgObject.getUniqueTypeString());
+                        metaEnabled.set(fgObject.isEnabled());
+                        metaPriority.set(fgObject.getPriority());
+                    }
+                } else {
+                    logger.info("Region \"" + name + "\" is already up to date. Skipping...");
+                }
+
+                mainMap.put(name, FGUtil.getCategory(fgObject));
+                typeMap.put(name, fgObject.getUniqueTypeString());
+                enabledMap.put(name, fgObject.isEnabled());
+                priorityMap.put(name, fgObject.getPriority());
+
+                defaultModifiedMap.put(fgObject, false);
+            } else {
+                logger.info("Handler " + fgObject.getName() + " does not need saving. Skipping...");
             }
-
-            logger.info("Saving metadata for handler \"" + name + "\"");
-            try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
-                Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
-                Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
-                Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
-                Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
-                Atomic.Integer metaPriority = metaDB.atomicInteger("priority").createOrOpen();
-                metaName.set(name);
-                metaCategory.set(FGUtil.getCategory(fgObject));
-                metaType.set(fgObject.getUniqueTypeString());
-                metaEnabled.set(fgObject.isEnabled());
-                metaPriority.set(fgObject.getPriority());
-            }
-
-            mainMap.put(name, FGUtil.getCategory(fgObject));
-            typeMap.put(name, fgObject.getUniqueTypeString());
-            enabledMap.put(name, fgObject.isEnabled());
-            priorityMap.put(name, fgObject.getPriority());
-
-            defaultModifiedMap.put(fgObject, false);
         } catch (DBException.DataCorruption e) {
             try {
                 Files.deleteIfExists(directory.resolve("regions.foxdb"));
@@ -862,12 +909,12 @@ public final class FGStorageManager {
             loaded.add(entry);
             if (object instanceof IRegion) {
                 if (object instanceof IWorldRegion) {
-                    this.saveWorldRegion((IWorldRegion) object);
+                    this.saveWorldRegion((IWorldRegion) object, true);
                 } else {
-                    this.saveRegion((IRegion) object);
+                    this.saveRegion((IRegion) object, true);
                 }
             } else if (object instanceof IHandler) {
-                this.saveHandler((IHandler) object);
+                this.saveHandler((IHandler) object, true);
             }
         }
     }

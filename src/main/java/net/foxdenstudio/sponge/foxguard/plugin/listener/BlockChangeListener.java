@@ -52,7 +52,7 @@ import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 import static org.spongepowered.api.util.Tristate.FALSE;
 import static org.spongepowered.api.util.Tristate.UNDEFINED;
 
-public class BlockListener implements EventListener<ChangeBlockEvent> {
+public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
 
     private static final FlagBitSet BASE_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, BLOCK, CHANGE);
 

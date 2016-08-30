@@ -238,7 +238,7 @@ public final class FGManager {
         ).getRegions(includeDisabled);
     }
 
-    public Set<IRegion> getRegionsAtPos(World world, Vector3d pos){
+    public Set<IRegion> getRegionsAtPos(World world, Vector3d pos) {
         return getRegionsInChunkAtPos(world, pos);
     }
 
