@@ -25,12 +25,10 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
-import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3d;
-import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.CommandHUD;
-import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
+import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
@@ -104,7 +102,7 @@ public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
                 .filter(entity -> entity instanceof Player)
                 .map(entity -> (Player) entity)
                 .forEach(player -> {
-                    final boolean hud = CommandHUD.instance().getIsHUDEnabled().get(player) && player.getScoreboard() == scoreboardMap.get(player);
+                    final boolean hud = player.getScoreboard() == scoreboardMap.get(player) && CommandHUD.instance().getIsHUDEnabled().get(player);
                     final HUDConfig config = this.hudConfigMap.get(player);
                     final boolean regionHUD = hud && config.regions;
 
@@ -115,10 +113,7 @@ public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
                         fromList = new ArrayList<>();
                         final List<IHandler> temp = fromList;
                         Vector3d from = event.getFromTransform().getPosition().add(0, 0.1, 0);
-                        FGManager.getInstance().getAllRegions(world, new Vector3i(
-                                GenericMath.floor(from.getX() / 16.0),
-                                GenericMath.floor(from.getY() / 16.0),
-                                GenericMath.floor(from.getZ() / 16.0))).stream()
+                        FGManager.getInstance().getRegionsInChunkAtPos(world, from).stream()
                                 .filter(region -> region.contains(from, world))
                                 .forEach(region -> region.getHandlers().stream()
                                         .filter(IFGObject::isEnabled)
@@ -127,10 +122,7 @@ public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
                     } else {
                         fromList = new ArrayList<>(fromList);
                     }
-                    FGManager.getInstance().getAllRegions(world, new Vector3i(
-                            GenericMath.floor(to.getX() / 16.0),
-                            GenericMath.floor(to.getY() / 16.0),
-                            GenericMath.floor(to.getZ() / 16.0))).stream()
+                    FGManager.getInstance().getRegionsInChunkAtPos(world, to).stream()
                             .filter(region -> region.contains(to, world))
                             .forEach(region -> {
                                 if (regionHUD) regionList.add(region);

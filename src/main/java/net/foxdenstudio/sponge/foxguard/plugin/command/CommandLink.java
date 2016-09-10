@@ -33,7 +33,10 @@ import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
@@ -44,6 +47,8 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.GuavaCollectors;
+import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -56,7 +61,7 @@ import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isIn;
 
 public class CommandLink extends FCCommandBase {
 
-    private static final FlagMapper mapper = map -> key -> value -> {
+    private static final FlagMapper MAPPER = map -> key -> value -> {
         map.put(key, value);
         if (isIn(WORLD_ALIASES, key) && !map.containsKey("world")) {
             map.put("world", value);
@@ -69,7 +74,7 @@ public class CommandLink extends FCCommandBase {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(mapper).parse();
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(MAPPER).parse();
 
         if (parse.args.length == 0) {
             if (FGUtil.getSelectedRegions(source).size() == 0 &&
@@ -80,7 +85,7 @@ public class CommandLink extends FCCommandBase {
             if (FGUtil.getSelectedHandlers(source).size() == 0)
                 throw new CommandException(Text.of("You don't have any handlers in your state buffer!"));
             int[] successes = {0};
-            FGUtil.getSelectedRegions(source).stream().forEach(
+            FGUtil.getSelectedRegions(source).forEach(
                     region -> FGUtil.getSelectedHandlers(source).stream()
                             .filter(handler -> !(handler instanceof GlobalHandler))
                             .forEach(handler -> successes[0] += FGManager.getInstance().link(region, handler) ? 1 : 0));
@@ -88,7 +93,6 @@ public class CommandLink extends FCCommandBase {
             FCStateManager.instance().getStateMap().get(source).flush(RegionsStateField.ID, HandlersStateField.ID);
             return CommandResult.builder().successCount(successes[0]).build();
         } else {
-            if (parse.args.length < 1) throw new CommandException(Text.of("Must specify items to link!"));
             IRegion region = FGManager.getInstance().getRegion(parse.args[0]);
             World world = null;
             if (region == null) {
@@ -127,6 +131,83 @@ public class CommandLink extends FCCommandBase {
 
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
+        if (!testPermission(source)) return ImmutableList.of();
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
+                .arguments(arguments)
+                .limit(2)
+                .flagMapper(MAPPER)
+                .excludeCurrent(true)
+                .autoCloseQuotes(true)
+                .parse();
+        if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
+            if (parse.current.index == 0) {
+                String worldName = parse.flags.get("world");
+                World world = null;
+                if (source instanceof Player) world = ((Player) source).getWorld();
+                if (!worldName.isEmpty()) {
+                    Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
+                    if (optWorld.isPresent()) {
+                        world = optWorld.get();
+                    }
+                }
+                if (world == null) return FGManager.getInstance().getRegions().stream()
+                        .map(IFGObject::getName)
+                        .filter(new StartsWithPredicate(parse.current.token))
+                        .map(args -> parse.current.prefix + args)
+                        .collect(GuavaCollectors.toImmutableList());
+                else return FGManager.getInstance().getAllRegions(world).stream()
+                        .map(IFGObject::getName)
+                        .filter(new StartsWithPredicate(parse.current.token))
+                        .map(args -> parse.current.prefix + args)
+                        .collect(GuavaCollectors.toImmutableList());
+            } else if (parse.current.index == 1) {
+                IRegion region = FGManager.getInstance().getRegion(parse.args[0]);
+                if (region == null) {
+                    String worldName = parse.flags.get("world");
+                    World world = null;
+                    if (source instanceof Player) world = ((Player) source).getWorld();
+                    if (!worldName.isEmpty()) {
+                        Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
+                        if (optWorld.isPresent()) {
+                            world = optWorld.get();
+                        }
+                    }
+                    if (world != null) {
+                        region = FGManager.getInstance().getWorldRegion(world, parse.args[0]);
+                    }
+                }
+
+                if (region != null) {
+                    IRegion finalRegion = region;
+                    return FGManager.getInstance().getHandlers().stream()
+                            .filter(handler -> !finalRegion.getHandlers().contains(handler) && !(handler instanceof IGlobal))
+                            .map(IFGObject::getName)
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                }
+                return FGManager.getInstance().getHandlers().stream()
+                        .filter(handler -> !(handler instanceof IGlobal))
+                        .map(IFGObject::getName)
+                        .filter(new StartsWithPredicate(parse.current.token))
+                        .map(args -> parse.current.prefix + args)
+                        .collect(GuavaCollectors.toImmutableList());
+
+            }
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY))
+            return ImmutableList.of("world").stream()
+                    .filter(new StartsWithPredicate(parse.current.token))
+                    .map(args -> parse.current.prefix + args)
+                    .collect(GuavaCollectors.toImmutableList());
+        else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGVALUE)) {
+            if (isIn(WORLD_ALIASES, parse.current.key))
+                return Sponge.getGame().getServer().getWorlds().stream()
+                        .map(World::getName)
+                        .filter(new StartsWithPredicate(parse.current.token))
+                        .map(args -> parse.current.prefix + args)
+                        .collect(GuavaCollectors.toImmutableList());
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
+            return ImmutableList.of(parse.current.prefix + " ");
         return ImmutableList.of();
     }
 

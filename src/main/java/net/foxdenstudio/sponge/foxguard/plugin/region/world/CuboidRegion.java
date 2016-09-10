@@ -38,7 +38,6 @@ import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
@@ -48,6 +47,7 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -110,7 +110,7 @@ public class CuboidRegion extends WorldRegionBase implements IIterableRegion {
 
     @Override
     public List<String> modifySuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) {
-        return null;
+        return ImmutableList.of();
     }
 
     @Override

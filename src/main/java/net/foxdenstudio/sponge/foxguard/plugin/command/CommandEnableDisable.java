@@ -79,7 +79,6 @@ public class CommandEnableDisable extends FCCommandBase {
         this.enableState = enableState;
     }
 
-    @SuppressWarnings("Convert2Lambda")
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {
@@ -96,8 +95,8 @@ public class CommandEnableDisable extends FCCommandBase {
                 return CommandResult.empty();
             } else {
                 List<IFGObject> objects = new ArrayList<>();
-                FGUtil.getSelectedRegions(source).stream().forEach(objects::add);
-                FGUtil.getSelectedHandlers(source).stream().forEach(objects::add);
+                FGUtil.getSelectedRegions(source).forEach(objects::add);
+                FGUtil.getSelectedHandlers(source).forEach(objects::add);
                 int successes = 0;
                 int failures = 0;
                 for (IFGObject object : objects) {
@@ -138,7 +137,7 @@ public class CommandEnableDisable extends FCCommandBase {
             int successes = 0;
             int failures = 0;
             List<IRegion> regions = new ArrayList<>();
-            FGUtil.getSelectedRegions(source).stream().forEach(regions::add);
+            FGUtil.getSelectedRegions(source).forEach(regions::add);
             if (parse.args.length > 1) {
                 for (String name : Arrays.copyOfRange(parse.args, 1, parse.args.length)) {
                     IWorldRegion region = FGManager.getInstance().getWorldRegion(world, name);
@@ -177,7 +176,7 @@ public class CommandEnableDisable extends FCCommandBase {
             int successes = 0;
             int failures = 0;
             List<IHandler> handlers = new ArrayList<>();
-            FGUtil.getSelectedHandlers(source).stream().forEach(handlers::add);
+            FGUtil.getSelectedHandlers(source).forEach(handlers::add);
             for (String name : Arrays.copyOfRange(parse.args, 1, parse.args.length)) {
                 IHandler handler = FGManager.getInstance().gethandler(name);
                 if (handler == null) failures++;
@@ -222,7 +221,7 @@ public class CommandEnableDisable extends FCCommandBase {
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0)
-                return Arrays.asList(FGManager.TYPES).stream()
+                return ImmutableList.of("region", "handler").stream()
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
@@ -237,26 +236,28 @@ public class CommandEnableDisable extends FCCommandBase {
                             world = optWorld.get();
                         }
                     }
+                    String[] existing = Arrays.copyOfRange(parse.args, 1, parse.args.length);
                     if (world == null) return FGManager.getInstance().getRegions().stream()
                             .filter(region -> region.isEnabled() != this.enableState && !(region instanceof IGlobal))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
-                            .filter(alias -> !isIn(parse.args, alias))
+                            .filter(alias -> !isIn(existing, alias))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                     return FGManager.getInstance().getAllRegions(world).stream()
                             .filter(region -> region.isEnabled() != this.enableState && !(region instanceof IGlobal))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
-                            .filter(alias -> !isIn(parse.args, alias))
+                            .filter(alias -> !isIn(existing, alias))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
+                    String[] existing = Arrays.copyOfRange(parse.args, 1, parse.args.length);
                     return FGManager.getInstance().getHandlers().stream()
                             .filter(handler -> handler.isEnabled() != this.enableState && !(handler instanceof IGlobal))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
-                            .filter(alias -> !isIn(parse.args, alias))
+                            .filter(alias -> !isIn(existing, alias))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 }

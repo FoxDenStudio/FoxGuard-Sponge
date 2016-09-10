@@ -1,12 +1,13 @@
 package net.foxdenstudio.sponge.foxguard.plugin.event.util;
 
-import java.util.HashMap;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateObjectEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FoxGuardEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import org.spongepowered.api.event.SpongeEventFactoryUtils;
 import org.spongepowered.api.event.cause.Cause;
+
+import java.util.HashMap;
 
 /**
  * Created by Fox on 7/9/2016.
@@ -16,7 +17,7 @@ public class FGEventFactory {
      * AUTOMATICALLY GENERATED, DO NOT EDIT.
      * Creates a new instance of
      * {@link net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent}.
-     * 
+     *
      * @param cause The cause
      * @return A new f g update event
      */
@@ -30,8 +31,8 @@ public class FGEventFactory {
      * AUTOMATICALLY GENERATED, DO NOT EDIT.
      * Creates a new instance of
      * {@link net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateObjectEvent}.
-     * 
-     * @param cause The cause
+     *
+     * @param cause  The cause
      * @param target The target
      * @return A new f g update object event
      */
@@ -46,7 +47,7 @@ public class FGEventFactory {
      * AUTOMATICALLY GENERATED, DO NOT EDIT.
      * Creates a new instance of
      * {@link net.foxdenstudio.sponge.foxguard.plugin.event.FoxGuardEvent}.
-     * 
+     *
      * @param cause The cause
      * @return A new fox guard event
      */

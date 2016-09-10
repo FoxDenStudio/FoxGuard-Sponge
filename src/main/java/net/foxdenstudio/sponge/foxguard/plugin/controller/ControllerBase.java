@@ -49,10 +49,9 @@ public abstract class ControllerBase extends HandlerBase implements IController 
 
     @Override
     public boolean addHandler(IHandler handler) {
-        if (!FGManager.getInstance().isRegistered(handler)) {
-            return false;
-        }
-        return this.handlers.add(handler);
+        if (!FGManager.getInstance().isRegistered(handler)) return false;
+        int maxLinks = this.maxLinks();
+        return !(maxLinks >= 0 && this.handlers.size() >= maxLinks) && this.handlers.add(handler);
     }
 
     @Override

@@ -25,9 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
-import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3d;
-import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
@@ -93,13 +91,9 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
         World world = event.getTargetWorld();
 
         for (Entity entity : event.getEntities()) {
-            Vector3d loc = entity.getLocation().getPosition();
-            Vector3i chunk = new Vector3i(
-                    GenericMath.floor(loc.getX() / 16.0),
-                    GenericMath.floor(loc.getY() / 16.0),
-                    GenericMath.floor(loc.getZ() / 16.0));
-            FGManager.getInstance().getAllRegions(world, chunk).stream()
-                    .filter(region -> region.contains(loc, world))
+            Vector3d pos = entity.getLocation().getPosition();
+            FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
+                    .filter(region -> region.contains(pos, world))
                     .forEach(region -> region.getHandlers().stream()
                             .filter(IFGObject::isEnabled)
                             .filter(handler -> !handlerList.contains(handler))

@@ -29,11 +29,8 @@ import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableSet;
-import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
+import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
-import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
-import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateObjectEvent;
-import net.foxdenstudio.sponge.foxguard.plugin.event.FoxGuardEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.event.util.FGEventFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
@@ -45,7 +42,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.region.world.GlobalWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.RegionCache;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
@@ -57,7 +53,6 @@ import java.util.Set;
 public final class FGManager {
 
     public static final String[] ILLEGAL_NAMES = {"all", "state", "full", "everything"};
-    public static final String[] TYPES = {"region", "worldregion", "handler", "controller"};
 
     private static FGManager instance;
     private final Map<World, Set<IWorldRegion>> worldRegions;
@@ -195,7 +190,7 @@ public final class FGManager {
 
     public Set<IRegion> getAllRegions() {
         Set<IRegion> set = new HashSet<>();
-        this.worldRegions.forEach((world, tset) -> tset.forEach(set::add));
+        this.worldRegions.forEach((world, worldSet) -> worldSet.forEach(set::add));
         this.regions.forEach(set::add);
         return ImmutableSet.copyOf(set);
     }
@@ -216,24 +211,34 @@ public final class FGManager {
         return ImmutableSet.copyOf(this.regionCache.getData(world, chunk).getRegions(includeDisabled));
     }
 
+    public Set<IRegion> getRegionsInChunkAtPos(World world, Vector3d pos) {
+        return getRegionsInChunkAtPos(world, pos, false);
+    }
+
+    public Set<IRegion> getRegionsInChunkAtPos(World world, Vector3d pos, boolean includeDisabled) {
+        return this.regionCache.getData(world,
+                new Vector3i(
+                        GenericMath.floor(pos.getX()) >> 4,
+                        GenericMath.floor(pos.getY()) >> 4,
+                        GenericMath.floor(pos.getZ()) >> 4)
+        ).getRegions(includeDisabled);
+    }
+
+    public Set<IRegion> getRegionsInChunkAtPos(World world, Vector3i pos) {
+        return getRegionsInChunkAtPos(world, pos, false);
+    }
+
+    public Set<IRegion> getRegionsInChunkAtPos(World world, Vector3i pos, boolean includeDisabled) {
+        return this.regionCache.getData(world,
+                new Vector3i(
+                        pos.getX() >> 4,
+                        pos.getY() >> 4,
+                        pos.getZ() >> 4)
+        ).getRegions(includeDisabled);
+    }
+
     public Set<IRegion> getRegionsAtPos(World world, Vector3d pos) {
-        return getRegionsAtPos(world, pos, false);
-    }
-
-    public Set<IRegion> getRegionsAtPos(World world, Vector3d pos, boolean includeDisabled) {
-        Vector3i chunk = new Vector3i(
-                GenericMath.floor(pos.getX() / 16.0),
-                GenericMath.floor(pos.getY() / 16.0),
-                GenericMath.floor(pos.getZ() / 16.0));
-        return this.regionCache.getData(world, chunk).getRegions(includeDisabled);
-    }
-
-    public Set<IRegion> getRegionsAtPos(World world, Vector3i pos) {
-        return getRegionsAtPos(world, pos, false);
-    }
-
-    public Set<IRegion> getRegionsAtPos(World world, Vector3i pos, boolean includeDisabled) {
-        return getRegionsAtPos(world, pos.toDouble(), includeDisabled);
+        return getRegionsInChunkAtPos(world, pos);
     }
 
     public Set<IHandler> getHandlers() {
@@ -365,11 +370,10 @@ public final class FGManager {
     }
 
     public void initWorld(World world) {
-        GlobalWorldRegion gr = new GlobalWorldRegion();
-        gr.addHandler(this.globalHandler);
-        gr.setWorld(world);
-        this.worldRegions.get(world).add(gr);
-        this.regionCache.markDirty(gr, RegionCache.DirtyType.ADDED);
+        GlobalWorldRegion gwr = new GlobalWorldRegion();
+        gwr.setWorld(world);
+        this.worldRegions.get(world).add(gwr);
+        this.regionCache.markDirty(gwr, RegionCache.DirtyType.ADDED);
     }
 
     public void unloadWorld(World world) {
@@ -381,7 +385,7 @@ public final class FGManager {
     }
 
     public static boolean isNameValid(String name) {
-        if (name.matches("^.*[ :\\.=;\"\'\\\\/\\{\\}\\(\\)\\[\\]<>#@\\|\\?\\*].*$")) return false;
+        if (name.matches("^.*[ :.=;\"\'\\\\/{}()\\[\\]<>#@|?*].*$")) return false;
         for (String s : FGStorageManager.FS_ILLEGAL_NAMES) {
             if (name.equalsIgnoreCase(s)) return false;
         }
@@ -395,7 +399,7 @@ public final class FGManager {
         regionCache.markDirty(region, type);
     }
 
-    public void clearRegionCache(){
+    public void clearRegionCache() {
         this.regionCache.clearCaches();
     }
 

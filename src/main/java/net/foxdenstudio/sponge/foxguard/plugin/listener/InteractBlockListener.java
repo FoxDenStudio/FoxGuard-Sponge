@@ -25,7 +25,6 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
-import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
@@ -71,18 +70,14 @@ public class InteractBlockListener implements EventListener<InteractBlockEvent> 
         BlockSnapshot block = event.getTargetBlock();
         if (block.getState().getType().equals(BlockTypes.AIR)) return;
         World world = block.getLocation().get().getExtent();
-        Vector3i loc = block.getPosition();
+        Vector3i pos = block.getPosition();
         if (event instanceof InteractBlockEvent.Primary) flags.set(PRIMARY);
         else if (event instanceof InteractBlockEvent.Secondary) flags.set(SECONDARY);
 
 
         List<IHandler> handlerList = new ArrayList<>();
-        Vector3i chunk = new Vector3i(
-                GenericMath.floor(loc.getX() / 16.0),
-                GenericMath.floor(loc.getY() / 16.0),
-                GenericMath.floor(loc.getZ() / 16.0));
-        FGManager.getInstance().getAllRegions(world, chunk).stream()
-                .filter(region -> region.contains(loc, world))
+        FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
+                .filter(region -> region.contains(pos, world))
                 .forEach(region -> region.getHandlers().stream()
                         .filter(IFGObject::isEnabled)
                         .filter(handler -> !handlerList.contains(handler))

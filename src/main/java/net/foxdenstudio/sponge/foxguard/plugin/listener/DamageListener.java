@@ -25,9 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
-import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3d;
-import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
@@ -42,8 +40,11 @@ import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
+import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.entity.damage.DamageModifier;
 import org.spongepowered.api.event.cause.entity.damage.DamageModifierTypes;
+import org.spongepowered.api.event.cause.entity.damage.source.EntityDamageSource;
+import org.spongepowered.api.event.cause.entity.damage.source.IndirectEntityDamageSource;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.chat.ChatTypes;
@@ -70,16 +71,10 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
     public void handle(DamageEntityEvent event) throws Exception {
         if (event.isCancelled()) return;
         User user;
-        if (event.getCause().containsType(Player.class)) {
-            user = event.getCause().first(Player.class).get();
-        } else if (event.getCause().containsType(User.class)) {
-            user = event.getCause().first(User.class).get();
-        } else {
-            user = null;
-        }
+        user = getPlayerCause(event.getCause());
 
         World world = event.getTargetEntity().getWorld();
-        Vector3d loc = event.getTargetEntity().getLocation().getPosition();
+        Vector3d pos = event.getTargetEntity().getLocation().getPosition();
         Entity entity = event.getTargetEntity();
         FlagBitSet flags = (FlagBitSet) BASE_FLAG_SET_SOURCE.clone();
 
@@ -101,13 +96,8 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
 
 
         List<IHandler> handlerList = new ArrayList<>();
-        final Vector3d finalLoc = loc;
-        final World finalWorld = world;
-        FGManager.getInstance().getAllRegions(world, new Vector3i(
-                GenericMath.floor(loc.getX() / 16.0),
-                GenericMath.floor(loc.getY() / 16.0),
-                GenericMath.floor(loc.getZ() / 16.0))).stream()
-                .filter(region -> region.contains(finalLoc, finalWorld))
+        FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
+                .filter(region -> region.contains(pos, world))
                 .forEach(region -> region.getHandlers().stream()
                         .filter(IFGObject::isEnabled)
                         .filter(handler -> !handlerList.contains(handler))
@@ -193,5 +183,23 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
             //makes sure that handlers are unable to cancel the event directly.
             event.setCancelled(false);
         }
+    }
+
+    private Player getPlayerCause (Cause cause){
+        List<EntityDamageSource> sources = cause.allOf(EntityDamageSource.class);
+        for (EntityDamageSource source : sources){
+            Entity entity;
+            entity = source.getSource();
+            if(entity instanceof Player){
+                return (Player) entity;
+            }
+            if(source instanceof IndirectEntityDamageSource){
+                entity = ((IndirectEntityDamageSource) source).getIndirectSource();
+                if(entity instanceof Player){
+                    return (Player) entity;
+                }
+            }
+        }
+        return null;
     }
 }

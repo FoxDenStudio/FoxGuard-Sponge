@@ -113,6 +113,11 @@ public class LinkageParser {
                             .filter(new StartsWithPredicate(token.substring(1)))
                             .map(str -> endPart + str.substring(token.length() - 1))
                             .collect(Collectors.toList());
+                } else if (token.startsWith("$")) {
+                    return ImmutableList.of("regions", "handlers", "controllers").stream()
+                            .filter(new StartsWithPredicate(token.substring(1)))
+                            .map(str -> endPart + str.substring(token.length() - 1))
+                            .collect(Collectors.toList());
                 } else {
                     if (stage == Stage.START) {
                         return FGManager.getInstance().getAllRegions(world).stream()
@@ -148,7 +153,7 @@ public class LinkageParser {
 
     private Set<LinkEntry> parse(String expressionString, CommandSource source) throws CommandException {
         String[] parts = expressionString.split(";");
-        Set<LinkEntry> set = new HashSet<>();
+        Set<LinkEntry> set = new LinkedHashSet<>();
         for (String part : parts) {
             if (!checkParentheses(part)) {
                 throw new CommandException(Text.of("You must close all parentheses!"));
@@ -198,8 +203,8 @@ public class LinkageParser {
         }
 
         private Set<IExpression> parseSegment(String segmentString, CommandSource source) {
-            Set<IExpression> set = new HashSet<>();
-            Set<IFGObject> stubObjects = new HashSet<>();
+            Set<IExpression> set = new LinkedHashSet<>();
+            Set<IFGObject> stubObjects = new LinkedHashSet<>();
             Matcher matcher = PATTERN.matcher(segmentString);
             while (matcher.find()) {
                 if (matcher.group().equals("(")) {
@@ -247,7 +252,7 @@ public class LinkageParser {
         @Override
         public Set<IFGObject> getValue() {
             if (contents.size() > 0) {
-                Set<IFGObject> set = new HashSet<>();
+                Set<IFGObject> set = new LinkedHashSet<>();
                 for (IExpression expression : contents.get(0)) {
                     set.addAll(expression.getValue());
                 }
@@ -258,7 +263,7 @@ public class LinkageParser {
         @Override
         public Set<LinkEntry> getLinks() {
             if (contents.size() > 0) {
-                Set<LinkEntry> set = new HashSet<>();
+                Set<LinkEntry> set = new LinkedHashSet<>();
                 if (contents.size() > 1) {
                     for (Set<IExpression> eSet : contents) {
                         for (IExpression ex : eSet) {
@@ -292,9 +297,10 @@ public class LinkageParser {
 
     }
 
-    /**
-     * Created by Fox on 4/30/2016.
-     */
+    public class Result {
+
+    }
+
     public class ExpressionStub implements IExpression {
 
         Set<IFGObject> set;

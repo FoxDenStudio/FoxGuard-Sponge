@@ -87,7 +87,7 @@ public class MessageController extends ControllerBase {
     }
 
     @Override
-    public List<String> detailsSuggestions(CommandSource source, String arguments, @org.jetbrains.annotations.Nullable Location<World> targetPosition) {
+    public List<String> detailsSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) {
         return ImmutableList.of();
     }
 
@@ -156,7 +156,7 @@ public class MessageController extends ControllerBase {
     }
 
     @Override
-    public List<String> modifySuggestions(CommandSource source, String arguments, @org.jetbrains.annotations.Nullable Location<World> targetPosition) throws CommandException {
+    public List<String> modifySuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
         return ImmutableList.of();
     }
 
@@ -244,7 +244,7 @@ public class MessageController extends ControllerBase {
         }
 
         @Override
-        public List<String> createSuggestions(CommandSource source, String arguments, String type, @org.jetbrains.annotations.Nullable Location<World> targetPosition) throws CommandException {
+        public List<String> createSuggestions(CommandSource source, String arguments, String type, @Nullable Location<World> targetPosition) throws CommandException {
             return ImmutableList.of();
         }
     }

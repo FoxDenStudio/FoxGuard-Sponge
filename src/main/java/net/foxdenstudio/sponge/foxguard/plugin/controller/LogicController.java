@@ -126,7 +126,7 @@ public class LogicController extends ControllerBase {
     }
 
     @Override
-    public List<String> detailsSuggestions(CommandSource source, String arguments, @org.jetbrains.annotations.Nullable Location<World> targetPosition) {
+    public List<String> detailsSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) {
         return null;
     }
 
@@ -136,7 +136,7 @@ public class LogicController extends ControllerBase {
     }
 
     @Override
-    public List<String> modifySuggestions(CommandSource source, String arguments, @org.jetbrains.annotations.Nullable Location<World> targetPosition) throws CommandException {
+    public List<String> modifySuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
         return ImmutableList.of();
     }
 
@@ -306,7 +306,7 @@ public class LogicController extends ControllerBase {
         }
 
         @Override
-        public List<String> createSuggestions(CommandSource source, String arguments, String type, @org.jetbrains.annotations.Nullable Location<World> targetPosition) throws CommandException {
+        public List<String> createSuggestions(CommandSource source, String arguments, String type, @Nullable Location<World> targetPosition) throws CommandException {
             return ImmutableList.of();
         }
 
@@ -333,11 +333,6 @@ public class LogicController extends ControllerBase {
             else if (isIn(FALSE_ALIASES, modeName)) mode = FALSE;
             else mode = UNDEFINED;
             boolean shortCircuit = root.getNode("shortCircuit").getBoolean(false);
-            try {
-                loader.save(root);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
             return new LogicController(name, isEnabled, priority, operator, mode, shortCircuit);
         }
 

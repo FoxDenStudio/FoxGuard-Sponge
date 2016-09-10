@@ -27,18 +27,19 @@ package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
 import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
-import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.Flags;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Entry;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Operation;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
@@ -406,7 +407,7 @@ public class BasicHandler extends HandlerBase {
                 if (op != Operation.SET)
                     return ProcessResult.of(false, Text.of("Must specify a user or a group to add!"));
                 else {
-                    group.users.clear();
+                    clearUsers(group);
                     return ProcessResult.of(true, Text.of("Successfully cleared group!"));
                 }
             }
@@ -477,13 +478,13 @@ public class BasicHandler extends HandlerBase {
                 if (successes == 1)
                     return ProcessResult.of(true, Text.of("Successfully " + op.pastTense + " user!"));
                 else {
-                    return ProcessResult.of(true, Text.of("Successfully " + op.pastTense + " " + successes + " members!"));
+                    return ProcessResult.of(true, Text.of("Successfully " + op.pastTense + " " + successes + " users!"));
                 }
             } else {
                 if (successes > 0) {
-                    return ProcessResult.of(true, Text.of("Successfully " + op.pastTense + " " + successes + " members with " + failures + " failures!"));
+                    return ProcessResult.of(true, Text.of("Successfully " + op.pastTense + " " + successes + " users with " + failures + " failures!"));
                 } else {
-                    return ProcessResult.of(false, Text.of("Failed to " + op.pastTense + " " + failures + " members!"));
+                    return ProcessResult.of(false, Text.of("Failed to " + op.pastTense + " " + failures + " users!"));
                 }
             }
         } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
@@ -765,7 +766,7 @@ public class BasicHandler extends HandlerBase {
     }
 
     @Override
-    public List<String> modifySuggestions(CommandSource source, String arguments, @org.jetbrains.annotations.Nullable Location<World> targetPosition) throws CommandException {
+    public List<String> modifySuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
                 .flagMapper(MAPPER)
@@ -996,7 +997,7 @@ public class BasicHandler extends HandlerBase {
             }
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGVALUE)) {
             if (isIn(GROUPS_ALIASES, parse.args[0])) {
-                if(isIn(COLOR_ALIASES, parse.current.key)){
+                if (isIn(COLOR_ALIASES, parse.current.key)) {
                     return Arrays.stream(FCCUtil.colorNames)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
@@ -1117,7 +1118,7 @@ public class BasicHandler extends HandlerBase {
     }
 
     @Override
-    public List<String> detailsSuggestions(CommandSource source, String arguments, @org.jetbrains.annotations.Nullable Location<World> targetPosition) {
+    public List<String> detailsSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) {
         return ImmutableList.of();
     }
 
@@ -1239,7 +1240,7 @@ public class BasicHandler extends HandlerBase {
             }
             groupSuperSet.forEach(this.groupSetPermCache::remove);
             this.groups.remove(group);
-            if (this.passiveGroup.equals(group)) this.setPassiveSetting(PassiveSetting.PASSTHROUGH);
+            if (group.equals(passiveGroup)) this.setPassiveSetting(PassiveSetting.PASSTHROUGH);
             return true;
         }
         return false;
@@ -1569,6 +1570,7 @@ public class BasicHandler extends HandlerBase {
                 Group owners = handler.createGroup("owners").get();
                 owners.displayName = "Owners";
                 owners.color = TextColors.GOLD;
+                handler.addFlagEntry(owners, new Entry(ImmutableSet.of(Flags.DEBUFF), Tristate.TRUE));
                 if (source instanceof Player) owners.users.add(((Player) source).getUniqueId());
                 Group members = handler.createGroup("members").get();
                 members.displayName = "Members";
@@ -1613,10 +1615,16 @@ public class BasicHandler extends HandlerBase {
                     List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
                     groupPermissions.put(group, stringEntries.stream()
                             .map(Entry::deserialize)
+                            .filter(entry -> !entry.set.isEmpty())
+                            .distinct()
                             .collect(Collectors.toList()));
                 }
                 List<String> stringEntries = flagMapDB.indexTreeList("default", Serializer.STRING).createOrOpen();
-                defaultPermissions = stringEntries.stream().map(Entry::deserialize).collect(Collectors.toList());
+                defaultPermissions = stringEntries.stream()
+                        .map(Entry::deserialize)
+                        .filter(entry -> !entry.set.isEmpty())
+                        .distinct()
+                        .collect(Collectors.toList());
             }
 
             Path basicFile = directory.resolve("basic.cfg");
@@ -1671,7 +1679,7 @@ public class BasicHandler extends HandlerBase {
         }
 
         @Override
-        public List<String> createSuggestions(CommandSource source, String arguments, String type, @org.jetbrains.annotations.Nullable Location<World> targetPosition) throws CommandException {
+        public List<String> createSuggestions(CommandSource source, String arguments, String type, @Nullable Location<World> targetPosition) throws CommandException {
             AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                     .arguments(arguments)
                     .excludeCurrent(true)

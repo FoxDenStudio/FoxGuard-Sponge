@@ -23,24 +23,24 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.object.factory;
+package net.foxdenstudio.sponge.foxguard.plugin.compat.djxy.pm;
 
-import org.spongepowered.api.command.CommandException;
-import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.world.Location;
+import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.world.World;
 
-import javax.annotation.Nullable;
-import java.util.List;
+/**
+ * Created by Fox on 8/21/2016.
+ */
+public class FGCompat {
 
-public interface IFGFactory {
+    public static boolean isPlayerInRegion(Player player, String regionName) {
+        World world = player.getWorld();
+        return FGManager.getInstance().getRegionFromWorld(world, regionName).contains(player.getLocation().getPosition(), world);
+    }
 
-    String[] getAliases();
-
-    String getType();
-
-    String getPrimaryAlias();
-
-    List<String> createSuggestions(CommandSource source, String arguments, String type, @Nullable Location<World> targetPosition) throws CommandException;
+    public static int getCompatVersion() {
+        return 1;
+    }
 
 }

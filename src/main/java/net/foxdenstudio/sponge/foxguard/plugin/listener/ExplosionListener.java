@@ -25,9 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
-import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3d;
-import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
@@ -50,7 +48,7 @@ import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 
 public class ExplosionListener implements EventListener<ExplosionEvent.Detonate> {
 
-    private static final FlagBitSet FLAG_SET = new FlagBitSet(ROOT, DEBUFF, EXPLOSION);
+    private static final FlagBitSet FLAG_SET = new FlagBitSet(ROOT, DEBUFF, BLOCK, CHANGE, EXPLOSION);
 
 
     @Override
@@ -66,16 +64,11 @@ public class ExplosionListener implements EventListener<ExplosionEvent.Detonate>
         }
 
         World world = event.getTargetWorld();
-        Vector3d loc = event.getExplosion().getLocation().getPosition();
+        Vector3d pos = event.getExplosion().getOrigin();
         FlagBitSet flags = (FlagBitSet) FLAG_SET.clone();
         List<IHandler> handlerList = new ArrayList<>();
-        final Vector3d finalLoc = loc;
-        final World finalWorld = world;
-        FGManager.getInstance().getAllRegions(world, new Vector3i(
-                GenericMath.floor(loc.getX() / 16.0),
-                GenericMath.floor(loc.getY() / 16.0),
-                GenericMath.floor(loc.getZ() / 16.0))).stream()
-                .filter(region -> region.contains(finalLoc, finalWorld))
+        FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
+                .filter(region -> region.contains(pos, world))
                 .forEach(region -> region.getHandlers().stream()
                         .filter(IFGObject::isEnabled)
                         .filter(handler -> !handlerList.contains(handler))

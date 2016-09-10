@@ -62,7 +62,7 @@ foxguard {
                     own
                     others
                 }
-                unlink {
+                link {
                     own
                     others
                 }

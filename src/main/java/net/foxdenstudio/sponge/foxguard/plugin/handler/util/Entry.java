@@ -27,7 +27,6 @@ package net.foxdenstudio.sponge.foxguard.plugin.handler.util;
 
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.BasicHandler;
 import org.spongepowered.api.util.Tristate;
 
 import java.util.HashSet;
@@ -71,5 +70,21 @@ public class Entry {
             }
         }
         return new Entry(flagSet, Tristate.valueOf(parts[1]));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Entry entry = (Entry) o;
+
+        return set != null ? set.equals(entry.set) : entry.set == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return set != null ? set.hashCode() : 0;
     }
 }
