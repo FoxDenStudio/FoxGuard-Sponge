@@ -29,7 +29,7 @@ import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableSet;
-import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
+import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.event.util.FGEventFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
@@ -53,7 +53,6 @@ import java.util.Set;
 public final class FGManager {
 
     public static final String[] ILLEGAL_NAMES = {"all", "state", "full", "everything"};
-    public static final String[] TYPES = {"region", "worldregion", "handler", "controller"};
 
     private static FGManager instance;
     private final Map<World, Set<IWorldRegion>> worldRegions;
@@ -371,11 +370,10 @@ public final class FGManager {
     }
 
     public void initWorld(World world) {
-        GlobalWorldRegion gr = new GlobalWorldRegion();
-        gr.addHandler(this.globalHandler);
-        gr.setWorld(world);
-        this.worldRegions.get(world).add(gr);
-        this.regionCache.markDirty(gr, RegionCache.DirtyType.ADDED);
+        GlobalWorldRegion gwr = new GlobalWorldRegion();
+        gwr.setWorld(world);
+        this.worldRegions.get(world).add(gwr);
+        this.regionCache.markDirty(gwr, RegionCache.DirtyType.ADDED);
     }
 
     public void unloadWorld(World world) {
@@ -387,7 +385,7 @@ public final class FGManager {
     }
 
     public static boolean isNameValid(String name) {
-        if (name.matches("^.*[ :\\.=;\"\'\\\\/\\{\\}\\(\\)\\[\\]<>#@\\|\\?\\*].*$")) return false;
+        if (name.matches("^.*[ :.=;\"\'\\\\/{}()\\[\\]<>#@|?*].*$")) return false;
         for (String s : FGStorageManager.FS_ILLEGAL_NAMES) {
             if (name.equalsIgnoreCase(s)) return false;
         }

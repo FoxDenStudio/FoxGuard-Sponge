@@ -47,10 +47,11 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
+import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import javax.annotation.Nonnull;
-import java.util.Arrays;
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 
@@ -93,17 +94,19 @@ public class CommandCreate extends FCCommandBase {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
             String worldName = parse.flags.get("world");
             World world = null;
-            if (source instanceof Player) world = ((Player) source).getWorld();
-            if (!worldName.isEmpty()) {
-                Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
-                if (optWorld.isPresent()) {
-                    world = optWorld.get();
-                } else {
-                    if (world == null)
-                        throw new CommandException(Text.of("No world exists with name \"" + worldName + "\"!"));
+            if (isWorldRegion) {
+                if (source instanceof Player) world = ((Player) source).getWorld();
+                if (!worldName.isEmpty()) {
+                    Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
+                    if (optWorld.isPresent()) {
+                        world = optWorld.get();
+                    } else {
+                        if (world == null)
+                            throw new CommandException(Text.of("No world exists with name \"" + worldName + "\"!"));
+                    }
                 }
+                if (world == null) throw new CommandException(Text.of("Must specify a world!"));
             }
-            if (isWorldRegion && world == null) throw new CommandException(Text.of("Must specify a world!"));
             if (parse.args[1].matches("^.*[^0-9a-zA-Z_$].*$"))
                 throw new CommandException(Text.of("Name must be alphanumeric!"));
             if (parse.args[1].matches("^[0-9].*$"))
@@ -204,7 +207,7 @@ public class CommandCreate extends FCCommandBase {
 
     @Nonnull
     @Override
-    public List<String> getSuggestions(@Nonnull CommandSource source, @Nonnull String arguments) throws CommandException {
+    public List<String> getSuggestions(@Nonnull CommandSource source, @Nonnull String arguments, @Nullable Location<World> targetPosition) throws CommandException {
         if (!testPermission(source)) return ImmutableList.of();
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
@@ -216,7 +219,7 @@ public class CommandCreate extends FCCommandBase {
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0)
-                return Arrays.asList(FGManager.TYPES).stream()
+                return ImmutableList.of("region", "worldregion", "handler", "controller").stream()
                         .filter(new StartsWithPredicate(parse.current.token))
                         .collect(GuavaCollectors.toImmutableList());
             else if (parse.current.index == 1) {

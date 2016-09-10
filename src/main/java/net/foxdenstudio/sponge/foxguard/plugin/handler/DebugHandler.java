@@ -34,6 +34,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Operation;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.util.DebugHelper;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
@@ -44,6 +45,8 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.source.ConsoleSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.event.Event;
+import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColor;
@@ -81,6 +84,14 @@ public class DebugHandler extends HandlerBase {
 
     @Override
     public EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra) {
+        Optional<Event> eventOptional = extra.first(Event.class);
+        if (eventOptional.isPresent()) {
+            Event event = eventOptional.get();
+            if (event instanceof DamageEntityEvent) {
+                DamageEntityEvent damageEntityEvent = (DamageEntityEvent) event;
+                DebugHelper.printDamageEvent(damageEntityEvent);
+            }
+        }
         UserStorageService storageService = FoxGuardMain.instance().getUserStorage();
 
         Text.Builder builder = Text.builder();

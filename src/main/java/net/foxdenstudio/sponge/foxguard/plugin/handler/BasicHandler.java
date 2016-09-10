@@ -27,18 +27,19 @@ package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
 import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
-import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.Flags;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Entry;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Operation;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
@@ -1569,6 +1570,7 @@ public class BasicHandler extends HandlerBase {
                 Group owners = handler.createGroup("owners").get();
                 owners.displayName = "Owners";
                 owners.color = TextColors.GOLD;
+                handler.addFlagEntry(owners, new Entry(ImmutableSet.of(Flags.DEBUFF), Tristate.TRUE));
                 if (source instanceof Player) owners.users.add(((Player) source).getUniqueId());
                 Group members = handler.createGroup("members").get();
                 members.displayName = "Members";
@@ -1613,10 +1615,16 @@ public class BasicHandler extends HandlerBase {
                     List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
                     groupPermissions.put(group, stringEntries.stream()
                             .map(Entry::deserialize)
+                            .filter(entry -> !entry.set.isEmpty())
+                            .distinct()
                             .collect(Collectors.toList()));
                 }
                 List<String> stringEntries = flagMapDB.indexTreeList("default", Serializer.STRING).createOrOpen();
-                defaultPermissions = stringEntries.stream().map(Entry::deserialize).collect(Collectors.toList());
+                defaultPermissions = stringEntries.stream()
+                        .map(Entry::deserialize)
+                        .filter(entry -> !entry.set.isEmpty())
+                        .distinct()
+                        .collect(Collectors.toList());
             }
 
             Path basicFile = directory.resolve("basic.cfg");

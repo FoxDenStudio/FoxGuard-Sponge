@@ -33,6 +33,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.GlobalWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
@@ -47,8 +48,10 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
+import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -145,7 +148,7 @@ public class CommandRename extends FCCommandBase {
     }
 
     @Override
-    public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
+    public List<String> getSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
         if (!testPermission(source)) return ImmutableList.of();
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
@@ -156,7 +159,7 @@ public class CommandRename extends FCCommandBase {
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0)
-                return Arrays.asList(FGManager.TYPES).stream()
+                return ImmutableList.of("region", "handler").stream()
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
@@ -194,10 +197,8 @@ public class CommandRename extends FCCommandBase {
             } else if (parse.current.index == 2) {
                 Tristate available = null;
                 if (isIn(REGIONS_ALIASES, parse.args[0]) || isIn(WORLDREGIONS_ALIASES, parse.args[0])) {
-                    IRegion region = null;
                     World world = null;
-                    if (!parse.flags.keySet().contains("world"))
-                        region = FGManager.getInstance().getRegion(parse.args[1]);
+                    IRegion region = FGManager.getInstance().getRegion(parse.args[1]);
                     if (region == null) {
                         String worldName = parse.flags.get("world");
                         if (source instanceof Player) world = ((Player) source).getWorld();
@@ -210,7 +211,7 @@ public class CommandRename extends FCCommandBase {
                         if (world == null) return ImmutableList.of();
                         region = FGManager.getInstance().getWorldRegion(world, parse.args[1]);
                     }
-                    if (region == null || region instanceof GlobalWorldRegion) return ImmutableList.of();
+                    if (region == null || region instanceof IGlobal) return ImmutableList.of();
                     if (region instanceof IWorldRegion) {
                         available = Tristate.fromBoolean(FGManager.getInstance().isWorldRegionNameAvailable(parse.current.token, world));
                     } else {

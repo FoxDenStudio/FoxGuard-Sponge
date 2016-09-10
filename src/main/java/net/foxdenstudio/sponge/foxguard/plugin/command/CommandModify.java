@@ -35,7 +35,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
-import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
@@ -47,9 +46,10 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
+import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import java.util.Arrays;
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 
@@ -165,7 +165,7 @@ public class CommandModify extends FCCommandBase {
     }
 
     @Override
-    public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
+    public List<String> getSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
         if (!testPermission(source)) return ImmutableList.of();
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
@@ -177,7 +177,7 @@ public class CommandModify extends FCCommandBase {
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0)
-                return Arrays.asList(FGManager.TYPES).stream()
+                return ImmutableList.of("region", "handler").stream()
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
@@ -227,26 +227,34 @@ public class CommandModify extends FCCommandBase {
                         .collect(GuavaCollectors.toImmutableList());
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.FINAL)) {
             if (isIn(REGIONS_ALIASES, parse.args[0])) {
-                String worldName = parse.flags.get("world");
-                World world = null;
-                if (source instanceof Player) world = ((Player) source).getWorld();
-                if (!worldName.isEmpty()) {
-                    Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
-                    if (optWorld.isPresent()) {
-                        world = optWorld.get();
+                IRegion region = FGManager.getInstance().getRegion(parse.args[1]);
+                if (region == null) {
+                    String worldName = parse.flags.get("world");
+                    World world = null;
+                    if (source instanceof Player) world = ((Player) source).getWorld();
+                    if (!worldName.isEmpty()) {
+                        Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
+                        if (optWorld.isPresent()) {
+                            world = optWorld.get();
+                        } else return ImmutableList.of();
                     }
+                    if (world == null) return ImmutableList.of();
+                    region = FGManager.getInstance().getWorldRegion(world, parse.args[1]);
                 }
-                if (world == null) return ImmutableList.of();
-                IWorldRegion region = FGManager.getInstance().getWorldRegion(world, parse.args[1]);
+
                 if (region == null) return ImmutableList.of();
-                return region.modifySuggestions(source, parse.current.token, null).stream()
+                List<String> suggestions = region.modifySuggestions(source, parse.current.token, null);
+                if (suggestions == null) return ImmutableList.of();
+                return suggestions.stream()
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
                 if (parse.args.length < 2) return ImmutableList.of();
                 IHandler handler = FGManager.getInstance().gethandler(parse.args[1]);
                 if (handler == null) return ImmutableList.of();
-                return handler.modifySuggestions(source, parse.current.token, null).stream()
+                List<String> suggestions = handler.modifySuggestions(source, parse.current.token, null);
+                if (suggestions == null) return ImmutableList.of();
+                return suggestions.stream()
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             }

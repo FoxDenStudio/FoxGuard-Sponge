@@ -27,19 +27,29 @@ package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.GuavaCollectors;
+import org.spongepowered.api.util.StartsWithPredicate;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isIn;
 
 public class CommandPriority extends FCCommandBase {
 
@@ -49,9 +59,10 @@ public class CommandPriority extends FCCommandBase {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        String[] args = {};
-        if (!arguments.isEmpty()) args = arguments.split(" +");
-        if (args.length == 0) {
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
+                .arguments(arguments)
+                .parse();
+        if (parse.args.length == 0) {
             source.sendMessage(Text.builder()
                     .append(Text.of(TextColors.GREEN, "Usage: "))
                     .append(getUsage(source))
@@ -61,9 +72,9 @@ public class CommandPriority extends FCCommandBase {
             int successes = 0;
             int failures = 0;
             List<IHandler> handlers = new ArrayList<>();
-            FGUtil.getSelectedHandlers(source).stream().forEach(handlers::add);
+            FGUtil.getSelectedHandlers(source).forEach(handlers::add);
             PriorityMachine machine = null;
-            for (String arg : args) {
+            for (String arg : parse.args) {
                 try {
                     PriorityMachine temp = new PriorityMachine(arg);
                     if (machine == null) machine = temp;
@@ -94,7 +105,24 @@ public class CommandPriority extends FCCommandBase {
     }
 
     @Override
-    public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
+    public List<String> getSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
+        if (!testPermission(source)) return ImmutableList.of();
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
+                .arguments(arguments)
+                .excludeCurrent(true)
+                .autoCloseQuotes(true)
+                .parse();
+        if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
+            List<IHandler> selected = ImmutableList.copyOf(FGUtil.getSelectedHandlers(source));
+            return FGManager.getInstance().getHandlers().stream()
+                    .filter(handler -> !selected.contains(handler) && !(handler instanceof IGlobal))
+                    .map(IFGObject::getName)
+                    .filter(new StartsWithPredicate(parse.current.token))
+                    .filter(alias -> !isIn(parse.args, alias))
+                    .map(args -> parse.current.prefix + args)
+                    .collect(GuavaCollectors.toImmutableList());
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
+            return ImmutableList.of(parse.current.prefix + " ");
         return ImmutableList.of();
     }
 

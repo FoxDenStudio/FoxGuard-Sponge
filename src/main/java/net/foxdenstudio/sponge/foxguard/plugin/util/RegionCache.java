@@ -27,7 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.util;
 
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableSet;
-import net.foxdenstudio.sponge.foxcore.plugin.util.CacheMap;
+import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
@@ -42,7 +42,6 @@ import java.util.Set;
  * Created by Fox on 3/30/2016.
  */
 
-//TODO Complete caching behavior in FGManager
 public class RegionCache {
 
     private final Map<World, Set<IWorldRegion>> worldRegions;

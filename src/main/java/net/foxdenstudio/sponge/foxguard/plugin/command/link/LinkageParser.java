@@ -113,6 +113,11 @@ public class LinkageParser {
                             .filter(new StartsWithPredicate(token.substring(1)))
                             .map(str -> endPart + str.substring(token.length() - 1))
                             .collect(Collectors.toList());
+                } else if (token.startsWith("$")) {
+                    return ImmutableList.of("regions", "handlers", "controllers").stream()
+                            .filter(new StartsWithPredicate(token.substring(1)))
+                            .map(str -> endPart + str.substring(token.length() - 1))
+                            .collect(Collectors.toList());
                 } else {
                     if (stage == Stage.START) {
                         return FGManager.getInstance().getAllRegions(world).stream()

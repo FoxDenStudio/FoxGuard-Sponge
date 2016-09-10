@@ -71,4 +71,20 @@ public class Entry {
         }
         return new Entry(flagSet, Tristate.valueOf(parts[1]));
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Entry entry = (Entry) o;
+
+        return set != null ? set.equals(entry.set) : entry.set == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return set != null ? set.hashCode() : 0;
+    }
 }

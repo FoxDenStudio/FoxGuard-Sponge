@@ -110,7 +110,7 @@ public class CuboidRegion extends WorldRegionBase implements IIterableRegion {
 
     @Override
     public List<String> modifySuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) {
-        return null;
+        return ImmutableList.of();
     }
 
     @Override
