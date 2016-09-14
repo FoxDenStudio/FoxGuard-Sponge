@@ -64,7 +64,7 @@ public class ExplosionListener implements EventListener<ExplosionEvent.Detonate>
         }
 
         World world = event.getTargetWorld();
-        Vector3d pos = event.getExplosion().getOrigin();
+        Vector3d pos = event.getExplosion().getLocation().getPosition();
         FlagBitSet flags = (FlagBitSet) FLAG_SET.clone();
         List<IHandler> handlerList = new ArrayList<>();
         FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
