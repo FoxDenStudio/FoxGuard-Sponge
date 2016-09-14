@@ -42,6 +42,7 @@ import java.util.List;
 public class GlobalWorldRegion extends WorldRegionBase implements IGlobal {
 
     public static final String NAME = "_wglobal";
+    public static final String TYPE = "wglobal";
 
     public GlobalWorldRegion() {
         super(NAME, true);
@@ -64,7 +65,7 @@ public class GlobalWorldRegion extends WorldRegionBase implements IGlobal {
 
     @Override
     public String getUniqueTypeString() {
-        return "wglobal";
+        return TYPE;
     }
 
     @Override

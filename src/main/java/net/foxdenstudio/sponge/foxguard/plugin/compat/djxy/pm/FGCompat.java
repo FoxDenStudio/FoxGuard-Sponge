@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.compat.djxy.pm;
 
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.world.World;
 
@@ -36,7 +37,8 @@ public class FGCompat {
 
     public static boolean isPlayerInRegion(Player player, String regionName) {
         World world = player.getWorld();
-        return FGManager.getInstance().getRegionFromWorld(world, regionName).contains(player.getLocation().getPosition(), world);
+        IRegion region = FGManager.getInstance().getRegionFromWorld(world, regionName);
+        return region != null && region.contains(player.getLocation().getPosition(), world);
     }
 
     public static int getCompatVersion() {

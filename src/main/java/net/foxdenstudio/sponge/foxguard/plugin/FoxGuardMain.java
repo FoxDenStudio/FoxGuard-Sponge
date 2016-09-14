@@ -55,6 +55,7 @@ import org.spongepowered.api.command.CommandMapping;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.event.EventManager;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.cause.Cause;
@@ -278,17 +279,17 @@ public final class FoxGuardMain {
      */
     private void registerListeners() {
         eventManager.registerListeners(this, FlagRegistry.getInstance());
-        eventManager.registerListener(this, ChangeBlockEvent.class, new BlockChangeListener());
-        eventManager.registerListener(this, InteractBlockEvent.class, new InteractBlockListener());
-        eventManager.registerListener(this, InteractEntityEvent.class, new InteractEntityListener());
-        eventManager.registerListener(this, SpawnEntityEvent.class, new SpawnEntityListener());
+        eventManager.registerListener(this, ChangeBlockEvent.class, Order.LATE, new BlockChangeListener());
+        eventManager.registerListener(this, InteractBlockEvent.class, Order.LATE, new InteractBlockListener());
+        eventManager.registerListener(this, InteractEntityEvent.class, Order.LATE, new InteractEntityListener());
+        eventManager.registerListener(this, SpawnEntityEvent.class, Order.LATE, new SpawnEntityListener());
         if (FGConfigManager.getInstance().getModules().get(FGConfigManager.Module.MOVEMENT)) {
             PlayerMoveListener pml = new PlayerMoveListener(true);
-            eventManager.registerListener(this, DisplaceEntityEvent.class, pml);
+            eventManager.registerListener(this, DisplaceEntityEvent.class, Order.LATE, pml);
             eventManager.registerListeners(this, pml.new Listeners());
         }
-        eventManager.registerListener(this, ExplosionEvent.Detonate.class, new ExplosionListener());
-        eventManager.registerListener(this, DamageEntityEvent.class, new DamageListener());
+        eventManager.registerListener(this, ExplosionEvent.Detonate.class, Order.LATE, new ExplosionListener());
+        eventManager.registerListener(this, DamageEntityEvent.class, Order.LATE, new DamageListener());
     }
 
     /**

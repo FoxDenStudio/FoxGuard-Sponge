@@ -92,7 +92,7 @@ public class GlobalRegion extends RegionBase implements IGlobal {
 
     @Override
     public String getUniqueTypeString() {
-        return "superglobal";
+        return "sglobal";
     }
 
     @Override
