@@ -57,7 +57,7 @@ public class DebugHelper {
         FoxGuardMain.instance().getLogger().info(sb.toString());
     }
 
-    public static void printDamageEvent (DamageEntityEvent event){
+    public static void printDamageEvent(DamageEntityEvent event) {
         StringBuilder sb = new StringBuilder().append("-----------------------------------\n");
         sb.append(event.getClass()).append("\n\n");
         for (Object o : event.getCause().all()) {

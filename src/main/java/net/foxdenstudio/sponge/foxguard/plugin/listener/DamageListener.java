@@ -185,17 +185,17 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
         }
     }
 
-    private Player getPlayerCause (Cause cause){
+    private Player getPlayerCause(Cause cause) {
         List<EntityDamageSource> sources = cause.allOf(EntityDamageSource.class);
-        for (EntityDamageSource source : sources){
+        for (EntityDamageSource source : sources) {
             Entity entity;
             entity = source.getSource();
-            if(entity instanceof Player){
+            if (entity instanceof Player) {
                 return (Player) entity;
             }
-            if(source instanceof IndirectEntityDamageSource){
+            if (source instanceof IndirectEntityDamageSource) {
                 entity = ((IndirectEntityDamageSource) source).getIndirectSource();
-                if(entity instanceof Player){
+                if (entity instanceof Player) {
                     return (Player) entity;
                 }
             }

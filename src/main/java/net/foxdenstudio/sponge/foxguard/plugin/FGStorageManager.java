@@ -88,7 +88,8 @@ public final class FGStorageManager {
 
     public synchronized void saveRegions(boolean force) {
         logger.info("Saving regions" + (force ? " (forced save)" : ""));
-        try (DB mainDB = DBMaker.fileDB(directory.resolve("regions.foxdb").normalize().toString()).make()) {
+        Path dbFile = directory.resolve("regions.foxdb").normalize();
+        try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
@@ -143,7 +144,9 @@ public final class FGStorageManager {
             });
         } catch (DBException.DataCorruption e) {
             try {
-                Files.deleteIfExists(directory.resolve("regions.foxdb"));
+                FoxGuardMain.instance().getLogger().error("Database file \"" + dbFile + "\" appears to be corrupted:", e);
+                FoxGuardMain.instance().getLogger().error("Deleting the database file and trying again");
+                Files.deleteIfExists(dbFile);
                 saveRegions(force);
             } catch (IOException e1) {
                 e1.printStackTrace();
@@ -157,7 +160,8 @@ public final class FGStorageManager {
 
     public synchronized void saveWorldRegions(World world, boolean force) {
         logger.info("Saving world regions in world \"" + world.getName() + "\"" + (force ? " (forced save)" : ""));
-        try (DB mainDB = DBMaker.fileDB(worldDirectories.get(world.getName()).resolve("wregions.foxdb").normalize().toString()).make()) {
+        Path dbFile = worldDirectories.get(world.getName()).resolve("wregions.foxdb").normalize();
+        try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
@@ -213,7 +217,9 @@ public final class FGStorageManager {
             });
         } catch (DBException.DataCorruption e) {
             try {
-                Files.deleteIfExists(directory.resolve("wregions.foxdb"));
+                FoxGuardMain.instance().getLogger().error("Database file \"" + dbFile + "\" appears to be corrupted:", e);
+                FoxGuardMain.instance().getLogger().error("Deleting the database file and trying again");
+                Files.deleteIfExists(dbFile);
                 saveWorldRegions(world, force);
             } catch (IOException e1) {
                 e1.printStackTrace();
@@ -227,7 +233,8 @@ public final class FGStorageManager {
 
     public synchronized void saveHandlers(boolean force) {
         logger.info("Saving handlers" + (force ? " (forced save)" : ""));
-        try (DB mainDB = DBMaker.fileDB(directory.resolve("handlers.foxdb").normalize().toString()).make()) {
+        Path dbFile = directory.resolve("handlers.foxdb").normalize();
+        try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
@@ -280,7 +287,9 @@ public final class FGStorageManager {
             });
         } catch (DBException.DataCorruption e) {
             try {
-                Files.deleteIfExists(directory.resolve("handlers.foxdb"));
+                FoxGuardMain.instance().getLogger().error("Database file \"" + dbFile + "\" appears to be corrupted:", e);
+                FoxGuardMain.instance().getLogger().error("Deleting the database file and trying again");
+                Files.deleteIfExists(dbFile);
                 saveHandlers(force);
             } catch (IOException e1) {
                 e1.printStackTrace();
@@ -294,60 +303,65 @@ public final class FGStorageManager {
 
     public synchronized void saveRegion(IRegion fgObject, boolean force) {
         if (fgObject instanceof IWorldRegion) saveWorldRegion((IWorldRegion) fgObject, force);
-        else try (DB mainDB = DBMaker.fileDB(directory.resolve("regions.foxdb").normalize().toString()).make()) {
-            Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
-            Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
-            Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
-            Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
+        else {
+            Path dbFile = directory.resolve("regions.foxdb").normalize();
+            try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
+                Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
+                Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
+                Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
+                Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
 
-            Path dir = directory.resolve("regions");
-            constructDirectory(dir);
-            String name = fgObject.getName();
-            if (fgObject.autoSave()) {
-                Path singleDir = dir.resolve(name.toLowerCase());
-                boolean shouldSave = fgObject.shouldSave();
-                if (force || shouldSave) {
-                    logger.info((shouldSave ? "S" : "Force s") + "aving region \"" + name + "\" in directory: " + singleDir);
-                    constructDirectory(singleDir);
-                    try {
-                        fgObject.save(singleDir);
-                    } catch (Exception e) {
-                        logger.error("There was an error while saving region \"" + name + "\"!", e);
-                    }
+                Path dir = directory.resolve("regions");
+                constructDirectory(dir);
+                String name = fgObject.getName();
+                if (fgObject.autoSave()) {
+                    Path singleDir = dir.resolve(name.toLowerCase());
+                    boolean shouldSave = fgObject.shouldSave();
+                    if (force || shouldSave) {
+                        logger.info((shouldSave ? "S" : "Force s") + "aving region \"" + name + "\" in directory: " + singleDir);
+                        constructDirectory(singleDir);
+                        try {
+                            fgObject.save(singleDir);
+                        } catch (Exception e) {
+                            logger.error("There was an error while saving region \"" + name + "\"!", e);
+                        }
 
-                    logger.info("Saving metadata for region \"" + name + "\"");
-                    try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
-                        Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
-                        Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
-                        Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
-                        Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
-                        metaName.set(name);
-                        metaCategory.set(FGUtil.getCategory(fgObject));
-                        metaType.set(fgObject.getUniqueTypeString());
-                        metaEnabled.set(fgObject.isEnabled());
+                        logger.info("Saving metadata for region \"" + name + "\"");
+                        try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
+                            Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
+                            Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
+                            Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
+                            Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
+                            metaName.set(name);
+                            metaCategory.set(FGUtil.getCategory(fgObject));
+                            metaType.set(fgObject.getUniqueTypeString());
+                            metaEnabled.set(fgObject.isEnabled());
+                        }
+                    } else {
+                        logger.info("Region \"" + name + "\" is already up to date. Skipping...");
                     }
+                    mainMap.put(name, FGUtil.getCategory(fgObject));
+                    typeMap.put(name, fgObject.getUniqueTypeString());
+                    enabledMap.put(name, fgObject.isEnabled());
+
+                    defaultModifiedMap.put(fgObject, false);
                 } else {
-                    logger.info("Region \"" + name + "\" is already up to date. Skipping...");
+                    logger.info("Region " + fgObject.getName() + " does not need saving. Skipping...");
                 }
-                mainMap.put(name, FGUtil.getCategory(fgObject));
-                typeMap.put(name, fgObject.getUniqueTypeString());
-                enabledMap.put(name, fgObject.isEnabled());
-
-                defaultModifiedMap.put(fgObject, false);
-            } else {
-                logger.info("Region " + fgObject.getName() + " does not need saving. Skipping...");
-            }
-            if (fgObject.saveLinks()) {
-                linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
-            } else {
-                logger.info("Region " + fgObject.getName() + " does not need its links saved. Skipping...");
-            }
-        } catch (DBException.DataCorruption e) {
-            try {
-                Files.deleteIfExists(directory.resolve("regions.foxdb"));
-                saveRegions();
-            } catch (IOException e1) {
-                e1.printStackTrace();
+                if (fgObject.saveLinks()) {
+                    linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
+                } else {
+                    logger.info("Region " + fgObject.getName() + " does not need its links saved. Skipping...");
+                }
+            } catch (DBException.DataCorruption e) {
+                try {
+                    FoxGuardMain.instance().getLogger().error("Database file \"" + dbFile + "\" appears to be corrupted:", e);
+                    FoxGuardMain.instance().getLogger().error("Deleting the database file and trying again");
+                    Files.deleteIfExists(dbFile);
+                    saveRegions();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
             }
         }
     }
@@ -358,7 +372,8 @@ public final class FGStorageManager {
 
     public synchronized void saveWorldRegion(IWorldRegion fgObject, boolean force) {
         World world = fgObject.getWorld();
-        try (DB mainDB = DBMaker.fileDB(worldDirectories.get(world.getName()).resolve("wregions.foxdb").normalize().toString()).make()) {
+        Path dbFile = worldDirectories.get(world.getName()).resolve("wregions.foxdb").normalize();
+        try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
@@ -409,7 +424,9 @@ public final class FGStorageManager {
             }
         } catch (DBException.DataCorruption e) {
             try {
-                Files.deleteIfExists(directory.resolve("regions.foxdb"));
+                FoxGuardMain.instance().getLogger().error("Database file \"" + dbFile + "\" appears to be corrupted:", e);
+                FoxGuardMain.instance().getLogger().error("Deleting the database file and trying again");
+                Files.deleteIfExists(dbFile);
                 saveWorldRegions(fgObject.getWorld());
             } catch (IOException e1) {
                 e1.printStackTrace();
@@ -422,7 +439,8 @@ public final class FGStorageManager {
     }
 
     public synchronized void saveHandler(IHandler fgObject, boolean force) {
-        try (DB mainDB = DBMaker.fileDB(directory.resolve("handlers.foxdb").normalize().toString()).make()) {
+        Path dbFile = directory.resolve("handlers.foxdb").normalize();
+        try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
@@ -471,7 +489,9 @@ public final class FGStorageManager {
             }
         } catch (DBException.DataCorruption e) {
             try {
-                Files.deleteIfExists(directory.resolve("regions.foxdb"));
+                FoxGuardMain.instance().getLogger().error("Database file \"" + dbFile + "\" appears to be corrupted:", e);
+                FoxGuardMain.instance().getLogger().error("Deleting the database file and trying again");
+                Files.deleteIfExists(dbFile);
                 saveHandlers();
             } catch (IOException e1) {
                 e1.printStackTrace();
@@ -571,7 +591,8 @@ public final class FGStorageManager {
     }
 
     public synchronized void loadRegions() {
-        try (DB mainDB = DBMaker.fileDB(directory.resolve("regions.foxdb").normalize().toString()).make()) {
+        Path dbFile = directory.resolve("regions.foxdb").normalize();
+        try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
@@ -652,11 +673,20 @@ public final class FGStorageManager {
                     }
                 }
             });
+        } catch (DBException.DataCorruption e) {
+            try {
+                FoxGuardMain.instance().getLogger().error("Database file \"" + dbFile + "\" appears to be corrupted:", e);
+                FoxGuardMain.instance().getLogger().error("Deleting the database file");
+                Files.deleteIfExists(dbFile);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
         }
     }
 
     public synchronized void loadWorldRegions(World world) {
-        try (DB mainDB = DBMaker.fileDB(worldDirectories.get(world.getName()).resolve("wregions.foxdb").normalize().toString()).make()) {
+        Path dbFile = worldDirectories.get(world.getName()).resolve("wregions.foxdb").normalize();
+        try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
@@ -680,7 +710,9 @@ public final class FGStorageManager {
                             "\",  Category: \"" + category +
                             "\",  Type: \"" + type +
                             "\",  Enabled: " + enabled);
-                    if (name.equalsIgnoreCase(GlobalWorldRegion.NAME)) {
+                    if (category == null) category = "";
+                    if (type == null) type = "";
+                    if (name.equalsIgnoreCase(GlobalWorldRegion.NAME) || type.equals(GlobalWorldRegion.TYPE)) {
                         logger.info("Global world region found! Skipping...");
                         return;
                     }
@@ -693,8 +725,6 @@ public final class FGStorageManager {
                             deleteDirectory(singleDir);
                         }
                     }
-                    if (category == null) category = "";
-                    if (type == null) type = "";
                     IWorldRegion object = null;
                     try {
                         if (category.equalsIgnoreCase("worldregion"))
@@ -737,6 +767,14 @@ public final class FGStorageManager {
                     }
                 }
             });
+        } catch (DBException.DataCorruption e) {
+            try {
+                FoxGuardMain.instance().getLogger().error("Database file \"" + dbFile + "\" appears to be corrupted:", e);
+                FoxGuardMain.instance().getLogger().error("Deleting the database file");
+                Files.deleteIfExists(dbFile);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
         }
     }
 
