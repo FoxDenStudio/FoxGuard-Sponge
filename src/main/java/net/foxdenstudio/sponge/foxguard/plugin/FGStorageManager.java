@@ -767,7 +767,7 @@ public final class FGStorageManager {
                     }
                 }
             });
-        }catch (DBException.DataCorruption e) {
+        } catch (DBException.DataCorruption e) {
             try {
                 FoxGuardMain.instance().getLogger().error("Database file \"" + dbFile + "\" appears to be corrupted:", e);
                 FoxGuardMain.instance().getLogger().error("Deleting the database file");
