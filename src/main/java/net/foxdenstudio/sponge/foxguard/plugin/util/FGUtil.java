@@ -112,9 +112,9 @@ public final class FGUtil {
             case UNDEFINED:
                 return Text.of(TextColors.YELLOW, "Pass");
             case TRUE:
-                return Text.of(TextColors.GREEN, "True");
+                return Text.of(TextColors.GREEN, "Allow");
             case FALSE:
-                return Text.of(TextColors.RED, "False");
+                return Text.of(TextColors.RED, "Deny");
             default:
                 return Text.of(TextColors.LIGHT_PURPLE, "Wait wat?");
         }
