@@ -34,7 +34,7 @@ if (System.env.TRAVIS) {
     version tempVersion
 }
 
-apply from: project(":FoxCore").file("sponge.gradle")
+apply from: project(":FoxCore").file("versions.gradle")
 
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'

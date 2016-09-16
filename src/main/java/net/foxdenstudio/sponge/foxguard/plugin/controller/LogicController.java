@@ -83,11 +83,6 @@ public class LogicController extends ControllerBase {
         this.shortCircuit = shortCircuit;
     }
 
-    @Deprecated
-    public EventResult handle(@Nullable User user, IFlag flag, Optional<Event> event, Object... extra) {
-        return EventResult.pass();
-    }
-
     @Override
     public EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra) {
         return EventResult.of(operator.operate(this.handlers, mode, shortCircuit, user, flags, extra));

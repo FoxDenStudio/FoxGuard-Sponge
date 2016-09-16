@@ -817,6 +817,7 @@ public class BasicHandler extends HandlerBase {
                                     source.sendMessage(Text.of(TextColors.GREEN, "Name is available!"));
                                 }
                             }
+                            return ImmutableList.of();
                         }
                         case "modify": {
                             List<String> list = this.groups.stream()
@@ -1086,11 +1087,9 @@ public class BasicHandler extends HandlerBase {
             int index = 0;
             for (Entry entry : this.groupPermissions.get(group)) {
                 StringBuilder stringBuilder = new StringBuilder();
-                for (Flag flag : entry.set) {
-                    stringBuilder.append(flag.name).append(" ");
-                }
+                entry.set.stream().sorted().forEach(flag -> stringBuilder.append(flag.name).append(" "));
                 Text.Builder entryBuilder = Text.builder();
-                entryBuilder.append(Text.of("  " + stringBuilder.toString(), TextColors.AQUA, ": "))
+                entryBuilder.append(Text.of("  " + index + ": " + stringBuilder.toString(), TextColors.AQUA, ": "))
                         .append(FGUtil.readableTristateText(entry.state))
                         .onHover(TextActions.showText(Text.of("Click to change this flag entry")))
                         .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " flags " + group.name + " set " + (index++) + " "));
@@ -1104,11 +1103,9 @@ public class BasicHandler extends HandlerBase {
         int index = 0;
         for (Entry entry : this.defaultPermissions) {
             StringBuilder stringBuilder = new StringBuilder();
-            for (Flag flag : entry.set) {
-                stringBuilder.append(flag.name).append(" ");
-            }
+            entry.set.stream().sorted().forEach(flag -> stringBuilder.append(flag.name).append(" "));
             Text.Builder entryBuilder = Text.builder();
-            entryBuilder.append(Text.of("  " + stringBuilder.toString(), TextColors.AQUA, ": "))
+            entryBuilder.append(Text.of("  " + index + ": " + stringBuilder.toString(), TextColors.AQUA, ": "))
                     .append(FGUtil.readableTristateText(entry.state))
                     .onHover(TextActions.showText(Text.of("Click to change this flag entry")))
                     .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " flags default set " + (index++) + " "));
