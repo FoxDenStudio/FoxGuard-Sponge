@@ -23,6 +23,9 @@ cache:
 notifications:
   email: false
 
+after_success:
+  - ./gradlew travisPublish
+
 deploy:
   file_glob: true
   provider: releases
