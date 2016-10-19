@@ -24,7 +24,7 @@ notifications:
   email: false
 
 after_success:
-  - ./gradlew travisPublish
+  - ./gradlew :travisPublish
 
 deploy:
   file_glob: true
