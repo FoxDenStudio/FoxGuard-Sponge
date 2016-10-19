@@ -49,6 +49,7 @@ import org.spongepowered.api.world.World;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public final class FGManager {
 
@@ -211,6 +212,12 @@ public final class FGManager {
         return ImmutableSet.copyOf(this.regionCache.getData(world, chunk).getRegions(includeDisabled));
     }
 
+    public Set<IRegion> getRegionsAtPos(World world, Vector3d position) {
+        return FGManager.getInstance().getRegionsInChunkAtPos(world, position).stream()
+                .filter(region -> region.contains(position, world))
+                .collect(Collectors.toSet());
+    }
+
     public Set<IRegion> getRegionsInChunkAtPos(World world, Vector3d pos) {
         return getRegionsInChunkAtPos(world, pos, false);
     }
@@ -235,10 +242,6 @@ public final class FGManager {
                         pos.getY() >> 4,
                         pos.getZ() >> 4)
         ).getRegions(includeDisabled);
-    }
-
-    public Set<IRegion> getRegionsAtPos(World world, Vector3d pos) {
-        return getRegionsInChunkAtPos(world, pos);
     }
 
     public Set<IHandler> getHandlers() {
@@ -402,5 +405,4 @@ public final class FGManager {
     public void clearRegionCache() {
         this.regionCache.clearCaches();
     }
-
 }

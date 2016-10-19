@@ -74,6 +74,7 @@ public class CommandList extends FCCommandBase {
         } else if (isIn(NUMBER_ALIASES, key) && !map.containsKey("number")) {
             map.put("number", value);
         }
+        return true;
     };
 
     @Override

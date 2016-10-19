@@ -1,12 +1,24 @@
+
+apply from: project(":FoxCore").file("gradle/versions.gradle")
+
 buildscript {
     repositories {
         jcenter()
+        maven {
+            name = 'gradle-plugins'
+            url = 'https://plugins.gradle.org/m2'
+        }
+        maven {
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
         maven {
             name 'Sponge maven repo'
             url 'http://repo.spongepowered.org/maven'
         }
     }
     dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
         classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
         classpath 'org.spongepowered:spongegradle:0.5.2-SNAPSHOT'
         classpath 'org.spongepowered:event-impl-gen:2.0.0-SNAPSHOT'
@@ -14,85 +26,19 @@ buildscript {
 }
 
 apply plugin: 'org.spongepowered.plugin'
-apply plugin: 'java'
-apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'net.minecraftforge.gradle.forge'
 
-group 'net.foxdenstudio.sponge.foxguard'
-version '0.19.0'
+group 'net.foxdenstudio.sponge'
+version 'SNAPSHOT'
 
-if (System.env.TRAVIS) {
-    String tempVersion = ''
-    if (System.env.TRAVIS_TAG) {
-        tempVersion = System.env.TRAVIS_TAG;
-        if(tempVersion.startsWith("v")){
-            tempVersion = tempVersion.substring(1)
-        }
-        tempVersion += "-$System.env.TRAVIS_BUILD_NUMBER"
-    } else {
-        tempVersion = version + "-$System.env.TRAVIS_BUILD_NUMBER-SNAPSHOT"
-    }
-    version tempVersion
-}
-
-apply from: project(":FoxCore").file("versions.gradle")
-
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
-
-sponge.plugin {
-    id = 'foxguard'
-}
-
-repositories {
-    mavenCentral()
-    maven {
-        name = 'sponge'
-        url = 'http://repo.spongepowered.org/maven'
-    }
-    maven {
-        name = 'minecrell'
-        url = 'http://repo.minecrell.net/releases'
-    }
-}
+apply from: project(":FoxCore").file("gradle/fox.gradle")
+apply from: project(":FoxCore").file("gradle/minecraft.gradle")
+apply from: project(":FoxCore").file("gradle/publish.gradle")
+apply from: project.file("gradle/foxguard.gradle")
 
 dependencies {
     compile project(':FoxCore')
     compile "org.spongepowered:spongeapi:$spongeVersion"
     compile 'net.minecrell.mcstats:statslite-sponge:0.2.2'
     //testCompile group: 'junit', name: 'junit', version: '4.11'
-}
-
-shadowJar {
-    classifier = ''
-    dependencies {
-        include dependency('net.minecrell.mcstats:statslite-sponge')
-    }
-    relocate 'net.minecrell.mcstats', 'net.foxdenstudio.sponge.foxguard.mcstats'
-}
-
-artifacts {
-    archives shadowJar
-}
-
-apply plugin: 'event-impl-gen'
-
-// Compile time code generator for the event factory
-genEventImpl {
-    includeSrc = [
-            'src/main/java/net/foxdenstudio/sponge/foxguard/plugin/event'
-    ]
-    excludeSrc = [
-            'src/main/java/net/foxdenstudio/sponge/foxguard/plugin/event/util'
-    ]
-    outputDir = 'src/main/java/'
-    outputFactory = 'net.foxdenstudio.sponge.foxguard.plugin.event.util.FGEventFactory'
-    eventImplCreateMethod = 'org.spongepowered.api.event.SpongeEventFactoryUtils.createEventImpl'
-    sortPriorityPrefix = 'original'
-    groupingPrefixes = ['from': 'to']
-    validateCode = false
-}
-
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.14'
 }

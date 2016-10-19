@@ -67,6 +67,7 @@ public class CommandDetail extends FCCommandBase {
         } else if (isIn(ALL_ALIASES, key) && !map.containsKey("all")) {
             map.put("all", value);
         }
+        return true;
     };
 
     @Override

@@ -86,6 +86,7 @@ public class GroupHandler extends HandlerBase {
         } else if (isIn(PERMISSION_ALIASES, key) && !map.containsKey("permission")) {
             map.put("permission", value);
         }
+        return true;
     };
 
     private final List<Group> groups;
@@ -198,6 +199,19 @@ public class GroupHandler extends HandlerBase {
                         return ProcessResult.of(false, Text.of("Group already exists with this name!"));
 
                     Group group = groupOptional.get();
+                    if (parse.flags.containsKey("permission")) {
+                        String permissionString = parse.flags.get("permission");
+                        if (!permissionString.isEmpty()) {
+                            if (!permissionString.matches("[\\w\\-.]+") ||
+                                    permissionString.matches("^.*\\.\\..*$") ||
+                                    permissionString.startsWith(".") ||
+                                    permissionString.endsWith(".")) {
+                                return ProcessResult.of(false, Text.of("\"" + permissionString + "\" is an invalid permission string!"));
+                            }
+                            group.specialPermission = true;
+                            group.permission = permissionString;
+                        }
+                    }
                     if (parse.flags.containsKey("color")) {
                         String colorString = parse.flags.get("color");
                         Optional<TextColor> colorOptional = FCPUtil.textColorFromHex(colorString);
@@ -242,6 +256,22 @@ public class GroupHandler extends HandlerBase {
                         return ProcessResult.of(false, Text.of("No group exists with this name!"));
 
                     Group group = groupOptional.get();
+                    if (parse.flags.containsKey("permission")) {
+                        String permissionString = parse.flags.get("permission");
+                        if (permissionString.isEmpty()) {
+                            group.specialPermission = false;
+                            group.permission = "";
+                        } else {
+                            if (!permissionString.matches("[\\w\\-.]+") ||
+                                    permissionString.matches("^.*\\.\\..*$") ||
+                                    permissionString.startsWith(".") ||
+                                    permissionString.endsWith(".")) {
+                                return ProcessResult.of(false, Text.of("\"" + permissionString + "\" is an invalid permission string!"));
+                            }
+                            group.specialPermission = true;
+                            group.permission = permissionString;
+                        }
+                    }
                     if (parse.flags.containsKey("color")) {
                         String colorString = parse.flags.get("color");
                         if (!colorString.isEmpty()) {
@@ -613,6 +643,7 @@ public class GroupHandler extends HandlerBase {
                             .map(args -> parse.current.prefix + args)
                             .collect(Collectors.toList());
                     list.add("default");
+                    return ImmutableList.copyOf(list);
                 }
             } else if (parse.current.index == 2) {
                 if (isIn(GROUPS_ALIASES, parse.args[0])) {
@@ -736,12 +767,12 @@ public class GroupHandler extends HandlerBase {
             }
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY)) {
             if (isIn(GROUPS_ALIASES, parse.args[0])) {
-                return ImmutableList.of("index", "color", "displayname").stream()
+                return ImmutableList.of("index", "color", "displayname", "permission").stream()
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
-                ImmutableList.of("index").stream()
+                return ImmutableList.of("index").stream()
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
@@ -768,7 +799,12 @@ public class GroupHandler extends HandlerBase {
             final String prefix = "foxguard.handler." + this.name.toLowerCase() + ".";
             for (Group g : this.groups) {
                 if (g.specialPermission) {
-                    if (user.hasPermission(g.permission)) set.add(g);
+                    System.out.print("Permission \"" + g.permission + "\": ");
+                    if (user.hasPermission(g.permission)) {
+                        set.add(g);
+                        System.out.println(true);
+                    } else
+                        System.out.println(false);
                 } else {
                     if (user.hasPermission(prefix + g.name)) set.add(g);
                 }
@@ -812,7 +848,8 @@ public class GroupHandler extends HandlerBase {
                 permBuilder.append(Text.of("foxguard.handler.", TextColors.YELLOW, this.name, TextColors.RESET, ".", group.color, group.name));
             }
             permBuilder.onHover(TextActions.showText(Text.of("Click to modify the permissions string for \"", group.color, group.displayName, TextColors.RESET, "\"" + (group.name.equals(group.displayName) ? "" : " (" + group.name + ")"))));
-            permBuilder.onClick(TextActions.suggestCommand("/foxguard md h " + this.getName() + " group modify " + group.name + " --perm:"));
+            permBuilder.onClick(TextActions.suggestCommand("/foxguard md h " + this.getName() + " group modify " + group.name + " --p:"));
+            builder.append(permBuilder.build());
             builder.append(Text.NEW_LINE);
         }
         builder.append(Text.of(TextColors.GOLD,
@@ -1100,15 +1137,17 @@ public class GroupHandler extends HandlerBase {
     private void clearFlagCacheForGroup(Group group) {
         if (group == defaultGroup) {
             this.defaultPermCache.clear();
+            this.groupSetPermCache.clear();
         } else {
             this.groupPermCache.get(group).clear();
+            Set<Set<Group>> groupSuperSet = new HashSet<>();
+            for (Map.Entry<Set<Group>, Map<FlagBitSet, Tristate>> cacheEntry : this.groupSetPermCache.entrySet()) {
+                Set<Group> key = cacheEntry.getKey();
+                if (key.contains(group)) groupSuperSet.add(key);
+            }
+            groupSuperSet.forEach(this.groupSetPermCache::remove);
         }
-        Set<Set<Group>> groupSuperSet = new HashSet<>();
-        for (Map.Entry<Set<Group>, Map<FlagBitSet, Tristate>> cacheEntry : this.groupSetPermCache.entrySet()) {
-            Set<Group> key = cacheEntry.getKey();
-            if (key.contains(group)) groupSuperSet.add(key);
-        }
-        groupSuperSet.forEach(this.groupSetPermCache::remove);
+
     }
 
     private List<Entry> getGroupPermissions(Group group) {
@@ -1136,27 +1175,6 @@ public class GroupHandler extends HandlerBase {
             if (name.equalsIgnoreCase(s)) return false;
         }
         return true;
-    }
-
-    public enum PassiveSetting {
-        ALLOW, DENY, PASSTHROUGH, GROUP, DEFAULT;
-
-        public String toString() {
-            switch (this) {
-                case ALLOW:
-                    return "Allow";
-                case DENY:
-                    return "Deny";
-                case PASSTHROUGH:
-                    return "Passthrough";
-                case GROUP:
-                    return "Group : ";
-                case DEFAULT:
-                    return "Default";
-                default:
-                    return "Awut...?";
-            }
-        }
     }
 
     public static class Group {

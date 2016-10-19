@@ -63,7 +63,7 @@ public class ElevationRegion extends WorldRegionBase {
         this.lowerBound = lowerBound;
     }
 
-    public ElevationRegion(String name, List<Vector3i> positions, String[] args, CommandSource source)
+    public ElevationRegion(String name, List<? extends Vector3i> positions, String[] args, CommandSource source)
             throws CommandException {
         super(name, true);
         List<Vector3i> allPositions = new ArrayList<>(positions);

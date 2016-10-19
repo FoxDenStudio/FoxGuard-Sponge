@@ -39,7 +39,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.Flags;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Entry;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Operation;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
@@ -76,6 +75,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
+import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
+import static org.spongepowered.api.util.Tristate.*;
 
 public class BasicHandler extends HandlerBase {
 
@@ -88,6 +89,7 @@ public class BasicHandler extends HandlerBase {
         } else if (isIn(DISPLAY_NAME_ALIASES, key) && !map.containsKey("displayname")) {
             map.put("displayname", value);
         }
+        return true;
     };
 
     private final List<Group> groups;
@@ -212,10 +214,10 @@ public class BasicHandler extends HandlerBase {
                 Tristate state = Tristate.UNDEFINED;
                 switch (passiveSetting) {
                     case ALLOW:
-                        state = Tristate.TRUE;
+                        state = TRUE;
                         break;
                     case DENY:
-                        state = Tristate.FALSE;
+                        state = FALSE;
                         break;
                     case GROUP:
                         state = passiveGroupCacheRef.get(flags);
@@ -798,7 +800,7 @@ public class BasicHandler extends HandlerBase {
                             .map(args -> parse.current.prefix + args)
                             .collect(Collectors.toList());
                     list.add("default");
-                    return list;
+                    return ImmutableList.copyOf(list);
                 } else if (isIn(PASSIVE_ALIASES, parse.args[0])) {
                     return ImmutableList.of("allow", "deny", "pass", "group", "default").stream()
                             .filter(new StartsWithPredicate(parse.current.token))
@@ -1055,24 +1057,34 @@ public class BasicHandler extends HandlerBase {
                     TextActions.showText(Text.of("Click to add player(s) to \"", group.color, group.displayName, TextColors.RESET, "\"" + (group.name.equals(group.displayName) ? "" : " (" + group.name + ")"))),
                     group.displayName,
                     TextColors.RESET, ": "));
+            Set<User> online = new HashSet<>();
+            Set<UUID> offline = new HashSet<>();
             for (UUID uuid : group.users) {
                 Optional<User> userOptional = userStorageService.get(uuid);
                 if (userOptional.isPresent()) {
-                    TextColor color = TextColors.WHITE;
-                    User u = userOptional.get();
-                    if (source instanceof Player && ((Player) source).getUniqueId().equals(uuid))
-                        color = TextColors.YELLOW;
-                    builder.append(Text.of(color,
-                            TextActions.suggestCommand("/foxguard md h " + this.getName() + " users " + group.name + " remove " + u.getName()),
-                            TextActions.showText(Text.of("Click to remove player \"" + u.getName() + "\" from \"", group.color, group.displayName, TextColors.RESET, "\"" + (group.name.equals(group.displayName) ? "" : " (" + group.name + ")"))),
-                            u.getName())).append(Text.of(" "));
+                    online.add(userOptional.get());
                 } else {
-                    builder.append(Text.of(TextColors.RESET,
-                            TextActions.suggestCommand("/foxguard md h " + this.getName() + " users " + group.name + " remove " + uuid.toString()),
-                            TextActions.showText(Text.of("Click to remove player \"" + uuid.toString() + "\" from \"", group.color, group.displayName, TextColors.RESET, "\"" + (group.name.equals(group.displayName) ? "" : " (" + group.name + ")"))),
-                            uuid.toString())).append(Text.of(" "));
+                    offline.add(uuid);
                 }
             }
+            online.stream()
+                    .sorted((u1, u2) -> u1.getName().compareTo(u2.getName()))
+                    .forEach(user -> {
+                        TextColor color = TextColors.WHITE;
+                        if (source instanceof Player && ((Player) source).getUniqueId().equals(user.getUniqueId()))
+                            color = TextColors.YELLOW;
+                        builder.append(Text.of(color,
+                                TextActions.suggestCommand("/foxguard md h " + this.getName() + " users " + group.name + " remove " + user.getName()),
+                                TextActions.showText(Text.of("Click to remove player \"" + user.getName() + "\" from \"", group.color, group.displayName, TextColors.RESET, "\"" + (group.name.equals(group.displayName) ? "" : " (" + group.name + ")"))),
+                                user.getName())).append(Text.of(" "));
+                    });
+            offline.stream()
+                    .sorted((u1, u2) -> u1.toString().compareTo(u2.toString()))
+                    .forEach(uuid -> builder.append(Text.of(TextColors.RESET,
+                            TextActions.suggestCommand("/foxguard md h " + this.getName() + " users " + group.name + " remove " + uuid.toString()),
+                            TextActions.showText(Text.of("Click to remove player \"" + uuid.toString() + "\" from \"", group.color, group.displayName, TextColors.RESET, "\"" + (group.name.equals(group.displayName) ? "" : " (" + group.name + ")"))),
+                            uuid.toString())).append(Text.of(" ")));
+
             builder.append(Text.NEW_LINE);
         }
         builder.append(Text.of(TextColors.GOLD,
@@ -1563,17 +1575,76 @@ public class BasicHandler extends HandlerBase {
         public IHandler create(String name, int priority, String arguments, CommandSource source) throws CommandException {
             AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).parse();
             BasicHandler handler = new BasicHandler(name, priority);
-            if (parse.args.length < 1 || !parse.args[0].equalsIgnoreCase("bare")) {
+            if (parse.args[0].equalsIgnoreCase("bare")) {
+                return handler;
+            } else if (parse.args[0].equalsIgnoreCase("skeleton")) {
                 Group owners = handler.createGroup("owners").get();
                 owners.displayName = "Owners";
                 owners.color = TextColors.GOLD;
-                handler.addFlagEntry(owners, new Entry(ImmutableSet.of(Flags.DEBUFF), Tristate.TRUE));
-                if (source instanceof Player) owners.users.add(((Player) source).getUniqueId());
+
                 Group members = handler.createGroup("members").get();
                 members.displayName = "Members";
                 members.color = TextColors.GREEN;
-            }
-            return handler;
+
+                return handler;
+            } else if (parse.args[0].equalsIgnoreCase("default")) {
+                Group owners = handler.createGroup("owners").get();
+                owners.displayName = "Owners";
+                owners.color = TextColors.GOLD;
+                handler.addFlagEntry(owners, new Entry(ImmutableSet.of(DEBUFF), TRUE));
+                if (source instanceof Player) owners.users.add(((Player) source).getUniqueId());
+
+                Group members = handler.createGroup("members").get();
+                members.displayName = "Members";
+                members.color = TextColors.GREEN;
+
+                handler.setPassiveSetting(PassiveSetting.DEFAULT);
+
+                return handler;
+            } else if (parse.args[0].equalsIgnoreCase("easy")) {
+                Group owners = handler.createGroup("owners").get();
+                owners.displayName = "Owners";
+                owners.color = TextColors.GOLD;
+                handler.addFlagEntry(owners, new Entry(ImmutableSet.of(DEBUFF), TRUE));
+                if (source instanceof Player) owners.users.add(((Player) source).getUniqueId());
+
+                Group members = handler.createGroup("members").get();
+                members.displayName = "Members";
+                members.color = TextColors.GREEN;
+
+                Group passive = handler.createGroup("passive").get();
+                passive.displayName = "Passive";
+                passive.color = TextColors.AQUA;
+                handler.setPassiveSetting(PassiveSetting.GROUP, passive);
+
+                return handler;
+            } else if (parse.args[0].equalsIgnoreCase("plugandplay")) {
+                Group owners = handler.createGroup("owners").get();
+                owners.displayName = "Owners";
+                owners.color = TextColors.GOLD;
+                handler.addFlagEntry(owners, new Entry(ImmutableSet.of(DEBUFF), TRUE));
+                if (source instanceof Player) owners.users.add(((Player) source).getUniqueId());
+
+                Group members = handler.createGroup("members").get();
+                members.displayName = "Members";
+                members.color = TextColors.GREEN;
+                handler.addFlagEntry(members, new Entry(ImmutableSet.of(BLOCK), UNDEFINED));
+
+                Group passive = handler.createGroup("passive").get();
+                passive.displayName = "Passive";
+                passive.color = TextColors.AQUA;
+                handler.addFlagEntry(passive, new Entry(ImmutableSet.of(SPAWN, HOSTILE), FALSE));
+                handler.setPassiveSetting(PassiveSetting.GROUP, passive);
+
+                Group defaultG = handler.getDefaultGroup();
+                handler.addFlagEntry(defaultG, new Entry(ImmutableSet.of(BLOCK, CHANGE), FALSE));
+                handler.addFlagEntry(defaultG, new Entry(ImmutableSet.of(DAMAGE, ENTITY), FALSE));
+                handler.addFlagEntry(defaultG, new Entry(ImmutableSet.of(DAMAGE, LIVING), UNDEFINED));
+                handler.addFlagEntry(defaultG, new Entry(ImmutableSet.of(DAMAGE, PLAYER), FALSE));
+
+                return handler;
+            } else
+                throw new CommandException(Text.of("Must specify a starting template! (\"easy\" or \"plugandplay\" are the recommended)"));
         }
 
         @Override
@@ -1684,7 +1755,7 @@ public class BasicHandler extends HandlerBase {
                     .parse();
             if (parse.current.type == AdvCmdParser.CurrentElement.ElementType.ARGUMENT &&
                     parse.current.index == 0) {
-                return ImmutableList.of("bare").stream()
+                return ImmutableList.of("bare", "skeleton", "default", "easy", "plugandplay").stream()
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());

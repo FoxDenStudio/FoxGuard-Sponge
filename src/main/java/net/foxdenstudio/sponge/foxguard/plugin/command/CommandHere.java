@@ -74,6 +74,7 @@ public class CommandHere extends FCCommandBase {
         } else if (isIn(PRIORITY_ALIASES, key) && !map.containsKey("priority")) {
             map.put("priority", value);
         }
+        return true;
     };
 
     @Override

@@ -63,6 +63,7 @@ public class CommandDelete extends FCCommandBase {
         if (isIn(WORLD_ALIASES, key) && !map.containsKey("world")) {
             map.put("world", value);
         }
+        return true;
     };
 
     @Override

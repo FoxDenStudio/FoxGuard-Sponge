@@ -66,7 +66,7 @@ public class RectangularRegion extends WorldRegionBase implements IIterableRegio
         this.boundingBox = boundingBox;
     }
 
-    public RectangularRegion(String name, List<Vector3i> positions, String[] args, CommandSource source)
+    public RectangularRegion(String name, List<? extends Vector3i> positions, String[] args, CommandSource source)
             throws CommandException {
         super(name, true);
         List<Vector3i> allPositions = new ArrayList<>(positions);

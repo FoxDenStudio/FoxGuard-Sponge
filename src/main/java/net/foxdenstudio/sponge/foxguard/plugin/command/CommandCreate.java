@@ -71,6 +71,7 @@ public class CommandCreate extends FCCommandBase {
         } else if (isIn(STATE_ALIASES, key) && !map.containsKey("state")) {
             map.put("state", value);
         }
+        return true;
     };
 
     @Nonnull

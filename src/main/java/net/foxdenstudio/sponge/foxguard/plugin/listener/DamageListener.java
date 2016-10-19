@@ -70,8 +70,8 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
     @Override
     public void handle(DamageEntityEvent event) throws Exception {
         if (event.isCancelled()) return;
-        User user;
-        user = getPlayerCause(event.getCause());
+        Player player;
+        player = getPlayerCause(event.getCause());
 
         World world = event.getTargetEntity().getWorld();
         Vector3d pos = event.getTargetEntity().getLocation().getPosition();
@@ -129,14 +129,14 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
                 if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                     break;
                 }
-                flagState = flagState.and(handler.handle(user, flags, ExtraContext.of(event)).getState());
+                flagState = flagState.and(handler.handle(player, flags, ExtraContext.of(event)).getState());
                 currPriority = handler.getPriority();
             }
 //            if(flagState == UNDEFINED) flagState = TRUE;
         }
         if (flagState == FALSE) {
-            if (user instanceof Player && !invincible) {
-                ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
+            if (player != null && player.isOnline() && !invincible) {
+                player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
             }
             event.setCancelled(true);
         } else {
@@ -166,7 +166,7 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
                         if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                             break;
                         }
-                        flagState = flagState.and(handler.handle(user, flags, ExtraContext.of(event)).getState());
+                        flagState = flagState.and(handler.handle(player, flags, ExtraContext.of(event)).getState());
                         currPriority = handler.getPriority();
                     }
 //                    if(flagState == UNDEFINED) flagState = TRUE;
@@ -176,8 +176,8 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
                     builder.type(DamageModifierTypes.ABSORPTION);
                     builder.cause(FoxGuardMain.getCause());
                     event.setDamage(builder.build(), damage -> ((Living) event.getTargetEntity()).getHealthData().health().get() - damage - 1);
-                    if (user instanceof Player && !invincible)
-                        ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission to kill!"));
+                    if (player != null && player.isOnline() && !invincible)
+                        player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission to kill!"));
                 }
             }
             //makes sure that handlers are unable to cancel the event directly.
