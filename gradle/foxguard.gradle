@@ -37,11 +37,11 @@ publishing{
 
 if(System.env.TRAVIS && !Boolean.valueOf(System.env.TRAVIS_PULL_REQUEST)){
     if(System.env.TRAVIS_TAG){
-        travisPublish.dependsOn 'publishFoxguardPublicationToFDSReleasesRepository'
+        travisPublish.dependsOn ':publishFoxguardPublicationToFDSReleasesRepository'
     } else {
-        travisPublish.dependsOn 'publishFoxguardPublicationToFDSSnapshotsRepository'
+        travisPublish.dependsOn ':publishFoxguardPublicationToFDSSnapshotsRepository'
     }
-    travisPublish.dependsOn 'publishDownloadPublicationToFDSDownloadsRepository'
+    travisPublish.dependsOn ':publishDownloadPublicationToFDSDownloadsRepository'
 }
 
 shadowJar {
