@@ -37,6 +37,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.BasicHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.DebugHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GroupHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.*;
+import net.foxdenstudio.sponge.foxguard.plugin.misc.FGContextCalculator;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.CuboidRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.ElevationRegion;
@@ -296,8 +297,9 @@ public final class FoxGuardMain {
      * A private method that sets up the permissions.
      */
     private void configurePermissions() {
-        game.getServiceManager().provide(PermissionService.class).get().getDefaults()
-                .getSubjectData().setPermission(SubjectData.GLOBAL_CONTEXT, "foxguard.override", Tristate.FALSE);
+        PermissionService service = game.getServiceManager().provide(PermissionService.class).get();
+        service.getDefaults().getSubjectData().setPermission(SubjectData.GLOBAL_CONTEXT, "foxguard.override", Tristate.FALSE);
+        service.registerContextCalculator(new FGContextCalculator());
     }
 
     /**

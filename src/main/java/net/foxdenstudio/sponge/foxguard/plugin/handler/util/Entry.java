@@ -25,6 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.handler.util;
 
+import com.google.common.collect.ImmutableSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
 import org.spongepowered.api.util.Tristate;
@@ -44,6 +45,11 @@ public class Entry {
     public Entry(Set<Flag> set, Tristate state) {
         this.set = set;
         this.state = state;
+    }
+
+    public Entry(Tristate state, Flag... flags){
+        this.state = state;
+        this.set = ImmutableSet.copyOf(flags);
     }
 
     public String serialize() {

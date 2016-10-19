@@ -147,7 +147,7 @@ public interface IFGObject {
      * This method is called when the modify command is used to try to modify an object.
      * This method is essentially a command handler that does a specific job.
      * <p>
-     * The only really important thing to note is that it is important that an object report a modify result of success if and only if the object was actually modified.
+     * The only really important thing to note is that it is (REALLY) important that an object report a modify result of success if and only if the object was actually modified.
      * "Actually modified" implies that the object needs to be saved again.
      * <p>
      * This contract is less important if an object implements the {@link IFGObject#shouldSave()} method.

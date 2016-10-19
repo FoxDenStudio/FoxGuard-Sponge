@@ -66,6 +66,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         if (isIn(WORLD_ALIASES, key) && !map.containsKey("world")) {
             map.put("world", value);
         }
+        return true;
     };
 
     public RegionsStateField(SourceState sourceState) {

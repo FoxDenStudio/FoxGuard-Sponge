@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
+import net.foxdenstudio.sponge.foxcore.plugin.command.CommandHUD;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
@@ -86,7 +87,14 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
 
         World world = event.getTargetEntity().getWorld();
 
-
+        getPassengerStack(event.getTargetEntity()).stream()
+                .filter(entity -> entity instanceof Player)
+                .map(entity -> (Player) entity)
+                .forEach(player -> {
+                    final boolean hud = player.getScoreboard() == scoreboardMap.get(player) && CommandHUD.instance().getIsHUDEnabled().get(player);
+                    final HUDConfig config = this.hudConfigMap.get(player);
+                    final boolean regionHUD = hud && config.regions;
+                });
     }
 
     public void renderHUD(Player player, List<IRegion> regions, List<IHandler> handlers, HUDConfig config) {

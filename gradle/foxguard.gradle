@@ -1,0 +1,75 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            name 'Sponge maven repo'
+            url 'http://repo.spongepowered.org/maven'
+        }
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
+    }
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'org.spongepowered.plugin'
+
+publishing{
+    publications {
+        foxguard(MavenPublication) {
+            artifactId = archivesBaseName
+            version = repoVersion
+
+            artifact jar
+            artifact sourceJar {
+                classifier "sources"
+            }
+        }
+        download(MavenPublication) {
+            artifactId = archivesBaseName
+
+            artifact shadowJar {
+                classifier "plugin"
+            }
+        }
+    }
+}
+
+if(System.env.TRAVIS && !Boolean.valueOf(System.env.TRAVIS_PULL_REQUEST)){
+    if(System.env.TRAVIS_TAG){
+        travisPublish.dependsOn 'publishFoxguardPublicationToFDSReleasesRepository'
+    } else {
+        travisPublish.dependsOn 'publishFoxguardPublicationToFDSSnapshotsRepository'
+    }
+    travisPublish.dependsOn 'publishDownloadPublicationToFDSDownloadsRepository'
+}
+
+shadowJar {
+    classifier = ''
+    dependencies {
+        include dependency('net.minecrell.mcstats:statslite-sponge')
+    }
+    relocate 'net.minecrell.mcstats', 'net.foxdenstudio.sponge.foxguard.mcstats'
+}
+
+artifacts {
+    archives shadowJar
+}
+
+apply plugin: 'event-impl-gen'
+
+// Compile time code generator for the event factory
+genEventImpl {
+    includeSrc = [
+            'src/main/java/net/foxdenstudio/sponge/foxguard/plugin/event'
+    ]
+    excludeSrc = [
+            'src/main/java/net/foxdenstudio/sponge/foxguard/plugin/event/util'
+    ]
+    outputDir = 'src/main/java/'
+    outputFactory = 'net.foxdenstudio.sponge.foxguard.plugin.event.util.FGEventFactory'
+    eventImplCreateMethod = 'org.spongepowered.api.event.SpongeEventFactoryUtils.createEventImpl'
+    sortPriorityPrefix = 'original'
+    groupingPrefixes = ['from': 'to']
+    validateCode = false
+}

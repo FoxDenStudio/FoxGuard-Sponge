@@ -30,6 +30,7 @@ import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
+import org.spongepowered.api.event.world.ExplosionEvent;
 
 public class DebugHelper {
 
@@ -54,15 +55,6 @@ public class DebugHelper {
         }
         sb.append("\n");
         event.getCause().getNamedCauses().forEach((k, v) -> sb.append(k).append("::").append(v).append("\n"));
-        FoxGuardMain.instance().getLogger().info(sb.toString());
-    }
-
-    public static void printDamageEvent(DamageEntityEvent event) {
-        StringBuilder sb = new StringBuilder().append("-----------------------------------\n");
-        sb.append(event.getClass()).append("\n\n");
-        for (Object o : event.getCause().all()) {
-            sb.append(o).append("\n");
-        }
         FoxGuardMain.instance().getLogger().info(sb.toString());
     }
 }

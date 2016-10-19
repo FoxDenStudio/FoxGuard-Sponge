@@ -65,7 +65,7 @@ public class CuboidRegion extends WorldRegionBase implements IIterableRegion {
         this.boundingBox = boundingBox;
     }
 
-    public CuboidRegion(String name, List<Vector3i> positions, String[] args, CommandSource source)
+    public CuboidRegion(String name, List<? extends Vector3i> positions, String[] args, CommandSource source)
             throws CommandException {
         super(name, true);
         List<Vector3i> allPositions = new ArrayList<>(positions);

@@ -54,6 +54,7 @@ public class CommandSave extends FCCommandBase {
         if (isIn(FORCE_ALIASES, key) && !map.containsKey("force")) {
             map.put("force", value);
         }
+        return true;
     };
 
     @Override

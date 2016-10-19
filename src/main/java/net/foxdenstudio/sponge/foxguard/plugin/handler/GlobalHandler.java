@@ -73,6 +73,7 @@ public class GlobalHandler extends HandlerBase implements IGlobal {
         if (isIn(INDEX_ALIASES, key) && !map.containsKey("index")) {
             map.put("index", value);
         }
+        return true;
     };
 
     private final List<Entry> entries;

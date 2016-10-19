@@ -47,6 +47,7 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
+import org.spongepowered.api.event.world.ExplosionEvent;
 import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColor;
@@ -87,9 +88,8 @@ public class DebugHandler extends HandlerBase {
         Optional<Event> eventOptional = extra.first(Event.class);
         if (eventOptional.isPresent()) {
             Event event = eventOptional.get();
-            if (event instanceof DamageEntityEvent) {
-                DamageEntityEvent damageEntityEvent = (DamageEntityEvent) event;
-                DebugHelper.printDamageEvent(damageEntityEvent);
+            if (event instanceof ExplosionEvent) {
+                DebugHelper.printEvent(event);
             }
         }
         UserStorageService storageService = FoxGuardMain.instance().getUserStorage();
