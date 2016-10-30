@@ -26,13 +26,12 @@
 package net.foxdenstudio.sponge.foxguard.plugin.controller;
 
 import com.google.common.collect.ImmutableList;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
-import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IControllerFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
@@ -40,15 +39,15 @@ import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.Serializer;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.User;
-import org.spongepowered.api.event.Event;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.action.TextActions;
+import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.GuavaCollectors;
+import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -57,16 +56,21 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
+import static org.spongepowered.api.text.format.TextColors.*;
 import static org.spongepowered.api.util.Tristate.*;
 
 /**
  * Created by Fox on 3/27/2016.
  */
 public class LogicController extends ControllerBase {
+
+    public static final String[] OPERATOR_ALIASES = {"o", "op", "operator", "operate", "operation"};
+    public static final String[] MODE_ALIASES = {"m", "mode", "default"};
+    public static final String[] SHORT_ALIASES = {"s", "sh", "short", "shortcircuit"};
 
     private Operator operator = Operator.AND;
     private Tristate mode = UNDEFINED;
@@ -111,37 +115,123 @@ public class LogicController extends ControllerBase {
     @Override
     public Text details(CommandSource source, String arguments) {
         Text.Builder builder = Text.builder();
-        builder.append(Text.of(TextColors.GOLD, "Operator: "));
-        builder.append(Text.of(TextColors.RESET, operator.toString()));
-        builder.append(Text.of(TextColors.GOLD, "\nMode: "));
-        builder.append(FGUtil.readableTristateText(mode));
-        builder.append(Text.of(TextColors.GOLD, "\nShort Circuit: "));
-        builder.append(Text.of(TextColors.RESET, shortCircuit));
+        builder.append(Text.of(
+                TextActions.suggestCommand("/foxguard md h " + this.name + " operator "),
+                TextActions.showText(Text.of(Text.of("Click to change operator"))),
+                TextColors.GOLD, "Operator: ",
+                operator.color, operator.toString()
+        ));
+        builder.append(Text.builder()
+                .append(Text.of(TextColors.GOLD, "\nMode: "))
+                .append(FGUtil.readableTristateText(mode))
+                .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " mode "))
+                .onHover(TextActions.showText(Text.of(Text.of("Click to change mode"))))
+                .build());
+        builder.append(Text.builder()
+                .append(Text.of(TextColors.GOLD, "\nShort Circuit: "))
+                .append(Text.of(FCPUtil.readableBooleanText(shortCircuit)))
+                .onClick(TextActions.runCommand("/foxguard md h " + this.name + " shortCircuit " + !shortCircuit))
+                .onHover(TextActions.showText(Text.of(Text.of("Click to toggle short circuit"))))
+                .build());
         return builder.build();
     }
 
     @Override
     public List<String> detailsSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) {
-        return null;
+        return ImmutableList.of();
     }
 
     @Override
     public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
+                .arguments(arguments)
+                .parse();
+        if (parse.args.length > 0) {
+            if (isIn(OPERATOR_ALIASES, parse.args[0])) {
+                if (parse.args.length > 1) {
+                    Operator op = Operator.from(parse.args[1]);
+                    if (op != null) {
+                        operator = op;
+                        return ProcessResult.of(true, Text.of(GREEN, "Successfully set operator to ", op.color, op.toString(), GREEN, "!"));
+                    } else
+                        return ProcessResult.of(false, Text.of("\"" + parse.args[1] + "\" is not a valid operator!"));
+                } else return ProcessResult.of(false, Text.of("You must specify an operator!"));
+            } else if (isIn(MODE_ALIASES, parse.args[0])) {
+                if (parse.args.length > 1) {
+                    Tristate tristate = tristateFrom(parse.args[1]);
+                    if (tristate != null) {
+                        this.mode = tristate;
+                        return ProcessResult.of(true, Text.builder()
+                                .append(Text.of(GREEN, "Successfully set mode to "))
+                                .append(FCPUtil.readableTristateText(tristate))
+                                .append(Text.of("!"))
+                                .build());
+                    } else
+                        return ProcessResult.of(false, Text.of("\"" + parse.args[1] + "\" is not a valid tristate value!"));
+                } else return ProcessResult.of(false, Text.of("You must specify a tristate value!"));
+            } else if (isIn(SHORT_ALIASES, parse.args[0])) {
+                if (parse.args.length > 1) {
+                    boolean bool;
+                    if (isIn(TRUE_ALIASES, parse.args[1])) {
+                        bool = true;
+                    } else if (isIn(FALSE_ALIASES, parse.args[1])) {
+                        bool = false;
+                    } else
+                        return ProcessResult.of(false, Text.of("\"" + parse.args[1] + "\" is not a valid boolean value!"));
+                    this.shortCircuit = bool;
+                    return ProcessResult.of(true, Text.builder()
+                            .append(Text.of(GREEN, "Successfully set mode to "))
+                            .append(FCPUtil.readableBooleanText(bool))
+                            .append(Text.of("!"))
+                            .build());
+
+                } else return ProcessResult.of(false, Text.of("You must specify a boolean!"));
+            }
+        } else return ProcessResult.of(false, Text.of("You must specify an option!"));
         return ProcessResult.failure();
     }
 
     @Override
     public List<String> modifySuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
+                .arguments(arguments)
+                .excludeCurrent(true)
+                .autoCloseQuotes(true)
+                .parse();
+        if (parse.current.type == AdvCmdParser.CurrentElement.ElementType.ARGUMENT) {
+            if (parse.current.index == 0) {
+                return ImmutableList.of("operator", "mode", "short").stream()
+                        .filter(new StartsWithPredicate(parse.current.token))
+                        .map(args -> parse.current.prefix + args)
+                        .collect(GuavaCollectors.toImmutableList());
+            } else if (parse.current.index == 1) {
+                if (isIn(OPERATOR_ALIASES, parse.args[0])) {
+                    return Arrays.stream(Operator.values())
+                            .map(Enum::name)
+                            .map(String::toLowerCase)
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                } else if (isIn(MODE_ALIASES, parse.args[0])) {
+                    return ImmutableList.of("allow", "deny", "pass").stream()
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                } else if (isIn(SHORT_ALIASES, parse.args[0])) {
+                    return ImmutableList.of("true", "false").stream()
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                }
+            }
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
+            return ImmutableList.of(parse.current.prefix + " ");
         return ImmutableList.of();
     }
 
     @Override
     public void save(Path directory) {
-        try (DB linksDB = DBMaker.fileDB(directory.resolve("links.foxdb").normalize().toString()).make()) {
-            List<String> linksList = linksDB.indexTreeList("links", Serializer.STRING).createOrOpen();
-            linksList.clear();
-            handlers.stream().map(IFGObject::getName).forEach(linksList::add);
-        }
+        saveLinks(directory);
         Path configFile = directory.resolve("settings.cfg");
         CommentedConfigurationNode root;
         ConfigurationLoader<CommentedConfigurationNode> loader =
@@ -165,22 +255,8 @@ public class LogicController extends ControllerBase {
         }
     }
 
-    @Override
-    public void loadLinks(Path directory) {
-        try (DB linksDB = DBMaker.fileDB(directory.resolve("links.foxdb").normalize().toString()).make()) {
-            List<String> linksList = linksDB.indexTreeList("links", Serializer.STRING).createOrOpen();
-            handlers.clear();
-            linksList.stream()
-                    .filter(name -> !this.name.equalsIgnoreCase(name))
-                    .map(name -> FGManager.getInstance().gethandler(name))
-                    .filter(handler -> handler != null)
-                    .forEach(handlers::add);
-
-        }
-    }
-
     private enum Operator {
-        AND {
+        AND(GREEN) {
             @Override
             public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, FlagBitSet flags, ExtraContext extra) {
                 Tristate state = UNDEFINED;
@@ -193,7 +269,7 @@ public class LogicController extends ControllerBase {
                 return state;
             }
         },
-        OR {
+        OR(AQUA) {
             @Override
             public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, FlagBitSet flags, ExtraContext extra) {
                 Tristate state = UNDEFINED;
@@ -206,7 +282,7 @@ public class LogicController extends ControllerBase {
                 return state;
             }
         },
-        XOR {
+        XOR(LIGHT_PURPLE) {
             @Override
             public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, FlagBitSet flags, ExtraContext extra) {
                 Tristate state = UNDEFINED;
@@ -218,7 +294,7 @@ public class LogicController extends ControllerBase {
                 return state;
             }
         },
-        NOT {
+        NOT(RED) {
             @Override
             public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, FlagBitSet flags, ExtraContext extra) {
                 if (handlers.size() > 0) {
@@ -230,7 +306,7 @@ public class LogicController extends ControllerBase {
                 } else return UNDEFINED;
             }
         },
-        NAND {
+        NAND(DARK_GREEN) {
             @Override
             public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, FlagBitSet flags, ExtraContext extra) {
                 Tristate state = UNDEFINED;
@@ -245,7 +321,7 @@ public class LogicController extends ControllerBase {
                 return state;
             }
         },
-        NOR {
+        NOR(DARK_AQUA) {
             @Override
             public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, FlagBitSet flags, ExtraContext extra) {
                 Tristate state = UNDEFINED;
@@ -260,7 +336,7 @@ public class LogicController extends ControllerBase {
                 return state;
             }
         },
-        XNOR {
+        XNOR(DARK_PURPLE) {
             @Override
             public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, User user, FlagBitSet flags, ExtraContext extra) {
                 Tristate state = UNDEFINED;
@@ -273,6 +349,15 @@ public class LogicController extends ControllerBase {
                 else if (state == FALSE) state = TRUE;
                 return state;
             }
+        },
+        IGNORE(YELLOW) {
+            @Override
+            public Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, @Nullable User user, FlagBitSet flags, ExtraContext extra) {
+                for (IHandler handler : handlers) {
+                    handler.handle(user, flags, extra);
+                }
+                return mode;
+            }
         };
 
         private static Tristate[][] XORMatrix = {
@@ -280,6 +365,12 @@ public class LogicController extends ControllerBase {
                 {TRUE, FALSE, FALSE},
                 {TRUE, FALSE, UNDEFINED}
         };
+
+        private final TextColor color;
+
+        Operator(TextColor color) {
+            this.color = color;
+        }
 
         public abstract Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, @Nullable User user, FlagBitSet flags, ExtraContext extra);
 
@@ -293,7 +384,7 @@ public class LogicController extends ControllerBase {
 
     public static final class Factory implements IControllerFactory {
 
-        public static final String[] LOGIC_ALIASES = {"logic", "logical", "boolean"};
+        public static final String[] LOGIC_ALIASES = {"logic", "logical"};
 
         @Override
         public IController create(String name, int priority, String arguments, CommandSource source) throws CommandException {

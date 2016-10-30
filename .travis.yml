@@ -30,7 +30,7 @@ deploy:
   file_glob: true
   provider: releases
   api-key: ${KEY}
-  file: "./build/libs/FoxGuard*.jar"
+  file: "./build/libs/foxguard*.jar"
   skip_cleanup: true
   on:
     tags: true

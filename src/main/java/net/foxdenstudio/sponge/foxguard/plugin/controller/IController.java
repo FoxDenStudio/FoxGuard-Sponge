@@ -45,4 +45,8 @@ public interface IController extends IHandler, ILinkable {
      */
     int maxLinks();
 
+    default boolean canLinkToItself() {
+        return false;
+    }
+
 }

@@ -25,7 +25,6 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.controller.message;
 
-import net.foxdenstudio.sponge.foxguard.plugin.listener.util.ISendableMessage;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.chat.ChatType;
