@@ -39,6 +39,7 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
+import org.spongepowered.api.event.world.ExplosionEvent;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
@@ -58,8 +59,7 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
 
     @Override
     public void handle(ChangeBlockEvent event) throws Exception {
-        if (event.isCancelled()) return;
-        if (event.getTransactions().isEmpty()) return;
+        if (event.isCancelled() || event.getTransactions().isEmpty() || event instanceof ExplosionEvent) return;
         for (Transaction<BlockSnapshot> tr : event.getTransactions()) {
             if (tr.getOriginal().getState().getType().equals(BlockTypes.DIRT)
                     && tr.getFinal().getState().getType().equals(BlockTypes.GRASS)

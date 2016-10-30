@@ -27,6 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.command.link;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
@@ -51,7 +52,7 @@ import java.util.stream.Collectors;
 /**
  * Created by Fox on 4/19/2016.
  */
-public class LinkageParser {
+public final class LinkageParser {
 
     private static final String REGEX = "[>()]|([\"'])(?:\\\\.|[^\\\\>(),])*?\\1|(?:\\\\.|[^\"'\\s>(),])+";
     private static final Pattern PATTERN = Pattern.compile(REGEX);
@@ -230,17 +231,15 @@ public class LinkageParser {
                             } else if (Aliases.isIn(Aliases.CONTROLLERS_ALIASES, name)) {
                                 set.add(new ExpressionStub(ImmutableSet.copyOf(FGUtil.getSelectedControllers(source))));
                             }
+                        } else if (token.startsWith("^")) {
+                            IController controller = FGManager.getInstance().getController(token.substring(1));
+                            if (controller != null) stubObjects.add(controller);
+                        } else if (stage == Stage.START) {
+                            IRegion region = FGManager.getInstance().getRegionFromWorld(currentWorld, token);
+                            if (region != null) stubObjects.add(region);
                         } else {
-                            if (token.startsWith("^")) {
-                                IController controller = FGManager.getInstance().getController(token.substring(1));
-                                if (controller != null) stubObjects.add(controller);
-                            } else if (stage == Stage.START) {
-                                IRegion region = FGManager.getInstance().getRegionFromWorld(currentWorld, token);
-                                if (region != null) stubObjects.add(region);
-                            } else {
-                                IHandler handler = FGManager.getInstance().gethandler(token);
-                                if (handler != null) stubObjects.add(handler);
-                            }
+                            IHandler handler = FGManager.getInstance().gethandler(token);
+                            if (handler != null) stubObjects.add(handler);
                         }
                     }
                 }
@@ -298,7 +297,8 @@ public class LinkageParser {
     }
 
     public class Result {
-
+        public Set<LinkEntry> entries = new HashSet<>();
+        public Map<String, String> flags = new CacheMap<>((k, m) -> "");
     }
 
     public class ExpressionStub implements IExpression {

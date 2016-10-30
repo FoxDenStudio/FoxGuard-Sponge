@@ -27,22 +27,23 @@ package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
+import org.spongepowered.api.entity.explosive.Explosive;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.world.ExplosionEvent;
+import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 
@@ -60,10 +61,22 @@ public class ExplosionListener implements EventListener<ExplosionEvent.Detonate>
         } else if (event.getCause().containsType(User.class)) {
             user = event.getCause().first(User.class).get();
         } else {
-            user = null;
+            Optional<Explosive> explosiveOptional = event.getExplosion().getSourceExplosive();
+            if (explosiveOptional.isPresent()) {
+                Explosive explosive = explosiveOptional.get();
+                UUID uuid;
+                Optional<UUID> notifierOptional = explosive.getNotifier();
+                if (notifierOptional.isPresent()) {
+                    uuid = notifierOptional.get();
+                } else {
+                    uuid = explosive.getCreator().orElse(null);
+                }
+                if (uuid != null) {
+                    UserStorageService storageService = FoxGuardMain.instance().getUserStorage();
+                    user = storageService.get(uuid).orElse(null);
+                } else user = null;
+            } else user = null;
         }
-
-        System.out.println(event.getCause());
 
         World world = event.getTargetWorld();
         Vector3d pos = event.getExplosion().getOrigin();

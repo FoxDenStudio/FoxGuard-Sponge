@@ -31,10 +31,8 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.ControllerBase;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.util.HandlerWrapper;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
-import net.foxdenstudio.sponge.foxguard.plugin.listener.util.ISendableMessage;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.command.CommandException;
@@ -55,14 +53,12 @@ public class MessageController extends ControllerBase {
 
     private HandlerWrapper slot;
     private Map<String, ISendableMessage> messages;
-    private Map<Config, String> configs;
 
 
     public MessageController(String name, boolean isEnabled, int priority) {
         super(name, isEnabled, priority);
         slot = HandlerWrapper.PASSTHROUGH;
         messages = new HashMap<>();
-        configs = new HashMap<>();
     }
 
     @Override
@@ -174,44 +170,6 @@ public class MessageController extends ControllerBase {
 
     public void setMessages(Map<String, ISendableMessage> messages) {
         this.messages = messages;
-    }
-
-    public Map<Config, String> getConfigs() {
-        return configs;
-    }
-
-    public void setConfigs(Map<Config, String> configs) {
-        this.configs = configs;
-    }
-
-    private static final class Config {
-
-        public final IFlag flag;
-        public final Tristate state;
-
-        public Config(IFlag flag, Tristate state) {
-            this.flag = flag;
-            this.state = state;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            Config config = (Config) o;
-
-            if (flag != null ? !flag.equals(config.flag) : config.flag != null) return false;
-            return state == config.state;
-
-        }
-
-        @Override
-        public int hashCode() {
-            int result = flag != null ? flag.hashCode() : 0;
-            result = 31 * result + (state != null ? state.hashCode() : 0);
-            return result;
-        }
     }
 
     public static class Factory implements IHandlerFactory {

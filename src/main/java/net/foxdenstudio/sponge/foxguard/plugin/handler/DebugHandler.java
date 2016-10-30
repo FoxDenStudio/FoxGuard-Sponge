@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
+import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
@@ -46,12 +47,13 @@ import org.spongepowered.api.command.source.ConsoleSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Event;
-import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.world.ExplosionEvent;
 import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.GuavaCollectors;
+import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -85,15 +87,35 @@ public class DebugHandler extends HandlerBase {
 
     @Override
     public EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra) {
-        Optional<Event> eventOptional = extra.first(Event.class);
+        /*Optional<Event> eventOptional = extra.first(Event.class);
         if (eventOptional.isPresent()) {
             Event event = eventOptional.get();
             if (event instanceof ExplosionEvent) {
                 DebugHelper.printEvent(event);
             }
-        }
+        }*/
+
         UserStorageService storageService = FoxGuardMain.instance().getUserStorage();
 
+        for (UUID uuid : this.members) {
+            Optional<User> listenerOpt = storageService.get(uuid);
+            if (listenerOpt.isPresent()) {
+                Optional<Player> playerOpt = listenerOpt.get().getPlayer();
+                if (playerOpt.isPresent()) {
+                    Player player = playerOpt.get();
+                    Text.Builder builder = Text.builder();
+                    builder.append(Text.of(color, "[FG " + this.name + "] "));
+                    if (user == null) {
+                        builder.append(Text.of(TextColors.WHITE, "None"));
+                    } else {
+                        builder.append(Text.of(user.getUniqueId().equals(player.getUniqueId()) ? TextColors.AQUA : (user.isOnline() ? TextColors.GREEN : TextColors.YELLOW), user.getName()));
+                    }
+                    builder.append(Text.of(TextColors.RESET, " :"));
+                    flags.toFlagSet().stream().forEachOrdered(flag -> builder.append(Text.of(" " + flag.name)));
+                    player.sendMessage(builder.build());
+                }
+            }
+        }
         Text.Builder builder = Text.builder();
         builder.append(Text.of(color, "[FG " + this.name + "] "));
         if (user == null) {
@@ -103,17 +125,7 @@ public class DebugHandler extends HandlerBase {
         }
         builder.append(Text.of(TextColors.RESET, " :"));
         flags.toFlagSet().stream().forEachOrdered(flag -> builder.append(Text.of(" " + flag.name)));
-        Text message = builder.build();
-        for (UUID uuid : this.members) {
-            Optional<User> listenerOpt = storageService.get(uuid);
-            if (listenerOpt.isPresent()) {
-                Optional<Player> playerOpt = listenerOpt.get().getPlayer();
-                if (playerOpt.isPresent()) {
-                    playerOpt.get().sendMessage(message);
-                }
-            }
-        }
-        if (console) Sponge.getServer().getConsole().sendMessage(message);
+        if (console) Sponge.getServer().getConsole().sendMessage(builder.build());
         return EventResult.pass();
     }
 
@@ -168,7 +180,7 @@ public class DebugHandler extends HandlerBase {
             if (parse.args[0].equalsIgnoreCase("members")) {
                 if (parse.args.length < 2) return ProcessResult.of(false, Text.of("Must specify an operation!"));
                 Operation op;
-                switch (parse.args[2].toLowerCase()) {
+                switch (parse.args[1].toLowerCase()) {
                     case "add":
                         op = Operation.ADD;
                         break;
@@ -191,7 +203,7 @@ public class DebugHandler extends HandlerBase {
                 }
                 Set<UUID> users = new HashSet<>();
                 int successes = 0, failures = 0;
-                String[] newArgs = Arrays.copyOfRange(parse.args, 3, parse.args.length);
+                String[] newArgs = Arrays.copyOfRange(parse.args, 2, parse.args.length);
                 for (String s : newArgs) {
                     try {
                         UUID uuid = UUID.fromString(s);
@@ -270,7 +282,9 @@ public class DebugHandler extends HandlerBase {
                         colorOptional = FCPUtil.textColorFromName(parse.args[1]);
                     if (colorOptional.isPresent()) {
                         this.color = colorOptional.get();
-                        return ProcessResult.of(true, Text.of("Successfuly set color!"));
+                        return ProcessResult.of(true, Text.of(TextColors.GREEN, "Successfuly set color to ",
+                                this.color, FCPUtil.getColorName(this.color, false),
+                                TextColors.GREEN, "!"));
                     } else return ProcessResult.of(false, Text.of("Not a valid color!"));
                 } else {
                     return ProcessResult.of(false, Text.of("Must specify a color!"));
@@ -285,6 +299,63 @@ public class DebugHandler extends HandlerBase {
 
     @Override
     public List<String> modifySuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
+                .arguments(arguments)
+                .excludeCurrent(true)
+                .autoCloseQuotes(true)
+                .parse();
+        if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
+            if (parse.current.index == 0) {
+                return ImmutableList.of("members", "console", "color").stream()
+                        .filter(new StartsWithPredicate(parse.current.token))
+                        .map(args -> parse.current.prefix + args)
+                        .collect(GuavaCollectors.toImmutableList());
+            } else if (parse.current.index == 1) {
+                if (parse.args[0].equalsIgnoreCase("members")) {
+                    return ImmutableList.of("add", "remove", "set").stream()
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                } else if (parse.args[0].equalsIgnoreCase("console")) {
+                    return ImmutableList.of("true", "false", "color").stream()
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                } else if (parse.args[0].equalsIgnoreCase("color")) {
+                    return Arrays.stream(FCCUtil.colorNames)
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                }
+            } else if (parse.current.index >= 2) {
+                if (parse.args[0].equalsIgnoreCase("members")) {
+                    String[] entries = Arrays.copyOfRange(parse.args, 2, parse.args.length);
+                    Operation op;
+                    switch (parse.args[1].toLowerCase()) {
+                        case "add":
+                            op = Operation.ADD;
+                            break;
+                        case "remove":
+                            op = Operation.REMOVE;
+                            break;
+                        case "set":
+                            op = Operation.SET;
+                            break;
+                        default:
+                            op = null;
+                    }
+                    return Sponge.getServer().getOnlinePlayers().stream()
+                            .filter(player -> Operation.userFilter(op, members.contains(player.getUniqueId())))
+                            .map(Player::getName)
+                            .filter(entry -> !isIn(entries, entry))
+                            .sorted(String.CASE_INSENSITIVE_ORDER)
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                }
+            }
+        } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
+            return ImmutableList.of(parse.current.prefix + " ");
         return ImmutableList.of();
     }
 

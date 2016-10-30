@@ -25,7 +25,6 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.listener.util;
 
-import net.foxdenstudio.sponge.foxguard.plugin.controller.message.ChatMessage;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
@@ -39,23 +38,19 @@ public final class EventResult {
     private static final EventResult FAILURE = of(Tristate.FALSE);
 
     private final Tristate state;
-    private final Optional<ISendableMessage> message;
+    private final boolean displayDefaultMessage;
 
-    private EventResult(Tristate success, Optional<ISendableMessage> message) {
+    private EventResult(Tristate success, boolean displayDefaultMessage) {
         this.state = success;
-        this.message = message;
+        this.displayDefaultMessage = displayDefaultMessage;
     }
 
     public static EventResult of(Tristate state) {
-        return new EventResult(state, Optional.empty());
+        return new EventResult(state, true);
     }
 
-    public static EventResult of(Tristate success, ISendableMessage message) {
-        return new EventResult(success, Optional.of(message));
-    }
-
-    public static EventResult of(Tristate success, Text message) {
-        return new EventResult(success, Optional.of(new ChatMessage(message, ChatTypes.ACTION_BAR)));
+    public static EventResult of(Tristate success, boolean displayDefaultMessage) {
+        return new EventResult(success, displayDefaultMessage);
     }
 
     public static EventResult allow() {
@@ -74,7 +69,7 @@ public final class EventResult {
         return state;
     }
 
-    public Optional<ISendableMessage> getMessage() {
-        return message;
+    public boolean shouldDisplayDefaultMessage() {
+        return displayDefaultMessage;
     }
 }

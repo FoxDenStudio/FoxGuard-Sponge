@@ -31,7 +31,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 /**
  * Created by Fox on 4/20/2016.
  */
-public class LinkEntry {
+public final class LinkEntry {
 
     public ILinkable linkable;
     public IHandler handler;

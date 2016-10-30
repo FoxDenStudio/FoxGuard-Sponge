@@ -38,4 +38,17 @@ public enum Operation {
     Operation(String pastTense) {
         this.pastTense = pastTense;
     }
+
+    public static boolean userFilter(Operation op, boolean isPresent) {
+        switch (op) {
+            case ADD:
+                return !isPresent;
+            case REMOVE:
+                return isPresent;
+            case SET:
+                return true;
+            default:
+                return false;
+        }
+    }
 }

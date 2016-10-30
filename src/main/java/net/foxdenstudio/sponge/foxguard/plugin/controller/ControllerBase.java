@@ -29,7 +29,12 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.HandlerBase;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+import org.mapdb.Serializer;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,4 +69,25 @@ public abstract class ControllerBase extends HandlerBase implements IController 
         this.handlers.clear();
     }
 
+    @Override
+    public void loadLinks(Path directory) {
+        try (DB linksDB = DBMaker.fileDB(directory.resolve("links.foxdb").normalize().toString()).make()) {
+            List<String> linksList = linksDB.indexTreeList("links", Serializer.STRING).createOrOpen();
+            handlers.clear();
+            linksList.stream()
+                    .filter(name -> !this.name.equalsIgnoreCase(name))
+                    .map(name -> FGManager.getInstance().gethandler(name))
+                    .filter(handler -> handler != null)
+                    .forEach(handlers::add);
+
+        }
+    }
+
+    protected void saveLinks(Path directory){
+        try (DB linksDB = DBMaker.fileDB(directory.resolve("links.foxdb").normalize().toString()).make()) {
+            List<String> linksList = linksDB.indexTreeList("links", Serializer.STRING).createOrOpen();
+            linksList.clear();
+            handlers.stream().map(IFGObject::getName).forEach(linksList::add);
+        }
+    }
 }

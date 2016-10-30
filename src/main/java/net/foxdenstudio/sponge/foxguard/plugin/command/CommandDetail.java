@@ -55,6 +55,7 @@ import org.spongepowered.api.world.World;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
@@ -290,7 +291,9 @@ public class CommandDetail extends FCCommandBase {
         builder.append(Text.of(TextColors.GREEN, "\n------- Outbound Links -------"));
         if (linkable.getHandlers().size() == 0)
             builder.append(Text.of(TextStyles.ITALIC, "\nNo outbound links!"));
-        linkable.getHandlers().stream().sorted((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName())).forEach(handler -> {
+        Stream<IHandler> handlerStream = linkable.getHandlers().stream();
+        if(!(linkable instanceof IController)) handlerStream = handlerStream.sorted((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
+        handlerStream.forEach(handler -> {
             builder.append(Text.NEW_LINE);
             if (source instanceof Player) {
                 List<IHandler> selectedHandlers = FGUtil.getSelectedHandlers(source);

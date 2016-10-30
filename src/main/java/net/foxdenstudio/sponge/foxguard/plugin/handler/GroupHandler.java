@@ -661,11 +661,12 @@ public class GroupHandler extends HandlerBase {
                         case "modify": {
                             List<String> list = this.groups.stream()
                                     .map(Group::getName)
-                                    .filter(new StartsWithPredicate(parse.current.token))
-                                    .map(args -> parse.current.prefix + args)
                                     .collect(Collectors.toList());
                             list.add("default");
-                            return list;
+                            return list.stream()
+                                    .filter(new StartsWithPredicate(parse.current.token))
+                                    .map(args -> parse.current.prefix + args)
+                                    .collect(GuavaCollectors.toImmutableList());
                         }
                         case "remove":
                         case "rename":

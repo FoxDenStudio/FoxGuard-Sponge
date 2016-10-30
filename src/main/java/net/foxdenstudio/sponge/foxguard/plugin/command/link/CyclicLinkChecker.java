@@ -23,19 +23,23 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.listener.util;
+package net.foxdenstudio.sponge.foxguard.plugin.command.link;
 
-import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.text.Text;
+import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * Created by Fox on 4/10/2016.
+ * Created by Fox on 10/24/2016.
  */
-public interface ISendableMessage {
+public class CyclicLinkChecker {
 
-    void send(Player player);
+    Set<IController> network = new HashSet<>();
+    Set<LinkEntry> proposedLinks;
 
-    Text preview();
-
+    public CyclicLinkChecker(Set<LinkEntry> proposedLinks) {
+        this.proposedLinks = proposedLinks;
+    }
 
 }

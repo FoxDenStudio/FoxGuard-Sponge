@@ -23,33 +23,19 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.flag;
+package net.foxdenstudio.sponge.foxguard.plugin.controller.message;
 
-import org.spongepowered.api.util.Tristate;
-
-import java.util.List;
-import java.util.Set;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.text.Text;
 
 /**
- * Created by Fox on 4/2/2016.
+ * Created by Fox on 4/10/2016.
  */
-public interface IFlag {
+public interface ISendableMessage {
 
-    String flagName();
+    void send(Player player);
 
-    IFlag[] getParents();
+    Text preview();
 
-    /**
-     * Gets the hierarchy of the flag. This behavior is very specific, and is already implemented in
-     * {@link FlagOld#getHierarchyStatic(IFlag)} for use by other plugins wishing to implement {@code IFlag}.
-     *
-     * @return A list of ordered sets representing the hierarchy of the flag.
-     */
-    List<Set<IFlag>> getHierarchy();
 
-    /**
-     * @param input
-     * @return
-     */
-    Tristate resolve(Tristate input);
 }

@@ -32,6 +32,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandDispatcher;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.plugin.command.*;
+import net.foxdenstudio.sponge.foxguard.plugin.controller.LogicController;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.BasicHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.DebugHandler;
@@ -51,6 +52,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.state.factory.RegionsStateFieldFa
 import net.minecrell.mcstats.SpongeStatsLite;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandMapping;
 import org.spongepowered.api.config.ConfigDir;
@@ -71,6 +73,7 @@ import org.spongepowered.api.event.world.UnloadWorldEvent;
 import org.spongepowered.api.plugin.Dependency;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
+import org.spongepowered.api.service.economy.EconomyService;
 import org.spongepowered.api.service.permission.PermissionService;
 import org.spongepowered.api.service.permission.SubjectData;
 import org.spongepowered.api.service.user.UserStorageService;
@@ -81,6 +84,7 @@ import org.spongepowered.api.util.Tristate;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 @Plugin(id = "foxguard",
@@ -120,6 +124,7 @@ public final class FoxGuardMain {
     private SpongeStatsLite stats;
 
     private UserStorageService userStorage;
+    private EconomyService economyService = null;
 
     private boolean loaded = false;
 
@@ -135,12 +140,12 @@ public final class FoxGuardMain {
     //my uuid - f275f223-1643-4fac-9fb8-44aaf5b4b371
 
     @Listener
-    public void gameConstruct(GameConstructionEvent event) {
+    public void construct(GameConstructionEvent event) {
         instanceField = this;
     }
 
     @Listener
-    public void gamePreInit(GamePreInitializationEvent event) {
+    public void preInit(GamePreInitializationEvent event) {
         logger.info("Beginning FoxGuard initialization");
         logger.info("Version: " + container.getVersion().orElse("Unknown"));
         logger.info("Loading configs");
@@ -148,15 +153,15 @@ public final class FoxGuardMain {
         logger.info("Saving configs");
         FGConfigManager.getInstance().save();
 
+        logger.info("Initializing FoxGuard manager instance");
+        FGManager.init();
+
         logger.info("Starting MCStats metrics extension");
         stats.start();
     }
 
     @Listener
-    public void gameInit(GameInitializationEvent event) {
-        logger.info("Initializing FoxGuard manager instance");
-        FGManager.init();
-
+    public void init(GameInitializationEvent event) {
         logger.info("Registering regions state field");
         FCStateManager.instance().registerStateFactory(new RegionsStateFieldFactory(), RegionsStateField.ID, RegionsStateField.ID, Aliases.REGIONS_ALIASES);
         logger.info("Registering handlers state field");
@@ -165,10 +170,6 @@ public final class FoxGuardMain {
         FCStateManager.instance().registerStateFactory(new ControllersStateFieldFactory(), ControllersStateField.ID, ControllersStateField.ID, Aliases.CONTROLLERS_ALIASES);
         logger.info("Registering FoxGuard object factories");
         registerFactories();
-        logger.info("Registering commands");
-        registerCommands();
-        logger.info("Setting default player permissions");
-        configurePermissions();
         logger.info("Getting User Storage");
         userStorage = game.getServiceManager().provide(UserStorageService.class).get();
         logger.info("Registering event listeners");
@@ -186,6 +187,52 @@ public final class FoxGuardMain {
         logger.info("Loading linkages");
         FGStorageManager.getInstance().loadLinks();
         loaded = true;
+    }
+
+    @Listener
+    public void registerCommands(GameInitializationEvent event) {
+        logger.info("Registering commands");
+        fgDispatcher = new FCCommandDispatcher("/foxguard",
+                "FoxGuard commands for managing world protection. Use /help foxguard for subcommands.");
+
+        registerCoreCommands(fgDispatcher);
+        fgDispatcher.register(new CommandCreate(), "create", "construct", "new", "make", "define", "mk", "cr");
+        fgDispatcher.register(new CommandDelete(), "delete", "del", "remove", "rem", "rm", "destroy");
+        fgDispatcher.register(new CommandModify(), "modify", "mod", "change", "edit", "update", "md", "ch");
+        fgDispatcher.register(new CommandRename(), "rename", "name", "rn");
+        fgDispatcher.register(new CommandLink(), "link", "connect", "attach");
+        fgDispatcher.register(new CommandUnlink(), "unlink", "disconnect", "detach");
+        fgDispatcher.register(new CommandEnableDisable(true), "enable", "activate", "engage", "on");
+        fgDispatcher.register(new CommandEnableDisable(false), "disable", "deactivate", "disengage", "off");
+        fgDispatcher.register(new CommandList(), "list", "ls");
+        fgDispatcher.register(new CommandHere(), "here", "around");
+        fgDispatcher.register(new CommandDetail(), "detail", "det", "show");
+        fgDispatcher.register(new CommandSave(), "save", "saveall", "save-all");
+
+        fgDispatcher.register(new CommandPriority(), "priority", "prio", "level", "rank");
+
+        fgDispatcher.register(new CommandTest(), "test");
+        fgDispatcher.register(new CommandLink2(true), "link2", "connect2", "attach2");
+        fgDispatcher.register(new CommandLink2(false), "unlink2", "disconnect2", "detach2");
+
+        game.getCommandManager().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
+    }
+
+    @Listener
+    public void setupEconomy(GamePostInitializationEvent event) {
+        Optional<EconomyService> economyServiceOptional = Sponge.getGame().getServiceManager().provide(EconomyService.class);
+        if(economyServiceOptional.isPresent()){
+            economyService = economyServiceOptional.get();
+
+        }
+    }
+
+    @Listener
+    public void configurePermissions(GamePostInitializationEvent event) {
+        logger.info("Configuring permissions");
+        PermissionService service = game.getServiceManager().provide(PermissionService.class).get();
+        service.getDefaultData().setPermission(SubjectData.GLOBAL_CONTEXT, "foxguard.override", Tristate.FALSE);
+        service.registerContextCalculator(new FGContextCalculator());
     }
 
     @Listener
@@ -215,36 +262,6 @@ public final class FoxGuardMain {
         }
     }
 
-    /**
-     * A private method that registers the list of commands, their aliases, and the command class.
-     */
-    private void registerCommands() {
-        fgDispatcher = new FCCommandDispatcher("/foxguard",
-                "FoxGuard commands for managing world protection. Use /help foxguard for subcommands.");
-
-        registerCoreCommands(fgDispatcher);
-        fgDispatcher.register(new CommandCreate(), "create", "construct", "new", "make", "define", "mk", "cr");
-        fgDispatcher.register(new CommandDelete(), "delete", "del", "remove", "rem", "rm", "destroy");
-        fgDispatcher.register(new CommandModify(), "modify", "mod", "change", "edit", "update", "md", "ch");
-        fgDispatcher.register(new CommandRename(), "rename", "name", "rn");
-        fgDispatcher.register(new CommandLink(), "link", "connect", "attach");
-        fgDispatcher.register(new CommandUnlink(), "unlink", "disconnect", "detach");
-        fgDispatcher.register(new CommandEnableDisable(true), "enable", "activate", "engage", "on");
-        fgDispatcher.register(new CommandEnableDisable(false), "disable", "deactivate", "disengage", "off");
-        fgDispatcher.register(new CommandList(), "list", "ls");
-        fgDispatcher.register(new CommandHere(), "here", "around");
-        fgDispatcher.register(new CommandDetail(), "detail", "det", "show");
-        fgDispatcher.register(new CommandSave(), "save", "saveall", "save-all");
-
-        fgDispatcher.register(new CommandPriority(), "priority", "prio", "level", "rank");
-
-        fgDispatcher.register(new CommandTest(), "test");
-        fgDispatcher.register(new CommandLink2(true), "link2", "connect2", "attach2");
-        fgDispatcher.register(new CommandLink2(false), "unlink2", "disconnect2", "detach2");
-
-        game.getCommandManager().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
-    }
-
     private void registerCoreCommands(FCCommandDispatcher dispatcher) {
         Text.Builder builder = Text.builder();
         builder.append(Text.of(TextColors.GOLD, "FoxGuard World Protection Plugin\n"));
@@ -272,8 +289,9 @@ public final class FoxGuardMain {
         manager.registerHandlerFactory(new DebugHandler.Factory());
 
         //manager.registerControllerFactory(new MessageController.Factory());
-        //manager.registerControllerFactory(new LogicController.Factory());
+        manager.registerControllerFactory(new LogicController.Factory());
     }
+
 
     /**
      * A private method that registers the Listener class and the corresponding event class.
@@ -291,15 +309,6 @@ public final class FoxGuardMain {
         }
         eventManager.registerListener(this, ExplosionEvent.Detonate.class, Order.LATE, new ExplosionListener());
         eventManager.registerListener(this, DamageEntityEvent.class, Order.LATE, new DamageListener());
-    }
-
-    /**
-     * A private method that sets up the permissions.
-     */
-    private void configurePermissions() {
-        PermissionService service = game.getServiceManager().provide(PermissionService.class).get();
-        service.getDefaultData().setPermission(SubjectData.GLOBAL_CONTEXT, "foxguard.override", Tristate.FALSE);
-        service.registerContextCalculator(new FGContextCalculator());
     }
 
     /**
@@ -340,5 +349,9 @@ public final class FoxGuardMain {
 
     public static Cause getCause() {
         return instance().pluginCause;
+    }
+
+    public EconomyService getEconomyService() {
+        return economyService;
     }
 }

@@ -824,11 +824,12 @@ public class BasicHandler extends HandlerBase {
                         case "modify": {
                             List<String> list = this.groups.stream()
                                     .map(Group::getName)
-                                    .filter(new StartsWithPredicate(parse.current.token))
-                                    .map(args -> parse.current.prefix + args)
                                     .collect(Collectors.toList());
                             list.add("default");
-                            return list;
+                            return list.stream()
+                                    .filter(new StartsWithPredicate(parse.current.token))
+                                    .map(args -> parse.current.prefix + args)
+                                    .collect(GuavaCollectors.toImmutableList());
                         }
                         case "remove":
                         case "rename":
@@ -943,7 +944,7 @@ public class BasicHandler extends HandlerBase {
                     Optional<Group> groupOptional = getGroup(parse.args[1]);
                     if (groupOptional.isPresent()) {
                         Group group = groupOptional.get();
-                        String[] entries = Arrays.copyOfRange(parse.args, 2, parse.args.length);
+                        String[] entries = Arrays.copyOfRange(parse.args, 3, parse.args.length);
                         Operation op;
                         switch (parse.args[2].toLowerCase()) {
                             case "add":
@@ -960,7 +961,7 @@ public class BasicHandler extends HandlerBase {
                         }
                         return ImmutableList.<String>builder()
                                 .addAll(Sponge.getServer().getOnlinePlayers().stream()
-                                        .filter(player -> userFilter(op, group.users.contains(player.getUniqueId())))
+                                        .filter(player -> Operation.userFilter(op, group.users.contains(player.getUniqueId())))
                                         .map(Player::getName)
                                         .filter(entry -> !isIn(entries, entry))
                                         .sorted(String.CASE_INSENSITIVE_ORDER)
@@ -969,7 +970,7 @@ public class BasicHandler extends HandlerBase {
                                 .addAll(this.groups.stream()
                                         .filter(group1 -> {
                                             for (UUID uuid : group1.users) {
-                                                if (userFilter(op, group.users.contains(uuid))) return true;
+                                                if (Operation.userFilter(op, group.users.contains(uuid))) return true;
                                             }
                                             return false;
                                         })
@@ -1478,19 +1479,6 @@ public class BasicHandler extends HandlerBase {
         else return this.groupPermissions.get(group);
     }
 
-    private boolean userFilter(Operation op, boolean isPresent) {
-        switch (op) {
-            case ADD:
-                return !isPresent;
-            case REMOVE:
-                return isPresent;
-            case SET:
-                return true;
-            default:
-                return false;
-        }
-    }
-
     public static boolean isNameValid(String name) {
         if (name.matches("^.*[ :\\.=;\"\'\\\\/\\{\\}\\(\\)\\[\\]<>#@\\|\\?\\*].*$")) return false;
         if (name.equalsIgnoreCase("default")) return false;
@@ -1575,74 +1563,76 @@ public class BasicHandler extends HandlerBase {
         public IHandler create(String name, int priority, String arguments, CommandSource source) throws CommandException {
             AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).parse();
             BasicHandler handler = new BasicHandler(name, priority);
-            if (parse.args[0].equalsIgnoreCase("bare")) {
-                return handler;
-            } else if (parse.args[0].equalsIgnoreCase("skeleton")) {
-                Group owners = handler.createGroup("owners").get();
-                owners.displayName = "Owners";
-                owners.color = TextColors.GOLD;
+            if (parse.args.length > 0) {
+                if (parse.args[0].equalsIgnoreCase("bare")) {
+                    return handler;
+                } else if (parse.args[0].equalsIgnoreCase("skeleton")) {
+                    Group owners = handler.createGroup("owners").get();
+                    owners.displayName = "Owners";
+                    owners.color = TextColors.GOLD;
 
-                Group members = handler.createGroup("members").get();
-                members.displayName = "Members";
-                members.color = TextColors.GREEN;
+                    Group members = handler.createGroup("members").get();
+                    members.displayName = "Members";
+                    members.color = TextColors.GREEN;
 
-                return handler;
-            } else if (parse.args[0].equalsIgnoreCase("default")) {
-                Group owners = handler.createGroup("owners").get();
-                owners.displayName = "Owners";
-                owners.color = TextColors.GOLD;
-                handler.addFlagEntry(owners, new Entry(ImmutableSet.of(DEBUFF), TRUE));
-                if (source instanceof Player) owners.users.add(((Player) source).getUniqueId());
+                    return handler;
+                } else if (parse.args[0].equalsIgnoreCase("default")) {
+                    Group owners = handler.createGroup("owners").get();
+                    owners.displayName = "Owners";
+                    owners.color = TextColors.GOLD;
+                    handler.addFlagEntry(owners, new Entry(ImmutableSet.of(DEBUFF), TRUE));
+                    if (source instanceof Player) owners.users.add(((Player) source).getUniqueId());
 
-                Group members = handler.createGroup("members").get();
-                members.displayName = "Members";
-                members.color = TextColors.GREEN;
+                    Group members = handler.createGroup("members").get();
+                    members.displayName = "Members";
+                    members.color = TextColors.GREEN;
 
-                handler.setPassiveSetting(PassiveSetting.DEFAULT);
+                    handler.setPassiveSetting(PassiveSetting.DEFAULT);
 
-                return handler;
-            } else if (parse.args[0].equalsIgnoreCase("easy")) {
-                Group owners = handler.createGroup("owners").get();
-                owners.displayName = "Owners";
-                owners.color = TextColors.GOLD;
-                handler.addFlagEntry(owners, new Entry(ImmutableSet.of(DEBUFF), TRUE));
-                if (source instanceof Player) owners.users.add(((Player) source).getUniqueId());
+                    return handler;
+                } else if (parse.args[0].equalsIgnoreCase("easy")) {
+                    Group owners = handler.createGroup("owners").get();
+                    owners.displayName = "Owners";
+                    owners.color = TextColors.GOLD;
+                    handler.addFlagEntry(owners, new Entry(ImmutableSet.of(DEBUFF), TRUE));
+                    if (source instanceof Player) owners.users.add(((Player) source).getUniqueId());
 
-                Group members = handler.createGroup("members").get();
-                members.displayName = "Members";
-                members.color = TextColors.GREEN;
+                    Group members = handler.createGroup("members").get();
+                    members.displayName = "Members";
+                    members.color = TextColors.GREEN;
 
-                Group passive = handler.createGroup("passive").get();
-                passive.displayName = "Passive";
-                passive.color = TextColors.AQUA;
-                handler.setPassiveSetting(PassiveSetting.GROUP, passive);
+                    Group passive = handler.createGroup("passive").get();
+                    passive.displayName = "Passive";
+                    passive.color = TextColors.AQUA;
+                    handler.setPassiveSetting(PassiveSetting.GROUP, passive);
 
-                return handler;
-            } else if (parse.args[0].equalsIgnoreCase("plugandplay")) {
-                Group owners = handler.createGroup("owners").get();
-                owners.displayName = "Owners";
-                owners.color = TextColors.GOLD;
-                handler.addFlagEntry(owners, new Entry(ImmutableSet.of(DEBUFF), TRUE));
-                if (source instanceof Player) owners.users.add(((Player) source).getUniqueId());
+                    return handler;
+                } else if (parse.args[0].equalsIgnoreCase("plugandplay")) {
+                    Group owners = handler.createGroup("owners").get();
+                    owners.displayName = "Owners";
+                    owners.color = TextColors.GOLD;
+                    handler.addFlagEntry(owners, new Entry(ImmutableSet.of(DEBUFF), TRUE));
+                    if (source instanceof Player) owners.users.add(((Player) source).getUniqueId());
 
-                Group members = handler.createGroup("members").get();
-                members.displayName = "Members";
-                members.color = TextColors.GREEN;
-                handler.addFlagEntry(members, new Entry(ImmutableSet.of(BLOCK), UNDEFINED));
+                    Group members = handler.createGroup("members").get();
+                    members.displayName = "Members";
+                    members.color = TextColors.GREEN;
+                    handler.addFlagEntry(members, new Entry(ImmutableSet.of(BLOCK), UNDEFINED));
 
-                Group passive = handler.createGroup("passive").get();
-                passive.displayName = "Passive";
-                passive.color = TextColors.AQUA;
-                handler.addFlagEntry(passive, new Entry(ImmutableSet.of(SPAWN, HOSTILE), FALSE));
-                handler.setPassiveSetting(PassiveSetting.GROUP, passive);
+                    Group passive = handler.createGroup("passive").get();
+                    passive.displayName = "Passive";
+                    passive.color = TextColors.AQUA;
+                    handler.addFlagEntry(passive, new Entry(ImmutableSet.of(SPAWN, HOSTILE), FALSE));
+                    handler.setPassiveSetting(PassiveSetting.GROUP, passive);
 
-                Group defaultG = handler.getDefaultGroup();
-                handler.addFlagEntry(defaultG, new Entry(ImmutableSet.of(BLOCK, CHANGE), FALSE));
-                handler.addFlagEntry(defaultG, new Entry(ImmutableSet.of(DAMAGE, ENTITY), FALSE));
-                handler.addFlagEntry(defaultG, new Entry(ImmutableSet.of(DAMAGE, LIVING), UNDEFINED));
-                handler.addFlagEntry(defaultG, new Entry(ImmutableSet.of(DAMAGE, PLAYER), FALSE));
+                    Group defaultG = handler.getDefaultGroup();
+                    handler.addFlagEntry(defaultG, new Entry(ImmutableSet.of(BLOCK, CHANGE), FALSE));
+                    handler.addFlagEntry(defaultG, new Entry(ImmutableSet.of(DAMAGE, ENTITY), FALSE));
+                    handler.addFlagEntry(defaultG, new Entry(ImmutableSet.of(DAMAGE, LIVING), UNDEFINED));
+                    handler.addFlagEntry(defaultG, new Entry(ImmutableSet.of(DAMAGE, PLAYER), FALSE));
 
-                return handler;
+                    return handler;
+                } else throw new CommandException(Text.of("\"" + parse.args[0] + "\" is not a valid template!"));
             } else
                 throw new CommandException(Text.of("Must specify a starting template! (\"easy\" or \"plugandplay\" are the recommended)"));
         }

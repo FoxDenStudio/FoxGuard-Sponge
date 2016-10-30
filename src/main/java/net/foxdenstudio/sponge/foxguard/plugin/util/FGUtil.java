@@ -31,7 +31,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.event.util.FGEventFactory;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.IFlag;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
@@ -49,7 +48,6 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
 
 import java.util.List;
-import java.util.Set;
 
 public final class FGUtil {
 
@@ -80,17 +78,6 @@ public final class FGUtil {
 
     public static String getRegionName(IRegion region, boolean dispWorld) {
         return region.getShortTypeName() + " : " + (dispWorld && region instanceof IWorldRegion ? ((IWorldRegion) region).getWorld().getName() + " : " : "") + region.getName();
-    }
-
-    public static IFlag nearestParent(IFlag child, Set<IFlag> set) {
-        for (Set<IFlag> level : child.getHierarchy()) {
-            for (IFlag flag : level) {
-                if (set.contains(flag)) {
-                    return flag;
-                }
-            }
-        }
-        return child;
     }
 
     public static String getCategory(IFGObject object) {
