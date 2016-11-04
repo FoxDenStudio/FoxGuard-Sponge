@@ -33,6 +33,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.hanging.Hanging;
 import org.spongepowered.api.entity.living.Agent;
 import org.spongepowered.api.entity.living.Hostile;
 import org.spongepowered.api.entity.living.Human;
@@ -92,6 +93,8 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
             } else if (entity instanceof Player) {
                 flags.set(PLAYER);
             }
+        } else if(entity instanceof Hanging){
+            flags.set(HANGING);
         }
 
 

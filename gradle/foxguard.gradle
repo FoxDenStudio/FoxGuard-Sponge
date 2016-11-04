@@ -16,7 +16,7 @@ apply plugin: 'org.spongepowered.plugin'
 
 publishing{
     publications {
-        foxguard(MavenPublication) {
+        library(MavenPublication) {
             artifactId = archivesBaseName
             version = repoVersion
 
@@ -28,7 +28,7 @@ publishing{
         download(MavenPublication) {
             artifactId = archivesBaseName
 
-            artifact shadowJar {
+            artifact jar {
                 classifier "plugin"
             }
         }
@@ -37,23 +37,11 @@ publishing{
 
 if(System.env.TRAVIS && !Boolean.valueOf(System.env.TRAVIS_PULL_REQUEST)){
     if(System.env.TRAVIS_TAG){
-        travisPublish.dependsOn ':publishFoxguardPublicationToFDSReleasesRepository'
+        travisPublish.dependsOn ':publishLibraryPublicationToFDSReleasesRepository'
     } else {
-        travisPublish.dependsOn ':publishFoxguardPublicationToFDSSnapshotsRepository'
+        travisPublish.dependsOn ':publishLibraryPublicationToFDSSnapshotsRepository'
     }
     travisPublish.dependsOn ':publishDownloadPublicationToFDSDownloadsRepository'
-}
-
-shadowJar {
-    classifier = ''
-    dependencies {
-        include dependency('net.minecrell.mcstats:statslite-sponge')
-    }
-    relocate 'net.minecrell.mcstats', 'net.foxdenstudio.sponge.foxguard.mcstats'
-}
-
-artifacts {
-    archives shadowJar
 }
 
 apply plugin: 'event-impl-gen'

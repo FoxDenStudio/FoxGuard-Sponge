@@ -177,25 +177,11 @@ public final class FoxGuardMain {
     }
 
     @Listener
-    public void serverStarting(GameStartingServerEvent event) {
-        logger.info("Loading regions");
-        FGStorageManager.getInstance().loadRegions();
-        logger.info("Loading global handler");
-        FGStorageManager.getInstance().loadGlobalHandler();
-        logger.info("Loading handlers");
-        FGStorageManager.getInstance().loadHandlers();
-        logger.info("Loading linkages");
-        FGStorageManager.getInstance().loadLinks();
-        loaded = true;
-    }
-
-    @Listener
     public void registerCommands(GameInitializationEvent event) {
         logger.info("Registering commands");
         fgDispatcher = new FCCommandDispatcher("/foxguard",
                 "FoxGuard commands for managing world protection. Use /help foxguard for subcommands.");
 
-        registerCoreCommands(fgDispatcher);
         fgDispatcher.register(new CommandCreate(), "create", "construct", "new", "make", "define", "mk", "cr");
         fgDispatcher.register(new CommandDelete(), "delete", "del", "remove", "rem", "rm", "destroy");
         fgDispatcher.register(new CommandModify(), "modify", "mod", "change", "edit", "update", "md", "ch");
@@ -214,6 +200,7 @@ public final class FoxGuardMain {
         fgDispatcher.register(new CommandTest(), "test");
         fgDispatcher.register(new CommandLink2(true), "link2", "connect2", "attach2");
         fgDispatcher.register(new CommandLink2(false), "unlink2", "disconnect2", "detach2");
+        registerCoreCommands(fgDispatcher);
 
         game.getCommandManager().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");
     }
@@ -233,6 +220,20 @@ public final class FoxGuardMain {
         PermissionService service = game.getServiceManager().provide(PermissionService.class).get();
         service.getDefaults().getTransientSubjectData().setPermission(SubjectData.GLOBAL_CONTEXT, "foxguard.override", Tristate.FALSE);
         service.registerContextCalculator(new FGContextCalculator());
+    }
+
+    @Listener
+    public void serverStarting(GameStartingServerEvent event) {
+        logger.info("Loading regions");
+        FGStorageManager.getInstance().loadRegions();
+        logger.info("Loading global handler");
+        FGStorageManager.getInstance().loadGlobalHandler();
+        logger.info("Loading handlers");
+        FGStorageManager.getInstance().loadHandlers();
+        logger.info("Loading linkages");
+        FGStorageManager.getInstance().loadLinks();
+        loaded = true;
+        logger.info("Finished loading FoxGuard!");
     }
 
     @Listener

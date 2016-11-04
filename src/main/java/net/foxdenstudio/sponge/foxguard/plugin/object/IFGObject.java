@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.object;
 
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
+import net.foxdenstudio.sponge.foxcore.plugin.util.IModifiable;
 import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
 import net.foxdenstudio.sponge.foxguard.plugin.command.CommandDetail;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
@@ -46,7 +47,7 @@ import java.util.List;
  * and {@link IHandler Handlers}.
  * Essentially the core of the code, this is the most used interface.
  */
-public interface IFGObject {
+public interface IFGObject extends IModifiable {
 
     /**
      * Gets the name of the object. It should be alphanumeric with limited use of special characters.
@@ -158,9 +159,8 @@ public interface IFGObject {
      * @throws CommandException If there is an issue parsing the command.
      */
 
+    @Override
     ProcessResult modify(CommandSource source, String arguments) throws CommandException;
-
-    List<String> modifySuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException;
 
     default boolean shouldSave() {
         return FGStorageManager.getInstance().defaultModifiedMap.get(this);

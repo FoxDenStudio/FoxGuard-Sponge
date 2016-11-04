@@ -56,6 +56,7 @@ public class Flags {
     public static final Flag SPAWN = REGISTRY.registerFlag("spawn");
 
     public static final Flag ENTITY = REGISTRY.registerFlag("entity");
+    public static final Flag HANGING = REGISTRY.registerFlag("hanging");
     public static final Flag LIVING = REGISTRY.registerFlag("living");
     public static final Flag MOB = REGISTRY.registerFlag("mob");
     public static final Flag PASSIVE = REGISTRY.registerFlag("passive");

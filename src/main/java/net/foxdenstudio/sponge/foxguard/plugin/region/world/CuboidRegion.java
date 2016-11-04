@@ -30,10 +30,12 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
+import net.foxdenstudio.sponge.foxcore.plugin.selection.CuboidSelection;
 import net.foxdenstudio.sponge.foxcore.plugin.util.BoundingBox3;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IWorldRegionFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IIterableRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.ISelectableRegion;
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
@@ -55,7 +57,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class CuboidRegion extends WorldRegionBase implements IIterableRegion {
+public class CuboidRegion extends WorldRegionBase implements IIterableRegion, ISelectableRegion<CuboidSelection> {
 
     private BoundingBox3 boundingBox;
 
@@ -207,6 +209,11 @@ public class CuboidRegion extends WorldRegionBase implements IIterableRegion {
     @Override
     public Iterator<Location<World>> iterator() {
         return new RegionIterator();
+    }
+
+    @Override
+    public CuboidSelection toSelection() {
+        return new CuboidSelection(this.boundingBox);
     }
 
     private class RegionIterator implements Iterator<Location<World>> {

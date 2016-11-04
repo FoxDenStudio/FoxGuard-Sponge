@@ -27,6 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
@@ -38,16 +39,16 @@ import org.spongepowered.api.entity.living.Human;
 import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.entity.projectile.arrow.Arrow;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.entity.SpawnEntityEvent;
+import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 
@@ -58,10 +59,10 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
     @Override
     public void handle(SpawnEntityEvent event) throws Exception {
         if (event.isCancelled()) return;
+        if (event.getEntities().isEmpty()) return;
         for (Entity entity : event.getEntities()) {
             if (entity instanceof Player) return;
         }
-        if (event.getEntities().isEmpty()) return;
         User user;
         if (event.getCause().containsType(Player.class)) {
             user = event.getCause().first(Player.class).get();
@@ -72,6 +73,22 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
         }
 
         Entity oneEntity = event.getEntities().get(0);
+        /*if (oneEntity instanceof Arrow) {
+            Optional<UUID> creator = oneEntity.getCreator(), notifier = oneEntity.getNotifier();
+
+            System.out.println(creator + ", " + notifier);
+            UserStorageService service = FoxGuardMain.instance().getUserStorage();
+            if (creator.isPresent()){
+                Optional<User> optional = service.get(creator.get());
+                System.out.println("Creator: " + (optional.isPresent() ? optional.get().getName() : creator.get()));
+            }
+
+            if (notifier.isPresent()) {
+                Optional<User> optional = service.get(notifier.get());
+                System.out.println("Notifier: " + (optional.isPresent() ? optional.get().getName() : notifier.get()));
+            }
+
+        }*/
         FlagBitSet flags = (FlagBitSet) BASE_FLAG_SET.clone();
         if (oneEntity instanceof Living) {
             flags.set(LIVING);

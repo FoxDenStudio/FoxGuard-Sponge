@@ -1461,6 +1461,7 @@ public class BasicHandler extends HandlerBase {
             this.defaultPermCache.clear();
             this.userPermCache.clear();
             this.groupSetPermCache.clear();
+            if(this.passiveSetting == PassiveSetting.DEFAULT) this.passivePermCache.clear();
         } else {
             this.groupPermCache.get(group).clear();
             group.users.forEach(this.userPermCache::remove);
@@ -1470,6 +1471,7 @@ public class BasicHandler extends HandlerBase {
                 if (key.contains(group)) groupSuperSet.add(key);
             }
             groupSuperSet.forEach(this.groupSetPermCache::remove);
+            if(this.passiveSetting == PassiveSetting.GROUP && this.passiveGroup == group) this.passivePermCache.clear();
         }
 
     }
