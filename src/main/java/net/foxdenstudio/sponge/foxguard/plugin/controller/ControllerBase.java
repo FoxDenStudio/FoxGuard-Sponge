@@ -43,7 +43,7 @@ public abstract class ControllerBase extends HandlerBase implements IController 
     protected final List<IHandler> handlers;
 
     public ControllerBase(String name, boolean isEnabled, int priority) {
-        super(name, isEnabled, priority);
+        super(name, priority, isEnabled);
         this.handlers = new ArrayList<>();
     }
 

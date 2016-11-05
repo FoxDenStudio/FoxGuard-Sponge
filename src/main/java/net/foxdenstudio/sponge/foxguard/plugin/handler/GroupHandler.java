@@ -111,7 +111,7 @@ public class GroupHandler extends HandlerBase {
                         Map<Group, List<Entry>> groupPermissions,
                         Group defaultGroup,
                         List<Entry> defaultPermissions) {
-        super(name, isEnabled, priority);
+        super(name, priority, isEnabled);
         this.groups = groups;
         this.defaultGroup = defaultGroup;
 
@@ -860,9 +860,7 @@ public class GroupHandler extends HandlerBase {
             int index = 0;
             for (Entry entry : this.groupPermissions.get(group)) {
                 StringBuilder stringBuilder = new StringBuilder();
-                for (Flag flag : entry.set) {
-                    stringBuilder.append(flag.name).append(" ");
-                }
+                entry.set.stream().sorted().forEach(flag -> stringBuilder.append(flag.name).append(" "));
                 Text.Builder entryBuilder = Text.builder();
                 entryBuilder.append(Text.of("  " + stringBuilder.toString(), TextColors.AQUA, ": "))
                         .append(FGUtil.readableTristateText(entry.state))

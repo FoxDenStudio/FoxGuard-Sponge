@@ -71,8 +71,15 @@ public class InteractBlockListener implements EventListener<InteractBlockEvent> 
         if (block.getState().getType().equals(BlockTypes.AIR)) return;
         World world = block.getLocation().get().getExtent();
         Vector3i pos = block.getPosition();
-        if (event instanceof InteractBlockEvent.Primary) flags.set(PRIMARY);
-        else if (event instanceof InteractBlockEvent.Secondary) flags.set(SECONDARY);
+        if (event instanceof InteractBlockEvent.Primary) {
+            flags.set(PRIMARY);
+            if (event instanceof InteractBlockEvent.Primary.MainHand) flags.set(MAIN);
+            else if (event instanceof InteractBlockEvent.Primary.OffHand) flags.set(OFF);
+        } else if (event instanceof InteractBlockEvent.Secondary) {
+            flags.set(SECONDARY);
+            if (event instanceof InteractBlockEvent.Secondary.MainHand) flags.set(MAIN);
+            else if (event instanceof InteractBlockEvent.Secondary.OffHand) flags.set(OFF);
+        }
 
 
         List<IHandler> handlerList = new ArrayList<>();

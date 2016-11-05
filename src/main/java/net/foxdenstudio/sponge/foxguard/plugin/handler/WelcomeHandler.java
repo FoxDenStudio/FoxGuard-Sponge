@@ -60,7 +60,7 @@ public class WelcomeHandler extends HandlerBase {
     }
 
     public WelcomeHandler(String name, boolean isEnabled, int priority) {
-        super(name, isEnabled, priority);
+        super(name, priority, isEnabled);
     }
 
     @Override

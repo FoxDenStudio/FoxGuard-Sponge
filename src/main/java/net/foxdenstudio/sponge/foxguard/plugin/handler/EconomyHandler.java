@@ -49,7 +49,7 @@ public class EconomyHandler extends HandlerBase {
 
 
     public EconomyHandler(String name, boolean isEnabled, int priority) {
-        super(name, isEnabled, priority);
+        super(name, priority, isEnabled);
     }
 
     @Override

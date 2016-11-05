@@ -35,7 +35,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Operation;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
-import net.foxdenstudio.sponge.foxguard.plugin.util.DebugHelper;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
@@ -46,8 +45,6 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.source.ConsoleSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
-import org.spongepowered.api.event.Event;
-import org.spongepowered.api.event.world.ExplosionEvent;
 import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColor;
@@ -79,7 +76,7 @@ public class DebugHandler extends HandlerBase {
     }
 
     public DebugHandler(String name, boolean isEnabled, int priority, Set<UUID> members, boolean console, TextColor color) {
-        super(name, isEnabled, priority);
+        super(name, priority, isEnabled);
         this.members = members;
         this.console = console;
         this.color = color;

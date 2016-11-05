@@ -74,8 +74,12 @@ public class InteractEntityListener implements EventListener<InteractEntityEvent
         Vector3d pos = event.getTargetEntity().getLocation().getPosition();
         if (event instanceof InteractEntityEvent.Primary) {
             flags.set(PRIMARY);
+            if (event instanceof InteractEntityEvent.Primary.MainHand) flags.set(MAIN);
+            else if (event instanceof InteractEntityEvent.Primary.OffHand) flags.set(OFF);
         } else if (event instanceof InteractEntityEvent.Secondary) {
             flags.set(SECONDARY);
+            if (event instanceof InteractEntityEvent.Secondary.MainHand) flags.set(MAIN);
+            else if (event instanceof InteractEntityEvent.Secondary.OffHand) flags.set(OFF);
         }
         Entity entity = event.getTargetEntity();
         if (entity instanceof Living) {

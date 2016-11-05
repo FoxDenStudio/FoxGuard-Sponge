@@ -25,22 +25,14 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
-import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Entry;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
-import ninja.leaping.configurate.commented.CommentedConfigurationNode;
-import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
-import ninja.leaping.configurate.loader.ConfigurationLoader;
-
-import java.nio.file.Path;
-import java.util.*;
 
 public class GlobalHandler extends StaticHandler implements IGlobal {
 
     public static final String NAME = "_global";
 
     public GlobalHandler() {
-        super(NAME, true, Integer.MIN_VALUE / 2);
+        super(NAME, Integer.MIN_VALUE / 2, true);
     }
 
     @Override
@@ -68,25 +60,6 @@ public class GlobalHandler extends StaticHandler implements IGlobal {
         return "global";
     }
 
-
-    public void load(Path directory) {
-        Path flagsFile = directory.resolve("flags.cfg");
-        ConfigurationLoader<CommentedConfigurationNode> loader =
-                HoconConfigurationLoader.builder().setPath(flagsFile).build();
-        CommentedConfigurationNode root = FCPUtil.getHOCONConfiguration(flagsFile, loader);
-        List<Optional<String>> optionalFlagsList = root.getList(o -> {
-            if (o instanceof String) {
-                return Optional.of((String) o);
-            } else return Optional.empty();
-        });
-        this.entries.clear();
-        optionalFlagsList.stream()
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .map(Entry::deserialize)
-                .forEach(this.entries::add);
-        this.permCache.clear();
-    }
 
     @Override
     public boolean isEnabled() {

@@ -121,7 +121,7 @@ public class BasicHandler extends HandlerBase {
                         Map<Group, List<Entry>> groupPermissions,
                         Group defaultGroup,
                         List<Entry> defaultPermissions) {
-        super(name, isEnabled, priority);
+        super(name, priority, isEnabled);
         this.groups = groups;
         this.defaultGroup = defaultGroup;
 

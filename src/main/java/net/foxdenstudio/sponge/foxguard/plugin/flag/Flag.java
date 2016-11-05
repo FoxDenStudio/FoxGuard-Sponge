@@ -25,6 +25,8 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.flag;
 
+import javax.annotation.Nonnull;
+
 /**
  * Created by Fox on 5/25/2016.
  */
@@ -40,7 +42,7 @@ public class Flag implements Comparable<Flag> {
 
     @Override
     public String toString() {
-        return "FlagOld{" + name + "," + id + "}";
+        return "Flag{" + name + "," + id + "}";
     }
 
     public String getName() {
@@ -52,7 +54,7 @@ public class Flag implements Comparable<Flag> {
     }
 
     @Override
-    public int compareTo(Flag flag) {
+    public int compareTo(@Nonnull Flag flag) {
         return this.id - flag.id;
     }
 }

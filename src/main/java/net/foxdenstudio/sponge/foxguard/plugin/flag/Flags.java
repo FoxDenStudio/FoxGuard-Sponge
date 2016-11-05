@@ -37,6 +37,8 @@ public class Flags {
     public static final Flag DEBUFF = REGISTRY.registerFlag("debuff");
 
     public static final Flag INTERACT = REGISTRY.registerFlag("interact");
+    public static final Flag MAIN = REGISTRY.registerFlag("main");
+    public static final Flag OFF = REGISTRY.registerFlag("off");
     public static final Flag PRIMARY = REGISTRY.registerFlag("primary");
     public static final Flag SECONDARY = REGISTRY.registerFlag("secondary");
 

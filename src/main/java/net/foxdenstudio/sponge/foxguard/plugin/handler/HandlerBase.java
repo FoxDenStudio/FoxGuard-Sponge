@@ -32,7 +32,7 @@ public abstract class HandlerBase extends FGObjectBase implements IHandler {
 
     int priority;
 
-    public HandlerBase(String name, boolean isEnabled, int priority) {
+    public HandlerBase(String name, int priority, boolean isEnabled) {
         super(name, isEnabled);
         setPriority(priority);
     }

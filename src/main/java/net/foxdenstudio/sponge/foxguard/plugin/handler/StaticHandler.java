@@ -78,11 +78,11 @@ public class StaticHandler extends HandlerBase {
     protected final Map<FlagBitSet, Tristate> permCache;
 
     public StaticHandler(String name, int priority) {
-        this(name, true, priority);
+        this(name, priority, true);
     }
 
-    public StaticHandler(String name, boolean isEnabled, int priority) {
-        super(name, true, priority);
+    public StaticHandler(String name, int priority, boolean isEnabled) {
+        super(name, priority, true);
         this.entries = new ArrayList<>();
         this.permCache = new CacheMap<>((k, m) -> {
             if (k instanceof FlagBitSet) {
@@ -460,9 +460,7 @@ public class StaticHandler extends HandlerBase {
         int index = 0;
         for (Entry entry : this.entries) {
             StringBuilder stringBuilder = new StringBuilder();
-            for (Flag flag : entry.set) {
-                stringBuilder.append(flag.name).append(" ");
-            }
+            entry.set.stream().sorted().forEach(flag -> stringBuilder.append(flag.name).append(" "));
             Text.Builder entryBuilder = Text.builder();
             entryBuilder.append(Text.of("  " + stringBuilder.toString(), TextColors.AQUA, ": "))
                     .append(FGUtil.readableTristateText(entry.state))
@@ -484,9 +482,10 @@ public class StaticHandler extends HandlerBase {
         ConfigurationLoader<CommentedConfigurationNode> loader =
                 HoconConfigurationLoader.builder().setPath(flagsFile).build();
         CommentedConfigurationNode root = FCPUtil.getHOCONConfiguration(flagsFile, loader);
-        root.setValue(this.entries.stream()
+        root.getNode("flags").setValue(this.entries.stream()
                 .map(Entry::serialize)
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList())
+        );
         try {
             loader.save(root);
         } catch (IOException e) {
@@ -586,6 +585,25 @@ public class StaticHandler extends HandlerBase {
         this.permCache.clear();
     }
 
+    public void load(Path directory) {
+        Path flagsFile = directory.resolve("flags.cfg");
+        ConfigurationLoader<CommentedConfigurationNode> loader =
+                HoconConfigurationLoader.builder().setPath(flagsFile).build();
+        CommentedConfigurationNode root = FCPUtil.getHOCONConfiguration(flagsFile, loader);
+        List<Optional<String>> optionalFlagsList = root.getNode("flags").getList(o -> {
+            if (o instanceof String) {
+                return Optional.of((String) o);
+            } else return Optional.empty();
+        });
+        this.entries.clear();
+        optionalFlagsList.stream()
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .map(Entry::deserialize)
+                .forEach(this.entries::add);
+        this.permCache.clear();
+    }
+
     public static class Factory implements IHandlerFactory {
 
         public static final String[] ALIASES = {"static", "stub", "blind"};
@@ -597,21 +615,8 @@ public class StaticHandler extends HandlerBase {
 
         @Override
         public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
-            StaticHandler handler = new StaticHandler(name, priority);
-            Path flagsFile = directory.resolve("flags.cfg");
-            ConfigurationLoader<CommentedConfigurationNode> loader =
-                    HoconConfigurationLoader.builder().setPath(flagsFile).build();
-            CommentedConfigurationNode root = FCPUtil.getHOCONConfiguration(flagsFile, loader);
-            List<Optional<String>> optionalFlagsList = root.getList(o -> {
-                if (o instanceof String) {
-                    return Optional.of((String) o);
-                } else return Optional.empty();
-            });
-            optionalFlagsList.stream()
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .map(Entry::deserialize)
-                    .forEach(handler.entries::add);
+            StaticHandler handler = new StaticHandler(name, priority, isEnabled);
+            handler.load(directory);
             return handler;
         }
 
