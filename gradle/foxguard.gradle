@@ -11,7 +11,7 @@ buildscript {
     }
 }
 
-apply plugin: 'com.github.johnrengelman.shadow'
+//apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'org.spongepowered.plugin'
 
 publishing{
@@ -20,16 +20,18 @@ publishing{
             artifactId = archivesBaseName
             version = repoVersion
 
-            artifact jar
+            artifact jar{
+                classifier ''
+            }
             artifact sourceJar {
-                classifier "sources"
+                classifier 'sources'
             }
         }
         download(MavenPublication) {
             artifactId = archivesBaseName
 
-            artifact jar {
-                classifier "plugin"
+            artifact serverJar {
+                classifier 'server'
             }
         }
     }
@@ -60,4 +62,14 @@ genEventImpl {
     sortPriorityPrefix = 'original'
     groupingPrefixes = ['from': 'to']
     validateCode = false
+}
+
+task serverJar(type: Jar) {
+    group = 'build'
+    classifier = 'server'
+    from(sourceSets.main.output)
+}
+
+artifacts {
+    archives serverJar
 }

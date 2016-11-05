@@ -19,9 +19,9 @@ buildscript {
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
-        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
         classpath 'gradle.plugin.org.spongepowered:spongegradle:0.7'
         classpath 'org.spongepowered:event-impl-gen:2.0.0-SNAPSHOT'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
     }
 }
 
@@ -29,12 +29,12 @@ apply plugin: 'org.spongepowered.plugin'
 apply plugin: 'net.minecraftforge.gradle.forge'
 
 group 'net.foxdenstudio.sponge'
-version 'SNAPSHOT'
+version 'api5-SNAPSHOT'
 
 apply from: project(":FoxCore").file("gradle/fox.gradle")
-apply from: project(":FoxCore").file("gradle/minecraft.gradle")
 apply from: project(":FoxCore").file("gradle/publish.gradle")
 apply from: project.file("gradle/foxguard.gradle")
+apply from: project(":FoxCore").file("gradle/minecraft.gradle")
 
 dependencies {
     compile project(':FoxCore')
