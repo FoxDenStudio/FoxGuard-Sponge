@@ -36,6 +36,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.controller.LogicController;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.BasicHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.DebugHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.StaticHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GroupHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.*;
 import net.foxdenstudio.sponge.foxguard.plugin.misc.FGContextCalculator;
@@ -285,6 +286,7 @@ public final class FoxGuardMain {
         manager.registerWorldRegionFactory(new CuboidRegion.Factory());
         manager.registerWorldRegionFactory(new ElevationRegion.Factory());
 
+        manager.registerHandlerFactory(new StaticHandler.Factory());
         manager.registerHandlerFactory(new BasicHandler.Factory());
         manager.registerHandlerFactory(new GroupHandler.Factory());
         manager.registerHandlerFactory(new DebugHandler.Factory());

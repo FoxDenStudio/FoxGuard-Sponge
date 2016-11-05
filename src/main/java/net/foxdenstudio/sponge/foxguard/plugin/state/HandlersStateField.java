@@ -85,12 +85,21 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
 
     @Override
     public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).limit(1).parseLastFlags(false).parse();
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
+                .arguments(arguments)
+                .limit(1)
+                .parseLastFlags(false)
+                .leaveFinalAsIs(true)
+                .parse();
         String newArgs = parse.args.length > 1 ? parse.args[1] : "";
-        if (parse.args.length == 0 || parse.args[0].equalsIgnoreCase("add")) {
-            return add(source, newArgs);
-        } else if (parse.args[0].equalsIgnoreCase("remove")) {
-            return remove(source, newArgs);
+        if (parse.args.length > 0) {
+            if (parse.args[0].equalsIgnoreCase("add")) {
+                return add(source, newArgs);
+            } else if (parse.args[0].equalsIgnoreCase("remove")) {
+                return remove(source, newArgs);
+            }
+        } else {
+            return ProcessResult.of(false, Text.of("Must specify a handler state command!"));
         }
         return ProcessResult.of(false, Text.of("Not a valid handler state command!"));
     }
@@ -113,6 +122,7 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
                             .filter(handler -> !this.list.contains(handler))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
+                            .sorted(String.CASE_INSENSITIVE_ORDER)
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (parse.args[0].equals("remove")) {

@@ -74,4 +74,10 @@ public class FlagBitSet extends BitSet {
         }
         return builder.build();
     }
+
+    boolean contains(BitSet set){
+        FlagBitSet temp = (FlagBitSet) clone();
+        temp.or(set);
+        return this.equals(temp);
+    }
 }

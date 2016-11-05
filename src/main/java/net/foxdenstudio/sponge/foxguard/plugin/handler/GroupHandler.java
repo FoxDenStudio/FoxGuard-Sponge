@@ -800,12 +800,7 @@ public class GroupHandler extends HandlerBase {
             final String prefix = "foxguard.handler." + this.name.toLowerCase() + ".";
             for (Group g : this.groups) {
                 if (g.specialPermission) {
-                    System.out.print("Permission \"" + g.permission + "\": ");
-                    if (user.hasPermission(g.permission)) {
-                        set.add(g);
-                        System.out.println(true);
-                    } else
-                        System.out.println(false);
+                    if (user.hasPermission(g.permission)) set.add(g);
                 } else {
                     if (user.hasPermission(prefix + g.name)) set.add(g);
                 }

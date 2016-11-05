@@ -33,6 +33,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
@@ -162,11 +163,13 @@ public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
                             if (wrap.handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
                                 break;
                             }
+                            EventResult result;
                             if (wrap.type == Type.FROM) {
-                                flagState = flagState.and(wrap.handler.handle(player, (FlagBitSet) EXIT_FLAG_SET.clone(), ExtraContext.of(event)).getState());
+                                result = wrap.handler.handle(player, (FlagBitSet) EXIT_FLAG_SET.clone(), ExtraContext.of(event));
                             } else {
-                                flagState = flagState.and(wrap.handler.handle(player, (FlagBitSet) ENTER_FLAG_SET.clone(), ExtraContext.of(event)).getState());
+                                result = wrap.handler.handle(player, (FlagBitSet) ENTER_FLAG_SET.clone(), ExtraContext.of(event));
                             }
+                            flagState = flagState.and(result.getState());
                             currPriority = wrap.handler.getPriority();
                         }
 
@@ -276,7 +279,7 @@ public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
         set.add(e);
         List<Entity> po = e.getPassengers();
         if (!po.isEmpty()) {
-            for(Entity ent : po){
+            for (Entity ent : po) {
                 set.add(ent);
             }
         }

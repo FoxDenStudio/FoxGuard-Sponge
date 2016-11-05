@@ -55,6 +55,8 @@ public abstract class FGObjectBase implements IFGObject {
         this.isEnabled = state;
     }
 
+    public abstract void markDirty();
+
     @Override
     public String toString() {
         return this.getClass().getSimpleName() + "{" +

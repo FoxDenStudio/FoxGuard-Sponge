@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectBase;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 
 public abstract class HandlerBase extends FGObjectBase implements IHandler {
 
@@ -51,6 +52,10 @@ public abstract class HandlerBase extends FGObjectBase implements IHandler {
     @Override
     public int compareTo(IHandler o) {
         return o.getPriority() - this.priority;
+    }
+
+    public void markDirty(){
+        FGUtil.markHandlerDirty(this);
     }
 
     @Override

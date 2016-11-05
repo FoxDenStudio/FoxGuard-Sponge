@@ -100,14 +100,25 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         return currentState(source);
     }
 
+    //TODO make it so you don't need a world to remove
+
     @Override
     public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).limit(1).parseLastFlags(false).parse();
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
+                .arguments(arguments)
+                .limit(1)
+                .parseLastFlags(false)
+                .leaveFinalAsIs(true)
+                .parse();
         String newArgs = parse.args.length > 1 ? parse.args[1] : "";
-        if (parse.args.length == 0 || parse.args[0].equalsIgnoreCase("add")) {
-            return add(source, newArgs);
-        } else if (parse.args[0].equalsIgnoreCase("remove")) {
-            return remove(source, newArgs);
+        if (parse.args.length > 0) {
+            if (parse.args[0].equalsIgnoreCase("add")) {
+                return add(source, newArgs);
+            } else if (parse.args[0].equalsIgnoreCase("remove")) {
+                return remove(source, newArgs);
+            }
+        } else {
+            return ProcessResult.of(false, Text.of("Must specify a region state command!"));
         }
         return ProcessResult.of(false, Text.of("Not a valid region state command!"));
     }
@@ -135,18 +146,25 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                         world = optWorld.get();
                     }
                 }
-                if (world == null) return ImmutableList.of();
                 if (parse.args[0].equals("add")) {
-                    return FGManager.getInstance().getAllRegions(world).stream()
+                    if (world == null) return FGManager.getInstance().getRegions().stream()
                             .filter(region -> !this.list.contains(region))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
+                            .sorted(String.CASE_INSENSITIVE_ORDER)
+                            .map(args -> parse.current.prefix + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                    else return FGManager.getInstance().getAllRegions(world).stream()
+                            .filter(region -> !this.list.contains(region))
+                            .map(IFGObject::getName)
+                            .filter(new StartsWithPredicate(parse.current.token))
+                            .sorted(String.CASE_INSENSITIVE_ORDER)
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (parse.args[0].equals("remove")) {
                     final World finalWorld = world;
                     return this.list.stream()
-                            .filter(region -> !(region instanceof IWorldRegion) || ((IWorldRegion) region).getWorld().equals(finalWorld))
+                            .filter(region -> !(region instanceof IWorldRegion) || finalWorld != null && ((IWorldRegion) region).getWorld().equals(finalWorld))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)

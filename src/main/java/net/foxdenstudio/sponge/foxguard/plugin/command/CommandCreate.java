@@ -33,6 +33,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.state.PositionStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.FGConfigManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
@@ -152,6 +153,10 @@ public class CommandCreate extends FCCommandBase {
                 throw new CommandException(Text.of("There was an error trying to create the " + (isWorldRegion ? "World" : "") + "Region!"));
             FCStateManager.instance().getStateMap().get(source).flush(PositionStateField.ID);
             source.sendMessage(Text.of(TextColors.GREEN, (isWorldRegion ? "Worldr" : "R") + "egion created successfully"));
+            FoxGuardMain.instance().getLogger().info(
+                    source.getName() + " created a " + (isWorldRegion ? "world" : "") + "region with name \"" + newRegion.getName() + "\"" +
+                            (isWorldRegion ? (" in world \"" + world.getName() + "\"") : "")
+            );
             return CommandResult.success();
             //----------------------------------------------------------------------------------------------------------------------
         } else if (isIn(HANDLERS_ALIASES, parse.args[0]) || isIn(CONTROLLERS_ALIASES, parse.args[0])) {
@@ -201,6 +206,9 @@ public class CommandCreate extends FCCommandBase {
             if (!success)
                 throw new ArgumentParseException(Text.of("That name is already taken!"), parse.args[1], 1);
             source.sendMessage(Text.of(TextColors.GREEN, (isController ? "Controller" : "Handler") + " created successfully!"));
+            FoxGuardMain.instance().getLogger().info(
+                    source.getName() + " created a " + (isController ? "controller" : "handler") + " with name \"" + newHandler.getName() + "\""
+            );
             return CommandResult.success();
             //----------------------------------------------------------------------------------------------------------------------
         } else throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);

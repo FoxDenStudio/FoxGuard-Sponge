@@ -31,6 +31,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
@@ -85,6 +86,7 @@ public class CommandDelete extends FCCommandBase {
         } else if (isIn(REGIONS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
             IRegion region = FGManager.getInstance().getRegion(parse.args[1]);
+            boolean isWorldRegion = false;
             if (region == null) {
                 String worldName = parse.flags.get("world");
                 World world = null;
@@ -100,6 +102,7 @@ public class CommandDelete extends FCCommandBase {
                 }
                 if (world == null) throw new CommandException(Text.of("Must specify a world!"));
                 region = FGManager.getInstance().getWorldRegion(world, parse.args[1]);
+                isWorldRegion = true;
             }
             if (region == null)
                 throw new CommandException(Text.of("No region exists with the name \"" + parse.args[1] + "\"!"));
@@ -109,6 +112,9 @@ public class CommandDelete extends FCCommandBase {
             boolean success = FGManager.getInstance().removeRegion(region);
             if (!success) throw new CommandException(Text.of("There was an error trying to delete the region!"));
             source.sendMessage(Text.of(TextColors.GREEN, "Region deleted successfully!"));
+            FoxGuardMain.instance().getLogger().info(
+                    source.getName() + " deleted " + (isWorldRegion ? "world" : "") + "region"
+            );
             return CommandResult.success();
         } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
