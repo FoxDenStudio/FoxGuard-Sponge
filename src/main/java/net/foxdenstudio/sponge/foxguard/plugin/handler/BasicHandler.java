@@ -169,11 +169,13 @@ public class BasicHandler extends HandlerBase {
                     if (!(o instanceof Group)) return null;
                 }
                 Set<Group> set = (Set<Group>) k1;
+                List<Group> list = new ArrayList<>(set);
+                Collections.sort(list, (g1, g2) -> this.groups.indexOf(g1) - this.groups.indexOf(g2));
                 Map<FlagBitSet, Tristate> map = new CacheMap<>((k2, m2) -> {
                     if (k2 instanceof FlagBitSet) {
                         Tristate state = null;
                         FlagBitSet flags = (FlagBitSet) k2;
-                        for (Group group : set) {
+                        for (Group group : list) {
                             state = this.groupPermCache.get(group).get(flags);
                             if (state != null) break;
                         }
@@ -1461,7 +1463,7 @@ public class BasicHandler extends HandlerBase {
             this.defaultPermCache.clear();
             this.userPermCache.clear();
             this.groupSetPermCache.clear();
-            if(this.passiveSetting == PassiveSetting.DEFAULT) this.passivePermCache.clear();
+            if (this.passiveSetting == PassiveSetting.DEFAULT) this.passivePermCache.clear();
         } else {
             this.groupPermCache.get(group).clear();
             group.users.forEach(this.userPermCache::remove);
@@ -1471,7 +1473,8 @@ public class BasicHandler extends HandlerBase {
                 if (key.contains(group)) groupSuperSet.add(key);
             }
             groupSuperSet.forEach(this.groupSetPermCache::remove);
-            if(this.passiveSetting == PassiveSetting.GROUP && this.passiveGroup == group) this.passivePermCache.clear();
+            if (this.passiveSetting == PassiveSetting.GROUP && this.passiveGroup == group)
+                this.passivePermCache.clear();
         }
 
     }

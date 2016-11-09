@@ -56,8 +56,8 @@ import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
  */
 public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
 
-    private static final FlagBitSet ENTER_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, DISPLACE, MOVE, ENTER);
-    private static final FlagBitSet EXIT_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, DISPLACE, MOVE, EXIT);
+    private static final FlagBitSet ENTER_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, MOVE, ENTER);
+    private static final FlagBitSet EXIT_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, MOVE, EXIT);
 
     private static PlayerMoveListenerNew instance;
 
@@ -183,7 +183,7 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
         List<Entity> po = e.getPassengers();
         if (!po.isEmpty()) {
             for(Entity ent : po){
-                set.add(ent);
+                set.addAll(getPassengerStack(ent));
             }
         }
         return set;

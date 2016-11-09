@@ -66,9 +66,9 @@ public class Flags {
     public static final Flag HUMAN = REGISTRY.registerFlag("human");
     public static final Flag PLAYER = REGISTRY.registerFlag("player");
 
-    public static final Flag DISPLACE = REGISTRY.registerFlag("displace");
     public static final Flag MOVE = REGISTRY.registerFlag("move");
     public static final Flag TELEPORT = REGISTRY.registerFlag("teleport");
+    public static final Flag PORTAL = REGISTRY.registerFlag("portal");
     public static final Flag ENTER = REGISTRY.registerFlag("enter");
     public static final Flag EXIT = REGISTRY.registerFlag("exit");
 
