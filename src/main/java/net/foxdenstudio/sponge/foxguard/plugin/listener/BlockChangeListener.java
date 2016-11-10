@@ -45,9 +45,8 @@ import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 import static org.spongepowered.api.util.Tristate.FALSE;
@@ -59,7 +58,7 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
 
     @Override
     public void handle(ChangeBlockEvent event) throws Exception {
-        if (event.isCancelled() || event.getTransactions().isEmpty() || event instanceof ExplosionEvent) return;
+        if (event.isCancelled() || event instanceof ExplosionEvent || event.getTransactions().isEmpty()) return;
         for (Transaction<BlockSnapshot> tr : event.getTransactions()) {
             if (tr.getOriginal().getState().getType().equals(BlockTypes.DIRT)
                     && tr.getFinal().getState().getType().equals(BlockTypes.GRASS)
@@ -88,25 +87,35 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
         if (event instanceof ChangeBlockEvent.Modify) flags.set(MODIFY);
         else if (event instanceof ChangeBlockEvent.Break) flags.set(BREAK);
         else if (event instanceof ChangeBlockEvent.Place) flags.set(PLACE);
+        else if (event instanceof ChangeBlockEvent.Post) flags.set(POST);
         else if (event instanceof ChangeBlockEvent.Decay) flags.set(DECAY);
         else if (event instanceof ChangeBlockEvent.Grow) flags.set(GROW);
-        else if (event instanceof ChangeBlockEvent.Post) flags.set(POST);
 
         //FoxGuardMain.instance().getLogger().info(player.getName());
 
-        List<IHandler> handlerList = new ArrayList<>();
-        handlerList.add(FGManager.getInstance().getGlobalHandler());
+        List<IHandler> handlerList;
         World world = event.getTargetWorld();
 
-        for (Transaction<BlockSnapshot> trans : event.getTransactions()) {
-            Vector3i pos = trans.getFinal().getLocation().get().getBlockPosition();
+        List<Transaction<BlockSnapshot>> transactions = event.getTransactions();
+        Set<IHandler> handlerSet = new HashSet<>();
+        if (transactions.size() == 1) {
+            Vector3i pos = transactions.get(0).getFinal().getLocation().get().getBlockPosition();
             FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                     .filter(region -> region.contains(pos, world))
                     .forEach(region -> region.getHandlers().stream()
                             .filter(IFGObject::isEnabled)
-                            .filter(handler -> !handlerList.contains(handler))
-                            .forEach(handlerList::add));
+                            .forEach(handlerSet::add));
+        } else {
+            FGManager.getInstance().getRegionsAtMultiPosI(
+                    world,
+                    transactions.stream()
+                            .map(trans -> trans.getFinal().getLocation().get().getBlockPosition())
+                            .collect(Collectors.toList())
+            ).forEach(region -> region.getHandlers().stream()
+                    .filter(IFGObject::isEnabled)
+                    .forEach(handlerSet::add));
         }
+        handlerList = new ArrayList<>(handlerSet);
         Collections.sort(handlerList);
         int currPriority = handlerList.get(0).getPriority();
         Tristate flagState = UNDEFINED;

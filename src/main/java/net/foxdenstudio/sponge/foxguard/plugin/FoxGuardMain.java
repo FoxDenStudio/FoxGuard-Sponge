@@ -36,8 +36,8 @@ import net.foxdenstudio.sponge.foxguard.plugin.controller.LogicController;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.BasicHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.DebugHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.StaticHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GroupHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.StaticHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.*;
 import net.foxdenstudio.sponge.foxguard.plugin.misc.FGContextCalculator;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
@@ -209,7 +209,7 @@ public final class FoxGuardMain {
     @Listener
     public void setupEconomy(GamePostInitializationEvent event) {
         Optional<EconomyService> economyServiceOptional = Sponge.getGame().getServiceManager().provide(EconomyService.class);
-        if(economyServiceOptional.isPresent()){
+        if (economyServiceOptional.isPresent()) {
             economyService = economyServiceOptional.get();
 
         }
@@ -306,7 +306,7 @@ public final class FoxGuardMain {
         eventManager.registerListener(this, InteractEntityEvent.class, Order.LATE, new InteractEntityListener());
         eventManager.registerListener(this, SpawnEntityEvent.class, Order.LATE, new SpawnEntityListener());
         if (FGConfigManager.getInstance().getModules().get(FGConfigManager.Module.MOVEMENT)) {
-            PlayerMoveListenerNew pml = new PlayerMoveListenerNew(true);
+            PlayerMoveListener pml = new PlayerMoveListener(true);
             eventManager.registerListener(this, MoveEntityEvent.class, pml);
             eventManager.registerListeners(this, pml.new Listeners());
         }

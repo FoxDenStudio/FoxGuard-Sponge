@@ -28,7 +28,9 @@ package net.foxdenstudio.sponge.foxguard.plugin;
 import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.SetMultimap;
 import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.event.util.FGEventFactory;
@@ -46,9 +48,7 @@ import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public final class FGManager {
@@ -209,7 +209,19 @@ public final class FGManager {
     }
 
     public Set<IRegion> getAllRegions(World world, Vector3i chunk, boolean includeDisabled) {
-        return ImmutableSet.copyOf(this.regionCache.getData(world, chunk).getRegions(includeDisabled));
+        return this.regionCache.getData(world, chunk).getRegions(includeDisabled);
+    }
+
+    public Set<IRegion> getRegionsAtPos(World world, Vector3i position) {
+        return FGManager.getInstance().getRegionsInChunkAtPos(world, position).stream()
+                .filter(region -> region.contains(position, world))
+                .collect(Collectors.toSet());
+    }
+
+    public Set<IRegion> getRegionsAtPos(World world, Vector3i position, boolean includeDisabled) {
+        return FGManager.getInstance().getRegionsInChunkAtPos(world, position, includeDisabled).stream()
+                .filter(region -> region.contains(position, world))
+                .collect(Collectors.toSet());
     }
 
     public Set<IRegion> getRegionsAtPos(World world, Vector3d position) {
@@ -218,17 +230,82 @@ public final class FGManager {
                 .collect(Collectors.toSet());
     }
 
-    public Set<IRegion> getRegionsInChunkAtPos(World world, Vector3d pos) {
-        return getRegionsInChunkAtPos(world, pos, false);
+    public Set<IRegion> getRegionsAtPos(World world, Vector3d position, boolean includeDisabled) {
+        return FGManager.getInstance().getRegionsInChunkAtPos(world, position, includeDisabled).stream()
+                .filter(region -> region.contains(position, world))
+                .collect(Collectors.toSet());
     }
 
-    public Set<IRegion> getRegionsInChunkAtPos(World world, Vector3d pos, boolean includeDisabled) {
-        return this.regionCache.getData(world,
-                new Vector3i(
-                        GenericMath.floor(pos.getX()) >> 4,
-                        GenericMath.floor(pos.getY()) >> 4,
-                        GenericMath.floor(pos.getZ()) >> 4)
-        ).getRegions(includeDisabled);
+    public Set<IRegion> getRegionsAtMultiPosI(World world, Iterable<Vector3i> positions) {
+        return getRegionsAtMultiPosI(world, positions, false);
+    }
+
+    public Set<IRegion> getRegionsAtMultiPosI(World world, Iterable<Vector3i> positions, boolean includeDisabled) {
+        Set<IRegion> set = new HashSet<>();
+        SetMultimap<Vector3i, Vector3i> chunkPosMap = HashMultimap.create();
+        for (Vector3i pos : positions) {
+            chunkPosMap.put(
+                    new Vector3i(
+                            pos.getX() >> 4,
+                            pos.getY() >> 4,
+                            pos.getZ() >> 4
+                    ), pos
+            );
+        }
+        for (Map.Entry<Vector3i, Collection<Vector3i>> entry : chunkPosMap.asMap().entrySet()) {
+            RegionCache.ChunkData data = this.regionCache.getData(world, entry.getKey());
+            Set<IRegion> candidates = new HashSet<>(data.getRegions(includeDisabled));
+            candidates.removeAll(set);
+            for (Vector3i pos : entry.getValue()) {
+                if (candidates.isEmpty()) break;
+                Iterator<IRegion> regionIterator = candidates.iterator();
+                do {
+                    IRegion region = regionIterator.next();
+                    if (region.contains(pos, world)) {
+                        set.add(region);
+                        regionIterator.remove();
+                    }
+                } while (regionIterator.hasNext());
+            }
+
+        }
+        return set;
+    }
+
+    public Set<IRegion> getRegionsAtMultiPosD(World world, Iterable<Vector3d> positions) {
+        return getRegionsAtMultiPosD(world, positions, false);
+    }
+
+    public Set<IRegion> getRegionsAtMultiPosD(World world, Iterable<Vector3d> positions, boolean includeDisabled) {
+        Set<IRegion> set = new HashSet<>();
+        SetMultimap<Vector3i, Vector3d> chunkPosMap = HashMultimap.create();
+        for (Vector3d pos : positions) {
+            chunkPosMap.put(
+                    new Vector3i(
+                            GenericMath.floor(pos.getX()) >> 4,
+                            GenericMath.floor(pos.getY()) >> 4,
+                            GenericMath.floor(pos.getZ()) >> 4)
+                    , pos
+            );
+        }
+        for (Map.Entry<Vector3i, Collection<Vector3d>> entry : chunkPosMap.asMap().entrySet()) {
+            RegionCache.ChunkData data = this.regionCache.getData(world, entry.getKey());
+            Set<IRegion> candidates = new HashSet<>(data.getRegions(includeDisabled));
+            candidates.removeAll(set);
+            for (Vector3d pos : entry.getValue()) {
+                if (candidates.isEmpty()) break;
+                Iterator<IRegion> regionIterator = candidates.iterator();
+                do {
+                    IRegion region = regionIterator.next();
+                    if (region.contains(pos, world)) {
+                        set.add(region);
+                        regionIterator.remove();
+                    }
+                } while (regionIterator.hasNext());
+            }
+
+        }
+        return set;
     }
 
     public Set<IRegion> getRegionsInChunkAtPos(World world, Vector3i pos) {
@@ -241,6 +318,19 @@ public final class FGManager {
                         pos.getX() >> 4,
                         pos.getY() >> 4,
                         pos.getZ() >> 4)
+        ).getRegions(includeDisabled);
+    }
+
+    public Set<IRegion> getRegionsInChunkAtPos(World world, Vector3d pos) {
+        return getRegionsInChunkAtPos(world, pos, false);
+    }
+
+    public Set<IRegion> getRegionsInChunkAtPos(World world, Vector3d pos, boolean includeDisabled) {
+        return this.regionCache.getData(world,
+                new Vector3i(
+                        GenericMath.floor(pos.getX()) >> 4,
+                        GenericMath.floor(pos.getY()) >> 4,
+                        GenericMath.floor(pos.getZ()) >> 4)
         ).getRegions(includeDisabled);
     }
 

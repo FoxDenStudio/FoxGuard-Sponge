@@ -35,26 +35,29 @@ import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.explosive.Explosive;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.event.Cancellable;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.world.ExplosionEvent;
 import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
+import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 
-public class ExplosionListener implements EventListener<ExplosionEvent.Detonate> {
+public class ExplosionListener implements EventListener<ExplosionEvent> {
 
-    private static final FlagBitSet FLAG_SET = new FlagBitSet(ROOT, DEBUFF, BLOCK, CHANGE, EXPLOSION);
+    private static final FlagBitSet FLAG_SET = new FlagBitSet(ROOT, DEBUFF, EXPLOSION);
 
 
     @Override
-    public void handle(ExplosionEvent.Detonate event) throws Exception {
-        if (event.isCancelled()) return;
+    public void handle(ExplosionEvent event) throws Exception {
+        if (!(event instanceof Cancellable) || ((Cancellable) event).isCancelled()) return;
         User user;
         if (event.getCause().containsType(Player.class)) {
             user = event.getCause().first(Player.class).get();
@@ -79,15 +82,46 @@ public class ExplosionListener implements EventListener<ExplosionEvent.Detonate>
         }
 
         World world = event.getTargetWorld();
-        Vector3d pos = event.getExplosion().getLocation().getPosition();
         FlagBitSet flags = (FlagBitSet) FLAG_SET.clone();
-        List<IHandler> handlerList = new ArrayList<>();
-        FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
-                .filter(region -> region.contains(pos, world))
-                .forEach(region -> region.getHandlers().stream()
-                        .filter(IFGObject::isEnabled)
-                        .filter(handler -> !handlerList.contains(handler))
-                        .forEach(handlerList::add));
+
+        Set<IHandler> handlerSet = new HashSet<>();
+        if (event instanceof ExplosionEvent.Post) {
+            flags.set(POST);
+            flags.set(BLOCK);
+            flags.set(CHANGE);
+
+            ExplosionEvent.Post postEvent = (ExplosionEvent.Post) event;
+            FGManager.getInstance().getRegionsAtMultiPosI(
+                    world,
+                    postEvent.getTransactions().stream()
+                            .map(trans -> trans.getFinal().getLocation().get().getBlockPosition())
+                            .collect(Collectors.toList())
+            ).forEach(region -> region.getHandlers().stream()
+                    .filter(IFGObject::isEnabled)
+                    .forEach(handlerSet::add));
+        } else if (event instanceof ExplosionEvent.Detonate) {
+            flags.set(DETONATE);
+
+            ExplosionEvent.Detonate detonateEvent = ((ExplosionEvent.Detonate) event);
+            FGManager.getInstance().getRegionsAtMultiPosI(
+                    world,
+                    detonateEvent.getAffectedLocations().stream()
+                            .map(Location::getBlockPosition)
+                            .collect(Collectors.toList())
+            ).forEach(region -> region.getHandlers().stream()
+                    .filter(IFGObject::isEnabled)
+                    .forEach(handlerSet::add));
+        } else if (event instanceof ExplosionEvent.Pre) {
+            flags.set(PRE);
+
+            Vector3d pos = event.getExplosion().getLocation().getPosition();
+            FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
+                    .filter(region -> region.contains(pos, world))
+                    .forEach(region -> region.getHandlers().stream()
+                            .filter(IFGObject::isEnabled)
+                            .forEach(handlerSet::add));
+        }
+        List<IHandler> handlerList = new ArrayList<>(handlerSet);
 
         Collections.sort(handlerList);
         int currPriority = handlerList.get(0).getPriority();
@@ -102,10 +136,10 @@ public class ExplosionListener implements EventListener<ExplosionEvent.Detonate>
         if (flagState == Tristate.FALSE) {
             if (user instanceof Player)
                 ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
-            event.setCancelled(true);
+            ((Cancellable) event).setCancelled(true);
         } else {
             //makes sure that handlers are unable to cancel the event directly.
-            event.setCancelled(false);
+            ((Cancellable) event).setCancelled(false);
         }
     }
 }

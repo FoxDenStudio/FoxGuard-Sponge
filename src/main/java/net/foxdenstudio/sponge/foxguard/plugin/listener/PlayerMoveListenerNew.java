@@ -94,6 +94,7 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
                     final boolean hud = player.getScoreboard() == scoreboardMap.get(player) && CommandHUD.instance().getIsHUDEnabled().get(player);
                     final HUDConfig config = this.hudConfigMap.get(player);
                     final boolean regionHUD = hud && config.regions;
+
                 });
     }
 
