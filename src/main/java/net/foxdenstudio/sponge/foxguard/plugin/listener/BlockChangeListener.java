@@ -148,9 +148,9 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
                         r = Response.LOCATION;
                     }
                     if (r == Response.BASIC)
-                        player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
+                        player.sendMessage(ChatTypes.ACTION_BAR, Text.of("У вас нет разрешения!"));
                     else if (r == Response.LOCATION)
-                        player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission! " +
+                        player.sendMessage(ChatTypes.ACTION_BAR, Text.of("У вас нет разрешения! " +
                                 event.getTransactions().get(0).getOriginal().getPosition() +
                                 (event.getTransactions().size() > 1 ? "..." : "")));
                 }
