@@ -135,7 +135,7 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
         }
         if (flagState == Tristate.FALSE) {
             if (user instanceof Player)
-                ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
+                ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("У вас нет разрешения!"));
             ((Cancellable) event).setCancelled(true);
         } else {
             //makes sure that handlers are unable to cancel the event directly.
