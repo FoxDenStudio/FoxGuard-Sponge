@@ -25,11 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.listener.util;
 
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
-
-import java.util.Optional;
 
 public final class EventResult {
 

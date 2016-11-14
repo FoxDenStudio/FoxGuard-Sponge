@@ -165,10 +165,9 @@ public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
                             }
                             EventResult result;
                             if (wrap.type == Type.FROM) {
-                                result = wrap.handler.handle(player, (FlagBitSet) EXIT_FLAG_SET.clone(), ExtraContext.of(event));
-                            } else {
-                                result = wrap.handler.handle(player, (FlagBitSet) ENTER_FLAG_SET.clone(), ExtraContext.of(event));
-                            }
+                                result = wrap.handler.handle(player, EXIT_FLAG_SET, ExtraContext.of(event));
+                            } else
+                                result = wrap.handler.handle(player, ENTER_FLAG_SET, ExtraContext.of(event));
                             flagState = flagState.and(result.getState());
                             currPriority = wrap.handler.getPriority();
                         }

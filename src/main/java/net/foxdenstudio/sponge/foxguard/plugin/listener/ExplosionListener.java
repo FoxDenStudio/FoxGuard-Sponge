@@ -82,7 +82,7 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
         }
 
         World world = event.getTargetWorld();
-        FlagBitSet flags = (FlagBitSet) FLAG_SET.clone();
+        FlagBitSet flags = FLAG_SET.clone();
 
         Set<IHandler> handlerSet = new HashSet<>();
         if (event instanceof ExplosionEvent.Post) {

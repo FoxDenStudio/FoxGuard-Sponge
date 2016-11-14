@@ -47,7 +47,6 @@ import java.util.List;
 public class EconomyHandler extends HandlerBase {
 
 
-
     public EconomyHandler(String name, boolean isEnabled, int priority) {
         super(name, priority, isEnabled);
     }

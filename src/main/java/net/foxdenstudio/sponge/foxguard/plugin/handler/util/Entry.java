@@ -47,7 +47,7 @@ public class Entry {
         this.state = state;
     }
 
-    public Entry(Tristate state, Flag... flags){
+    public Entry(Tristate state, Flag... flags) {
         this.state = state;
         this.set = ImmutableSet.copyOf(flags);
     }

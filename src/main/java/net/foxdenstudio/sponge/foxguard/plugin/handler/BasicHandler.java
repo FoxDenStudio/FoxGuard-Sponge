@@ -1595,6 +1595,13 @@ public class BasicHandler extends HandlerBase {
                     handler.setPassiveSetting(PassiveSetting.DEFAULT);
 
                     return handler;
+                } else if (parse.args[0].equalsIgnoreCase("passive")) {
+                    Group passive = handler.createGroup("passive").get();
+                    passive.displayName = "Passive";
+                    passive.color = TextColors.AQUA;
+                    handler.setPassiveSetting(PassiveSetting.GROUP, passive);
+
+                    return handler;
                 } else if (parse.args[0].equalsIgnoreCase("easy")) {
                     Group owners = handler.createGroup("owners").get();
                     owners.displayName = "Owners";

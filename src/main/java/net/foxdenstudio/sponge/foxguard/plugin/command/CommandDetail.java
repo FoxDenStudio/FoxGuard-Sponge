@@ -292,7 +292,8 @@ public class CommandDetail extends FCCommandBase {
         if (linkable.getHandlers().size() == 0)
             builder.append(Text.of(TextStyles.ITALIC, "\nNo outbound links!"));
         Stream<IHandler> handlerStream = linkable.getHandlers().stream();
-        if(!(linkable instanceof IController)) handlerStream = handlerStream.sorted((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
+        if (!(linkable instanceof IController))
+            handlerStream = handlerStream.sorted((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
         handlerStream.forEach(handler -> {
             builder.append(Text.NEW_LINE);
             if (source instanceof Player) {

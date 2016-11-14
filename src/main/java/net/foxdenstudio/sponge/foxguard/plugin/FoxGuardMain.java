@@ -310,7 +310,7 @@ public final class FoxGuardMain {
             eventManager.registerListener(this, MoveEntityEvent.class, pml);
             eventManager.registerListeners(this, pml.new Listeners());
         }
-        eventManager.registerListener(this, ExplosionEvent.Detonate.class, Order.LATE, new ExplosionListener());
+        eventManager.registerListener(this, ExplosionEvent.class, Order.LATE, new ExplosionListener());
         eventManager.registerListener(this, DamageEntityEvent.class, Order.LATE, new DamageListener());
     }
 

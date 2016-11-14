@@ -39,7 +39,6 @@ import org.spongepowered.api.entity.living.Hostile;
 import org.spongepowered.api.entity.living.Human;
 import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.entity.damage.DamageModifier;
@@ -77,7 +76,7 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
         World world = event.getTargetEntity().getWorld();
         Vector3d pos = event.getTargetEntity().getLocation().getPosition();
         Entity entity = event.getTargetEntity();
-        FlagBitSet flags = (FlagBitSet) BASE_FLAG_SET_SOURCE.clone();
+        FlagBitSet flags = BASE_FLAG_SET_SOURCE.clone();
 
         if (entity instanceof Living) {
             flags.set(LIVING);
@@ -93,7 +92,7 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
             } else if (entity instanceof Player) {
                 flags.set(PLAYER);
             }
-        } else if(entity instanceof Hanging){
+        } else if (entity instanceof Hanging) {
             flags.set(HANGING);
         }
 

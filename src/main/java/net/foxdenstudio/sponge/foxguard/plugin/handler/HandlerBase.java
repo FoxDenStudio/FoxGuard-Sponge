@@ -54,7 +54,7 @@ public abstract class HandlerBase extends FGObjectBase implements IHandler {
         return o.getPriority() - this.priority;
     }
 
-    public void markDirty(){
+    public void markDirty() {
         FGUtil.markHandlerDirty(this);
     }
 

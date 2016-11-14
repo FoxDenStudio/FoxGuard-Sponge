@@ -27,28 +27,28 @@ package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.hanging.Hanging;
 import org.spongepowered.api.entity.living.Agent;
 import org.spongepowered.api.entity.living.Hostile;
 import org.spongepowered.api.entity.living.Human;
 import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
-import org.spongepowered.api.entity.projectile.arrow.Arrow;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.entity.SpawnEntityEvent;
-import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 
@@ -89,7 +89,7 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
             }
 
         }*/
-        FlagBitSet flags = (FlagBitSet) BASE_FLAG_SET.clone();
+        FlagBitSet flags = BASE_FLAG_SET.clone();
         if (oneEntity instanceof Living) {
             flags.set(LIVING);
             if (oneEntity instanceof Agent) {
@@ -102,6 +102,8 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
                     flags.set(PASSIVE);
                 }
             }
+        } else if (oneEntity instanceof Hanging) {
+            flags.set(HANGING);
         }
 
         List<IHandler> handlerList = new ArrayList<>();

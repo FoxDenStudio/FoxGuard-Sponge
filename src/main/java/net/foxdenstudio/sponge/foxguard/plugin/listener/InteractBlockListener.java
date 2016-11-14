@@ -66,7 +66,7 @@ public class InteractBlockListener implements EventListener<InteractBlockEvent> 
             user = null;
         }
 
-        FlagBitSet flags = (FlagBitSet) BASE_FLAG_SET.clone();
+        FlagBitSet flags = BASE_FLAG_SET.clone();
         BlockSnapshot block = event.getTargetBlock();
         if (block.getState().getType().equals(BlockTypes.AIR)) return;
         World world = block.getLocation().get().getExtent();

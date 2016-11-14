@@ -25,7 +25,6 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.misc;
 
-import com.google.common.collect.ImmutableSet;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
@@ -73,19 +72,19 @@ public class FGContextCalculator implements ContextCalculator<Subject> {
             String[] regionNames = context.getValue().split(",");
             FGManager fgManager = FGManager.getInstance();
             for (String regionName : regionNames) {
-                if(regionName.contains(":")){
+                if (regionName.contains(":")) {
                     String[] parts = regionName.split(":");
                     Optional<World> worldOptional = Sponge.getServer().getWorld(parts[0]);
-                    if(worldOptional.isPresent()){
+                    if (worldOptional.isPresent()) {
                         IWorldRegion region = fgManager.getWorldRegion(worldOptional.get(), parts[1]);
-                        if(region != null) {
-                            if(!region.contains(player.getLocation().getPosition())) return false;
+                        if (region != null) {
+                            if (!region.contains(player.getLocation().getPosition())) return false;
                         } else return false;
                     } else return false;
                 } else {
                     IRegion region = fgManager.getRegion(regionName);
-                    if(region != null){
-                        if(!region.contains(player.getLocation().getPosition(), player.getWorld())) return false;
+                    if (region != null) {
+                        if (!region.contains(player.getLocation().getPosition(), player.getWorld())) return false;
                     } else return false;
                 }
             }

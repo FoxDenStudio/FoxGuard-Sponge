@@ -25,9 +25,10 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
-import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
+import com.flowpowered.math.vector.Vector3d;
+import net.foxdenstudio.sponge.foxcore.common.util.WeakCacheMap;
 import net.foxdenstudio.sponge.foxcore.plugin.command.CommandHUD;
-import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
+import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
@@ -35,7 +36,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.EventListener;
-import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.entity.MoveEntityEvent;
 import org.spongepowered.api.scoreboard.Score;
 import org.spongepowered.api.scoreboard.Scoreboard;
@@ -47,6 +47,7 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.World;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 
@@ -56,15 +57,16 @@ import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
  */
 public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
 
-    private static final FlagBitSet ENTER_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, MOVE, ENTER);
-    private static final FlagBitSet EXIT_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, MOVE, EXIT);
+    private static final FlagBitSet BASE_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, MOVE);
 
     private static PlayerMoveListenerNew instance;
 
     public final boolean full;
 
-    private final Map<Player, List<IHandler>> last = new CacheMap<>((key, map) -> null);
-    private final Map<Player, Scoreboard> scoreboardMap = new CacheMap<>((k, m) -> {
+    private final Map<Entity, Boolean> lastRiding = new WeakHashMap<>();
+    private final Map<Player, Vector3d> lastValidPosition = new WeakHashMap<>();
+
+    private final Map<Player, Scoreboard> scoreboardMap = new WeakCacheMap<>((k, m) -> {
         if (k instanceof Player) {
             Scoreboard s = Scoreboard.builder().build();
             Objective o = Objective.builder().criterion(Criteria.DUMMY).name("foxguardhere").displayName(Text.EMPTY).build();
@@ -74,7 +76,7 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
             return s;
         } else return null;
     });
-    private final Map<Player, HUDConfig> hudConfigMap = new CacheMap<>((k, m) -> new HUDConfig());
+    private final Map<Player, HUDConfig> hudConfigMap = new WeakCacheMap<>((k, m) -> new HUDConfig());
 
     public PlayerMoveListenerNew(boolean full) {
         this.full = full;
@@ -83,19 +85,55 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
 
     @Override
     public void handle(MoveEntityEvent event) throws Exception {
-        if (event.isCancelled() || event.getTargetEntity().getVehicle().isPresent()) return;
+        Entity entity = event.getTargetEntity();
+        boolean isRiding = entity.getVehicle().isPresent();
+        if (!lastRiding.containsKey(entity)) lastRiding.put(entity, isRiding);
+        if (event.isCancelled()) return;
+        boolean wasRiding = lastRiding.get(entity);
 
-        World world = event.getTargetEntity().getWorld();
+        FlagBitSet enter = BASE_FLAG_SET.clone();
 
-        getPassengerStack(event.getTargetEntity()).stream()
-                .filter(entity -> entity instanceof Player)
-                .map(entity -> (Player) entity)
-                .forEach(player -> {
+        if (isRiding && !wasRiding) {
+
+        } else {
+            Set<Player> passengerStack = getPassengerStack(event.getTargetEntity());
+
+            if (!passengerStack.isEmpty()) {
+
+                FGManager manager = FGManager.getInstance();
+                World world = event.getTargetEntity().getWorld();
+
+                Vector3d from = event.getFromTransform().getPosition();
+                Vector3d to = event.getToTransform().getPosition();
+
+                Set<IRegion> fromRegions, toRegions = new HashSet<>(), finalRegions = new HashSet<>();
+                Set<IHandler> fromHandlers, toHandlers = new HashSet<>(), finalHandlers;
+
+                fromRegions = manager.getRegionsAtPos(world, from);
+                fromHandlers = fromRegions.stream().flatMap(region -> region.getHandlers().stream()).collect(Collectors.toSet());
+
+                manager.getRegionsInChunkAtPos(world, to).stream()
+                        .filter(region -> region.contains(to, world))
+                        .forEach(region -> {
+                            finalRegions.add(region);
+                            if (!fromRegions.remove(region)) toRegions.add(region);
+                        });
+                finalHandlers = finalRegions.stream().flatMap(region -> region.getHandlers().stream()).collect(Collectors.toSet());
+                finalHandlers.forEach(handler -> {
+                    if (!fromHandlers.remove(handler)) toHandlers.add(handler);
+                });
+
+                passengerStack.forEach(player -> {
                     final boolean hud = player.getScoreboard() == scoreboardMap.get(player) && CommandHUD.instance().getIsHUDEnabled().get(player);
                     final HUDConfig config = this.hudConfigMap.get(player);
                     final boolean regionHUD = hud && config.regions;
 
+
                 });
+            }
+        }
+
+        lastRiding.put(entity, isRiding);
     }
 
     public void renderHUD(Player player, List<IRegion> regions, List<IHandler> handlers, HUDConfig config) {
@@ -178,12 +216,12 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
         return instance;
     }
 
-    private static Set<Entity> getPassengerStack(Entity e) {
-        Set<Entity> set = new HashSet<>();
-        set.add(e);
+    private static Set<Player> getPassengerStack(Entity e) {
+        Set<Player> set = new HashSet<>();
+        if (e instanceof Player) set.add((Player) e);
         List<Entity> po = e.getPassengers();
         if (!po.isEmpty()) {
-            for(Entity ent : po){
+            for (Entity ent : po) {
                 set.addAll(getPassengerStack(ent));
             }
         }
@@ -229,14 +267,5 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
             this.handlers = handlers;
             this.priority = priority;
         }
-    }
-
-    public class Listeners {
-
-        @Listener
-        public void onChange(FGUpdateEvent event) {
-            last.clear();
-        }
-
     }
 }

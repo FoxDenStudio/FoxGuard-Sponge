@@ -32,6 +32,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.hanging.Hanging;
 import org.spongepowered.api.entity.living.Agent;
 import org.spongepowered.api.entity.living.Hostile;
 import org.spongepowered.api.entity.living.Human;
@@ -69,7 +70,7 @@ public class InteractEntityListener implements EventListener<InteractEntityEvent
             user = null;
         }
 
-        FlagBitSet flags = (FlagBitSet) BASE_FLAG_SET.clone();
+        FlagBitSet flags = BASE_FLAG_SET.clone();
         World world = event.getTargetEntity().getWorld();
         Vector3d pos = event.getTargetEntity().getLocation().getPosition();
         if (event instanceof InteractEntityEvent.Primary) {
@@ -97,6 +98,8 @@ public class InteractEntityListener implements EventListener<InteractEntityEvent
                 flags.set(PLAYER);
             }
 
+        } else if (entity instanceof Hanging) {
+            flags.set(HANGING);
         }
 
         List<IHandler> handlerList = new ArrayList<>();

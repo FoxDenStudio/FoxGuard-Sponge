@@ -74,15 +74,15 @@ public class StaticHandler extends HandlerBase {
         return true;
     };
 
-    protected final List<Entry> entries;
-    protected final Map<FlagBitSet, Tristate> permCache;
+    private final List<Entry> entries;
+    private final Map<FlagBitSet, Tristate> permCache;
 
     public StaticHandler(String name, int priority) {
         this(name, priority, true);
     }
 
     public StaticHandler(String name, int priority, boolean isEnabled) {
-        super(name, priority, true);
+        super(name, priority, isEnabled);
         this.entries = new ArrayList<>();
         this.permCache = new CacheMap<>((k, m) -> {
             if (k instanceof FlagBitSet) {
@@ -462,7 +462,7 @@ public class StaticHandler extends HandlerBase {
             StringBuilder stringBuilder = new StringBuilder();
             entry.set.stream().sorted().forEach(flag -> stringBuilder.append(flag.name).append(" "));
             Text.Builder entryBuilder = Text.builder();
-            entryBuilder.append(Text.of("  " + stringBuilder.toString(), TextColors.AQUA, ": "))
+            entryBuilder.append(Text.of("  " + index + ": " + stringBuilder.toString(), TextColors.AQUA, ": "))
                     .append(FGUtil.readableTristateText(entry.state))
                     .onHover(TextActions.showText(Text.of("Click to change this flag entry")))
                     .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set " + (index++) + " "));

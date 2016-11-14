@@ -82,7 +82,7 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
         else if (event instanceof ChangeBlockEvent.Grow) typeFlag = FlagOld.BLOCK_GROW;
         else return;*/
 
-        FlagBitSet flags = (FlagBitSet) BASE_FLAG_SET.clone();
+        FlagBitSet flags = BASE_FLAG_SET.clone();
 
         if (event instanceof ChangeBlockEvent.Modify) flags.set(MODIFY);
         else if (event instanceof ChangeBlockEvent.Break) flags.set(BREAK);

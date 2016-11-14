@@ -83,7 +83,7 @@ public abstract class ControllerBase extends HandlerBase implements IController 
         }
     }
 
-    protected void saveLinks(Path directory){
+    protected void saveLinks(Path directory) {
         try (DB linksDB = DBMaker.fileDB(directory.resolve("links.foxdb").normalize().toString()).make()) {
             List<String> linksList = linksDB.indexTreeList("links", Serializer.STRING).createOrOpen();
             linksList.clear();
