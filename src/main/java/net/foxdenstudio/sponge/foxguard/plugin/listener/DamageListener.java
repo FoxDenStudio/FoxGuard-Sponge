@@ -138,7 +138,7 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
         }
         if (flagState == FALSE) {
             if (player != null && player.isOnline() && !invincible) {
-                player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
+                player.sendMessage(ChatTypes.ACTION_BAR, Text.of("У вас нет разрешения!"));
             }
             event.setCancelled(true);
         } else {
@@ -179,7 +179,7 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
                     builder.cause(FoxGuardMain.getCause());
                     event.setDamage(builder.build(), damage -> ((Living) event.getTargetEntity()).getHealthData().health().get() - damage - 1);
                     if (player != null && player.isOnline() && !invincible)
-                        player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission to kill!"));
+                        player.sendMessage(ChatTypes.ACTION_BAR, Text.of("У вас нет разрешения, для убийства!"));
                 }
             }
             //makes sure that handlers are unable to cancel the event directly.
