@@ -173,7 +173,7 @@ public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
                         }
 
                         if (flagState == Tristate.FALSE) {
-                            player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission to pass!"));
+                            player.sendMessage(ChatTypes.ACTION_BAR, Text.of("У вас нет разрешения для прохода!"));
                             Vector3d position = this.last.get(player).position;
                             if (position == null) position = event.getFromTransform().getPosition();
                             event.setToTransform(event.getToTransform().setPosition(position));
