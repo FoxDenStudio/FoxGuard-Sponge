@@ -124,7 +124,7 @@ public class InteractEntityListener implements EventListener<InteractEntityEvent
 //        if(flagState == UNDEFINED) flagState = TRUE;
         if (flagState == FALSE) {
             if (user instanceof Player)
-                ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
+                ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("У вас нет разрешения!"));
             event.setCancelled(true);
         } else {
             //makes sure that handlers are unable to cancel the event directly.
