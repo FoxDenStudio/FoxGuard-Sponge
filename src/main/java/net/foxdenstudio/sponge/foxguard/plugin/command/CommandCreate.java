@@ -48,6 +48,7 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
+import org.spongepowered.api.world.Locatable;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -97,7 +98,7 @@ public class CommandCreate extends FCCommandBase {
             String worldName = parse.flags.get("world");
             World world = null;
             if (isWorldRegion) {
-                if (source instanceof Player) world = ((Player) source).getWorld();
+                if (source instanceof Locatable) world = ((Locatable) source).getWorld();
                 if (!worldName.isEmpty()) {
                     Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
                     if (optWorld.isPresent()) {
@@ -257,7 +258,7 @@ public class CommandCreate extends FCCommandBase {
                 } else if (isIn(WORLDREGIONS_ALIASES, parse.args[0])) {
                     String worldName = parse.flags.get("world");
                     World world = null;
-                    if (source instanceof Player) world = ((Player) source).getWorld();
+                    if (source instanceof Locatable) world = ((Locatable) source).getWorld();
                     if (!worldName.isEmpty()) {
                         Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
                         if (optWorld.isPresent()) {

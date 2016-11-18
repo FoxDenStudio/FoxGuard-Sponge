@@ -53,6 +53,7 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
+import org.spongepowered.api.world.Locatable;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -127,7 +128,7 @@ public class CommandEnableDisable extends FCCommandBase {
         } else if (isIn(REGIONS_ALIASES, parse.args[0])) {
             String worldName = parse.flags.get("world");
             World world = null;
-            if (source instanceof Player) world = ((Player) source).getWorld();
+            if (source instanceof Locatable) world = ((Locatable) source).getWorld();
             if (!worldName.isEmpty()) {
                 Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
                 if (optWorld.isPresent()) {
@@ -230,7 +231,7 @@ public class CommandEnableDisable extends FCCommandBase {
                 if (isIn(REGIONS_ALIASES, parse.args[0])) {
                     String worldName = parse.flags.get("world");
                     World world = null;
-                    if (source instanceof Player) world = ((Player) source).getWorld();
+                    if (source instanceof Locatable) world = ((Locatable) source).getWorld();
                     if (!worldName.isEmpty()) {
                         Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
                         if (optWorld.isPresent()) {
@@ -297,8 +298,6 @@ public class CommandEnableDisable extends FCCommandBase {
 
     @Override
     public Text getUsage(CommandSource source) {
-        if (source instanceof Player)
-            return Text.of((this.enableState ? "enable" : "disable") + " <region [--w:<worldname>] | handler> [names]...");
-        else return Text.of((this.enableState ? "enable" : "disable") + " <region <worldname> | handler> [names]...");
+        return Text.of((this.enableState ? "enable" : "disable") + " <region [--w:worldname]> | handler> [names]...");
     }
 }

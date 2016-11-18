@@ -30,6 +30,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
@@ -49,6 +50,7 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.format.TextStyles;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
+import org.spongepowered.api.world.Locatable;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -95,7 +97,7 @@ public class CommandDetail extends FCCommandBase {
             if (region == null) {
                 String worldName = parse.flags.get("world");
                 World world = null;
-                if (source instanceof Player) world = ((Player) source).getWorld();
+                if (source instanceof Locatable) world = ((Locatable) source).getWorld();
                 if (!worldName.isEmpty()) {
                     Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
                     if (optWorld.isPresent()) {
@@ -136,6 +138,12 @@ public class CommandDetail extends FCCommandBase {
                     builder.append(objectDetails);
                 } catch (Exception e) {
                     builder.append(Text.of(TextColors.RED, TextStyles.ITALIC, "There was an error getting details for region \"" + region.getName() + "\"."));
+                    FoxGuardMain.instance().getLogger().error(
+                            (region instanceof IWorldRegion ? "Worldregion \"" : "Region \"")
+                                    + region.getName() + "\" of type \"" + region.getLongTypeName() + "\""
+                                    + (region instanceof IWorldRegion ? " in world \"" + ((IWorldRegion) region).getWorld().getName() + "\"" : "")
+                                    + " threw an exception while getting details", e
+                    );
                 }
                 outboundLinks(builder, region, source);
             } else {
@@ -148,6 +156,12 @@ public class CommandDetail extends FCCommandBase {
                     builder.append(objectDetails);
                 } catch (Exception e) {
                     builder.append(Text.of(TextColors.RED, TextStyles.ITALIC, "There was an error getting details for region \"" + region.getName() + "\"."));
+                    FoxGuardMain.instance().getLogger().error(
+                            (region instanceof IWorldRegion ? "Worldregion \"" : "Region \"")
+                                    + region.getName() + "\" of type \"" + region.getLongTypeName() + "\""
+                                    + (region instanceof IWorldRegion ? " in world \"" + ((IWorldRegion) region).getWorld().getName() + "\"" : "")
+                                    + " threw an exception while getting details", e
+                    );
                 }
             }
             source.sendMessage(builder.build());
@@ -187,6 +201,9 @@ public class CommandDetail extends FCCommandBase {
                     builder.append(objectDetails);
                 } catch (Exception e) {
                     builder.append(Text.of(TextColors.RED, TextStyles.ITALIC, "There was an error getting details for handler \"" + handler.getName() + "\"."));
+                    FoxGuardMain.instance().getLogger().error(
+                            "Handler \"" + handler.getName() + "\" of type \"" + handler.getLongTypeName() + "\" threw an exception while getting details", e
+                    );
                 }
                 builder.append(Text.of(TextColors.GREEN, "\n------- Inbound Links -------"));
                 List<IController> controllerList = FGManager.getInstance().getControllers().stream()
@@ -278,6 +295,9 @@ public class CommandDetail extends FCCommandBase {
                     builder.append(objectDetails);
                 } catch (Exception e) {
                     builder.append(Text.of(TextColors.RED, TextStyles.ITALIC, "There was an error getting details for handler \"" + handler.getName() + "\"."));
+                    FoxGuardMain.instance().getLogger().error(
+                            "Handler \"" + handler.getName() + "\" of type \"" + handler.getLongTypeName() + "\" threw an exception while getting details", e
+                    );
                 }
             }
             source.sendMessage(builder.build());
@@ -360,7 +380,7 @@ public class CommandDetail extends FCCommandBase {
                 if (isIn(REGIONS_ALIASES, parse.args[0])) {
                     String worldName = parse.flags.get("world");
                     World world = null;
-                    if (source instanceof Player) world = ((Player) source).getWorld();
+                    if (source instanceof Locatable) world = ((Locatable) source).getWorld();
                     if (!worldName.isEmpty()) {
                         Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
                         if (optWorld.isPresent()) {

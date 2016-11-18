@@ -39,8 +39,8 @@ import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Entry;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Operation;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.util.TristateEntry;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.util.EverythingSet;
@@ -93,9 +93,9 @@ public class BasicHandler extends HandlerBase {
     };
 
     private final List<Group> groups;
-    private final Map<Group, List<Entry>> groupPermissions;
+    private final Map<Group, List<TristateEntry>> groupPermissions;
     private final Group defaultGroup;
-    private final List<Entry> defaultPermissions;
+    private final List<TristateEntry> defaultPermissions;
 
     private final Map<Group, Map<FlagBitSet, Tristate>> groupPermCache;
     private final Map<FlagBitSet, Tristate> defaultPermCache;
@@ -118,9 +118,9 @@ public class BasicHandler extends HandlerBase {
 
     public BasicHandler(String name, boolean isEnabled, int priority,
                         List<Group> groups,
-                        Map<Group, List<Entry>> groupPermissions,
+                        Map<Group, List<TristateEntry>> groupPermissions,
                         Group defaultGroup,
-                        List<Entry> defaultPermissions) {
+                        List<TristateEntry> defaultPermissions) {
         super(name, priority, isEnabled);
         this.groups = groups;
         this.defaultGroup = defaultGroup;
@@ -130,14 +130,14 @@ public class BasicHandler extends HandlerBase {
 
         this.groupPermCache = new CacheMap<>((k1, m1) -> {
             if (k1 instanceof Group) {
-                List<Entry> entries = BasicHandler.this.groupPermissions.get(k1);
+                List<TristateEntry> entries = BasicHandler.this.groupPermissions.get(k1);
                 Map<FlagBitSet, Tristate> map = new CacheMap<>((k2, m2) -> {
                     if (k2 instanceof FlagBitSet) {
                         FlagBitSet flags = (FlagBitSet) k2;
                         Tristate state = null;
-                        for (Entry entry : entries) {
+                        for (TristateEntry entry : entries) {
                             if (flags.toFlagSet().containsAll(entry.set)) {
-                                state = entry.state;
+                                state = entry.tristate;
                                 break;
                             }
                         }
@@ -153,9 +153,9 @@ public class BasicHandler extends HandlerBase {
             if (k instanceof FlagBitSet) {
                 FlagBitSet flags = (FlagBitSet) k;
                 Tristate state = Tristate.UNDEFINED;
-                for (Entry entry : BasicHandler.this.defaultPermissions) {
+                for (TristateEntry entry : BasicHandler.this.defaultPermissions) {
                     if (flags.toFlagSet().containsAll(entry.set)) {
-                        state = entry.state;
+                        state = entry.tristate;
                         break;
                     }
                 }
@@ -533,10 +533,10 @@ public class BasicHandler extends HandlerBase {
                     }
                     if (!areFlagsSet) return ProcessResult.of(false, Text.of("Must specify flags!"));
                     if (state == null) return ProcessResult.of(false, Text.of("Must specify a tristate value!"));
-                    List<Entry> permissions = getGroupPermissions(group);
-                    Entry entry = new Entry(flags, state);
+                    List<TristateEntry> permissions = getGroupPermissions(group);
+                    TristateEntry entry = new TristateEntry(flags, state);
 
-                    for (Entry existing : permissions) {
+                    for (TristateEntry existing : permissions) {
                         if (existing.set.equals(entry.set))
                             return ProcessResult.of(false, Text.of("Entry already exists with this flag set!"));
                     }
@@ -559,7 +559,8 @@ public class BasicHandler extends HandlerBase {
                 case "remove": {
                     if (parse.args.length < 4)
                         return ProcessResult.of(false, Text.of("Must specify flags or an index to remove!"));
-                    List<Entry> permissions = getGroupPermissions(group);
+                    List<TristateEntry> permissions = getGroupPermissions(group);
+                    if(permissions.isEmpty()) return ProcessResult.of(false, "There are no entries to remove in this group!");
                     try {
                         int index = Integer.parseInt(parse.args[3]);
                         if (index < 0) index = 0;
@@ -577,8 +578,8 @@ public class BasicHandler extends HandlerBase {
                                 return ProcessResult.of(false, Text.of("\"" + argument + "\" is not a valid flag!"));
                             }
                         }
-                        Entry entry = null;
-                        for (Entry existing : permissions) {
+                        TristateEntry entry = null;
+                        for (TristateEntry existing : permissions) {
                             if (existing.set.equals(flags)) {
                                 entry = existing;
                                 break;
@@ -592,7 +593,8 @@ public class BasicHandler extends HandlerBase {
                 case "set": {
                     if (parse.args.length < 4)
                         return ProcessResult.of(false, Text.of("Must specify an index or flags and then a tristate value!"));
-                    List<Entry> permissions = getGroupPermissions(group);
+                    List<TristateEntry> permissions = getGroupPermissions(group);
+                    if(permissions.isEmpty()) return ProcessResult.of(false, "There are no entries to set in this group!");
                     try {
                         int index = Integer.parseInt(parse.args[3]);
                         if (index < 0) index = 0;
@@ -647,10 +649,10 @@ public class BasicHandler extends HandlerBase {
                     if (!areFlagsSet) return ProcessResult.of(false, Text.of("Must specify flags!"));
                     if (state == null && !clear)
                         return ProcessResult.of(false, Text.of("Must specify a tristate value!"));
-                    Entry entry = new Entry(flags, state);
+                    TristateEntry entry = new TristateEntry(flags, state);
 
-                    Entry original = null;
-                    for (Entry existing : permissions) {
+                    TristateEntry original = null;
+                    for (TristateEntry existing : permissions) {
                         if (existing.set.equals(entry.set)) {
                             original = existing;
                             break;
@@ -683,9 +685,10 @@ public class BasicHandler extends HandlerBase {
                     }
                 }
                 case "move": {
-                    List<Entry> permissions = getGroupPermissions(group);
+                    List<TristateEntry> permissions = getGroupPermissions(group);
                     if (parse.args.length < 4)
                         return ProcessResult.of(false, Text.of("Must specify flags or an index to move!"));
+                    if(permissions.isEmpty()) return ProcessResult.of(false, "There are no entries to move in this group!");
                     try {
                         int from = Integer.parseInt(parse.args[3]);
                         if (from < 0) from = 0;
@@ -723,8 +726,8 @@ public class BasicHandler extends HandlerBase {
                             return ProcessResult.of(false, Text.of("\"" + argument + "\" is not a valid flag!"));
                         }
                         if (!set) return ProcessResult.of(false, Text.of("Must specify a target index!"));
-                        Entry entry = null;
-                        for (Entry existing : permissions) {
+                        TristateEntry entry = null;
+                        for (TristateEntry existing : permissions) {
                             if (existing.set.equals(flags)) {
                                 entry = existing;
                                 break;
@@ -1100,12 +1103,12 @@ public class BasicHandler extends HandlerBase {
                     TextActions.showText(Text.of("Click to add a flag entry")),
                     group.displayName + ":\n"));
             int index = 0;
-            for (Entry entry : this.groupPermissions.get(group)) {
+            for (TristateEntry entry : this.groupPermissions.get(group)) {
                 StringBuilder stringBuilder = new StringBuilder();
                 entry.set.stream().sorted().forEach(flag -> stringBuilder.append(flag.name).append(" "));
                 Text.Builder entryBuilder = Text.builder();
                 entryBuilder.append(Text.of("  " + index + ": " + stringBuilder.toString(), TextColors.AQUA, ": "))
-                        .append(FGUtil.readableTristateText(entry.state))
+                        .append(FGUtil.readableTristateText(entry.tristate))
                         .onHover(TextActions.showText(Text.of("Click to change this flag entry")))
                         .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " flags " + group.name + " set " + (index++) + " "));
                 builder.append(entryBuilder.build()).append(Text.NEW_LINE);
@@ -1116,12 +1119,12 @@ public class BasicHandler extends HandlerBase {
                 TextActions.showText(Text.of("Click to add a flag entry")),
                 this.defaultGroup.displayName + ":"));
         int index = 0;
-        for (Entry entry : this.defaultPermissions) {
+        for (TristateEntry entry : this.defaultPermissions) {
             StringBuilder stringBuilder = new StringBuilder();
             entry.set.stream().sorted().forEach(flag -> stringBuilder.append(flag.name).append(" "));
             Text.Builder entryBuilder = Text.builder();
             entryBuilder.append(Text.of("  " + index + ": " + stringBuilder.toString(), TextColors.AQUA, ": "))
-                    .append(FGUtil.readableTristateText(entry.state))
+                    .append(FGUtil.readableTristateText(entry.tristate))
                     .onHover(TextActions.showText(Text.of("Click to change this flag entry")))
                     .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " flags default set " + (index++) + " "));
             builder.append(Text.NEW_LINE).append(entryBuilder.build());
@@ -1147,11 +1150,11 @@ public class BasicHandler extends HandlerBase {
             for (Group group : this.groups) {
                 List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
                 stringEntries.clear();
-                stringEntries.addAll(this.groupPermissions.get(group).stream().map(Entry::serialize).collect(Collectors.toList()));
+                stringEntries.addAll(this.groupPermissions.get(group).stream().map(TristateEntry::serialize).collect(Collectors.toList()));
             }
             List<String> stringEntries = flagMapDB.indexTreeList("default", Serializer.STRING).createOrOpen();
             stringEntries.clear();
-            stringEntries.addAll(this.defaultPermissions.stream().map(Entry::serialize).collect(Collectors.toList()));
+            stringEntries.addAll(this.defaultPermissions.stream().map(TristateEntry::serialize).collect(Collectors.toList()));
         }
         Path groupsDirectory = directory.resolve("groups");
         storageManager.constructDirectory(groupsDirectory);
@@ -1331,15 +1334,15 @@ public class BasicHandler extends HandlerBase {
         group.users.clear();
     }
 
-    public boolean addFlagEntry(Group group, Entry entry) {
+    public boolean addFlagEntry(Group group, TristateEntry entry) {
         return addFlagEntry(group, 0, entry);
     }
 
-    public boolean addFlagEntry(Group group, int index, Entry entry) {
-        List<Entry> groupEntries = getGroupPermissions(group);
+    public boolean addFlagEntry(Group group, int index, TristateEntry entry) {
+        List<TristateEntry> groupEntries = getGroupPermissions(group);
         if (index < 0 || index > groupEntries.size())
             throw new IndexOutOfBoundsException("Index out of bounds: " + index + " Range: 0-" + groupEntries.size());
-        for (Entry groupEntry : groupEntries) {
+        for (TristateEntry groupEntry : groupEntries) {
             if (groupEntry.set.equals(entry.set)) return false;
         }
         groupEntries.add(index, entry);
@@ -1347,11 +1350,11 @@ public class BasicHandler extends HandlerBase {
         return true;
     }
 
-    public void setFlagEntry(Group group, Entry entry) {
-        List<Entry> groupEntries = getGroupPermissions(group);
-        for (Entry groupEntry : groupEntries) {
+    public void setFlagEntry(Group group, TristateEntry entry) {
+        List<TristateEntry> groupEntries = getGroupPermissions(group);
+        for (TristateEntry groupEntry : groupEntries) {
             if (groupEntry.set.equals(entry.set)) {
-                groupEntry.state = entry.state;
+                groupEntry.tristate = entry.tristate;
                 return;
             }
         }
@@ -1359,10 +1362,10 @@ public class BasicHandler extends HandlerBase {
         clearFlagCacheForGroup(group);
     }
 
-    public void setFlagEntry(Group group, int index, Entry entry) {
-        List<Entry> groupEntries = getGroupPermissions(group);
-        Entry original = null;
-        for (Entry groupEntry : groupEntries) {
+    public void setFlagEntry(Group group, int index, TristateEntry entry) {
+        List<TristateEntry> groupEntries = getGroupPermissions(group);
+        TristateEntry original = null;
+        for (TristateEntry groupEntry : groupEntries) {
             if (groupEntry.set.equals(entry.set)) {
                 original = groupEntry;
                 break;
@@ -1374,18 +1377,18 @@ public class BasicHandler extends HandlerBase {
     }
 
     public void setFlagEntry(Group group, int index, Tristate state) {
-        List<Entry> groupEntries = getGroupPermissions(group);
+        List<TristateEntry> groupEntries = getGroupPermissions(group);
         if (index < 0 || index >= groupEntries.size())
             throw new IndexOutOfBoundsException("Index out of bounds: " + index + " Range: 0-" + (groupEntries.size() - 1));
-        Entry entry = groupEntries.get(index);
-        entry.state = state;
+        TristateEntry entry = groupEntries.get(index);
+        entry.tristate = state;
         clearFlagCacheForGroup(group);
     }
 
     public boolean removeFlagEntry(Group group, Set<Flag> flags) {
-        List<Entry> groupEntries = getGroupPermissions(group);
-        Entry toRemove = null;
-        for (Entry groupEntry : groupEntries) {
+        List<TristateEntry> groupEntries = getGroupPermissions(group);
+        TristateEntry toRemove = null;
+        for (TristateEntry groupEntry : groupEntries) {
             if (groupEntry.set.equals(flags)) {
                 toRemove = groupEntry;
             }
@@ -1397,7 +1400,7 @@ public class BasicHandler extends HandlerBase {
     }
 
     public void removeFlagEntry(Group group, int index) {
-        List<Entry> groupEntries = getGroupPermissions(group);
+        List<TristateEntry> groupEntries = getGroupPermissions(group);
         if (index < 0 || index >= groupEntries.size())
             throw new IndexOutOfBoundsException("Index out of bounds: " + index + " Range: 0-" + (groupEntries.size() - 1));
         groupEntries.remove(index);
@@ -1405,11 +1408,11 @@ public class BasicHandler extends HandlerBase {
     }
 
     public boolean moveFlagEntry(Group group, Set<Flag> flags, int destination) {
-        List<Entry> groupEntries = getGroupPermissions(group);
+        List<TristateEntry> groupEntries = getGroupPermissions(group);
         if (destination < 0 || destination >= groupEntries.size())
             throw new IndexOutOfBoundsException("Destination index out of bounds: " + destination + " Range: 0-" + (groupEntries.size() - 1));
-        Entry toMove = null;
-        for (Entry groupEntry : groupEntries) {
+        TristateEntry toMove = null;
+        for (TristateEntry groupEntry : groupEntries) {
             if (groupEntry.set.equals(flags)) {
                 toMove = groupEntry;
             }
@@ -1421,12 +1424,12 @@ public class BasicHandler extends HandlerBase {
     }
 
     public void moveFlagEntry(Group group, int source, int destination) {
-        List<Entry> groupEntries = getGroupPermissions(group);
+        List<TristateEntry> groupEntries = getGroupPermissions(group);
         if (source < 0 || source >= groupEntries.size())
             throw new IndexOutOfBoundsException("Source index out of bounds: " + source + " Range: 0-" + (groupEntries.size() - 1));
         if (destination < 0 || destination >= groupEntries.size())
             throw new IndexOutOfBoundsException("Destination index out of bounds: " + destination + " Range: 0-" + (groupEntries.size() - 1));
-        Entry entry = groupEntries.remove(source);
+        TristateEntry entry = groupEntries.remove(source);
         groupEntries.add(destination, entry);
         clearFlagCacheForGroup(group);
     }
@@ -1479,7 +1482,7 @@ public class BasicHandler extends HandlerBase {
 
     }
 
-    private List<Entry> getGroupPermissions(Group group) {
+    private List<TristateEntry> getGroupPermissions(Group group) {
         if (group == this.defaultGroup) return this.defaultPermissions;
         else return this.groupPermissions.get(group);
     }
@@ -1585,7 +1588,7 @@ public class BasicHandler extends HandlerBase {
                     Group owners = handler.createGroup("owners").get();
                     owners.displayName = "Owners";
                     owners.color = TextColors.GOLD;
-                    handler.addFlagEntry(owners, new Entry(ImmutableSet.of(DEBUFF), TRUE));
+                    handler.addFlagEntry(owners, new TristateEntry(ImmutableSet.of(DEBUFF), TRUE));
                     if (source instanceof Player) owners.users.add(((Player) source).getUniqueId());
 
                     Group members = handler.createGroup("members").get();
@@ -1606,7 +1609,7 @@ public class BasicHandler extends HandlerBase {
                     Group owners = handler.createGroup("owners").get();
                     owners.displayName = "Owners";
                     owners.color = TextColors.GOLD;
-                    handler.addFlagEntry(owners, new Entry(ImmutableSet.of(DEBUFF), TRUE));
+                    handler.addFlagEntry(owners, new TristateEntry(ImmutableSet.of(DEBUFF), TRUE));
                     if (source instanceof Player) owners.users.add(((Player) source).getUniqueId());
 
                     Group members = handler.createGroup("members").get();
@@ -1623,25 +1626,25 @@ public class BasicHandler extends HandlerBase {
                     Group owners = handler.createGroup("owners").get();
                     owners.displayName = "Owners";
                     owners.color = TextColors.GOLD;
-                    handler.addFlagEntry(owners, new Entry(ImmutableSet.of(DEBUFF), TRUE));
+                    handler.addFlagEntry(owners, new TristateEntry(ImmutableSet.of(DEBUFF), TRUE));
                     if (source instanceof Player) owners.users.add(((Player) source).getUniqueId());
 
                     Group members = handler.createGroup("members").get();
                     members.displayName = "Members";
                     members.color = TextColors.GREEN;
-                    handler.addFlagEntry(members, new Entry(ImmutableSet.of(BLOCK), UNDEFINED));
+                    handler.addFlagEntry(members, new TristateEntry(ImmutableSet.of(BLOCK), UNDEFINED));
 
                     Group passive = handler.createGroup("passive").get();
                     passive.displayName = "Passive";
                     passive.color = TextColors.AQUA;
-                    handler.addFlagEntry(passive, new Entry(ImmutableSet.of(SPAWN, HOSTILE), FALSE));
+                    handler.addFlagEntry(passive, new TristateEntry(ImmutableSet.of(SPAWN, HOSTILE), FALSE));
                     handler.setPassiveSetting(PassiveSetting.GROUP, passive);
 
                     Group defaultG = handler.getDefaultGroup();
-                    handler.addFlagEntry(defaultG, new Entry(ImmutableSet.of(BLOCK, CHANGE), FALSE));
-                    handler.addFlagEntry(defaultG, new Entry(ImmutableSet.of(DAMAGE, ENTITY), FALSE));
-                    handler.addFlagEntry(defaultG, new Entry(ImmutableSet.of(DAMAGE, LIVING), UNDEFINED));
-                    handler.addFlagEntry(defaultG, new Entry(ImmutableSet.of(DAMAGE, PLAYER), FALSE));
+                    handler.addFlagEntry(defaultG, new TristateEntry(ImmutableSet.of(BLOCK, CHANGE), FALSE));
+                    handler.addFlagEntry(defaultG, new TristateEntry(ImmutableSet.of(DAMAGE, ENTITY), FALSE));
+                    handler.addFlagEntry(defaultG, new TristateEntry(ImmutableSet.of(DAMAGE, LIVING), UNDEFINED));
+                    handler.addFlagEntry(defaultG, new TristateEntry(ImmutableSet.of(DAMAGE, PLAYER), FALSE));
 
                     return handler;
                 } else throw new CommandException(Text.of("\"" + parse.args[0] + "\" is not a valid template!"));
@@ -1678,20 +1681,20 @@ public class BasicHandler extends HandlerBase {
                 TextColor color = Sponge.getRegistry().getType(TextColor.class, root.getNode("color").getString("white")).orElse(TextColors.WHITE);
                 groups.add(new Group(groupName, members, color, displayName));
             }
-            Map<Group, List<Entry>> groupPermissions = new HashMap<>();
-            List<Entry> defaultPermissions;
+            Map<Group, List<TristateEntry>> groupPermissions = new HashMap<>();
+            List<TristateEntry> defaultPermissions;
             try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.foxdb").normalize().toString()).make()) {
                 for (Group group : groups) {
                     List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
                     groupPermissions.put(group, stringEntries.stream()
-                            .map(Entry::deserialize)
+                            .map(TristateEntry::deserialize)
                             .filter(entry -> !entry.set.isEmpty())
                             .distinct()
                             .collect(Collectors.toList()));
                 }
                 List<String> stringEntries = flagMapDB.indexTreeList("default", Serializer.STRING).createOrOpen();
                 defaultPermissions = stringEntries.stream()
-                        .map(Entry::deserialize)
+                        .map(TristateEntry::deserialize)
                         .filter(entry -> !entry.set.isEmpty())
                         .distinct()
                         .collect(Collectors.toList());

@@ -45,6 +45,7 @@ import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.Locatable;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -70,18 +71,17 @@ public class RectangularRegion extends WorldRegionBase implements IIterableRegio
             throws CommandException {
         super(name, true);
         List<Vector3i> allPositions = new ArrayList<>(positions);
+        Vector3i sourcePos = source instanceof Locatable ? ((Locatable) source).getLocation().getBlockPosition() : Vector3i.ZERO;
         for (int i = 0; i < args.length - 1; i += 2) {
             int x, z;
             try {
-                x = FCCUtil.parseCoordinate(source instanceof Player ?
-                        ((Player) source).getLocation().getBlockX() : 0, args[i]);
+                x = FCCUtil.parseCoordinate(sourcePos.getX(), args[i]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(
                         Text.of("Unable to parse \"" + args[i] + "\"!"), e, args[i], i);
             }
             try {
-                z = FCCUtil.parseCoordinate(source instanceof Player ?
-                        ((Player) source).getLocation().getBlockZ() : 0, args[i + 1]);
+                z = FCCUtil.parseCoordinate(sourcePos.getZ(), args[i + 1]);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(
                         Text.of("Unable to parse \"" + args[i + 1] + "\"!"), e, args[i + 1], i + 1);

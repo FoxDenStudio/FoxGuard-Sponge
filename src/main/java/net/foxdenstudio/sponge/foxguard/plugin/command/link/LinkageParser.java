@@ -42,6 +42,7 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.StartsWithPredicate;
+import org.spongepowered.api.world.Locatable;
 import org.spongepowered.api.world.World;
 
 import java.util.*;
@@ -69,7 +70,7 @@ public final class LinkageParser {
         Matcher matcher = PATTERN.matcher(expressionString);
         boolean found = false;
         Stage stage = Stage.START;
-        World world = source instanceof Player ? ((Player) source).getWorld() : null;
+        World world = source instanceof Locatable ? ((Locatable) source).getWorld() : null;
         int parentheses = 0;
         String match = "";
         while (matcher.find()) {
@@ -147,8 +148,8 @@ public final class LinkageParser {
     }
 
     private LinkageParser(CommandSource source) {
-        if (source instanceof Player) {
-            currentWorld = ((Player) source).getWorld();
+        if (source instanceof Locatable) {
+            currentWorld = ((Locatable) source).getWorld();
         }
     }
 

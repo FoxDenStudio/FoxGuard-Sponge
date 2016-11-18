@@ -39,9 +39,9 @@ import ninja.leaping.configurate.loader.ConfigurationLoader;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.Locatable;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -67,11 +67,11 @@ public class ElevationRegion extends WorldRegionBase {
             throws CommandException {
         super(name, true);
         List<Vector3i> allPositions = new ArrayList<>(positions);
+        int sourceY = source instanceof Locatable ? ((Locatable) source).getLocation().getBlockY() : 0;
         for (String arg : args) {
             int y;
             try {
-                y = FCCUtil.parseCoordinate(source instanceof Player ?
-                        ((Player) source).getLocation().getBlockY() : 0, arg);
+                y = FCCUtil.parseCoordinate(sourceY, arg);
             } catch (NumberFormatException e) {
                 throw new ArgumentParseException(
                         Text.of("Unable to parse \"" + arg + "\"!"), e, arg, 1);

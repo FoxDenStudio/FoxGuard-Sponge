@@ -36,7 +36,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Entry;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.util.TristateEntry;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
@@ -74,7 +74,7 @@ public class StaticHandler extends HandlerBase {
         return true;
     };
 
-    private final List<Entry> entries;
+    private final List<TristateEntry> entries;
     private final Map<FlagBitSet, Tristate> permCache;
 
     public StaticHandler(String name, int priority) {
@@ -88,9 +88,9 @@ public class StaticHandler extends HandlerBase {
             if (k instanceof FlagBitSet) {
                 FlagBitSet flags = (FlagBitSet) k;
                 Tristate state = Tristate.UNDEFINED;
-                for (Entry entry : StaticHandler.this.entries) {
+                for (TristateEntry entry : StaticHandler.this.entries) {
                     if (flags.toFlagSet().containsAll(entry.set)) {
-                        state = entry.state;
+                        state = entry.tristate;
                         break;
                     }
                 }
@@ -162,9 +162,9 @@ public class StaticHandler extends HandlerBase {
                 }
                 if (!areFlagsSet) return ProcessResult.of(false, Text.of("Must specify flags!"));
                 if (state == null) return ProcessResult.of(false, Text.of("Must specify a tristate value!"));
-                Entry entry = new Entry(flags, state);
+                TristateEntry entry = new TristateEntry(flags, state);
 
-                for (Entry existing : this.entries) {
+                for (TristateEntry existing : this.entries) {
                     if (existing.set.equals(entry.set))
                         return ProcessResult.of(false, Text.of("Entry already exists with this flag set!"));
                 }
@@ -187,6 +187,7 @@ public class StaticHandler extends HandlerBase {
             case "remove": {
                 if (parse.args.length < 2)
                     return ProcessResult.of(false, Text.of("Must specify flags or an index to remove!"));
+                if(this.entries.isEmpty()) return ProcessResult.of(false, "There are no entries to remove!");
                 try {
                     int index = Integer.parseInt(parse.args[1]);
                     if (index < 0) index = 0;
@@ -204,8 +205,8 @@ public class StaticHandler extends HandlerBase {
                             return ProcessResult.of(false, Text.of("\"" + argument + "\" is not a valid flag!"));
                         }
                     }
-                    Entry entry = null;
-                    for (Entry existing : this.entries) {
+                    TristateEntry entry = null;
+                    for (TristateEntry existing : this.entries) {
                         if (existing.set.equals(flags)) {
                             entry = existing;
                             break;
@@ -219,6 +220,7 @@ public class StaticHandler extends HandlerBase {
             case "set": {
                 if (parse.args.length < 2)
                     return ProcessResult.of(false, Text.of("Must specify an index or flags and then a tristate value!"));
+                if (this.entries.isEmpty()) return ProcessResult.of(false, "There are no entries to set!");
                 try {
                     int index = Integer.parseInt(parse.args[1]);
                     if (index < 0) index = 0;
@@ -272,10 +274,10 @@ public class StaticHandler extends HandlerBase {
                 }
                 if (!areFlagsSet) return ProcessResult.of(false, Text.of("Must specify flags!"));
                 if (state == null && !clear) return ProcessResult.of(false, Text.of("Must specify a tristate value!"));
-                Entry entry = new Entry(flags, state);
+                TristateEntry entry = new TristateEntry(flags, state);
 
-                Entry original = null;
-                for (Entry existing : this.entries) {
+                TristateEntry original = null;
+                for (TristateEntry existing : this.entries) {
                     if (existing.set.equals(entry.set)) {
                         original = existing;
                         break;
@@ -309,6 +311,7 @@ public class StaticHandler extends HandlerBase {
             case "move": {
                 if (parse.args.length < 2)
                     return ProcessResult.of(false, Text.of("Must specify flags or an index to move!"));
+                if (this.entries.isEmpty()) return ProcessResult.of(false, "There are no entries to move!");
                 try {
                     int from = Integer.parseInt(parse.args[1]);
                     if (from < 0) from = 0;
@@ -346,8 +349,8 @@ public class StaticHandler extends HandlerBase {
                         return ProcessResult.of(false, Text.of("\"" + argument + "\" is not a valid flag!"));
                     }
                     if (!set) return ProcessResult.of(false, Text.of("Must specify a target index!"));
-                    Entry entry = null;
-                    for (Entry existing : this.entries) {
+                    TristateEntry entry = null;
+                    for (TristateEntry existing : this.entries) {
                         if (existing.set.equals(flags)) {
                             entry = existing;
                             break;
@@ -458,12 +461,12 @@ public class StaticHandler extends HandlerBase {
                 TextActions.showText(Text.of("Click to add a flag entry")),
                 "Flags:"));
         int index = 0;
-        for (Entry entry : this.entries) {
+        for (TristateEntry entry : this.entries) {
             StringBuilder stringBuilder = new StringBuilder();
             entry.set.stream().sorted().forEach(flag -> stringBuilder.append(flag.name).append(" "));
             Text.Builder entryBuilder = Text.builder();
             entryBuilder.append(Text.of("  " + index + ": " + stringBuilder.toString(), TextColors.AQUA, ": "))
-                    .append(FGUtil.readableTristateText(entry.state))
+                    .append(FGUtil.readableTristateText(entry.tristate))
                     .onHover(TextActions.showText(Text.of("Click to change this flag entry")))
                     .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set " + (index++) + " "));
             builder.append(Text.NEW_LINE).append(entryBuilder.build());
@@ -483,7 +486,7 @@ public class StaticHandler extends HandlerBase {
                 HoconConfigurationLoader.builder().setPath(flagsFile).build();
         CommentedConfigurationNode root = FCPUtil.getHOCONConfiguration(flagsFile, loader);
         root.getNode("flags").setValue(this.entries.stream()
-                .map(Entry::serialize)
+                .map(TristateEntry::serialize)
                 .collect(Collectors.toList())
         );
         try {
@@ -493,14 +496,14 @@ public class StaticHandler extends HandlerBase {
         }
     }
 
-    public boolean addFlagEntry(Entry entry) {
+    public boolean addFlagEntry(TristateEntry entry) {
         return addFlagEntry(0, entry);
     }
 
-    public boolean addFlagEntry(int index, Entry entry) {
+    public boolean addFlagEntry(int index, TristateEntry entry) {
         if (index < 0 || index > this.entries.size())
             throw new IndexOutOfBoundsException("Index out of bounds: " + index + " Range: 0-" + this.entries.size());
-        for (Entry groupEntry : this.entries) {
+        for (TristateEntry groupEntry : this.entries) {
             if (groupEntry.set.equals(entry.set)) return false;
         }
         this.entries.add(index, entry);
@@ -508,10 +511,10 @@ public class StaticHandler extends HandlerBase {
         return true;
     }
 
-    public void setFlagEntry(Entry entry) {
-        for (Entry groupEntry : this.entries) {
+    public void setFlagEntry(TristateEntry entry) {
+        for (TristateEntry groupEntry : this.entries) {
             if (groupEntry.set.equals(entry.set)) {
-                groupEntry.state = entry.state;
+                groupEntry.tristate = entry.tristate;
                 return;
             }
         }
@@ -519,9 +522,9 @@ public class StaticHandler extends HandlerBase {
         this.permCache.clear();
     }
 
-    public void setFlagEntry(int index, Entry entry) {
-        Entry original = null;
-        for (Entry groupEntry : this.entries) {
+    public void setFlagEntry(int index, TristateEntry entry) {
+        TristateEntry original = null;
+        for (TristateEntry groupEntry : this.entries) {
             if (groupEntry.set.equals(entry.set)) {
                 original = groupEntry;
                 break;
@@ -535,14 +538,14 @@ public class StaticHandler extends HandlerBase {
     public void setFlagEntry(int index, Tristate state) {
         if (index < 0 || index >= this.entries.size())
             throw new IndexOutOfBoundsException("Index out of bounds: " + index + " Range: 0-" + (this.entries.size() - 1));
-        Entry entry = this.entries.get(index);
-        entry.state = state;
+        TristateEntry entry = this.entries.get(index);
+        entry.tristate = state;
         this.permCache.clear();
     }
 
     public boolean removeFlagEntry(Set<Flag> flags) {
-        Entry toRemove = null;
-        for (Entry groupEntry : this.entries) {
+        TristateEntry toRemove = null;
+        for (TristateEntry groupEntry : this.entries) {
             if (groupEntry.set.equals(flags)) {
                 toRemove = groupEntry;
             }
@@ -563,8 +566,8 @@ public class StaticHandler extends HandlerBase {
     public boolean moveFlagEntry(Set<Flag> flags, int destination) {
         if (destination < 0 || destination >= this.entries.size())
             throw new IndexOutOfBoundsException("Destination index out of bounds: " + destination + " Range: 0-" + (this.entries.size() - 1));
-        Entry toMove = null;
-        for (Entry groupEntry : this.entries) {
+        TristateEntry toMove = null;
+        for (TristateEntry groupEntry : this.entries) {
             if (groupEntry.set.equals(flags)) {
                 toMove = groupEntry;
             }
@@ -580,7 +583,7 @@ public class StaticHandler extends HandlerBase {
             throw new IndexOutOfBoundsException("Source index out of bounds: " + source + " Range: 0-" + (this.entries.size() - 1));
         if (destination < 0 || destination >= this.entries.size())
             throw new IndexOutOfBoundsException("Destination index out of bounds: " + destination + " Range: 0-" + (this.entries.size() - 1));
-        Entry entry = this.entries.remove(source);
+        TristateEntry entry = this.entries.remove(source);
         this.entries.add(destination, entry);
         this.permCache.clear();
     }
@@ -599,7 +602,7 @@ public class StaticHandler extends HandlerBase {
         optionalFlagsList.stream()
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .map(Entry::deserialize)
+                .map(TristateEntry::deserialize)
                 .forEach(this.entries::add);
         this.permCache.clear();
     }

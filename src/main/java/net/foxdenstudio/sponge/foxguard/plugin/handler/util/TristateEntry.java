@@ -25,57 +25,46 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.handler.util;
 
-import com.google.common.collect.ImmutableSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
 import org.spongepowered.api.util.Tristate;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
 
 /**
- * Created by Fox on 7/8/2016.
+ * Created by Fox on 11/15/2016.
  */
-public abstract class Entry {
-    public Set<Flag> set;
+public class TristateEntry extends Entry {
 
-    public Entry(Set<Flag> set) {
-        this.set = set;
+    public Tristate tristate;
+
+    public TristateEntry(Set<Flag> set, Tristate tristate) {
+        super(set);
+        this.tristate = tristate;
     }
 
-    public Entry(Flag... flags) {
-        this.set = ImmutableSet.copyOf(flags);
+    public TristateEntry(Tristate tristate, Flag... flags) {
+        super(flags);
+        this.tristate = tristate;
     }
 
-    public String serialize() {
-        StringBuilder builder = new StringBuilder();
-        for (Iterator<Flag> iterator = set.iterator(); iterator.hasNext(); ) {
-            Flag flag = iterator.next();
-            builder.append(flag.name);
-            if (iterator.hasNext()) builder.append(",");
+    public String serializeValue(){
+        return tristate.name();
+    }
+
+    public static TristateEntry deserialize(String string) {
+        FlagRegistry registry = FlagRegistry.getInstance();
+        String[] parts = string.split(":");
+        String[] flags = parts[0].split(",");
+        Set<Flag> flagSet = new HashSet<>();
+        for (String flagName : flags) {
+            Optional<Flag> flagOptional = registry.getFlag(flagName);
+            if (flagOptional.isPresent()) {
+                flagSet.add(flagOptional.get());
+            }
         }
-        builder.append(":");
-        builder.append(serializeValue());
-        return builder.toString();
-    }
-
-    public abstract String serializeValue();
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Entry entry = (Entry) o;
-
-        return set != null ? set.equals(entry.set) : entry.set == null;
-
-    }
-
-    @Override
-    public int hashCode() {
-        return set != null ? set.hashCode() : 0;
+        return new TristateEntry(flagSet, Tristate.valueOf(parts[1]));
     }
 }

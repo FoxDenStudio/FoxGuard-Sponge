@@ -34,10 +34,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.plugin.command.*;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.LogicController;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.BasicHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.DebugHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.GroupHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.StaticHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.*;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.*;
 import net.foxdenstudio.sponge.foxguard.plugin.misc.FGContextCalculator;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
@@ -289,6 +286,7 @@ public final class FoxGuardMain {
         manager.registerHandlerFactory(new StaticHandler.Factory());
         manager.registerHandlerFactory(new BasicHandler.Factory());
         manager.registerHandlerFactory(new GroupHandler.Factory());
+        manager.registerHandlerFactory(new PermissionHandler.Factory());
         manager.registerHandlerFactory(new DebugHandler.Factory());
 
         //manager.registerControllerFactory(new MessageController.Factory());

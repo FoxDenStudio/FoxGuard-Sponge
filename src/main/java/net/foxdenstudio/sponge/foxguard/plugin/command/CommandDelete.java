@@ -48,6 +48,7 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
+import org.spongepowered.api.world.Locatable;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -90,7 +91,7 @@ public class CommandDelete extends FCCommandBase {
             if (region == null) {
                 String worldName = parse.flags.get("world");
                 World world = null;
-                if (source instanceof Player) world = ((Player) source).getWorld();
+                if (source instanceof Locatable) world = ((Locatable) source).getWorld();
                 if (!worldName.isEmpty()) {
                     Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
                     if (optWorld.isPresent()) {
@@ -149,7 +150,7 @@ public class CommandDelete extends FCCommandBase {
                 if (isIn(REGIONS_ALIASES, parse.args[0])) {
                     String worldName = parse.flags.get("world");
                     World world = null;
-                    if (source instanceof Player) world = ((Player) source).getWorld();
+                    if (source instanceof Locatable) world = ((Locatable) source).getWorld();
                     if (!worldName.isEmpty()) {
                         Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
                         if (optWorld.isPresent()) {

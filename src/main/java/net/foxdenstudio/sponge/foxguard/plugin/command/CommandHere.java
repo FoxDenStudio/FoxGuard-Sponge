@@ -37,7 +37,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.PlayerMoveListener;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
-import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
@@ -50,6 +49,7 @@ import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
+import org.spongepowered.api.world.Locatable;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -89,7 +89,7 @@ public class CommandHere extends FCCommandBase {
 
         String worldName = parse.flags.get("world");
         World world = null;
-        if (source instanceof Player) world = ((Player) source).getWorld();
+        if (source instanceof Locatable) world = ((Locatable) source).getWorld();
         if (!worldName.isEmpty()) {
             Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
             if (optWorld.isPresent()) {
@@ -102,8 +102,8 @@ public class CommandHere extends FCCommandBase {
         if (world == null) throw new CommandException(Text.of("Must specify a world!"));
         double x, y, z;
         Vector3d pPos = null;
-        if (source instanceof Player)
-            pPos = ((Player) source).getLocation().getPosition();
+        if (source instanceof Locatable)
+            pPos = ((Locatable) source).getLocation().getPosition();
         if (parse.args.length == 0) {
             if (pPos == null)
                 throw new CommandException(Text.of("Must specify coordinates!"));
@@ -154,16 +154,12 @@ public class CommandHere extends FCCommandBase {
                     if (selectedRegions.contains(region)) {
                         output.append(Text.of(TextColors.GRAY, "[+]"));
                         output.append(Text.of(TextColors.RED,
-                                TextActions.runCommand("/foxguard s r remove " +
-                                        (region instanceof IWorldRegion ? ("--w:" + ((IWorldRegion) region).getWorld() + " ") : "") +
-                                        region.getName()),
+                                TextActions.runCommand("/foxguard s r remove " + FGUtil.genWorldFlag(region) + region.getName()),
                                 TextActions.showText(Text.of("Remove from state buffer")),
                                 "[-]"));
                     } else {
                         output.append(Text.of(TextColors.GREEN,
-                                TextActions.runCommand("/foxguard s r add " +
-                                        (region instanceof IWorldRegion ? ("--w:" + ((IWorldRegion) region).getWorld().getName() + " ") : "") +
-                                        region.getName()),
+                                TextActions.runCommand("/foxguard s r add " + FGUtil.genWorldFlag(region) + region.getName()),
                                 TextActions.showText(Text.of("Add to state buffer")),
                                 "[+]"));
                         output.append(Text.of(TextColors.GRAY, "[-]"));
@@ -171,7 +167,7 @@ public class CommandHere extends FCCommandBase {
                     output.append(Text.of(" "));
                 }
                 output.append(Text.of(FGUtil.getColorForObject(region),
-                        TextActions.runCommand("/foxguard detail region" + (region instanceof IWorldRegion ? (" --w:" + ((IWorldRegion) region).getWorld().getName() + " ") : "") + region.getName()),
+                        TextActions.runCommand("/foxguard detail region " + FGUtil.genWorldFlag(region) + region.getName()),
                         TextActions.showText(Text.of("View details")),
                         FGUtil.getRegionName(region, false)));
                 if (regionListIterator.hasNext()) output.append(Text.NEW_LINE);

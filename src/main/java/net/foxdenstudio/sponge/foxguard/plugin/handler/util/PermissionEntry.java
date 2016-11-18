@@ -25,57 +25,47 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.handler.util;
 
-import com.google.common.collect.ImmutableSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
-import org.spongepowered.api.util.Tristate;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
 
 /**
- * Created by Fox on 7/8/2016.
+ * Created by Fox on 11/15/2016.
  */
-public abstract class Entry {
-    public Set<Flag> set;
+public class PermissionEntry extends Entry {
 
-    public Entry(Set<Flag> set) {
-        this.set = set;
+    public String permission;
+    public boolean relative;
+
+    public PermissionEntry(Set<Flag> set, String permission) {
+        super(set);
+        this.permission = permission;
     }
 
-    public Entry(Flag... flags) {
-        this.set = ImmutableSet.copyOf(flags);
+    public PermissionEntry(String permission, Flag... flags) {
+        super(flags);
+        this.permission = permission;
     }
 
-    public String serialize() {
-        StringBuilder builder = new StringBuilder();
-        for (Iterator<Flag> iterator = set.iterator(); iterator.hasNext(); ) {
-            Flag flag = iterator.next();
-            builder.append(flag.name);
-            if (iterator.hasNext()) builder.append(",");
+    @Override
+    public String serializeValue() {
+        return permission;
+    }
+
+    public static PermissionEntry deserialize(String string){
+        FlagRegistry registry = FlagRegistry.getInstance();
+        String[] parts = string.split(":");
+        String[] flags = parts[0].split(",", 2);
+        Set<Flag> flagSet = new HashSet<>();
+        for (String flagName : flags) {
+            Optional<Flag> flagOptional = registry.getFlag(flagName);
+            if (flagOptional.isPresent()) {
+                flagSet.add(flagOptional.get());
+            }
         }
-        builder.append(":");
-        builder.append(serializeValue());
-        return builder.toString();
-    }
-
-    public abstract String serializeValue();
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Entry entry = (Entry) o;
-
-        return set != null ? set.equals(entry.set) : entry.set == null;
-
-    }
-
-    @Override
-    public int hashCode() {
-        return set != null ? set.hashCode() : 0;
+        return new PermissionEntry(flagSet, parts[1]);
     }
 }
