@@ -484,7 +484,7 @@ public class PermissionHandler extends HandlerBase {
     public Text details(CommandSource source, String arguments) {
         Text.Builder builder = Text.builder();
 
-        Text prefix = Text.of("foxguard.handler.", TextColors.GOLD, this.name);
+        Text prefix = Text.of("foxguard.handler.", TextColors.GOLD, this.name.toLowerCase());
         Text postfix = Text.of(".",
                 TextColors.AQUA, "<",
                 TextColors.GREEN, "allow",
@@ -658,7 +658,7 @@ public class PermissionHandler extends HandlerBase {
     }
 
     private String expandPermission(String perm) {
-        if (perm.isEmpty() || perm.startsWith(".")) perm = "foxguard.handler." + this.name + perm;
+        if (perm.isEmpty() || perm.startsWith(".")) perm = "foxguard.handler." + this.name.toLowerCase() + perm;
         return perm;
     }
 
