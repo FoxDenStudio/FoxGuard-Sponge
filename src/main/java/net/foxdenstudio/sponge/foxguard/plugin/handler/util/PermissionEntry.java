@@ -42,12 +42,12 @@ public class PermissionEntry extends Entry {
 
     public PermissionEntry(Set<Flag> set, String permission) {
         super(set);
-        this.permission = permission;
+        this.permission = permission.toLowerCase();
     }
 
     public PermissionEntry(String permission, Flag... flags) {
         super(flags);
-        this.permission = permission;
+        this.permission = permission.toLowerCase();
     }
 
     @Override
