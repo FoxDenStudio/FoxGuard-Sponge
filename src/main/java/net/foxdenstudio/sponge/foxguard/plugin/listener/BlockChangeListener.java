@@ -28,8 +28,10 @@ package net.foxdenstudio.sponge.foxguard.plugin.listener;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxcore.plugin.command.CommandDebug;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.block.BlockSnapshot;
@@ -94,8 +96,6 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
 
         //FoxGuardMain.instance().getLogger().info(player.getName());
 
-        List<IHandler> handlerList;
-
         List<Transaction<BlockSnapshot>> transactions = event.getTransactions();
         Set<IHandler> handlerSet = new HashSet<>();
         if (transactions.size() == 1) {
@@ -117,19 +117,26 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
                     .filter(IFGObject::isEnabled)
                     .forEach(handlerSet::add));
         }
-        handlerList = new ArrayList<>(handlerSet);
-        Collections.sort(handlerList);
-        int currPriority = handlerList.get(0).getPriority();
         Tristate flagState = UNDEFINED;
-        for (IHandler handler : handlerList) {
-            if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
-                break;
+        if (!handlerSet.isEmpty()) {
+            List<IHandler> handlerList = new ArrayList<>(handlerSet);
+            Collections.sort(handlerList);
+            int currPriority = handlerList.get(0).getPriority();
+            for (IHandler handler : handlerList) {
+                if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
+                    break;
+                }
+                EventResult result = handler.handle(user, flags, ExtraContext.of(event));
+                if (result != null) {
+                    flagState = flagState.and(result.getState());
+                } else {
+                    FoxGuardMain.instance().getLogger().error("Handler \"" + handler.getName() + "\" of type \"" + handler.getUniqueTypeString() + "\" returned null!");
+                }
+                currPriority = handler.getPriority();
             }
-            //flagState = flagState.and(handler.handle(user, typeFlag, Optional.of(event)).getState());
-            flagState = flagState.and(handler.handle(user, flags, ExtraContext.of(event)).getState());
-            currPriority = handler.getPriority();
+        } else {
+            FoxGuardMain.instance().getLogger().error("Handlers list is empty for event: " + event);
         }
-//        if(flagState == UNDEFINED) flagState = TRUE;
 
         if (flagState == FALSE) {
             if (user instanceof Player) {

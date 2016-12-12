@@ -27,8 +27,10 @@ package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.Entity;
@@ -47,9 +49,7 @@ import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 
@@ -107,8 +107,7 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
             flags.set(HANGING);
         }
 
-        List<IHandler> handlerList = new ArrayList<>();
-
+        Set<IHandler> handlerSet = new HashSet<>();
         for (Entity entity : event.getEntities()) {
             Location<World> loc = entity.getLocation();
             Vector3d pos = loc.getPosition();
@@ -117,19 +116,29 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
                     .filter(region -> region.contains(pos, world))
                     .forEach(region -> region.getHandlers().stream()
                             .filter(IFGObject::isEnabled)
-                            .filter(handler -> !handlerList.contains(handler))
-                            .forEach(handlerList::add));
+                            .forEach(handlerSet::add));
         }
-        Collections.sort(handlerList);
-        int currPriority = handlerList.get(0).getPriority();
         Tristate flagState = Tristate.UNDEFINED;
-        for (IHandler handler : handlerList) {
-            if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
-                break;
+        if (!handlerSet.isEmpty()) {
+            List<IHandler> handlerList = new ArrayList<>(handlerSet);
+            Collections.sort(handlerList);
+            int currPriority = handlerList.get(0).getPriority();
+            for (IHandler handler : handlerList) {
+                if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
+                    break;
+                }
+                EventResult result = handler.handle(user, flags, ExtraContext.of(event));
+                if (result != null) {
+                    flagState = flagState.and(result.getState());
+                } else {
+                    FoxGuardMain.instance().getLogger().error("Handler \"" + handler.getName() + "\" returned null!");
+                }
+                currPriority = handler.getPriority();
             }
-            flagState = flagState.and(handler.handle(user, flags, ExtraContext.of(event)).getState());
-            currPriority = handler.getPriority();
+        } else {
+            FoxGuardMain.instance().getLogger().error("Handlers list is empty for event: " + event);
         }
+
         if (flagState == Tristate.FALSE) {
             if (user instanceof Player)
                 ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));

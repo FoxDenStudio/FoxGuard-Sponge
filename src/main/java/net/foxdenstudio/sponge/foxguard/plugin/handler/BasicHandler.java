@@ -134,7 +134,7 @@ public class BasicHandler extends HandlerBase {
                 Map<FlagBitSet, Tristate> map = new CacheMap<>((k2, m2) -> {
                     if (k2 instanceof FlagBitSet) {
                         FlagBitSet flags = (FlagBitSet) k2;
-                        Tristate state = null;
+                        Tristate state = UNDEFINED;
                         for (TristateEntry entry : entries) {
                             if (flags.toFlagSet().containsAll(entry.set)) {
                                 state = entry.tristate;
@@ -170,7 +170,7 @@ public class BasicHandler extends HandlerBase {
                 }
                 Set<Group> set = (Set<Group>) k1;
                 List<Group> list = new ArrayList<>(set);
-                Collections.sort(list, (g1, g2) -> this.groups.indexOf(g1) - this.groups.indexOf(g2));
+                list.sort(Comparator.comparingInt(this.groups::indexOf));
                 Map<FlagBitSet, Tristate> map = new CacheMap<>((k2, m2) -> {
                     if (k2 instanceof FlagBitSet) {
                         Tristate state = null;
@@ -1488,12 +1488,9 @@ public class BasicHandler extends HandlerBase {
     }
 
     public static boolean isNameValid(String name) {
-        if (name.matches("^.*[ :\\.=;\"\'\\\\/\\{\\}\\(\\)\\[\\]<>#@\\|\\?\\*].*$")) return false;
-        if (name.equalsIgnoreCase("default")) return false;
-        for (String s : FGStorageManager.FS_ILLEGAL_NAMES) {
-            if (name.equalsIgnoreCase(s)) return false;
-        }
-        return true;
+        return !name.matches("^.*[ :\\.=;\"\'\\\\/\\{\\}\\(\\)\\[\\]<>#@\\|\\?\\*].*$") &&
+                !name.equalsIgnoreCase("default") &&
+                !isIn(FGStorageManager.FS_ILLEGAL_NAMES, name);
     }
 
     public enum PassiveSetting {

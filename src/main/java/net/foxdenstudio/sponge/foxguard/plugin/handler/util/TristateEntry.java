@@ -25,6 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.handler.util;
 
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
 import org.spongepowered.api.util.Tristate;
@@ -42,15 +43,21 @@ public class TristateEntry extends Entry {
 
     public TristateEntry(Set<Flag> set, Tristate tristate) {
         super(set);
-        this.tristate = tristate;
+        if(tristate == null){
+            FoxGuardMain.instance().getLogger().warn("Tried to instantiate tristate entry with null tristate! Substituting default value UNDEFINED");
+            this.tristate = Tristate.UNDEFINED;
+        } else this.tristate = tristate;
     }
 
     public TristateEntry(Tristate tristate, Flag... flags) {
         super(flags);
-        this.tristate = tristate;
+        if(tristate == null){
+            FoxGuardMain.instance().getLogger().warn("Tried to instantiate tristate entry with null tristate! Substituting default value UNDEFINED");
+            this.tristate = Tristate.UNDEFINED;
+        } else this.tristate = tristate;
     }
 
-    public String serializeValue(){
+    public String serializeValue() {
         return tristate.name();
     }
 
@@ -61,10 +68,16 @@ public class TristateEntry extends Entry {
         Set<Flag> flagSet = new HashSet<>();
         for (String flagName : flags) {
             Optional<Flag> flagOptional = registry.getFlag(flagName);
-            if (flagOptional.isPresent()) {
-                flagSet.add(flagOptional.get());
-            }
+            flagOptional.ifPresent(flagSet::add);
         }
-        return new TristateEntry(flagSet, Tristate.valueOf(parts[1]));
+        Tristate tristate;
+        try {
+            tristate = Tristate.valueOf(parts[1]);
+        } catch (IllegalArgumentException e) {
+            FoxGuardMain.instance().getLogger().error("Error deserializing tristate value \"" + parts[1] + "\"!", e);
+            FoxGuardMain.instance().getLogger().warn("Substituting default value UNDEFINED");
+            tristate = Tristate.UNDEFINED;
+        }
+        return new TristateEntry(flagSet, tristate);
     }
 }
