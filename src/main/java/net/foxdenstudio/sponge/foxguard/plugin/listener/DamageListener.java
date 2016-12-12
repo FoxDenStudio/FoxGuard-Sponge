@@ -30,6 +30,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.Entity;
@@ -51,9 +52,7 @@ import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 import static org.spongepowered.api.util.Tristate.*;
@@ -97,94 +96,119 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
         }
 
 
-        List<IHandler> handlerList = new ArrayList<>();
+        Set<IHandler> handlerSet = new HashSet<>();
         FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                 .filter(region -> region.contains(pos, world))
                 .forEach(region -> region.getHandlers().stream()
                         .filter(IFGObject::isEnabled)
-                        .filter(handler -> !handlerList.contains(handler))
-                        .forEach(handlerList::add));
-
-        Collections.sort(handlerList);
-        int currPriority;
+                        .forEach(handlerSet::add));
         Tristate flagState = UNDEFINED;
         boolean invincible = false;
-        if (entity instanceof Player) {
-            currPriority = handlerList.get(0).getPriority();
-            for (IHandler handler : handlerList) {
-                if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
-                    break;
+        if (!handlerSet.isEmpty()) {
+            List<IHandler> handlerList = new ArrayList<>(handlerSet);
+            Collections.sort(handlerList);
+
+            int currPriority;
+            if (entity instanceof Player) {
+                currPriority = handlerList.get(0).getPriority();
+                for (IHandler handler : handlerList) {
+                    if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
+                        break;
+                    }
+                    EventResult result = handler.handle(player, INVINCIBLE_FLAG_SET, ExtraContext.of(event));
+                    if (result != null) {
+                        flagState = flagState.and(result.getState());
+                    } else {
+                        FoxGuardMain.instance().getLogger().error("Handler \"" + handler.getName() + "\" of type \"" + handler.getUniqueTypeString() + "\" returned null!");
+                    }
+                    currPriority = handler.getPriority();
                 }
-                flagState = flagState.and(handler.handle((Player) entity, INVINCIBLE_FLAG_SET, ExtraContext.of(event)).getState());
-                currPriority = handler.getPriority();
-            }
-//            if(flagState == UNDEFINED) flagState = FALSE;
-            if (flagState == TRUE) {
-                invincible = true;
-                flagState = FALSE;
-            }
-        }
-        if (!invincible) {
-            currPriority = handlerList.get(0).getPriority();
-            flagState = UNDEFINED;
-            for (IHandler handler : handlerList) {
-                if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
-                    break;
+
+                if (flagState == TRUE) {
+                    invincible = true;
+                    flagState = FALSE;
                 }
-                flagState = flagState.and(handler.handle(player, flags, ExtraContext.of(event)).getState());
-                currPriority = handler.getPriority();
             }
-//            if(flagState == UNDEFINED) flagState = TRUE;
-        }
-        if (flagState == FALSE) {
-            if (player != null && player.isOnline() && !invincible) {
-                player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
-            }
-            event.setCancelled(true);
-        } else {
-            if (event.willCauseDeath()) {
-                flags.set(KILL);
+            if (!invincible) {
+                currPriority = handlerList.get(0).getPriority();
                 flagState = UNDEFINED;
-                invincible = false;
-                if (entity instanceof Player) {
-                    currPriority = handlerList.get(0).getPriority();
-                    for (IHandler handler : handlerList) {
-                        if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
-                            break;
-                        }
-                        flagState = flagState.and(handler.handle((Player) entity, UNDYING_FLAG_SET, ExtraContext.of(event)).getState());
-                        currPriority = handler.getPriority();
+                for (IHandler handler : handlerList) {
+                    if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
+                        break;
                     }
-//                    if(flagState == UNDEFINED) flagState = FALSE;
-                    if (flagState == TRUE) {
-                        invincible = true;
-                        flagState = FALSE;
+                    EventResult result = handler.handle(player, flags, ExtraContext.of(event));
+                    if (result != null) {
+                        flagState = flagState.and(result.getState());
+                    } else {
+                        FoxGuardMain.instance().getLogger().error("Handler \"" + handler.getName() + "\" of type \"" + handler.getUniqueTypeString() + "\" returned null!");
                     }
+                    currPriority = handler.getPriority();
                 }
-                if (!invincible) {
-                    currPriority = handlerList.get(0).getPriority();
-                    flagState = UNDEFINED;
-                    for (IHandler handler : handlerList) {
-                        if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
-                            break;
-                        }
-                        flagState = flagState.and(handler.handle(player, flags, ExtraContext.of(event)).getState());
-                        currPriority = handler.getPriority();
-                    }
-//                    if(flagState == UNDEFINED) flagState = TRUE;
-                }
-                if (flagState == FALSE) {
-                    DamageModifier.Builder builder = DamageModifier.builder();
-                    builder.type(DamageModifierTypes.ABSORPTION);
-                    builder.cause(FoxGuardMain.getCause());
-                    event.setDamage(builder.build(), damage -> ((Living) event.getTargetEntity()).getHealthData().health().get() - damage - 1);
-                    if (player != null && player.isOnline() && !invincible)
-                        player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission to kill!"));
-                }
+//            if(flagState == UNDEFINED) flagState = TRUE;
             }
-            //makes sure that handlers are unable to cancel the event directly.
-            event.setCancelled(false);
+            if (flagState == FALSE) {
+                if (player != null && player.isOnline() && !invincible) {
+                    player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
+                }
+                event.setCancelled(true);
+            } else {
+                if (event.willCauseDeath()) {
+                    flags.set(KILL);
+                    flagState = UNDEFINED;
+                    invincible = false;
+                    if (entity instanceof Player) {
+                        currPriority = handlerList.get(0).getPriority();
+                        for (IHandler handler : handlerList) {
+                            if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
+                                break;
+                            }
+                            EventResult result = handler.handle(player, UNDYING_FLAG_SET, ExtraContext.of(event));
+                            if (result != null) {
+                                flagState = flagState.and(result.getState());
+                            } else {
+                                FoxGuardMain.instance().getLogger().error("Handler \"" + handler.getName() + "\" of type \"" + handler.getUniqueTypeString() + "\" returned null!");
+                            }
+                            currPriority = handler.getPriority();
+                        }
+//                    if(flagState == UNDEFINED) flagState = FALSE;
+                        if (flagState == TRUE) {
+                            invincible = true;
+                            flagState = FALSE;
+                        }
+                    }
+                    if (!invincible) {
+                        currPriority = handlerList.get(0).getPriority();
+                        flagState = UNDEFINED;
+                        for (IHandler handler : handlerList) {
+                            if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
+                                break;
+                            }
+                            EventResult result = handler.handle(player, flags, ExtraContext.of(event));
+                            if (result != null) {
+                                flagState = flagState.and(result.getState());
+                            } else {
+                                FoxGuardMain.instance().getLogger().error("Handler \"" + handler.getName() + "\" of type \"" + handler.getUniqueTypeString() + "\" returned null!");
+                            }
+                            currPriority = handler.getPriority();
+                        }
+//                    if(flagState == UNDEFINED) flagState = TRUE;
+                    }
+                    if (flagState == FALSE) {
+                        DamageModifier.Builder builder = DamageModifier.builder();
+                        builder.type(DamageModifierTypes.ABSORPTION);
+                        builder.cause(FoxGuardMain.getCause());
+                        event.setDamage(builder.build(), damage -> ((Living) event.getTargetEntity()).getHealthData().health().get() - damage - 1);
+                        if (player != null && player.isOnline() && !invincible)
+                            player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission to kill!"));
+                    }
+                }
+                //makes sure that handlers are unable to cancel the event directly.
+                event.setCancelled(false);
+            }
+        } else {
+            FoxGuardMain.instance().getLogger().error("Handlers list is empty for event: " + event);
         }
+
     }
 
     private Player getPlayerCause(Cause cause) {

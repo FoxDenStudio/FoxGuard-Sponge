@@ -559,6 +559,12 @@ public class PermissionHandler extends HandlerBase {
         }
     }
 
+    @Override
+    public void setName(String name) {
+        super.setName(name);
+        this.permCache.clear();
+    }
+
     public boolean addFlagEntry(PermissionEntry entry) {
         return addFlagEntry(0, entry);
     }

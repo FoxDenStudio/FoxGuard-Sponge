@@ -70,6 +70,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
+import static org.spongepowered.api.util.Tristate.UNDEFINED;
 
 public class GroupHandler extends HandlerBase {
 
@@ -124,7 +125,7 @@ public class GroupHandler extends HandlerBase {
                 Map<FlagBitSet, Tristate> map = new CacheMap<>((k2, m2) -> {
                     if (k2 instanceof FlagBitSet) {
                         FlagBitSet flags = (FlagBitSet) k2;
-                        Tristate state = null;
+                        Tristate state = UNDEFINED;
                         for (TristateEntry entry : entries) {
                             if (flags.toFlagSet().containsAll(entry.set)) {
                                 state = entry.tristate;
@@ -142,7 +143,7 @@ public class GroupHandler extends HandlerBase {
         this.defaultPermCache = new CacheMap<>((k, m) -> {
             if (k instanceof FlagBitSet) {
                 FlagBitSet flags = (FlagBitSet) k;
-                Tristate state = Tristate.UNDEFINED;
+                Tristate state = UNDEFINED;
                 for (TristateEntry entry : GroupHandler.this.defaultPermissions) {
                     if (flags.toFlagSet().containsAll(entry.set)) {
                         state = entry.tristate;
@@ -160,7 +161,7 @@ public class GroupHandler extends HandlerBase {
                 }
                 Set<Group> set = (Set<Group>) k1;
                 List<Group> list = new ArrayList<>(set);
-                Collections.sort(list, (g1, g2) -> this.groups.indexOf(g1) - this.groups.indexOf(g2));
+                list.sort(Comparator.comparingInt(this.groups::indexOf));
                 Map<FlagBitSet, Tristate> map = new CacheMap<>((k2, m2) -> {
                     if (k2 instanceof FlagBitSet) {
                         Tristate state = null;
@@ -1166,12 +1167,9 @@ public class GroupHandler extends HandlerBase {
     }
 
     public static boolean isNameValid(String name) {
-        if (name.matches("^.*[ :\\.=;\"\'\\\\/\\{\\}\\(\\)\\[\\]<>#@\\|\\?\\*].*$")) return false;
-        if (name.equalsIgnoreCase("default")) return false;
-        for (String s : FGStorageManager.FS_ILLEGAL_NAMES) {
-            if (name.equalsIgnoreCase(s)) return false;
-        }
-        return true;
+        return !name.matches("^.*[ :\\.=;\"\'\\\\/\\{\\}\\(\\)\\[\\]<>#@\\|\\?\\*].*$") &&
+                !name.equalsIgnoreCase("default") &&
+                !isIn(FGStorageManager.FS_ILLEGAL_NAMES, name);
     }
 
     public static class Group {

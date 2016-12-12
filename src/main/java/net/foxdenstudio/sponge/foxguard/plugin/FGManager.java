@@ -32,6 +32,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SetMultimap;
 import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
+import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.event.util.FGEventFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
@@ -43,6 +44,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.GlobalWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.RegionCache;
+import org.lwjgl.openal.AL;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.Tristate;
@@ -478,14 +480,9 @@ public final class FGManager {
     }
 
     public static boolean isNameValid(String name) {
-        if (name.matches("^.*[ :.=;\"\'\\\\/{}()\\[\\]<>#@|?*].*$")) return false;
-        for (String s : FGStorageManager.FS_ILLEGAL_NAMES) {
-            if (name.equalsIgnoreCase(s)) return false;
-        }
-        for (String s : ILLEGAL_NAMES) {
-            if (name.equalsIgnoreCase(s)) return false;
-        }
-        return true;
+        return !name.matches("^.*[ :.=;\"\'\\\\/{}()\\[\\]<>#@|?*].*$") &&
+                !Aliases.isIn(FGStorageManager.FS_ILLEGAL_NAMES, name) &&
+                !Aliases.isIn(ILLEGAL_NAMES, name);
     }
 
     public void markDirty(IRegion region, RegionCache.DirtyType type) {
