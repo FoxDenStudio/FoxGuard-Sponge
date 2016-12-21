@@ -39,7 +39,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.world.Locatable;
@@ -49,6 +48,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by Fox on 4/19/2016.
@@ -59,6 +59,12 @@ public final class LinkageParser {
     private static final Pattern PATTERN = Pattern.compile(REGEX);
 
     private World currentWorld;
+
+    private LinkageParser(CommandSource source) {
+        if (source instanceof Locatable) {
+            currentWorld = ((Locatable) source).getWorld();
+        }
+    }
 
     public static Set<LinkEntry> parseLinkageExpression(String expression, CommandSource source) throws CommandException {
         return new LinkageParser(source).parse(expression, source);
@@ -116,7 +122,7 @@ public final class LinkageParser {
                             .map(str -> endPart + str.substring(token.length() - 1))
                             .collect(Collectors.toList());
                 } else if (token.startsWith("$")) {
-                    return ImmutableList.of("regions", "handlers", "controllers").stream()
+                    return Stream.of("regions", "handlers", "controllers")
                             .filter(new StartsWithPredicate(token.substring(1)))
                             .map(str -> endPart + str.substring(token.length() - 1))
                             .collect(Collectors.toList());
@@ -147,10 +153,20 @@ public final class LinkageParser {
         return ImmutableList.of();
     }
 
-    private LinkageParser(CommandSource source) {
-        if (source instanceof Locatable) {
-            currentWorld = ((Locatable) source).getWorld();
+    private static boolean checkParentheses(String expression) {
+        Pattern leftPattern = Pattern.compile("\\(");
+        Matcher leftMatcher = leftPattern.matcher(expression);
+        int leftCount = 0;
+        while (leftMatcher.find()) {
+            leftCount++;
         }
+        Pattern rightPattern = Pattern.compile("\\)");
+        Matcher rightMatcher = rightPattern.matcher(expression);
+        int rightCount = 0;
+        while (rightMatcher.find()) {
+            rightCount++;
+        }
+        return leftCount == rightCount;
     }
 
     private Set<LinkEntry> parse(String expressionString, CommandSource source) throws CommandException {
@@ -166,20 +182,8 @@ public final class LinkageParser {
         return ImmutableSet.copyOf(set);
     }
 
-    private static boolean checkParentheses(String expression) {
-        Pattern leftPattern = Pattern.compile("\\(");
-        Matcher leftMatcher = leftPattern.matcher(expression);
-        int leftCount = 0;
-        while (leftMatcher.find()) {
-            leftCount++;
-        }
-        Pattern rightPattern = Pattern.compile("\\)");
-        Matcher rightMatcher = rightPattern.matcher(expression);
-        int rightCount = 0;
-        while (rightMatcher.find()) {
-            rightCount++;
-        }
-        return leftCount == rightCount;
+    private enum Stage {
+        START, REST
     }
 
     public class Expression implements IExpression {
@@ -222,7 +226,7 @@ public final class LinkageParser {
                     if (!token.startsWith("-")) {
                         if (token.startsWith("%")) {
                             Optional<World> worldOptional = Sponge.getServer().getWorld(token.substring(1));
-                            if (worldOptional.isPresent()) currentWorld = worldOptional.get();
+                            worldOptional.ifPresent(world -> currentWorld = world);
                         } else if (token.startsWith("$")) {
                             String name = token.substring(1);
                             if (Aliases.isIn(Aliases.REGIONS_ALIASES, name)) {
@@ -233,14 +237,14 @@ public final class LinkageParser {
                                 set.add(new ExpressionStub(ImmutableSet.copyOf(FGUtil.getSelectedControllers(source))));
                             }
                         } else if (token.startsWith("^")) {
-                            IController controller = FGManager.getInstance().getController(token.substring(1));
-                            if (controller != null) stubObjects.add(controller);
+                            Optional<IController> controllerOpt = FGManager.getInstance().getController(token.substring(1));
+                            controllerOpt.ifPresent(stubObjects::add);
                         } else if (stage == Stage.START) {
-                            IRegion region = FGManager.getInstance().getRegionFromWorld(currentWorld, token);
-                            if (region != null) stubObjects.add(region);
+                            Optional<IRegion> regionOpt = FGManager.getInstance().getRegionFromWorld(currentWorld, token);
+                            regionOpt.ifPresent(stubObjects::add);
                         } else {
-                            IHandler handler = FGManager.getInstance().gethandler(token);
-                            if (handler != null) stubObjects.add(handler);
+                            Optional<IHandler> handlerOpt = FGManager.getInstance().gethandler(token);
+                            handlerOpt.ifPresent(stubObjects::add);
                         }
                     }
                 }
@@ -319,9 +323,5 @@ public final class LinkageParser {
             return ImmutableSet.of();
         }
 
-    }
-
-    private enum Stage {
-        START, REST
     }
 }

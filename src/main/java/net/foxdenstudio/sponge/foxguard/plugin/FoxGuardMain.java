@@ -95,13 +95,11 @@ import java.util.Set;
         url = "https://github.com/FoxDenStudio/FoxGuard")
 public final class FoxGuardMain {
 
-    public final Cause pluginCause = Cause.builder().named("plugin", this).build();
-
     /**
      * FoxGuardMain instance object.
      */
     private static FoxGuardMain instanceField;
-
+    public final Cause pluginCause = Cause.builder().named("plugin", this).build();
     @Inject
     private Logger logger;
 
@@ -136,6 +134,10 @@ public final class FoxGuardMain {
     }
 
     //my uuid - f275f223-1643-4fac-9fb8-44aaf5b4b371
+
+    public static Cause getCause() {
+        return instance().pluginCause;
+    }
 
     @Listener
     public void construct(GameConstructionEvent event) {
@@ -240,6 +242,7 @@ public final class FoxGuardMain {
         FGStorageManager.getInstance().saveHandlers();
         logger.info("Saving configs");
         FGConfigManager.getInstance().save();
+        FGManager.getInstance().unloadServer();
     }
 
     @Listener
@@ -293,7 +296,6 @@ public final class FoxGuardMain {
         manager.registerControllerFactory(new LogicController.Factory());
     }
 
-
     /**
      * A private method that registers the Listener class and the corresponding event class.
      */
@@ -346,10 +348,6 @@ public final class FoxGuardMain {
      */
     public boolean isLoaded() {
         return loaded;
-    }
-
-    public static Cause getCause() {
-        return instance().pluginCause;
     }
 
     public EconomyService getEconomyService() {

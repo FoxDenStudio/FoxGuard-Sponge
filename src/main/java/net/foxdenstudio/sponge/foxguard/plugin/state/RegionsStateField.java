@@ -54,6 +54,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.WORLD_ALIASES;
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isIn;
@@ -134,7 +135,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0) {
-                return ImmutableList.of("add", "remove").stream()
+                return Stream.of("add", "remove")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .collect(GuavaCollectors.toImmutableList());
             } else if (parse.current.index == 1) {
@@ -174,7 +175,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
 
             }
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY))
-            return ImmutableList.of("world").stream()
+            return Stream.of("world")
                     .filter(new StartsWithPredicate(parse.current.token))
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());
@@ -219,7 +220,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(MAPPER).parse();
 
         if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name!"));
-        IRegion region = FGManager.getInstance().getRegion(parse.args[0]);
+        IRegion region = FGManager.getInstance().getRegion(parse.args[0]).orElse(null);
         if (region == null) {
             String worldName = parse.flags.get("world");
             World world = null;
@@ -231,7 +232,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                 }
             }
             if (world == null) throw new CommandException(Text.of("Must specify a world!"));
-            region = FGManager.getInstance().getWorldRegion(world, parse.args[0]);
+            region = FGManager.getInstance().getWorldRegion(world, parse.args[0]).orElse(null);
         }
         if (region == null)
             throw new CommandException(Text.of("No regions with the name\"" + parse.args[0] + "\"!"));
@@ -271,7 +272,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                     }
                 }
                 if (world == null) throw new CommandException(Text.of("Must specify a world!"));
-                region = FGManager.getInstance().getWorldRegion(world, parse.args[0]);
+                region = FGManager.getInstance().getWorldRegion(world, parse.args[0]).orElse(null);
             }
         } catch (IndexOutOfBoundsException e) {
             throw new CommandException(Text.of("Index " + parse.args[0] + " out of bounds! (1 - "

@@ -61,6 +61,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
@@ -187,7 +188,7 @@ public class StaticHandler extends HandlerBase {
             case "remove": {
                 if (parse.args.length < 2)
                     return ProcessResult.of(false, Text.of("Must specify flags or an index to remove!"));
-                if(this.entries.isEmpty()) return ProcessResult.of(false, "There are no entries to remove!");
+                if (this.entries.isEmpty()) return ProcessResult.of(false, "There are no entries to remove!");
                 try {
                     int index = Integer.parseInt(parse.args[1]);
                     if (index < 0) index = 0;
@@ -377,7 +378,7 @@ public class StaticHandler extends HandlerBase {
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0) {
-                return ImmutableList.of("add", "set", "remove", "move").stream()
+                return Stream.of("add", "set", "remove", "move")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
@@ -385,7 +386,7 @@ public class StaticHandler extends HandlerBase {
                 switch (parse.args[0].toLowerCase()) {
                     case "add": {
                         if (parse.current.token.startsWith("=")) {
-                            return ImmutableList.of("=allow", "=deny", "=pass").stream()
+                            return Stream.of("=allow", "=deny", "=pass")
                                     .filter(new StartsWithPredicate(parse.current.token))
                                     .map(args -> parse.current.prefix + args)
                                     .collect(GuavaCollectors.toImmutableList());
@@ -402,7 +403,7 @@ public class StaticHandler extends HandlerBase {
                     case "set": {
                         if (parse.current.index == 1) {
                             if (parse.current.token.startsWith("=")) {
-                                return ImmutableList.of("=allow", "=deny", "=pass", "=clear").stream()
+                                return Stream.of("=allow", "=deny", "=pass", "=clear")
                                         .filter(new StartsWithPredicate(parse.current.token))
                                         .map(args -> parse.current.prefix + args)
                                         .collect(GuavaCollectors.toImmutableList());
@@ -415,14 +416,14 @@ public class StaticHandler extends HandlerBase {
                             }
                         } else if (parse.current.index == 2) try {
                             Integer.parseInt(parse.args[1]);
-                            return ImmutableList.of("allow", "deny", "pass", "clear").stream()
+                            return Stream.of("allow", "deny", "pass", "clear")
                                     .filter(new StartsWithPredicate(parse.current.token))
                                     .map(args -> parse.current.prefix + args)
                                     .collect(GuavaCollectors.toImmutableList());
                         } catch (NumberFormatException ignored) {
                         }
                         if (parse.current.token.startsWith("=")) {
-                            return ImmutableList.of("=allow", "=deny", "=pass", "=clear").stream()
+                            return Stream.of("=allow", "=deny", "=pass", "=clear")
                                     .filter(new StartsWithPredicate(parse.current.token))
                                     .map(args -> parse.current.prefix + args)
                                     .collect(GuavaCollectors.toImmutableList());

@@ -46,8 +46,10 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
+import org.spongepowered.api.util.Tuple;
 
 import java.util.List;
+import java.util.UUID;
 
 public final class FGUtil {
 
@@ -118,4 +120,26 @@ public final class FGUtil {
         Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), handler));
     }
 
+
+    public static Tuple<UUID, String> getObjectDataFromUserInput(String input) {
+        if (input.startsWith(":")) input = input.substring(1);
+        String[] parts = input.split(":", 3);
+        String ownerString, nameString;
+        if (parts.length == 0) return Tuple.of(FGManager.SERVER_UUID, "");
+        else if (parts.length == 1) {
+            if (input.startsWith(":")) {
+                return Tuple.of(FGManager.SERVER_UUID, parts[0]);
+            } else {
+                ownerString = parts[0];
+                nameString = "";
+            }
+        } else if (parts.length == 2) {
+            nameString = "";
+        } else {
+            nameString = "";
+        }
+        UUID owner = null;
+
+        return Tuple.of(owner, nameString);
+    }
 }

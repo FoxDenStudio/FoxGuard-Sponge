@@ -38,7 +38,7 @@ public final class EventResult {
     private final boolean displayDefaultMessage;
 
     private EventResult(Tristate success, boolean displayDefaultMessage) {
-        if(success == null){
+        if (success == null) {
             FoxGuardMain.instance().getLogger().warn("Tried to instantiate event result with null tristate! Substituting default value UNDEFINED");
             this.state = Tristate.UNDEFINED;
         } else this.state = success;

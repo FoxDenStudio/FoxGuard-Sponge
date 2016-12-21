@@ -56,6 +56,7 @@ import org.spongepowered.api.world.World;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
@@ -260,12 +261,12 @@ public class CommandHere extends FCCommandBase {
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT) && parse.current.index < 3 && parse.current.token.isEmpty()) {
             return ImmutableList.of(parse.current.prefix + "~");
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.SHORTFLAG)) {
-            return ImmutableList.of("r", "h", "p").stream()
+            return Stream.of("r", "h", "p")
                     .filter(flag -> !parse.flags.containsKey(flag))
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY))
-            return ImmutableList.of("world", "regions", "handlers", "priority").stream()
+            return Stream.of("world", "regions", "handlers", "priority")
                     .filter(new StartsWithPredicate(parse.current.token))
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());

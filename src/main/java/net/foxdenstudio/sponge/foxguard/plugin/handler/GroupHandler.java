@@ -68,6 +68,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 import static org.spongepowered.api.util.Tristate.UNDEFINED;
@@ -179,6 +180,12 @@ public class GroupHandler extends HandlerBase {
                 return map;
             } else return null;
         });
+    }
+
+    public static boolean isNameValid(String name) {
+        return !name.matches("^.*[ :\\.=;\"\'\\\\/\\{\\}\\(\\)\\[\\]<>#@\\|\\?\\*].*$") &&
+                !name.equalsIgnoreCase("default") &&
+                !isIn(FGStorageManager.FS_ILLEGAL_NAMES, name);
     }
 
     public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
@@ -433,7 +440,8 @@ public class GroupHandler extends HandlerBase {
                     if (parse.args.length < 4)
                         return ProcessResult.of(false, Text.of("Must specify flags or an index to remove!"));
                     List<TristateEntry> permissions = getGroupPermissions(group);
-                    if(permissions.isEmpty()) return ProcessResult.of(false, "There are no entries to remove in this group!");
+                    if (permissions.isEmpty())
+                        return ProcessResult.of(false, "There are no entries to remove in this group!");
                     try {
                         int index = Integer.parseInt(parse.args[3]);
                         if (index < 0) index = 0;
@@ -467,7 +475,8 @@ public class GroupHandler extends HandlerBase {
                     if (parse.args.length < 4)
                         return ProcessResult.of(false, Text.of("Must specify an index or flags and then a tristate value!"));
                     List<TristateEntry> permissions = getGroupPermissions(group);
-                    if(permissions.isEmpty()) return ProcessResult.of(false, "There are no entries to set in this group!");
+                    if (permissions.isEmpty())
+                        return ProcessResult.of(false, "There are no entries to set in this group!");
                     try {
                         int index = Integer.parseInt(parse.args[3]);
                         if (index < 0) index = 0;
@@ -561,7 +570,8 @@ public class GroupHandler extends HandlerBase {
                     List<TristateEntry> permissions = getGroupPermissions(group);
                     if (parse.args.length < 4)
                         return ProcessResult.of(false, Text.of("Must specify flags or an index to move!"));
-                    if(permissions.isEmpty()) return ProcessResult.of(false, "There are no entries to move in this group!");
+                    if (permissions.isEmpty())
+                        return ProcessResult.of(false, "There are no entries to move in this group!");
                     try {
                         int from = Integer.parseInt(parse.args[3]);
                         if (from < 0) from = 0;
@@ -632,13 +642,13 @@ public class GroupHandler extends HandlerBase {
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0) {
-                return ImmutableList.of("groups", "flags").stream()
+                return Stream.of("groups", "flags")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             } else if (parse.current.index == 1) {
                 if (isIn(GROUPS_ALIASES, parse.args[0])) {
-                    return ImmutableList.of("add", "remove", "modify", "rename", "move").stream()
+                    return Stream.of("add", "remove", "modify", "rename", "move")
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
@@ -685,7 +695,7 @@ public class GroupHandler extends HandlerBase {
                         }
                     }
                 } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
-                    return ImmutableList.of("add", "remove", "set", "move").stream()
+                    return Stream.of("add", "remove", "set", "move")
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
@@ -708,7 +718,7 @@ public class GroupHandler extends HandlerBase {
                     switch (parse.args[2].toLowerCase()) {
                         case "add": {
                             if (parse.current.token.startsWith("=")) {
-                                return ImmutableList.of("=allow", "=deny", "=pass").stream()
+                                return Stream.of("=allow", "=deny", "=pass")
                                         .filter(new StartsWithPredicate(parse.current.token))
                                         .map(args -> parse.current.prefix + args)
                                         .collect(GuavaCollectors.toImmutableList());
@@ -725,7 +735,7 @@ public class GroupHandler extends HandlerBase {
                         case "set": {
                             if (parse.current.index == 3) {
                                 if (parse.current.token.startsWith("=")) {
-                                    return ImmutableList.of("=allow", "=deny", "=pass", "=clear").stream()
+                                    return Stream.of("=allow", "=deny", "=pass", "=clear")
                                             .filter(new StartsWithPredicate(parse.current.token))
                                             .map(args -> parse.current.prefix + args)
                                             .collect(GuavaCollectors.toImmutableList());
@@ -738,14 +748,14 @@ public class GroupHandler extends HandlerBase {
                                 }
                             } else if (parse.current.index == 4) try {
                                 Integer.parseInt(parse.args[3]);
-                                return ImmutableList.of("allow", "deny", "pass", "clear").stream()
+                                return Stream.of("allow", "deny", "pass", "clear")
                                         .filter(new StartsWithPredicate(parse.current.token))
                                         .map(args -> parse.current.prefix + args)
                                         .collect(GuavaCollectors.toImmutableList());
                             } catch (NumberFormatException ignored) {
                             }
                             if (parse.current.token.startsWith("=")) {
-                                return ImmutableList.of("=allow", "=deny", "=pass", "=clear").stream()
+                                return Stream.of("=allow", "=deny", "=pass", "=clear")
                                         .filter(new StartsWithPredicate(parse.current.token))
                                         .map(args -> parse.current.prefix + args)
                                         .collect(GuavaCollectors.toImmutableList());
@@ -774,12 +784,12 @@ public class GroupHandler extends HandlerBase {
             }
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY)) {
             if (isIn(GROUPS_ALIASES, parse.args[0])) {
-                return ImmutableList.of("index", "color", "displayname", "permission").stream()
+                return Stream.of("index", "color", "displayname", "permission")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
-                return ImmutableList.of("index").stream()
+                return Stream.of("index")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
@@ -1166,12 +1176,6 @@ public class GroupHandler extends HandlerBase {
         }
     }
 
-    public static boolean isNameValid(String name) {
-        return !name.matches("^.*[ :\\.=;\"\'\\\\/\\{\\}\\(\\)\\[\\]<>#@\\|\\?\\*].*$") &&
-                !name.equalsIgnoreCase("default") &&
-                !isIn(FGStorageManager.FS_ILLEGAL_NAMES, name);
-    }
-
     public static class Group {
         private String name;
         private String displayName;
@@ -1303,7 +1307,7 @@ public class GroupHandler extends HandlerBase {
                     .parse();
             if (parse.current.type == AdvCmdParser.CurrentElement.ElementType.ARGUMENT &&
                     parse.current.index == 0) {
-                return ImmutableList.of("bare").stream()
+                return Stream.of("bare")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());

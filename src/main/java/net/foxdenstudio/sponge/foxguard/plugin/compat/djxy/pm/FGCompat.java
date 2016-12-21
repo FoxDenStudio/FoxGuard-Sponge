@@ -30,6 +30,8 @@ import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.world.World;
 
+import java.util.Optional;
+
 /**
  * Created by Fox on 8/21/2016.
  */
@@ -37,8 +39,8 @@ public class FGCompat {
 
     public static boolean isPlayerInRegion(Player player, String regionName) {
         World world = player.getWorld();
-        IRegion region = FGManager.getInstance().getRegionFromWorld(world, regionName);
-        return region != null && region.contains(player.getLocation().getPosition(), world);
+        Optional<IRegion> regionOpt = FGManager.getInstance().getRegionFromWorld(world, regionName);
+        return regionOpt.isPresent() && regionOpt.get().contains(player.getLocation().getPosition(), world);
     }
 
     public static int getCompatVersion() {

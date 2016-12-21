@@ -43,7 +43,7 @@ public class TristateEntry extends Entry {
 
     public TristateEntry(Set<Flag> set, Tristate tristate) {
         super(set);
-        if(tristate == null){
+        if (tristate == null) {
             FoxGuardMain.instance().getLogger().warn("Tried to instantiate tristate entry with null tristate! Substituting default value UNDEFINED");
             this.tristate = Tristate.UNDEFINED;
         } else this.tristate = tristate;
@@ -51,14 +51,10 @@ public class TristateEntry extends Entry {
 
     public TristateEntry(Tristate tristate, Flag... flags) {
         super(flags);
-        if(tristate == null){
+        if (tristate == null) {
             FoxGuardMain.instance().getLogger().warn("Tried to instantiate tristate entry with null tristate! Substituting default value UNDEFINED");
             this.tristate = Tristate.UNDEFINED;
         } else this.tristate = tristate;
-    }
-
-    public String serializeValue() {
-        return tristate.name();
     }
 
     public static TristateEntry deserialize(String string) {
@@ -79,5 +75,9 @@ public class TristateEntry extends Entry {
             tristate = Tristate.UNDEFINED;
         }
         return new TristateEntry(flagSet, tristate);
+    }
+
+    public String serializeValue() {
+        return tristate.name();
     }
 }

@@ -25,13 +25,18 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.object;
 
+import javax.annotation.Nullable;
+import java.util.UUID;
+
 public abstract class FGObjectBase implements IFGObject {
 
     protected String name;
+    protected UUID owner;
     protected boolean isEnabled = true;
 
-    public FGObjectBase(String name, boolean isEnabled) {
+    public FGObjectBase(String name, @Nullable UUID owner, boolean isEnabled) {
         this.name = name;
+        this.owner = owner;
         this.isEnabled = isEnabled;
     }
 
@@ -43,6 +48,16 @@ public abstract class FGObjectBase implements IFGObject {
     @Override
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public UUID getOwner() {
+        return owner;
+    }
+
+    @Override
+    public void setOwner(UUID owner) {
+        this.owner = owner;
     }
 
     @Override
@@ -59,8 +74,9 @@ public abstract class FGObjectBase implements IFGObject {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "{" +
+        return "FGObjectBase{" +
                 "name='" + name + '\'' +
+                ", owner=" + owner +
                 ", isEnabled=" + isEnabled +
                 '}';
     }

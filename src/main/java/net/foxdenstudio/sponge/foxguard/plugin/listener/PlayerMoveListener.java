@@ -91,6 +91,22 @@ public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
         if (instance == null) instance = this;
     }
 
+    public static PlayerMoveListener getInstance() {
+        return instance;
+    }
+
+    private static Set<Entity> getPassengerStack(Entity e) {
+        Set<Entity> set = new HashSet<>();
+        set.add(e);
+        List<Entity> po = e.getPassengers();
+        if (!po.isEmpty()) {
+            for (Entity ent : po) {
+                set.add(ent);
+            }
+        }
+        return set;
+    }
+
     @Override
     public void handle(MoveEntityEvent event) throws Exception {
 
@@ -269,45 +285,8 @@ public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
         player.setScoreboard(this.scoreboardMap.get(player));
     }
 
-    public static PlayerMoveListener getInstance() {
-        return instance;
-    }
-
-    private static Set<Entity> getPassengerStack(Entity e) {
-        Set<Entity> set = new HashSet<>();
-        set.add(e);
-        List<Entity> po = e.getPassengers();
-        if (!po.isEmpty()) {
-            for (Entity ent : po) {
-                set.add(ent);
-            }
-        }
-        return set;
-    }
-
     private enum Type {
         FROM, TO
-    }
-
-    private class HandlerWrapper implements Comparable<HandlerWrapper> {
-        public IHandler handler;
-        public Type type;
-
-        public HandlerWrapper(IHandler handler, Type type) {
-            this.handler = handler;
-            this.type = type;
-        }
-
-        @Override
-        public int compareTo(HandlerWrapper w) {
-            int val = handler.compareTo(w.handler);
-            return val != 0 ? val : type.compareTo(w.type);
-        }
-
-        @Override
-        public String toString() {
-            return this.type + ":" + this.handler;
-        }
     }
 
     private static class LastWrapper {
@@ -333,6 +312,27 @@ public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
             this.regions = regions;
             this.handlers = handlers;
             this.priority = priority;
+        }
+    }
+
+    private class HandlerWrapper implements Comparable<HandlerWrapper> {
+        public IHandler handler;
+        public Type type;
+
+        public HandlerWrapper(IHandler handler, Type type) {
+            this.handler = handler;
+            this.type = type;
+        }
+
+        @Override
+        public int compareTo(HandlerWrapper w) {
+            int val = handler.compareTo(w.handler);
+            return val != 0 ? val : type.compareTo(w.type);
+        }
+
+        @Override
+        public String toString() {
+            return this.type + ":" + this.handler;
         }
     }
 

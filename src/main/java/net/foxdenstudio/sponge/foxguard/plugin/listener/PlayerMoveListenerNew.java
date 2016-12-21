@@ -83,6 +83,22 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
         if (instance == null) instance = this;
     }
 
+    public static PlayerMoveListenerNew getInstance() {
+        return instance;
+    }
+
+    private static Set<Player> getPassengerStack(Entity e) {
+        Set<Player> set = new HashSet<>();
+        if (e instanceof Player) set.add((Player) e);
+        List<Entity> po = e.getPassengers();
+        if (!po.isEmpty()) {
+            for (Entity ent : po) {
+                set.addAll(getPassengerStack(ent));
+            }
+        }
+        return set;
+    }
+
     @Override
     public void handle(MoveEntityEvent event) throws Exception {
         Entity entity = event.getTargetEntity();
@@ -212,24 +228,24 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
         player.setScoreboard(this.scoreboardMap.get(player));
     }
 
-    public static PlayerMoveListenerNew getInstance() {
-        return instance;
-    }
-
-    private static Set<Player> getPassengerStack(Entity e) {
-        Set<Player> set = new HashSet<>();
-        if (e instanceof Player) set.add((Player) e);
-        List<Entity> po = e.getPassengers();
-        if (!po.isEmpty()) {
-            for (Entity ent : po) {
-                set.addAll(getPassengerStack(ent));
-            }
-        }
-        return set;
-    }
-
     private enum Direction {
         FROM, TO
+    }
+
+    public static class HUDConfig {
+        public boolean regions;
+        public boolean handlers;
+        public boolean priority;
+
+        public HUDConfig() {
+            this(true, true, false);
+        }
+
+        public HUDConfig(boolean regions, boolean handlers, boolean priority) {
+            this.regions = regions;
+            this.handlers = handlers;
+            this.priority = priority;
+        }
     }
 
     private class HandlerWrapper implements Comparable<HandlerWrapper> {
@@ -250,22 +266,6 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
         @Override
         public String toString() {
             return this.direction + ":" + this.handler;
-        }
-    }
-
-    public static class HUDConfig {
-        public boolean regions;
-        public boolean handlers;
-        public boolean priority;
-
-        public HUDConfig() {
-            this(true, true, false);
-        }
-
-        public HUDConfig(boolean regions, boolean handlers, boolean priority) {
-            this.regions = regions;
-            this.handlers = handlers;
-            this.priority = priority;
         }
     }
 }

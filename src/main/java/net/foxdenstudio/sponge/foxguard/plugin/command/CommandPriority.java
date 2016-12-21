@@ -79,7 +79,7 @@ public class CommandPriority extends FCCommandBase {
                     PriorityMachine temp = new PriorityMachine(arg);
                     if (machine == null) machine = temp;
                 } catch (NumberFormatException ignored) {
-                    IHandler handler = FGManager.getInstance().gethandler(arg);
+                    IHandler handler = FGManager.getInstance().gethandler(arg).orElse(null);
                     if (handler != null && !handlers.contains(handler)) {
                         handlers.add(handler);
                     } else {

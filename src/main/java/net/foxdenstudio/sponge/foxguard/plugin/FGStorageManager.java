@@ -39,12 +39,16 @@ import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.mapdb.*;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.world.World;
 
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
+
+import static net.foxdenstudio.sponge.foxguard.plugin.FGManager.SERVER_UUID;
 
 /**
  * Created by Fox on 4/6/2016.
@@ -53,15 +57,16 @@ public final class FGStorageManager {
 
     public static final String[] FS_ILLEGAL_NAMES = {"con", "prn", "aux", "nul", "com0", "com1", "com2", "com3", "com4",
             "com5", "com6", "com7", "com8", "com9", "lpt0", "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9"};
-
-    public final HashMap<IFGObject, Boolean> defaultModifiedMap;
     private static FGStorageManager instance;
+    public final HashMap<IFGObject, Boolean> defaultModifiedMap;
+    private final UserStorageService userStorageService;
     private final Logger logger = FoxGuardMain.instance().getLogger();
     private final Set<LoadEntry> loaded = new HashSet<>();
     private final Path directory = getDirectory();
     private final Map<String, Path> worldDirectories;
 
     private FGStorageManager() {
+        userStorageService = FoxGuardMain.instance().getUserStorage();
         defaultModifiedMap = new CacheMap<>((k, m) -> {
             if (k instanceof IFGObject) {
                 m.put((IFGObject) k, true);
@@ -92,54 +97,62 @@ public final class FGStorageManager {
         try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, UUID> ownerMap = mainDB.hashMap("owners", Serializer.STRING, Serializer.UUID).createOrOpen();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
             Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
 
             mainMap.clear();
             linksMap.clear();
 
-            Path dir = directory.resolve("regions");
-            constructDirectory(dir);
+            Path serverDir = directory.resolve("regions");
+            constructDirectory(serverDir);
             FGManager.getInstance().getRegions().forEach(fgObject -> {
                 String name = fgObject.getName();
+                UUID owner = fgObject.getOwner();
+                boolean isOwned = !owner.equals(SERVER_UUID);
+                Optional<User> userOwner = userStorageService.get(owner);
+                String logName = (userOwner.isPresent() ? userOwner.get().getName() + ":" : "") + (isOwned ? owner + ":" : "") + name;
                 if (fgObject.autoSave()) {
-                    Path singleDir = dir.resolve(name.toLowerCase());
+                    Path singleDir = isOwned ? serverDir.resolve("users").resolve(owner.toString()) : serverDir.resolve(name.toLowerCase());
                     boolean shouldSave = fgObject.shouldSave();
                     if (force || shouldSave) {
-                        logger.info((shouldSave ? "S" : "Force s") + "aving region \"" + name + "\" in directory: " + singleDir);
+                        logger.info((shouldSave ? "S" : "Force s") + "aving region " + logName + " in directory: " + singleDir);
                         constructDirectory(singleDir);
                         try {
                             fgObject.save(singleDir);
                         } catch (Exception e) {
-                            logger.error("There was an error while saving region \"" + name + "\"!", e);
+                            logger.error("There was an error while saving region " + logName + "!", e);
                         }
 
-                        logger.info("Saving metadata for region \"" + name + "\"");
+                        logger.info("Saving metadata for region " + logName);
                         try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
                             Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
                             Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
                             Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
+                            Atomic.Var<UUID> metaOwner = metaDB.atomicVar("owner", Serializer.UUID).createOrOpen();
                             Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
                             metaName.set(name);
                             metaCategory.set(FGUtil.getCategory(fgObject));
                             metaType.set(fgObject.getUniqueTypeString());
+                            metaOwner.set(owner);
                             metaEnabled.set(fgObject.isEnabled());
                         }
                     } else {
-                        logger.info("Region \"" + name + "\" is already up to date. Skipping...");
+                        logger.info("Region " + logName + " is already up to date. Skipping...");
                     }
                     mainMap.put(name, FGUtil.getCategory(fgObject));
                     typeMap.put(name, fgObject.getUniqueTypeString());
+                    ownerMap.put(name, owner);
                     enabledMap.put(name, fgObject.isEnabled());
 
                     defaultModifiedMap.put(fgObject, false);
                 } else {
-                    logger.info("Region " + fgObject.getName() + " does not need saving. Skipping...");
+                    logger.info("Region " + logName + " does not need saving. Skipping...");
                 }
                 if (fgObject.saveLinks()) {
                     linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
                 } else {
-                    logger.info("Region " + fgObject.getName() + " does not need its links saved. Skipping...");
+                    logger.info("Region " + logName + " does not need its links saved. Skipping...");
                 }
             });
         } catch (DBException.DataCorruption e) {
@@ -164,55 +177,63 @@ public final class FGStorageManager {
         try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, UUID> ownerMap = mainDB.hashMap("owners", Serializer.STRING, Serializer.UUID).createOrOpen();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
             Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
 
             mainMap.clear();
             linksMap.clear();
 
-            Path dir = worldDirectories.get(world.getName()).resolve("wregions");
-            constructDirectory(dir);
+            Path serverDir = worldDirectories.get(world.getName()).resolve("wregions");
+            constructDirectory(serverDir);
             FGManager.getInstance().getWorldRegions(world).forEach(fgObject -> {
                 String name = fgObject.getName();
+                UUID owner = fgObject.getOwner();
+                boolean isOwned = !owner.equals(SERVER_UUID);
+                Optional<User> userOwner = userStorageService.get(owner);
+                String logName = (userOwner.isPresent() ? userOwner.get().getName() + ":" : "") + (isOwned ? owner + ":" : "") + name;
                 if (fgObject.autoSave()) {
-                    Path singleDir = dir.resolve(name.toLowerCase());
+                    Path singleDir = isOwned ? serverDir.resolve("users").resolve(owner.toString()) : serverDir.resolve(name.toLowerCase());
                     boolean shouldSave = fgObject.shouldSave();
                     if (force || shouldSave) {
-                        logger.info((shouldSave ? "S" : "Force s") + "aving world region \"" + name + "\" in directory: " + singleDir);
+                        logger.info((shouldSave ? "S" : "Force s") + "aving world region " + logName + " in directory: " + singleDir);
                         constructDirectory(singleDir);
                         try {
                             fgObject.save(singleDir);
                         } catch (Exception e) {
-                            logger.error("There was an error while saving world region \"" + name + "\" in world \"" + world.getName() + "\"!", e);
+                            logger.error("There was an error while saving world region " + logName + " in world " + world.getName() + "!", e);
                         }
 
-                        logger.info("Saving metadata for world region \"" + name + "\"");
+                        logger.info("Saving metadata for world region " + logName);
                         try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
                             Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
                             Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
                             Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
+                            Atomic.Var<UUID> metaOwner = metaDB.atomicVar("owner", Serializer.UUID).createOrOpen();
                             Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
                             metaName.set(name);
                             metaCategory.set(FGUtil.getCategory(fgObject));
                             metaType.set(fgObject.getUniqueTypeString());
+                            metaOwner.set(owner);
                             metaEnabled.set(fgObject.isEnabled());
                         }
                     } else {
-                        logger.info("Region \"" + name + "\" is already up to date. Skipping...");
+                        logger.info("Region " + logName + " is already up to date. Skipping...");
                     }
 
                     mainMap.put(name, FGUtil.getCategory(fgObject));
                     typeMap.put(name, fgObject.getUniqueTypeString());
+                    ownerMap.put(name, owner);
                     enabledMap.put(name, fgObject.isEnabled());
 
                     defaultModifiedMap.put(fgObject, false);
                 } else {
-                    logger.info("World region " + fgObject.getName() + " does not need saving. Skipping...");
+                    logger.info("World region " + logName + " does not need saving. Skipping...");
                 }
                 if (fgObject.saveLinks()) {
                     linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
                 } else {
-                    logger.info("World region " + fgObject.getName() + " does not need its links saved. Skipping...");
+                    logger.info("World region " + logName + " does not need its links saved. Skipping...");
                 }
             });
         } catch (DBException.DataCorruption e) {
@@ -237,52 +258,60 @@ public final class FGStorageManager {
         try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, UUID> ownerMap = mainDB.hashMap("owners", Serializer.STRING, Serializer.UUID).createOrOpen();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
             Map<String, Integer> priorityMap = mainDB.hashMap("priority", Serializer.STRING, Serializer.INTEGER).createOrOpen();
 
             mainMap.clear();
 
-            Path dir = directory.resolve("handlers");
-            constructDirectory(dir);
+            Path serverDir = directory.resolve("handlers");
+            constructDirectory(serverDir);
             FGManager.getInstance().getHandlers().forEach(fgObject -> {
+                String name = fgObject.getName();
+                UUID owner = fgObject.getOwner();
+                boolean isOwned = !owner.equals(SERVER_UUID);
+                Optional<User> userOwner = userStorageService.get(owner);
+                String logName = (userOwner.isPresent() ? userOwner.get().getName() + ":" : "") + (isOwned ? owner + ":" : "") + name;
                 if (fgObject.autoSave()) {
-                    String name = fgObject.getName();
-                    Path singleDir = dir.resolve(name.toLowerCase());
+                    Path singleDir = serverDir.resolve(name.toLowerCase());
                     boolean shouldSave = fgObject.shouldSave();
                     if (force || shouldSave) {
-                        logger.info((shouldSave ? "S" : "Force s") + "aving handler \"" + name + "\" in directory: " + singleDir);
+                        logger.info((shouldSave ? "S" : "Force s") + "aving handler " + logName + " in directory: " + singleDir);
                         constructDirectory(singleDir);
                         try {
                             fgObject.save(singleDir);
                         } catch (Exception e) {
-                            logger.error("There was an error while saving handler \"" + name + "\"!", e);
+                            logger.error("There was an error while saving handler " + logName + "!", e);
                         }
 
-                        logger.info("Saving metadata for handler \"" + name + "\"");
+                        logger.info("Saving metadata for handler " + logName);
                         try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
                             Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
                             Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
                             Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
+                            Atomic.Var<UUID> metaOwner = metaDB.atomicVar("owner", Serializer.UUID).createOrOpen();
                             Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
                             Atomic.Integer metaPriority = metaDB.atomicInteger("priority").createOrOpen();
                             metaName.set(name);
                             metaCategory.set(FGUtil.getCategory(fgObject));
                             metaType.set(fgObject.getUniqueTypeString());
+                            metaOwner.set(owner);
                             metaEnabled.set(fgObject.isEnabled());
                             metaPriority.set(fgObject.getPriority());
                         }
                     } else {
-                        logger.info("Region \"" + name + "\" is already up to date. Skipping...");
+                        logger.info("Region " + logName + " is already up to date. Skipping...");
                     }
 
                     mainMap.put(name, FGUtil.getCategory(fgObject));
                     typeMap.put(name, fgObject.getUniqueTypeString());
+                    ownerMap.put(name, owner);
                     enabledMap.put(name, fgObject.isEnabled());
                     priorityMap.put(name, fgObject.getPriority());
 
                     defaultModifiedMap.put(fgObject, false);
                 } else {
-                    logger.info("Handler " + fgObject.getName() + " does not need saving. Skipping...");
+                    logger.info("Handler " + logName + " does not need saving. Skipping...");
                 }
             });
         } catch (DBException.DataCorruption e) {
@@ -308,50 +337,58 @@ public final class FGStorageManager {
             try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
                 Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
                 Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
+                Map<String, UUID> ownerMap = mainDB.hashMap("owners", Serializer.STRING, Serializer.UUID).createOrOpen();
                 Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
                 Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
 
-                Path dir = directory.resolve("regions");
-                constructDirectory(dir);
+                Path serverDir = directory.resolve("regions");
+                constructDirectory(serverDir);
                 String name = fgObject.getName();
+                UUID owner = fgObject.getOwner();
+                boolean isOwned = !owner.equals(SERVER_UUID);
+                Optional<User> userOwner = userStorageService.get(owner);
+                String logName = (userOwner.isPresent() ? userOwner.get().getName() + ":" : "") + (isOwned ? owner + ":" : "") + name;
                 if (fgObject.autoSave()) {
-                    Path singleDir = dir.resolve(name.toLowerCase());
+                    Path singleDir = isOwned ? serverDir.resolve("users").resolve(owner.toString()) : serverDir.resolve(name.toLowerCase());
                     boolean shouldSave = fgObject.shouldSave();
                     if (force || shouldSave) {
-                        logger.info((shouldSave ? "S" : "Force s") + "aving region \"" + name + "\" in directory: " + singleDir);
+                        logger.info((shouldSave ? "S" : "Force s") + "aving region " + logName + " in directory: " + singleDir);
                         constructDirectory(singleDir);
                         try {
                             fgObject.save(singleDir);
                         } catch (Exception e) {
-                            logger.error("There was an error while saving region \"" + name + "\"!", e);
+                            logger.error("There was an error while saving region " + logName + "!", e);
                         }
 
-                        logger.info("Saving metadata for region \"" + name + "\"");
+                        logger.info("Saving metadata for region " + logName);
                         try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
                             Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
                             Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
                             Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
+                            Atomic.Var<UUID> metaOwner = metaDB.atomicVar("owner", Serializer.UUID).createOrOpen();
                             Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
                             metaName.set(name);
                             metaCategory.set(FGUtil.getCategory(fgObject));
                             metaType.set(fgObject.getUniqueTypeString());
+                            metaOwner.set(owner);
                             metaEnabled.set(fgObject.isEnabled());
                         }
                     } else {
-                        logger.info("Region \"" + name + "\" is already up to date. Skipping...");
+                        logger.info("Region " + logName + " is already up to date. Skipping...");
                     }
                     mainMap.put(name, FGUtil.getCategory(fgObject));
                     typeMap.put(name, fgObject.getUniqueTypeString());
+                    ownerMap.put(name, owner);
                     enabledMap.put(name, fgObject.isEnabled());
 
                     defaultModifiedMap.put(fgObject, false);
                 } else {
-                    logger.info("Region " + fgObject.getName() + " does not need saving. Skipping...");
+                    logger.info("Region " + logName + " does not need saving. Skipping...");
                 }
                 if (fgObject.saveLinks()) {
                     linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
                 } else {
-                    logger.info("Region " + fgObject.getName() + " does not need its links saved. Skipping...");
+                    logger.info("Region " + logName + " does not need its links saved. Skipping...");
                 }
             } catch (DBException.DataCorruption e) {
                 try {
@@ -376,51 +413,59 @@ public final class FGStorageManager {
         try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
+            Map<String, UUID> ownerMap = mainDB.hashMap("owners", Serializer.STRING, Serializer.UUID).createOrOpen();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
             Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
 
-            Path dir = worldDirectories.get(world.getName()).resolve("wregions");
-            constructDirectory(dir);
+            Path serverDir = worldDirectories.get(world.getName()).resolve("wregions");
+            constructDirectory(serverDir);
             String name = fgObject.getName();
+            UUID owner = fgObject.getOwner();
+            boolean isOwned = !owner.equals(SERVER_UUID);
+            Optional<User> userOwner = userStorageService.get(owner);
+            String logName = (userOwner.isPresent() ? userOwner.get().getName() + ":" : "") + (isOwned ? owner + ":" : "") + name;
             if (fgObject.autoSave()) {
-                Path singleDir = dir.resolve(name.toLowerCase());
+                Path singleDir = serverDir.resolve(name.toLowerCase());
                 boolean shouldSave = fgObject.shouldSave();
                 if (force || shouldSave) {
-                    logger.info((shouldSave ? "S" : "Force s") + "aving world region \"" + name + "\" in directory: " + singleDir);
+                    logger.info((shouldSave ? "S" : "Force s") + "aving world region " + logName + " in directory: " + singleDir);
                     constructDirectory(singleDir);
                     try {
                         fgObject.save(singleDir);
                     } catch (Exception e) {
-                        logger.error("There was an error while saving world region \"" + name + "\" in world \"" + world.getName() + "\"!", e);
+                        logger.error("There was an error while saving world region " + logName + " in world " + world.getName() + "!", e);
                     }
 
-                    logger.info("Saving metadata for world region \"" + name + "\"");
+                    logger.info("Saving metadata for world region " + logName);
                     try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
                         Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
                         Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
                         Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
+                        Atomic.Var<UUID> metaOwner = metaDB.atomicVar("owner", Serializer.UUID).createOrOpen();
                         Atomic.Boolean metaEnabled = metaDB.atomicBoolean("enabled").createOrOpen();
                         metaName.set(name);
                         metaCategory.set(FGUtil.getCategory(fgObject));
                         metaType.set(fgObject.getUniqueTypeString());
+                        metaOwner.set(owner);
                         metaEnabled.set(fgObject.isEnabled());
                     }
                 } else {
-                    logger.info("Region \"" + name + "\" is already up to date. Skipping...");
+                    logger.info("Region " + name + " is already up to date. Skipping...");
                 }
 
                 mainMap.put(name, FGUtil.getCategory(fgObject));
                 typeMap.put(name, fgObject.getUniqueTypeString());
+                ownerMap.put(name, owner);
                 enabledMap.put(name, fgObject.isEnabled());
 
                 defaultModifiedMap.put(fgObject, false);
             } else {
-                logger.info("World region " + fgObject.getName() + " does not need saving. Skipping...");
+                logger.info("World region " + logName + " does not need saving. Skipping...");
             }
             if (fgObject.saveLinks()) {
                 linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
             } else {
-                logger.info("World region " + fgObject.getName() + " does not need its links saved. Skipping...");
+                logger.info("World region " + logName + " does not need its links saved. Skipping...");
             }
         } catch (DBException.DataCorruption e) {
             try {
@@ -882,15 +927,17 @@ public final class FGStorageManager {
         try (DB mainDB = DBMaker.fileDB(directory.resolve("regions.foxdb").normalize().toString()).make()) {
             Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
             linksMap.entrySet().forEach(entry -> {
-                IRegion region = FGManager.getInstance().getRegion(entry.getKey());
-                if (region != null) {
+                Optional<IRegion> regionOpt = FGManager.getInstance().getRegion(entry.getKey());
+                if (regionOpt.isPresent()) {
+                    IRegion region = regionOpt.get();
                     logger.info("Loading links for region \"" + region.getName() + "\"");
                     String handlersString = entry.getValue();
                     if (handlersString != null && !handlersString.isEmpty()) {
                         String[] handlersNames = handlersString.split(",");
                         Arrays.stream(handlersNames).forEach(handlerName -> {
-                            IHandler handler = FGManager.getInstance().gethandler(handlerName);
-                            if (handler != null) {
+                            Optional<IHandler> handlerOpt = FGManager.getInstance().gethandler(handlerName);
+                            if (handlerOpt.isPresent()) {
+                                IHandler handler = handlerOpt.get();
                                 if (FGManager.getInstance().link(region, handler))
                                     logger.info("Linked region \"" + region.getName() + "\" to handler \"" + handler.getName() + "\"");
                             }
@@ -906,15 +953,17 @@ public final class FGStorageManager {
         try (DB mainDB = DBMaker.fileDB(worldDirectories.get(world.getName()).resolve("wregions.foxdb").normalize().toString()).make()) {
             Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
             linksMap.entrySet().forEach(entry -> {
-                IRegion region = FGManager.getInstance().getWorldRegion(world, entry.getKey());
-                if (region != null) {
+                Optional<IWorldRegion> regionOpt = FGManager.getInstance().getWorldRegion(world, entry.getKey());
+                if (regionOpt.isPresent()) {
+                    IWorldRegion region = regionOpt.get();
                     logger.info("Loading links for world region \"" + region.getName() + "\"");
                     String handlersString = entry.getValue();
                     if (handlersString != null && !handlersString.isEmpty()) {
                         String[] handlersNames = handlersString.split(",");
                         Arrays.stream(handlersNames).forEach(handlerName -> {
-                            IHandler handler = FGManager.getInstance().gethandler(handlerName);
-                            if (handler != null) {
+                            Optional<IHandler> handlerOpt = FGManager.getInstance().gethandler(handlerName);
+                            if (handlerOpt.isPresent()) {
+                                IHandler handler = handlerOpt.get();
                                 if (FGManager.getInstance().link(region, handler))
                                     logger.info("Linked world region \"" + region.getName() + "\" to handler \"" + handler.getName() + "\"");
                             }
@@ -1124,6 +1173,10 @@ public final class FGStorageManager {
         return builder.toString();
     }
 
+    public enum Type {
+        REGION, WREGION, HANDLER
+    }
+
     private final class LoadEntry {
         public final String name;
         public final Type type;
@@ -1202,9 +1255,5 @@ public final class FGStorageManager {
             }
             return singleDirectory.resolve(this.name.toLowerCase());
         }
-    }
-
-    public enum Type {
-        REGION, WREGION, HANDLER
     }
 }

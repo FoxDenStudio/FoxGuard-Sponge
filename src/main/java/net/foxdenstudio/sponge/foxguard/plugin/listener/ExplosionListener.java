@@ -65,6 +65,7 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
         } else if (event.getCause().containsType(User.class)) {
             user = event.getCause().first(User.class).get();
         } else {
+            // Duct tape:
             Optional<Explosive> explosiveOptional = event.getExplosion().getSourceExplosive();
             if (explosiveOptional.isPresent()) {
                 Explosive explosive = explosiveOptional.get();
@@ -98,10 +99,15 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
             flags.set(DETONATE);
 
             ExplosionEvent.Detonate detonateEvent = ((ExplosionEvent.Detonate) event);
-            FGManager.getInstance().getRegionsAtMultiLocI(detonateEvent.getAffectedLocations())
+
+            List<Location<World>> locations = detonateEvent.getAffectedLocations();
+            if (locations.isEmpty()) return;
+
+            FGManager.getInstance().getRegionsAtMultiLocI(locations)
                     .forEach(region -> region.getHandlers().stream()
                             .filter(IFGObject::isEnabled)
                             .forEach(handlerSet::add));
+
         } else if (event instanceof ExplosionEvent.Pre) {
             flags.set(PRE);
             Location<World> loc = event.getExplosion().getLocation();

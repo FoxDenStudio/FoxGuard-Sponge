@@ -58,6 +58,11 @@ public class InteractEntityListener implements EventListener<InteractEntityEvent
 
     private static final FlagBitSet BASE_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, INTERACT, ENTITY);
 
+    {
+        ArrayList<String> strings = new ArrayList<String>();
+
+    }
+
     @Override
     public void handle(InteractEntityEvent event) throws Exception {
         if (event.isCancelled()) return;
@@ -130,10 +135,5 @@ public class InteractEntityListener implements EventListener<InteractEntityEvent
             //makes sure that handlers are unable to cancel the event directly.
             event.setCancelled(false);
         }
-    }
-
-    {
-        ArrayList<String> strings = new ArrayList<String>();
-
     }
 }

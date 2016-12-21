@@ -37,6 +37,7 @@ import org.mapdb.Serializer;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public abstract class ControllerBase extends HandlerBase implements IController {
 
@@ -77,7 +78,8 @@ public abstract class ControllerBase extends HandlerBase implements IController 
             linksList.stream()
                     .filter(name -> !this.name.equalsIgnoreCase(name))
                     .map(name -> FGManager.getInstance().gethandler(name))
-                    .filter(handler -> handler != null)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
                     .forEach(handlers::add);
 
         }
