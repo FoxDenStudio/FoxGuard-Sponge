@@ -41,6 +41,7 @@ import org.spongepowered.api.world.World;
 import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Interface for all FoxGuard Objects. Inherited by {@link IRegion Regions}, {@link IWorldRegion World Regions},
@@ -62,6 +63,10 @@ public interface IFGObject extends IModifiable {
      * @param name The new name of the object.
      */
     void setName(String name);
+
+    UUID getOwner();
+
+    void setOwner(UUID owner);
 
     /**
      * Gets the short direction name for this object. It should be around four letters. It should be human readable.

@@ -59,6 +59,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
@@ -303,18 +304,18 @@ public class DebugHandler extends HandlerBase {
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0) {
-                return ImmutableList.of("members", "console", "color").stream()
+                return Stream.of("members", "console", "color")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             } else if (parse.current.index == 1) {
                 if (parse.args[0].equalsIgnoreCase("members")) {
-                    return ImmutableList.of("add", "remove", "set").stream()
+                    return Stream.of("add", "remove", "set")
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (parse.args[0].equalsIgnoreCase("console")) {
-                    return ImmutableList.of("true", "false", "color").stream()
+                    return Stream.of("true", "false")
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());

@@ -57,6 +57,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
@@ -66,8 +67,8 @@ import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 public class PermissionHandler extends HandlerBase {
 
     private final List<PermissionEntry> entries;
-    private String defaultPermission;
     private final Map<FlagBitSet, List<String>> permCache;
+    private String defaultPermission;
 
     public PermissionHandler(String name, int priority, boolean isEnabled) {
         this(name, priority, isEnabled,
@@ -366,13 +367,13 @@ public class PermissionHandler extends HandlerBase {
 
         if (parse.current.type == AdvCmdParser.CurrentElement.ElementType.ARGUMENT) {
             if (parse.current.index == 0) {
-                return ImmutableList.of("entries", "default").stream()
+                return Stream.of("entries", "default")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             } else if (isIn(ENTRIES_ALIASES, parse.args[0]) || isIn(FLAGS_ALIASES, parse.args[0])) {
                 if (parse.current.index == 1) {
-                    return ImmutableList.of("add", "set", "remove", "move").stream()
+                    return Stream.of("add", "set", "remove", "move")
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());

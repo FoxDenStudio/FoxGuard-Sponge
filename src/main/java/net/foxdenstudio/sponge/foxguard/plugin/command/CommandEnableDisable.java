@@ -48,7 +48,6 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
@@ -62,6 +61,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
@@ -142,7 +142,7 @@ public class CommandEnableDisable extends FCCommandBase {
             FGUtil.getSelectedRegions(source).forEach(regions::add);
             if (parse.args.length > 1) {
                 for (String name : Arrays.copyOfRange(parse.args, 1, parse.args.length)) {
-                    IWorldRegion region = FGManager.getInstance().getWorldRegion(world, name);
+                    IWorldRegion region = FGManager.getInstance().getWorldRegion(world, name).orElse(null);
                     if (region == null) failures++;
                     else {
                         regions.add(region);
@@ -180,7 +180,7 @@ public class CommandEnableDisable extends FCCommandBase {
             List<IHandler> handlers = new ArrayList<>();
             FGUtil.getSelectedHandlers(source).forEach(handlers::add);
             for (String name : Arrays.copyOfRange(parse.args, 1, parse.args.length)) {
-                IHandler handler = FGManager.getInstance().gethandler(name);
+                IHandler handler = FGManager.getInstance().gethandler(name).orElse(null);
                 if (handler == null) failures++;
                 else {
                     handlers.add(handler);
@@ -223,7 +223,7 @@ public class CommandEnableDisable extends FCCommandBase {
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0)
-                return ImmutableList.of("region", "handler").stream()
+                return Stream.of("region", "handler")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
@@ -265,7 +265,7 @@ public class CommandEnableDisable extends FCCommandBase {
                 }
             }
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY))
-            return ImmutableList.of("world").stream()
+            return Stream.of("world")
                     .filter(new StartsWithPredicate(parse.current.token))
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());

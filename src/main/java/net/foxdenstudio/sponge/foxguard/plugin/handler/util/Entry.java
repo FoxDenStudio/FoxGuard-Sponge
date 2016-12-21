@@ -27,12 +27,8 @@ package net.foxdenstudio.sponge.foxguard.plugin.handler.util;
 
 import com.google.common.collect.ImmutableSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
-import org.spongepowered.api.util.Tristate;
 
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Optional;
 import java.util.Set;
 
 /**

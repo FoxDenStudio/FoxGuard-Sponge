@@ -50,12 +50,7 @@ public class PermissionEntry extends Entry {
         this.permission = permission.toLowerCase();
     }
 
-    @Override
-    public String serializeValue() {
-        return permission;
-    }
-
-    public static PermissionEntry deserialize(String string){
+    public static PermissionEntry deserialize(String string) {
         FlagRegistry registry = FlagRegistry.getInstance();
         String[] parts = string.split(":");
         String[] flags = parts[0].split(",", 2);
@@ -67,5 +62,10 @@ public class PermissionEntry extends Entry {
             }
         }
         return new PermissionEntry(flagSet, parts[1]);
+    }
+
+    @Override
+    public String serializeValue() {
+        return permission;
     }
 }

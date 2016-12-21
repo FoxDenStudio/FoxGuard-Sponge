@@ -43,7 +43,6 @@ import ninja.leaping.configurate.loader.ConfigurationLoader;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Locatable;
@@ -215,21 +214,6 @@ public class CuboidRegion extends WorldRegionBase implements IIterableRegion, IS
         return new CuboidSelection(this.boundingBox);
     }
 
-    private class RegionIterator implements Iterator<Location<World>> {
-
-        Iterator<Vector3i> bbIterator = boundingBox.iterator();
-
-        @Override
-        public boolean hasNext() {
-            return bbIterator.hasNext();
-        }
-
-        @Override
-        public Location<World> next() {
-            return new Location<>(world, bbIterator.next());
-        }
-    }
-
     public static class Factory implements IWorldRegionFactory {
 
         private static final String[] cuboidAliases = {"box", "cube", "cuboid", "cuboidal", "rectangularprism", "rectangleprism", "rectprism"};
@@ -290,6 +274,21 @@ public class CuboidRegion extends WorldRegionBase implements IIterableRegion, IS
                     .autoCloseQuotes(true)
                     .parse();
             return ImmutableList.of(parse.current.prefix + "~");
+        }
+    }
+
+    private class RegionIterator implements Iterator<Location<World>> {
+
+        Iterator<Vector3i> bbIterator = boundingBox.iterator();
+
+        @Override
+        public boolean hasNext() {
+            return bbIterator.hasNext();
+        }
+
+        @Override
+        public Location<World> next() {
+            return new Location<>(world, bbIterator.next());
         }
     }
 }

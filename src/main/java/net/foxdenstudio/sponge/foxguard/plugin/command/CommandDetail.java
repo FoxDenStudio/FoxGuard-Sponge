@@ -93,7 +93,8 @@ public class CommandDetail extends FCCommandBase {
             return CommandResult.empty();
         } else if (isIn(REGIONS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
-            IRegion region = FGManager.getInstance().getRegion(parse.args[1]);
+            IRegion region = null;
+            /*FGManager.getInstance().getRegion(parse.args[1]);
             if (region == null) {
                 String worldName = parse.flags.get("world");
                 World world = null;
@@ -111,7 +112,9 @@ public class CommandDetail extends FCCommandBase {
                 region = FGManager.getInstance().getWorldRegion(world, parse.args[1]);
             }
             if (region == null)
-                throw new CommandException(Text.of("No region exists with the name \"" + parse.args[1] + "\"!"));
+                throw new CommandException(Text.of("No region exists with the name \"" + parse.args[1] + "\"!"));*/
+
+
             Text.Builder builder = Text.builder();
             builder.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
             if (parse.args.length < 3 || parse.args[2].isEmpty() || parse.flags.containsKey("all")) {
@@ -169,9 +172,10 @@ public class CommandDetail extends FCCommandBase {
         } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
 
-            IHandler handler = FGManager.getInstance().gethandler(parse.args[1]);
-            if (handler == null)
+            Optional<IHandler> handlerOpt = FGManager.getInstance().gethandler(parse.args[1]);
+            if (!handlerOpt.isPresent())
                 throw new CommandException(Text.of("No handler with name \"" + parse.args[1] + "\"!"));
+            IHandler handler = handlerOpt.get();
             Text.Builder builder = Text.builder();
             builder.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
             if (parse.args.length <= 2 || parse.args[2].isEmpty() || parse.flags.containsKey("all")) {
@@ -372,7 +376,7 @@ public class CommandDetail extends FCCommandBase {
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0)
-                return ImmutableList.of("region", "handler").stream()
+                return Stream.of("region", "handler")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
@@ -406,7 +410,7 @@ public class CommandDetail extends FCCommandBase {
                 }
             }
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY))
-            return ImmutableList.of("world").stream()
+            return Stream.of("world")
                     .filter(new StartsWithPredicate(parse.current.token))
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());

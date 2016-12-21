@@ -42,7 +42,6 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
@@ -55,6 +54,7 @@ import org.spongepowered.api.world.World;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
@@ -86,7 +86,7 @@ public class CommandRename extends FCCommandBase {
             IRegion region = null;
             World world = null;
             if (!parse.flags.keySet().contains("world"))
-                region = FGManager.getInstance().getRegion(parse.args[1]);
+                region = FGManager.getInstance().getRegion(parse.args[1]).orElse(null);
             if (region == null) {
                 String worldName = parse.flags.get("world");
                 if (source instanceof Locatable) world = ((Locatable) source).getWorld();
@@ -100,7 +100,7 @@ public class CommandRename extends FCCommandBase {
                     }
                 }
                 if (world == null) throw new CommandException(Text.of("Must specify a world!"));
-                region = FGManager.getInstance().getWorldRegion(world, parse.args[1]);
+                region = FGManager.getInstance().getWorldRegion(world, parse.args[1]).orElse(null);
             }
             if (region == null)
                 throw new CommandException(Text.of("No region exists with the name \"" + parse.args[1] + "\"!"));
@@ -126,9 +126,10 @@ public class CommandRename extends FCCommandBase {
             source.sendMessage(Text.of(TextColors.GREEN, "Region \"" + oldName + "\" successfully renamed to \"" + parse.args[2] + "\"!"));
         } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("You must specify a name!"));
-            IHandler handler = FGManager.getInstance().gethandler(parse.args[1]);
-            if (handler == null)
+            Optional<IHandler> handlerOpt = FGManager.getInstance().gethandler(parse.args[1]);
+            if (!handlerOpt.isPresent())
                 throw new CommandException(Text.of("No handler exists with the name \"" + parse.args[1] + "\"!"));
+            IHandler handler = handlerOpt.get();
             if (handler instanceof GlobalHandler) {
                 throw new CommandException(Text.of("You may not rename the global handler!"));
             }
@@ -160,7 +161,7 @@ public class CommandRename extends FCCommandBase {
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0)
-                return ImmutableList.of("region", "handler").stream()
+                return Stream.of("region", "handler")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
@@ -199,7 +200,7 @@ public class CommandRename extends FCCommandBase {
                 Tristate available = null;
                 if (isIn(REGIONS_ALIASES, parse.args[0]) || isIn(WORLDREGIONS_ALIASES, parse.args[0])) {
                     World world = null;
-                    IRegion region = FGManager.getInstance().getRegion(parse.args[1]);
+                    IRegion region = FGManager.getInstance().getRegion(parse.args[1]).orElse(null);
                     if (region == null) {
                         String worldName = parse.flags.get("world");
                         if (source instanceof Locatable) world = ((Locatable) source).getWorld();
@@ -210,7 +211,7 @@ public class CommandRename extends FCCommandBase {
                             }
                         }
                         if (world == null) return ImmutableList.of();
-                        region = FGManager.getInstance().getWorldRegion(world, parse.args[1]);
+                        region = FGManager.getInstance().getWorldRegion(world, parse.args[1]).orElse(null);
                     }
                     if (region == null || region instanceof IGlobal) return ImmutableList.of();
                     if (region instanceof IWorldRegion) {
@@ -236,7 +237,7 @@ public class CommandRename extends FCCommandBase {
                 }
             }
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY))
-            return ImmutableList.of("world").stream()
+            return Stream.of("world")
                     .filter(new StartsWithPredicate(parse.current.token))
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());

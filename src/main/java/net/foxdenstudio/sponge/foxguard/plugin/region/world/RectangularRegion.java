@@ -42,7 +42,6 @@ import ninja.leaping.configurate.loader.ConfigurationLoader;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Locatable;
@@ -193,31 +192,6 @@ public class RectangularRegion extends WorldRegionBase implements IIterableRegio
         return new RegionIterator();
     }
 
-    private class RegionIterator implements Iterator<Location<World>> {
-
-        Iterator<Vector2i> bbIterator = boundingBox.iterator();
-        Vector2i vec2 = bbIterator.next();
-        int y = 0;
-
-        @Override
-        public boolean hasNext() {
-            return vec2 != null;
-        }
-
-        @Override
-        public Location<World> next() {
-            if (hasNext()) {
-                Location<World> loc = new Location<>(world, vec2.getX(), y, vec2.getY());
-                y++;
-                if (y > 255) {
-                    y = 0;
-                    vec2 = bbIterator.next();
-                }
-                return loc;
-            } else return null;
-        }
-    }
-
     public static class Factory implements IWorldRegionFactory {
 
         private static final String[] rectAliases = {"square", "rectangular", "rectangle", "rect"};
@@ -275,6 +249,31 @@ public class RectangularRegion extends WorldRegionBase implements IIterableRegio
                     .autoCloseQuotes(true)
                     .parse();
             return ImmutableList.of(parse.current.prefix + "~");
+        }
+    }
+
+    private class RegionIterator implements Iterator<Location<World>> {
+
+        Iterator<Vector2i> bbIterator = boundingBox.iterator();
+        Vector2i vec2 = bbIterator.next();
+        int y = 0;
+
+        @Override
+        public boolean hasNext() {
+            return vec2 != null;
+        }
+
+        @Override
+        public Location<World> next() {
+            if (hasNext()) {
+                Location<World> loc = new Location<>(world, vec2.getX(), y, vec2.getY());
+                y++;
+                if (y > 255) {
+                    y = 0;
+                    vec2 = bbIterator.next();
+                }
+                return loc;
+            } else return null;
         }
     }
 

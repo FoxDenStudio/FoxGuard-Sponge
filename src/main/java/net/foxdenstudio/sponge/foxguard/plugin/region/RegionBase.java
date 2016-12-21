@@ -41,7 +41,7 @@ public abstract class RegionBase extends FGObjectBase implements IRegion {
     private final Set<IHandler> handlers;
 
     protected RegionBase(String name, boolean isEnabled) {
-        super(name, isEnabled);
+        super(name, null, isEnabled);
         this.handlers = new HashSet<>();
     }
 

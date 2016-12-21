@@ -58,6 +58,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 import static org.spongepowered.api.text.format.TextColors.*;
@@ -200,7 +201,7 @@ public class LogicController extends ControllerBase {
                 .parse();
         if (parse.current.type == AdvCmdParser.CurrentElement.ElementType.ARGUMENT) {
             if (parse.current.index == 0) {
-                return ImmutableList.of("operator", "mode", "short").stream()
+                return Stream.of("operator", "mode", "short")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
@@ -213,12 +214,12 @@ public class LogicController extends ControllerBase {
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(MODE_ALIASES, parse.args[0])) {
-                    return ImmutableList.of("allow", "deny", "pass").stream()
+                    return Stream.of("allow", "deny", "pass")
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(SHORT_ALIASES, parse.args[0])) {
-                    return ImmutableList.of("true", "false").stream()
+                    return Stream.of("true", "false")
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
@@ -372,14 +373,14 @@ public class LogicController extends ControllerBase {
             this.color = color;
         }
 
-        public abstract Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, @Nullable User user, FlagBitSet flags, ExtraContext extra);
-
         public static Operator from(String name) {
             for (Operator op : values()) {
                 if (op.name().equalsIgnoreCase(name)) return op;
             }
             return null;
         }
+
+        public abstract Tristate operate(List<IHandler> handlers, Tristate mode, boolean shortCircuit, @Nullable User user, FlagBitSet flags, ExtraContext extra);
     }
 
     public static final class Factory implements IControllerFactory {

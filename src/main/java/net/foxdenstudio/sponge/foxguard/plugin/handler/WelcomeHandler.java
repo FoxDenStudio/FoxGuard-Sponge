@@ -30,6 +30,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
+import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
@@ -116,5 +117,38 @@ public class WelcomeHandler extends HandlerBase {
         CommentedConfigurationNode root = FCPUtil.getHOCONConfiguration(file, loader);
         root.getNode("enter").setValue(enterTemplate);
         root.getNode("exit").setValue(exitTemplate);
+    }
+
+    public static class Factory implements IHandlerFactory {
+
+        @Override
+        public IHandler create(String name, int priority, String arguments, CommandSource source) throws CommandException {
+            return null;
+        }
+
+        @Override
+        public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
+            return null;
+        }
+
+        @Override
+        public String[] getAliases() {
+            return new String[0];
+        }
+
+        @Override
+        public String getType() {
+            return null;
+        }
+
+        @Override
+        public String getPrimaryAlias() {
+            return null;
+        }
+
+        @Override
+        public List<String> createSuggestions(CommandSource source, String arguments, String type, @Nullable Location<World> targetPosition) throws CommandException {
+            return null;
+        }
     }
 }

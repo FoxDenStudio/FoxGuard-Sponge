@@ -27,16 +27,13 @@ package net.foxdenstudio.sponge.foxguard.plugin.util;
 
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
 import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import org.spongepowered.api.world.World;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by Fox on 3/30/2016.
@@ -44,12 +41,12 @@ import java.util.Set;
 
 public class RegionCache {
 
-    private final Map<World, Set<IWorldRegion>> worldRegions;
-    private final Set<IRegion> regions;
+    private final Map<World, Multimap<UUID, IWorldRegion>> worldRegions;
+    private final Multimap<UUID, IRegion> regions;
 
     private final Map<World, Map<Vector3i, ChunkData>> chunks;
 
-    public RegionCache(Set<IRegion> regions, Map<World, Set<IWorldRegion>> worldRegions) {
+    public RegionCache(Multimap<UUID, IRegion> regions, Map<World, Multimap<UUID, IWorldRegion>> worldRegions) {
         this.worldRegions = worldRegions;
         this.regions = regions;
         chunks = new CacheMap<>((world, worldDataMap) -> {
@@ -89,6 +86,10 @@ public class RegionCache {
         return this.chunks.get(world).get(chunk);
     }
 
+    public enum DirtyType {
+        ADDED, MODIFIED, REMOVED
+    }
+
     public class ChunkData {
 
         private final World world;
@@ -105,23 +106,40 @@ public class RegionCache {
             this.chunk = chunk;
             this.dirty = new HashMap<>();
             this.contains = new HashSet<>();
-            worldRegions.get(world).stream()
+            this.disabled = new HashSet<>();
+
+            for (IWorldRegion region : worldRegions.get(world).values()) {
+                if (!region.isInChunk(chunk)) continue;
+                if (region.isEnabled()) {
+                    contains.add(region);
+                } else {
+                    disabled.add(region);
+                }
+            }
+            for (IRegion region : regions.values()) {
+                if (!region.isInChunk(chunk, world)) continue;
+                if (region.isEnabled()) {
+                    contains.add(region);
+                } else {
+                    disabled.add(region);
+                }
+            }
+            /*worldRegions.get(world).values().stream()
                     .filter(IFGObject::isEnabled)
                     .filter(r -> r.isInChunk(chunk))
                     .forEach(contains::add);
-            regions.stream()
+            regions.values().stream()
                     .filter(IFGObject::isEnabled)
                     .filter(r -> r.isInChunk(chunk, world))
                     .forEach(contains::add);
-            this.disabled = new HashSet<>();
-            worldRegions.get(world).stream()
+            worldRegions.get(world).values().stream()
                     .filter(r -> !r.isEnabled())
                     .filter(r -> r.isInChunk(chunk))
                     .forEach(disabled::add);
-            regions.stream()
+            regions.values().stream()
                     .filter(IFGObject::isEnabled)
                     .filter(r -> r.isInChunk(chunk, world))
-                    .forEach(disabled::add);
+                    .forEach(disabled::add);*/
         }
 
         public Set<IRegion> getRegions(boolean includeDisabled) {
@@ -170,9 +188,5 @@ public class RegionCache {
             isDirty = true;
         }
 
-    }
-
-    public enum DirtyType {
-        ADDED, MODIFIED, REMOVED
     }
 }
