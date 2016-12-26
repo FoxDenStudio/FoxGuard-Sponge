@@ -291,6 +291,7 @@ public final class FoxGuardMain {
         manager.registerHandlerFactory(new GroupHandler.Factory());
         manager.registerHandlerFactory(new PermissionHandler.Factory());
         manager.registerHandlerFactory(new DebugHandler.Factory());
+        manager.registerHandlerFactory(new WelcomeHandler.Factory());
 
         //manager.registerControllerFactory(new MessageController.Factory());
         manager.registerControllerFactory(new LogicController.Factory());

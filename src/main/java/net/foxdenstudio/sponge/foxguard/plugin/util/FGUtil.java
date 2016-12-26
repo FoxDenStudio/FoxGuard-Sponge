@@ -127,11 +127,11 @@ public final class FGUtil {
         String ownerString, nameString;
         if (parts.length == 0) return Tuple.of(FGManager.SERVER_UUID, "");
         else if (parts.length == 1) {
-            if (input.startsWith(":")) {
-                return Tuple.of(FGManager.SERVER_UUID, parts[0]);
-            } else {
+            if (input.endsWith(":")) {
                 ownerString = parts[0];
                 nameString = "";
+            } else {
+                return Tuple.of(FGManager.SERVER_UUID, parts[0]);
             }
         } else if (parts.length == 2) {
             nameString = "";
