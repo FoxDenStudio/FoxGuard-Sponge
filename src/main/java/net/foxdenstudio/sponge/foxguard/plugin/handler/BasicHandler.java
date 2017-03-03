@@ -50,7 +50,6 @@ import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
 import org.mapdb.DB;
-import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
@@ -1150,12 +1149,12 @@ public class BasicHandler extends HandlerBase {
     public void save(Path directory) {
         FGStorageManager storageManager = FGStorageManager.getInstance();
         UserStorageService userStorageService = FoxGuardMain.instance().getUserStorage();
-        try (DB flagMapDB = DBMaker.fileDB(directory.resolve("groups.foxdb").normalize().toString()).make()) {
+        try (DB flagMapDB = FGStorageManager.openFoxDB(directory.resolve("groups.foxdb"))) {
             List<String> groupNames = flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen();
             groupNames.clear();
             groupNames.addAll(this.groups.stream().map(group -> group.name).collect(Collectors.toList()));
         }
-        try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.foxdb").normalize().toString()).make()) {
+        try (DB flagMapDB = FGStorageManager.openFoxDB(directory.resolve("flags.foxdb"))) {
             for (Group group : this.groups) {
                 List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
                 stringEntries.clear();
@@ -1176,7 +1175,7 @@ public class BasicHandler extends HandlerBase {
             for (UUID uuid : group.users) {
                 Optional<User> userOptional = userStorageService.get(uuid);
                 Map<String, Object> map = new HashMap<>();
-                if (userOptional.isPresent()) map.put("username", userOptional.get().getName());
+                userOptional.ifPresent(user -> map.put("username", user.getName()));
                 map.put("uuid", uuid.toString());
                 members.add(map);
             }
@@ -1656,7 +1655,7 @@ public class BasicHandler extends HandlerBase {
         public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
             FGStorageManager storageManager = FGStorageManager.getInstance();
             List<String> groupNames = new ArrayList<>();
-            try (DB flagMapDB = DBMaker.fileDB(directory.resolve("groups.foxdb").normalize().toString()).make()) {
+            try (DB flagMapDB = FGStorageManager.openFoxDB(directory.resolve("groups.foxdb"))) {
                 groupNames.addAll(flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen());
             }
             Path groupsDirectory = directory.resolve("groups");
@@ -1683,7 +1682,7 @@ public class BasicHandler extends HandlerBase {
             }
             Map<Group, List<TristateEntry>> groupPermissions = new HashMap<>();
             List<TristateEntry> defaultPermissions;
-            try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.foxdb").normalize().toString()).make()) {
+            try (DB flagMapDB = FGStorageManager.openFoxDB(directory.resolve("flags.foxdb"))) {
                 for (Group group : groups) {
                     List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
                     groupPermissions.put(group, stringEntries.stream()

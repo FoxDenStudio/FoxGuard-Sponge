@@ -55,8 +55,9 @@ import static net.foxdenstudio.sponge.foxguard.plugin.FGManager.SERVER_UUID;
  */
 public final class FGStorageManager {
 
-    public static final String[] FS_ILLEGAL_NAMES = {"con", "prn", "aux", "nul", "com0", "com1", "com2", "com3", "com4",
-            "com5", "com6", "com7", "com8", "com9", "lpt0", "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9"};
+    public static final String[] FS_ILLEGAL_NAMES = {"con", "prn", "aux", "nul",
+            "com0", "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8", "com9",
+            "lpt0", "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9"};
     private static FGStorageManager instance;
     public final HashMap<IFGObject, Boolean> defaultModifiedMap;
     private final UserStorageService userStorageService;
@@ -87,6 +88,24 @@ public final class FGStorageManager {
         return instance;
     }
 
+    public static DB openFoxDB(Path path) {
+        FGConfigManager c = FGConfigManager.getInstance();
+        DBMaker.Maker maker = DBMaker.fileDB(path.normalize().toFile());
+        if (!c.lockDatabaseFiles()) maker.fileLockDisable();
+        if (c.useMMappedFiles()) maker.fileMmapEnableIfSupported();
+        if (c.gcCleanerHack()) maker.cleanerHackEnable();
+        return maker.make();
+    }
+
+    private static String serializeHandlerList(Collection<IHandler> handlers) {
+        StringBuilder builder = new StringBuilder();
+        for (Iterator<IHandler> it = handlers.iterator(); it.hasNext(); ) {
+            builder.append(it.next().getName());
+            if (it.hasNext()) builder.append(",");
+        }
+        return builder.toString();
+    }
+
     public void saveRegions() {
         saveRegions(false);
     }
@@ -94,7 +113,7 @@ public final class FGStorageManager {
     public synchronized void saveRegions(boolean force) {
         logger.info("Saving regions" + (force ? " (forced save)" : ""));
         Path dbFile = directory.resolve("regions.foxdb").normalize();
-        try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
+        try (DB mainDB = openFoxDB(dbFile)) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, UUID> ownerMap = mainDB.hashMap("owners", Serializer.STRING, Serializer.UUID).createOrOpen();
@@ -125,7 +144,7 @@ public final class FGStorageManager {
                         }
 
                         logger.info("Saving metadata for region " + logName);
-                        try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
+                        try (DB metaDB = openFoxDB(singleDir.resolve("metadata.foxdb"))) {
                             Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
                             Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
                             Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
@@ -172,9 +191,9 @@ public final class FGStorageManager {
     }
 
     public synchronized void saveWorldRegions(World world, boolean force) {
-        logger.info("Saving world regions in world \"" + world.getName() + "\"" + (force ? " (forced save)" : ""));
+        logger.info("Saving world regions in world " + world.getName() + (force ? " (forced save)" : ""));
         Path dbFile = worldDirectories.get(world.getName()).resolve("wregions.foxdb").normalize();
-        try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
+        try (DB mainDB = openFoxDB(dbFile)) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, UUID> ownerMap = mainDB.hashMap("owners", Serializer.STRING, Serializer.UUID).createOrOpen();
@@ -205,7 +224,7 @@ public final class FGStorageManager {
                         }
 
                         logger.info("Saving metadata for world region " + logName);
-                        try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
+                        try (DB metaDB = openFoxDB(singleDir.resolve("metadata.foxdb"))) {
                             Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
                             Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
                             Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
@@ -255,7 +274,7 @@ public final class FGStorageManager {
     public synchronized void saveHandlers(boolean force) {
         logger.info("Saving handlers" + (force ? " (forced save)" : ""));
         Path dbFile = directory.resolve("handlers.foxdb").normalize();
-        try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
+        try (DB mainDB = openFoxDB(dbFile)) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, UUID> ownerMap = mainDB.hashMap("owners", Serializer.STRING, Serializer.UUID).createOrOpen();
@@ -285,7 +304,7 @@ public final class FGStorageManager {
                         }
 
                         logger.info("Saving metadata for handler " + logName);
-                        try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
+                        try (DB metaDB = openFoxDB(singleDir.resolve("metadata.foxdb"))) {
                             Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
                             Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
                             Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
@@ -334,7 +353,7 @@ public final class FGStorageManager {
         if (fgObject instanceof IWorldRegion) saveWorldRegion((IWorldRegion) fgObject, force);
         else {
             Path dbFile = directory.resolve("regions.foxdb").normalize();
-            try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
+            try (DB mainDB = openFoxDB(dbFile)) {
                 Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
                 Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
                 Map<String, UUID> ownerMap = mainDB.hashMap("owners", Serializer.STRING, Serializer.UUID).createOrOpen();
@@ -361,7 +380,7 @@ public final class FGStorageManager {
                         }
 
                         logger.info("Saving metadata for region " + logName);
-                        try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
+                        try (DB metaDB = openFoxDB(singleDir.resolve("metadata.foxdb"))) {
                             Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
                             Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
                             Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
@@ -410,7 +429,7 @@ public final class FGStorageManager {
     public synchronized void saveWorldRegion(IWorldRegion fgObject, boolean force) {
         World world = fgObject.getWorld();
         Path dbFile = worldDirectories.get(world.getName()).resolve("wregions.foxdb").normalize();
-        try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
+        try (DB mainDB = openFoxDB(dbFile)) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, UUID> ownerMap = mainDB.hashMap("owners", Serializer.STRING, Serializer.UUID).createOrOpen();
@@ -437,7 +456,7 @@ public final class FGStorageManager {
                     }
 
                     logger.info("Saving metadata for world region " + logName);
-                    try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
+                    try (DB metaDB = openFoxDB(singleDir.resolve("metadata.foxdb"))) {
                         Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
                         Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
                         Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
@@ -463,6 +482,7 @@ public final class FGStorageManager {
                 logger.info("World region " + logName + " does not need saving. Skipping...");
             }
             if (fgObject.saveLinks()) {
+                logger.info("Saving links for world region " + logName + "");
                 linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
             } else {
                 logger.info("World region " + logName + " does not need its links saved. Skipping...");
@@ -485,7 +505,7 @@ public final class FGStorageManager {
 
     public synchronized void saveHandler(IHandler fgObject, boolean force) {
         Path dbFile = directory.resolve("handlers.foxdb").normalize();
-        try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
+        try (DB mainDB = openFoxDB(dbFile)) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
@@ -498,16 +518,16 @@ public final class FGStorageManager {
                 Path singleDir = dir.resolve(name.toLowerCase());
                 boolean shouldSave = fgObject.shouldSave();
                 if (force || shouldSave) {
-                    logger.info((shouldSave ? "S" : "Force s") + "aving handler \"" + name + "\" in directory: " + singleDir);
+                    logger.info((shouldSave ? "S" : "Force s") + "aving handler " + name + " in directory: " + singleDir);
                     constructDirectory(singleDir);
                     try {
                         fgObject.save(singleDir);
                     } catch (Exception e) {
-                        logger.error("There was an error while saving handler \"" + name + "\"!", e);
+                        logger.error("There was an error while saving handler " + name + "!", e);
                     }
 
-                    logger.info("Saving metadata for handler \"" + name + "\"");
-                    try (DB metaDB = DBMaker.fileDB(singleDir.resolve("metadata.foxdb").normalize().toString()).make()) {
+                    logger.info("Saving metadata for handler " + name);
+                    try (DB metaDB = openFoxDB(singleDir.resolve("metadata.foxdb"))) {
                         Atomic.String metaName = metaDB.atomicString("name").createOrOpen();
                         Atomic.String metaCategory = metaDB.atomicString("category").createOrOpen();
                         Atomic.String metaType = metaDB.atomicString("type").createOrOpen();
@@ -546,7 +566,7 @@ public final class FGStorageManager {
 
     public synchronized void removeRegion(IRegion fgObject) {
         if (fgObject instanceof IWorldRegion) removeWorldRegion((IWorldRegion) fgObject);
-        else try (DB mainDB = DBMaker.fileDB(directory.resolve("regions.foxdb").normalize().toString()).make()) {
+        else try (DB mainDB = openFoxDB(directory.resolve("regions.foxdb"))) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
@@ -568,15 +588,14 @@ public final class FGStorageManager {
             Path singleDir = new LoadEntry(fgObject).getPath();
             if (Files.exists(singleDir)) {
                 logger.warn("Cleaning up unused files");
-                System.gc();
-                System.runFinalization();
+                gcCleanup();
                 deleteDirectory(singleDir);
             }
         }
     }
 
     public synchronized void removeWorldRegion(IWorldRegion fgObject) {
-        try (DB mainDB = DBMaker.fileDB(worldDirectories.get(fgObject.getWorld().getName()).resolve("wregions.foxdb").normalize().toString()).make()) {
+        try (DB mainDB = openFoxDB(worldDirectories.get(fgObject.getWorld().getName()).resolve("wregions.foxdb"))) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
@@ -588,7 +607,7 @@ public final class FGStorageManager {
             linksMap.remove(fgObject.getName());
         } catch (DBException.DataCorruption e) {
             try {
-                Files.deleteIfExists(directory.resolve("regions.foxdb"));
+                Files.deleteIfExists(directory.resolve("wregions.foxdb"));
                 saveWorldRegions(fgObject.getWorld());
             } catch (IOException e1) {
                 e1.printStackTrace();
@@ -598,15 +617,14 @@ public final class FGStorageManager {
             Path singleDir = new LoadEntry(fgObject).getPath();
             if (Files.exists(singleDir)) {
                 logger.warn("Cleaning up unused files");
-                System.gc();
-                System.runFinalization();
+                gcCleanup();
                 deleteDirectory(singleDir);
             }
         }
     }
 
     public synchronized void removeHandler(IHandler fgObject) {
-        try (DB mainDB = DBMaker.fileDB(directory.resolve("handlers.foxdb").normalize().toString()).make()) {
+        try (DB mainDB = openFoxDB(directory.resolve("handlers.foxdb"))) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
@@ -618,7 +636,7 @@ public final class FGStorageManager {
             priorityMap.remove(fgObject.getName());
         } catch (DBException.DataCorruption e) {
             try {
-                Files.deleteIfExists(directory.resolve("regions.foxdb"));
+                Files.deleteIfExists(directory.resolve("handlers.foxdb"));
                 saveHandlers();
             } catch (IOException e1) {
                 e1.printStackTrace();
@@ -628,8 +646,7 @@ public final class FGStorageManager {
             Path singleDir = new LoadEntry(fgObject).getPath();
             if (Files.exists(singleDir)) {
                 logger.warn("Cleaning up unused files");
-                System.gc();
-                System.runFinalization();
+                gcCleanup();
                 deleteDirectory(singleDir);
             }
         }
@@ -637,7 +654,7 @@ public final class FGStorageManager {
 
     public synchronized void loadRegions() {
         Path dbFile = directory.resolve("regions.foxdb").normalize();
-        try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
+        try (DB mainDB = openFoxDB(dbFile)) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
@@ -652,7 +669,7 @@ public final class FGStorageManager {
                     String category;
                     String type;
                     Boolean enabled;
-                    try (DB metaDB = DBMaker.fileDB(metaDataFile.normalize().toString()).make()) {
+                    try (DB metaDB = openFoxDB(metaDataFile)) {
                         category = metaDB.exists("category") ? metaDB.atomicString("category").createOrOpen().get() : entry.getValue();
                         type = metaDB.exists("type") ? metaDB.atomicString("type").createOrOpen().get() : typeMap.get(name);
                         enabled = metaDB.exists("enabled") ? metaDB.atomicBoolean("enabled").createOrOpen().get() : enabledMap.get(name);
@@ -669,8 +686,7 @@ public final class FGStorageManager {
                         logger.error("Name conflict detected! \"" + name + "\" is already in use! A world region is likely already using that name.");
                         if (FGConfigManager.getInstance().cleanupFiles()) {
                             logger.warn("Cleaning up unused files");
-                            System.gc();
-                            System.runFinalization();
+                            gcCleanup();
                             deleteDirectory(singleDir);
                         }
                     }
@@ -692,8 +708,7 @@ public final class FGStorageManager {
                         logger.warn("A region was unable to be created. Either the metadata is incorrect, or there is no longer a factory available to create it.");
                         if (FGConfigManager.getInstance().cleanupFiles()) {
                             logger.warn("Cleaning up unused files");
-                            System.gc();
-                            System.runFinalization();
+                            gcCleanup();
                             deleteDirectory(singleDir);
                         }
                     }
@@ -710,8 +725,7 @@ public final class FGStorageManager {
                         } else {
                             if (FGConfigManager.getInstance().cleanupFiles()) {
                                 logger.warn("Cleaning up unused files");
-                                System.gc();
-                                System.runFinalization();
+                                gcCleanup();
                                 deleteDirectory(singleDir);
                             }
                         }
@@ -731,7 +745,7 @@ public final class FGStorageManager {
 
     public synchronized void loadWorldRegions(World world) {
         Path dbFile = worldDirectories.get(world.getName()).resolve("wregions.foxdb").normalize();
-        try (DB mainDB = DBMaker.fileDB(dbFile.toString()).make()) {
+        try (DB mainDB = openFoxDB(dbFile)) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
@@ -746,7 +760,7 @@ public final class FGStorageManager {
                     String category;
                     String type;
                     Boolean enabled;
-                    try (DB metaDB = DBMaker.fileDB(metaDataFile.normalize().toString()).make()) {
+                    try (DB metaDB = openFoxDB(metaDataFile)) {
                         category = metaDB.exists("category") ? metaDB.atomicString("category").createOrOpen().get() : entry.getValue();
                         type = metaDB.exists("type") ? metaDB.atomicString("type").createOrOpen().get() : typeMap.get(name);
                         enabled = metaDB.exists("enabled") ? metaDB.atomicBoolean("enabled").createOrOpen().get() : enabledMap.get(name);
@@ -765,8 +779,7 @@ public final class FGStorageManager {
                         logger.error("Name conflict detected! \"" + name + "\" is already in use! A super region is likely already using that name.");
                         if (FGConfigManager.getInstance().cleanupFiles()) {
                             logger.warn("Cleaning up unused files");
-                            System.gc();
-                            System.runFinalization();
+                            gcCleanup();
                             deleteDirectory(singleDir);
                         }
                     }
@@ -786,8 +799,7 @@ public final class FGStorageManager {
                         logger.warn("A world region was unable to be created. Either the metadata is incorrect, or there is no longer a factory available to create it.");
                         if (FGConfigManager.getInstance().cleanupFiles()) {
                             logger.warn("Cleaning up unused files");
-                            System.gc();
-                            System.runFinalization();
+                            gcCleanup();
                             deleteDirectory(singleDir);
                         }
                     }
@@ -804,8 +816,7 @@ public final class FGStorageManager {
                         } else {
                             if (FGConfigManager.getInstance().cleanupFiles()) {
                                 logger.warn("Cleaning up unused files");
-                                System.gc();
-                                System.runFinalization();
+                                gcCleanup();
                                 deleteDirectory(singleDir);
                             }
                         }
@@ -824,7 +835,7 @@ public final class FGStorageManager {
     }
 
     public synchronized void loadHandlers() {
-        try (DB mainDB = DBMaker.fileDB(directory.resolve("handlers.foxdb").normalize().toString()).make()) {
+        try (DB mainDB = openFoxDB(directory.resolve("handlers.foxdb"))) {
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, Boolean> enabledMap = mainDB.hashMap("enabled", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
@@ -841,7 +852,7 @@ public final class FGStorageManager {
                     String type;
                     Boolean enabled;
                     Integer priority;
-                    try (DB metaDB = DBMaker.fileDB(metaDataFile.normalize().toString()).make()) {
+                    try (DB metaDB = openFoxDB(metaDataFile)) {
                         category = metaDB.exists("category") ? metaDB.atomicString("category").createOrOpen().get() : entry.getValue();
                         type = metaDB.exists("type") ? metaDB.atomicString("type").createOrOpen().get() : typeMap.get(name);
                         enabled = metaDB.exists("enabled") ? metaDB.atomicBoolean("enabled").createOrOpen().get() : enabledMap.get(name);
@@ -876,8 +887,7 @@ public final class FGStorageManager {
                         logger.warn("A handler was unable to be created. Either the metadata is incorrect, or there is no longer a factory available to create it.");
                         if (FGConfigManager.getInstance().cleanupFiles()) {
                             logger.warn("Cleaning up unused files");
-                            System.gc();
-                            System.runFinalization();
+                            gcCleanup();
                             deleteDirectory(singleDir);
                         }
                     }
@@ -898,8 +908,7 @@ public final class FGStorageManager {
                         } else {
                             if (FGConfigManager.getInstance().cleanupFiles()) {
                                 logger.warn("Cleaning up unused files");
-                                System.gc();
-                                System.runFinalization();
+                                gcCleanup();
                                 deleteDirectory(singleDir);
                             }
                         }
@@ -924,7 +933,7 @@ public final class FGStorageManager {
 
     public synchronized void loadRegionLinks() {
         logger.info("Loading region links");
-        try (DB mainDB = DBMaker.fileDB(directory.resolve("regions.foxdb").normalize().toString()).make()) {
+        try (DB mainDB = openFoxDB(directory.resolve("regions.foxdb"))) {
             Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
             linksMap.entrySet().forEach(entry -> {
                 Optional<IRegion> regionOpt = FGManager.getInstance().getRegion(entry.getKey());
@@ -938,11 +947,20 @@ public final class FGStorageManager {
                             Optional<IHandler> handlerOpt = FGManager.getInstance().gethandler(handlerName);
                             if (handlerOpt.isPresent()) {
                                 IHandler handler = handlerOpt.get();
-                                if (FGManager.getInstance().link(region, handler))
+                                if (FGManager.getInstance().link(region, handler)) {
                                     logger.info("Linked region \"" + region.getName() + "\" to handler \"" + handler.getName() + "\"");
+                                } else {
+                                    logger.warn("Failed to link region \"" + region.getName() + "\" to handler \"" + handler.getName() + "\" for some reason!");
+                                }
+                            } else {
+                                logger.error("Unable to link region \"" + region.getName() + "\" to handler \"" + handlerName + "\" because that handler doesn't exist!");
                             }
                         });
+                    } else {
+                        logger.info("No links to load for region \"" + region.getName() + "\"!");
                     }
+                } else {
+                    logger.error("Unable to load links for region \"" + entry.getKey() + "\" because that region does not exist!");
                 }
             });
         }
@@ -950,7 +968,7 @@ public final class FGStorageManager {
 
     public synchronized void loadWorldRegionLinks(World world) {
         logger.info("Loading world region links for world \"" + world.getName() + "\"");
-        try (DB mainDB = DBMaker.fileDB(worldDirectories.get(world.getName()).resolve("wregions.foxdb").normalize().toString()).make()) {
+        try (DB mainDB = openFoxDB(worldDirectories.get(world.getName()).resolve("wregions.foxdb"))) {
             Map<String, String> linksMap = mainDB.hashMap("links", Serializer.STRING, Serializer.STRING).createOrOpen();
             linksMap.entrySet().forEach(entry -> {
                 Optional<IWorldRegion> regionOpt = FGManager.getInstance().getWorldRegion(world, entry.getKey());
@@ -964,11 +982,20 @@ public final class FGStorageManager {
                             Optional<IHandler> handlerOpt = FGManager.getInstance().gethandler(handlerName);
                             if (handlerOpt.isPresent()) {
                                 IHandler handler = handlerOpt.get();
-                                if (FGManager.getInstance().link(region, handler))
+                                if (FGManager.getInstance().link(region, handler)) {
                                     logger.info("Linked world region \"" + region.getName() + "\" to handler \"" + handler.getName() + "\"");
+                                } else {
+                                    logger.warn("Failed to link world region \"" + region.getName() + "\" to handler \"" + handler.getName() + "\" for some reason!");
+                                }
+                            } else {
+                                logger.error("Unable to link world region \"" + region.getName() + "\" to handler \"" + handlerName + "\" because that handler doesn't exist!");
                             }
                         });
+                    } else {
+                        logger.info("No links to load for world region \"" + region.getName() + "\"!");
                     }
+                } else {
+                    logger.error("Unable to load links for world region \"" + entry.getKey() + "\" because that world region does not exist!");
                 }
             });
         }
@@ -989,8 +1016,7 @@ public final class FGStorageManager {
             Path singleDirectory = entry.getPath();
             if (Files.exists(singleDirectory)) {
                 logger.info("Deleting directory \"" + singleDirectory + "\" to make room for new data.");
-                System.gc();
-                System.runFinalization();
+                gcCleanup();
                 deleteDirectory(singleDirectory, true);
             }
             loaded.add(entry);
@@ -1164,13 +1190,11 @@ public final class FGStorageManager {
         }
     }
 
-    private String serializeHandlerList(Collection<IHandler> handlers) {
-        StringBuilder builder = new StringBuilder();
-        for (Iterator<IHandler> it = handlers.iterator(); it.hasNext(); ) {
-            builder.append(it.next().getName());
-            if (it.hasNext()) builder.append(",");
+    private void gcCleanup() {
+        if (FGConfigManager.getInstance().gcAndFinalize()) {
+            System.gc();
+            System.runFinalization();
         }
-        return builder.toString();
     }
 
     public enum Type {

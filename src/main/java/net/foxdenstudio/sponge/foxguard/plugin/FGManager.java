@@ -39,6 +39,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.event.factory.FGEventFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
@@ -569,13 +570,13 @@ public final class FGManager {
     public boolean link(ILinkable linkable, IHandler handler) {
         if (linkable == null || handler == null || linkable.getHandlers().contains(handler)) return false;
         Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateEvent(FoxGuardMain.getCause()));
-        return !(handler instanceof GlobalHandler && !(linkable instanceof GlobalWorldRegion || linkable instanceof GlobalRegion)) && linkable.addHandler(handler);
+        return !(handler instanceof IGlobal) && linkable.addHandler(handler);
     }
 
     public boolean unlink(ILinkable linkable, IHandler handler) {
         if (linkable == null || handler == null || !linkable.getHandlers().contains(handler)) return false;
         Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateEvent(FoxGuardMain.getCause()));
-        return !(handler instanceof GlobalHandler) && linkable.removeHandler(handler);
+        return !(handler instanceof IGlobal) && linkable.removeHandler(handler);
     }
 
     public boolean rename(IFGObject object, String newName) {

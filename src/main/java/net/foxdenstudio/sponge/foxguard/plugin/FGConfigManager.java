@@ -29,6 +29,7 @@ import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
+import org.spongepowered.api.Sponge;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -44,6 +45,12 @@ public final class FGConfigManager {
     private boolean saveWorldRegionsInWorldFolders;
     private boolean saveInWorldFolder;
     private boolean useConfigFolder;
+    private boolean useCustomDirectory;
+    private Path customDirectory;
+    private boolean gcAndFinalize;
+    private boolean lockDatabaseFiles;
+    private boolean useMMappedFiles;
+    private boolean gcCleanerHack;
     private int nameLengthLimit;
 
     private Map<Module, Boolean> modules = new EnumMap<>(Module.class);
@@ -79,22 +86,42 @@ public final class FGConfigManager {
                 "This is meant to keep the file store clean and free of clutter. It also improves load times.\n" +
                 "The caveat is that objects that fail to load are deleted without warning. This normally isn't an issue, even in server crashes.\n" +
                 "However, modifying databases and moving the files around can trigger the cleanup.\n" +
-                "If force loading is off or the plugin simply fails to load the database, it would just be discarded.\n" +
+                "If plugin simply fails to load the database, it would just be discarded.\n" +
                 "Setting this option to false will prevent databases from being deleted.\n" +
                 "However, they will still be overwritten if a new database is made with the same name.")
                 .setValue(cleanupFiles);
 
-        root.getNode("storage", "saveInWorldFolder").setComment("Whether or not FoxGuard should save object information in the world folder.\n" +
-                "This includes super-regions, handlers, and controllers, but does not include world-regions.")
+        root.getNode("storage", "location", "saveInWorldFolder").setComment("Whether or not FoxGuard should save object information in the world folder.\n Default: true" +
+                "This includes super-regions, handlers, and controllers, but does not include world-regions.\n" +
+                "If set to false, files will be placed in a folder in the server root directory.")
                 .setValue(saveInWorldFolder);
 
-        root.getNode("storage", "saveWorldRegionsInWorldFolders").setComment("Whether or not FoxGuard should save world-region information in the world folder.\n" +
+        root.getNode("storage", "location", "saveWorldRegionsInWorldFolders").setComment("Whether or not FoxGuard should save world-region information in the world folder.\n" +
                 "In this case, the files are kept with their corresponding world/dimension.\n" +
                 "This makes it easier to copy and paste world data without causing de-synchronization between the world data and FoxGuard data.")
                 .setValue(saveWorldRegionsInWorldFolders);
-        root.getNode("storage", "useConfigFolder").setComment("Whether or not to place the foxguard folder inside the config folder.\n" +
+        root.getNode("storage", "location", "useConfigFolder").setComment("Whether or not to place the foxguard folder inside the config folder.\n" +
                 "Only applies if files are not kept inside the world folder.")
                 .setValue(useConfigFolder);
+        root.getNode("storage", "gcAndFinalize").setComment("Whether to run try running gc and finalization when deleting things.\n" +
+                "This may drastically slow down the deletion of objects.\n" +
+                "Use only if you are having trouble deleting things from in game.\n" +
+                "This really only makes a difference on Windows, so you can leave this alone on Unix based operating systems.")
+                .setValue(gcAndFinalize);
+        root.getNode("storage", "database", "lockDatabaseFiles").setComment("Whether to put a lock on database files while accessing them.\n" +
+                "Locking is known to cause Java to hang on Unix based operating systems running on a NFS (Networked File System) that does not properly support locking.\n" +
+                "This is often the case if you are using a server host, so be very cautious.\n" +
+                "If your server hangs and crashes from the Minecraft watchdog, try setting this to false.")
+                .setValue(lockDatabaseFiles);
+        root.getNode("storage", "database", "useMMappedFiles").setComment("Whether to enable memory mapping for database files.\n" +
+                "This has the potential to greatly speed up saving and loading from database files." +
+                "This is known to cause some issues on Windows.\n" +
+                "This may be correctable with gcCleanerHack.")
+                .setValue(useMMappedFiles);
+        root.getNode("storage", "database", "gcCleanerHack").setComment("Whether to enable MapDB's gcCleanerHack functionality.\n" +
+                "This is meant for fixing issues with databases being un-deletable on Windows when memory mapping is enabled.\n" +
+                "This only makes a difference if memory mapping is enabled, and can potentially decrease performance.")
+                .setValue(gcCleanerHack);
         root.getNode("general", "nameLengthLimit").setComment("The length limit for object names. Use 0 or lower for no limit.\n" +
                 "Extremely long names can cause a variety of unfixable issues. You have been warned.")
                 .setValue(nameLengthLimit);
@@ -133,12 +160,18 @@ public final class FGConfigManager {
         saveInWorldFolder = root.getNode("storage", "saveInWorldFolder").getBoolean(true);
         saveWorldRegionsInWorldFolders = root.getNode("storage", "saveWorldRegionsInWorldFolders").getBoolean(true);
         useConfigFolder = root.getNode("storage", "useConfigFolder").getBoolean(false);
+        gcAndFinalize = root.getNode("storage", "gcAndFinalize").getBoolean(false);
+        gcAndFinalize = root.getNode("storage", "database", "lockDatabaseFiles").getBoolean(false);
+        gcAndFinalize = root.getNode("storage", "database", "useMMappedFiles").getBoolean(false);
+        gcAndFinalize = root.getNode("storage", "database", "gcCleanerHack").getBoolean(false);
         nameLengthLimit = root.getNode("general", "nameLengthLimit").getInt(24);
         for (Module m : Module.values()) {
             this.modules.put(m, root.getNode("module", m.name).getBoolean(true));
         }
 
         //--------------------------------------------------------------------------------------------------------------
+
+        Path path = Sponge.getGame().getSavesDirectory();
     }
 
 
@@ -156,6 +189,22 @@ public final class FGConfigManager {
 
     public boolean useConfigFolder() {
         return useConfigFolder;
+    }
+
+    public boolean gcAndFinalize() {
+        return gcAndFinalize;
+    }
+
+    public boolean lockDatabaseFiles() {
+        return lockDatabaseFiles;
+    }
+
+    public boolean useMMappedFiles() {
+        return useMMappedFiles;
+    }
+
+    public boolean gcCleanerHack() {
+        return gcCleanerHack;
     }
 
     public int getNameLengthLimit() {
