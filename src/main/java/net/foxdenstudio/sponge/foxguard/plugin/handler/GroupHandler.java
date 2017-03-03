@@ -47,7 +47,6 @@ import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
 import org.mapdb.DB;
-import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
@@ -910,12 +909,12 @@ public class GroupHandler extends HandlerBase {
 
     @Override
     public void save(Path directory) {
-        try (DB flagMapDB = DBMaker.fileDB(directory.resolve("groups.foxdb").normalize().toString()).make()) {
+        try (DB flagMapDB = FGStorageManager.openFoxDB(directory.resolve("groups.foxdb"))) {
             List<String> groupNames = flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen();
             groupNames.clear();
             groupNames.addAll(this.groups.stream().map(group -> group.name).collect(Collectors.toList()));
         }
-        try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.foxdb").normalize().toString()).make()) {
+        try (DB flagMapDB = FGStorageManager.openFoxDB(directory.resolve("flags.foxdb"))) {
             for (Group group : this.groups) {
                 List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
                 stringEntries.clear();
@@ -1243,7 +1242,7 @@ public class GroupHandler extends HandlerBase {
         @Override
         public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
             List<String> groupNames = new ArrayList<>();
-            try (DB flagMapDB = DBMaker.fileDB(directory.resolve("groups.foxdb").normalize().toString()).make()) {
+            try (DB flagMapDB = FGStorageManager.openFoxDB(directory.resolve("groups.foxdb"))) {
                 groupNames.addAll(flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen());
             }
             List<Group> groups = new ArrayList<>();
@@ -1265,7 +1264,7 @@ public class GroupHandler extends HandlerBase {
 
             Map<Group, List<TristateEntry>> groupPermissions = new HashMap<>();
             List<TristateEntry> defaultPermissions;
-            try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.foxdb").normalize().toString()).make()) {
+            try (DB flagMapDB = FGStorageManager.openFoxDB(directory.resolve("flags.foxdb"))) {
                 for (Group group : groups) {
                     List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
                     groupPermissions.put(group, stringEntries.stream()
