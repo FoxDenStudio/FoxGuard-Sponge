@@ -30,7 +30,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.command.link.LinkEntry;
 import net.foxdenstudio.sponge.foxguard.plugin.command.link.LinkageParser;
-import net.foxdenstudio.sponge.foxguard.plugin.event.util.FGEventFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.event.factory.FGEventFactory;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
