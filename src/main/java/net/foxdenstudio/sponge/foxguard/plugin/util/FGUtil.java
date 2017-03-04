@@ -30,7 +30,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
-import net.foxdenstudio.sponge.foxguard.plugin.event.util.FGEventFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.event.factory.FGEventFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;

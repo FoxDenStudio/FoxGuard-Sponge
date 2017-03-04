@@ -46,28 +46,19 @@ if(System.env.TRAVIS && !Boolean.valueOf(System.env.TRAVIS_PULL_REQUEST)){
     travisPublish.dependsOn ':publishDownloadPublicationToFDSDownloadsRepository'
 }
 
-apply plugin: 'event-impl-gen'
+apply plugin: 'org.spongepowered.event-impl-gen'
 
 // Compile time code generator for the event factory
 genEventImpl {
-    includeSrc = [
-            'src/main/java/net/foxdenstudio/sponge/foxguard/plugin/event'
-    ]
-    excludeSrc = [
-            'src/main/java/net/foxdenstudio/sponge/foxguard/plugin/event/util'
-    ]
-    outputDir = 'src/main/java/'
-    outputFactory = 'net.foxdenstudio.sponge.foxguard.plugin.event.util.FGEventFactory'
-    eventImplCreateMethod = 'org.spongepowered.api.event.SpongeEventFactoryUtils.createEventImpl'
-    sortPriorityPrefix = 'original'
-    groupingPrefixes = ['from': 'to']
-    validateCode = false
+    outputFactory = 'net.foxdenstudio.sponge.foxguard.plugin.event.factory.FGEventFactory'
+    include 'net/foxdenstudio/sponge/foxguard/plugin/event/'
 }
 
 task serverJar(type: Jar) {
     group = 'build'
     classifier = 'server'
-    from(sourceSets.main.output)
+    from sourceSets.main.output
+    from tasks.genEventImpl
 }
 
 artifacts {
