@@ -94,18 +94,26 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
         //FoxGuardMain.instance().getLogger().info(player.getName());
 
         List<IHandler> handlerList;
-        World world = event.getTargetWorld();
+
+//        System.err.println(event);
+//        System.err.println(event.getClass());
+//        System.err.println(event.getTransactions());
+//        System.exit(1);
+
+//        if (1 == 1) return;
 
         List<Transaction<BlockSnapshot>> transactions = event.getTransactions();
         Set<IHandler> handlerSet = new HashSet<>();
         if (transactions.size() == 1) {
-            Vector3i pos = transactions.get(0).getFinal().getLocation().get().getBlockPosition();
+            final World world = transactions.get(0).getFinal().getLocation().get().getExtent();
+            final Vector3i pos = transactions.get(0).getFinal().getLocation().get().getBlockPosition();
             FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                     .filter(region -> region.contains(pos, world))
                     .forEach(region -> region.getHandlers().stream()
                             .filter(IFGObject::isEnabled)
                             .forEach(handlerSet::add));
         } else {
+            final World world = transactions.get(0).getFinal().getLocation().get().getExtent();
             FGManager.getInstance().getRegionsAtMultiPosI(
                     world,
                     transactions.stream()

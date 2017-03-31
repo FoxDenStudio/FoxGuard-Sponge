@@ -107,10 +107,11 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
         }
 
         List<IHandler> handlerList = new ArrayList<>();
-        World world = event.getTargetWorld();
+//        World world = event.getTargetWorld();
 
         for (Entity entity : event.getEntities()) {
             Vector3d pos = entity.getLocation().getPosition();
+            final World world = entity.getLocation().getExtent();
             FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                     .filter(region -> region.contains(pos, world))
                     .forEach(region -> region.getHandlers().stream()

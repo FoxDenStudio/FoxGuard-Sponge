@@ -81,7 +81,7 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
             } else user = null;
         }
 
-        World world = event.getTargetWorld();
+        final World world = event.getExplosion().getLocation().getExtent();
         FlagBitSet flags = FLAG_SET.clone();
 
         Set<IHandler> handlerSet = new HashSet<>();
