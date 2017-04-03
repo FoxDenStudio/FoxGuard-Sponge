@@ -24,7 +24,7 @@ apply plugin: 'org.spongepowered.plugin'
 apply plugin: 'net.minecraftforge.gradle.forge'
 
 group 'net.foxdenstudio.sponge'
-version 'api5-SNAPSHOT'
+version 'api6-SNAPSHOT'
 
 apply from: project(":FoxCore").file("gradle/fox.gradle")
 apply from: project(":FoxCore").file("gradle/publish.gradle")
