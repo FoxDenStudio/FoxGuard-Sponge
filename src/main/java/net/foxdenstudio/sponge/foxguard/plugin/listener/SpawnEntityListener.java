@@ -44,6 +44,7 @@ import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
+import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import java.util.ArrayList;
@@ -107,10 +108,11 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
         }
 
         List<IHandler> handlerList = new ArrayList<>();
-        World world = event.getTargetWorld();
 
         for (Entity entity : event.getEntities()) {
-            Vector3d pos = entity.getLocation().getPosition();
+            Location<World> loc = entity.getLocation();
+            Vector3d pos = loc.getPosition();
+            World world = loc.getExtent();
             FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                     .filter(region -> region.contains(pos, world))
                     .forEach(region -> region.getHandlers().stream()

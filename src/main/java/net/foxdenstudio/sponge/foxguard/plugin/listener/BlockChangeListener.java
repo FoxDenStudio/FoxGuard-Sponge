@@ -43,6 +43,7 @@ import org.spongepowered.api.event.world.ExplosionEvent;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
+import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import java.util.*;
@@ -94,22 +95,23 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
         //FoxGuardMain.instance().getLogger().info(player.getName());
 
         List<IHandler> handlerList;
-        World world = event.getTargetWorld();
 
         List<Transaction<BlockSnapshot>> transactions = event.getTransactions();
         Set<IHandler> handlerSet = new HashSet<>();
         if (transactions.size() == 1) {
-            Vector3i pos = transactions.get(0).getOriginal().getLocation().get().getBlockPosition();
+            Location<World> loc = transactions.get(0).getOriginal().getLocation().get();
+            Vector3i pos = loc.getBlockPosition();
+            World world = loc.getExtent();
+
             FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                     .filter(region -> region.contains(pos, world))
                     .forEach(region -> region.getHandlers().stream()
                             .filter(IFGObject::isEnabled)
                             .forEach(handlerSet::add));
         } else {
-            FGManager.getInstance().getRegionsAtMultiPosI(
-                    world,
+            FGManager.getInstance().getRegionsAtMultiLocI(
                     transactions.stream()
-                            .map(trans -> trans.getOriginal().getLocation().get().getBlockPosition())
+                            .map(trans -> trans.getOriginal().getLocation().get())
                             .collect(Collectors.toList())
             ).forEach(region -> region.getHandlers().stream()
                     .filter(IFGObject::isEnabled)

@@ -46,6 +46,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.util.RegionCache;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.Tristate;
+import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import java.util.*;
@@ -90,6 +91,17 @@ public final class FGManager {
 
     public static FGManager getInstance() {
         return instance;
+    }
+
+    public static boolean isNameValid(String name) {
+        if (name.matches("^.*[ :.=;\"\'\\\\/{}()\\[\\]<>#@|?*].*$")) return false;
+        for (String s : FGStorageManager.FS_ILLEGAL_NAMES) {
+            if (name.equalsIgnoreCase(s)) return false;
+        }
+        for (String s : ILLEGAL_NAMES) {
+            if (name.equalsIgnoreCase(s)) return false;
+        }
+        return true;
     }
 
     public boolean isRegistered(IHandler handler) {
@@ -236,24 +248,30 @@ public final class FGManager {
                 .collect(Collectors.toSet());
     }
 
-    public Set<IRegion> getRegionsAtMultiPosI(World world, Iterable<Vector3i> positions) {
-        return getRegionsAtMultiPosI(world, positions, false);
+    public Set<IRegion> getRegionsAtMultiLocI(Iterable<Location<World>> locations) {
+        return getRegionsAtMultiLocI(locations, false);
     }
 
-    public Set<IRegion> getRegionsAtMultiPosI(World world, Iterable<Vector3i> positions, boolean includeDisabled) {
+    public Set<IRegion> getRegionsAtMultiLocI(Iterable<Location<World>> locations, boolean includeDisabled) {
         Set<IRegion> set = new HashSet<>();
-        SetMultimap<Vector3i, Vector3i> chunkPosMap = HashMultimap.create();
-        for (Vector3i pos : positions) {
+        SetMultimap<Chunk, Vector3i> chunkPosMap = HashMultimap.create();
+        for (Location<World> loc : locations) {
+            Vector3i pos = loc.getBlockPosition();
             chunkPosMap.put(
-                    new Vector3i(
-                            pos.getX() >> 4,
-                            pos.getY() >> 4,
-                            pos.getZ() >> 4
-                    ), pos
+                    new Chunk(
+                            new Vector3i(
+                                    pos.getX() >> 4,
+                                    pos.getY() >> 4,
+                                    pos.getZ() >> 4
+                            ),
+                            loc.getExtent()
+                    ),
+                    loc.getBlockPosition()
             );
         }
-        for (Map.Entry<Vector3i, Collection<Vector3i>> entry : chunkPosMap.asMap().entrySet()) {
-            RegionCache.ChunkData data = this.regionCache.getData(world, entry.getKey());
+        for (Map.Entry<Chunk, Collection<Vector3i>> entry : chunkPosMap.asMap().entrySet()) {
+            Chunk chunk = entry.getKey();
+            RegionCache.ChunkData data = this.regionCache.getData(chunk.world, chunk.chunk);
             Set<IRegion> candidates = new HashSet<>(data.getRegions(includeDisabled));
             candidates.removeAll(set);
             for (Vector3i pos : entry.getValue()) {
@@ -261,7 +279,7 @@ public final class FGManager {
                 Iterator<IRegion> regionIterator = candidates.iterator();
                 do {
                     IRegion region = regionIterator.next();
-                    if (region.contains(pos, world)) {
+                    if (region.contains(pos, chunk.world)) {
                         set.add(region);
                         regionIterator.remove();
                     }
@@ -272,24 +290,30 @@ public final class FGManager {
         return set;
     }
 
-    public Set<IRegion> getRegionsAtMultiPosD(World world, Iterable<Vector3d> positions) {
-        return getRegionsAtMultiPosD(world, positions, false);
+    public Set<IRegion> getRegionsAtMultiLocD(Iterable<Location<World>> locations) {
+        return getRegionsAtMultiLocD(locations, false);
     }
 
-    public Set<IRegion> getRegionsAtMultiPosD(World world, Iterable<Vector3d> positions, boolean includeDisabled) {
+    public Set<IRegion> getRegionsAtMultiLocD(Iterable<Location<World>> locations, boolean includeDisabled) {
         Set<IRegion> set = new HashSet<>();
-        SetMultimap<Vector3i, Vector3d> chunkPosMap = HashMultimap.create();
-        for (Vector3d pos : positions) {
+        SetMultimap<Chunk, Vector3d> chunkPosMap = HashMultimap.create();
+        for (Location<World> loc : locations) {
+            Vector3i pos = loc.getBlockPosition();
             chunkPosMap.put(
-                    new Vector3i(
-                            GenericMath.floor(pos.getX()) >> 4,
-                            GenericMath.floor(pos.getY()) >> 4,
-                            GenericMath.floor(pos.getZ()) >> 4)
-                    , pos
+                    new Chunk(
+                            new Vector3i(
+                                    pos.getX() >> 4,
+                                    pos.getY() >> 4,
+                                    pos.getZ() >> 4
+                            ),
+                            loc.getExtent()
+                    ),
+                    loc.getPosition()
             );
         }
-        for (Map.Entry<Vector3i, Collection<Vector3d>> entry : chunkPosMap.asMap().entrySet()) {
-            RegionCache.ChunkData data = this.regionCache.getData(world, entry.getKey());
+        for (Map.Entry<Chunk, Collection<Vector3d>> entry : chunkPosMap.asMap().entrySet()) {
+            Chunk chunk = entry.getKey();
+            RegionCache.ChunkData data = this.regionCache.getData(chunk.world, chunk.chunk);
             Set<IRegion> candidates = new HashSet<>(data.getRegions(includeDisabled));
             candidates.removeAll(set);
             for (Vector3d pos : entry.getValue()) {
@@ -297,7 +321,7 @@ public final class FGManager {
                 Iterator<IRegion> regionIterator = candidates.iterator();
                 do {
                     IRegion region = regionIterator.next();
-                    if (region.contains(pos, world)) {
+                    if (region.contains(pos, chunk.world)) {
                         set.add(region);
                         regionIterator.remove();
                     }
@@ -477,22 +501,38 @@ public final class FGManager {
         return globalHandler;
     }
 
-    public static boolean isNameValid(String name) {
-        if (name.matches("^.*[ :.=;\"\'\\\\/{}()\\[\\]<>#@|?*].*$")) return false;
-        for (String s : FGStorageManager.FS_ILLEGAL_NAMES) {
-            if (name.equalsIgnoreCase(s)) return false;
-        }
-        for (String s : ILLEGAL_NAMES) {
-            if (name.equalsIgnoreCase(s)) return false;
-        }
-        return true;
-    }
-
     public void markDirty(IRegion region, RegionCache.DirtyType type) {
         regionCache.markDirty(region, type);
     }
 
     public void clearRegionCache() {
         this.regionCache.clearCaches();
+    }
+
+    private static class Chunk {
+        Vector3i chunk;
+        World world;
+
+        public Chunk(Vector3i chunk, World world) {
+            this.chunk = chunk;
+            this.world = world;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Chunk chunk1 = (Chunk) o;
+
+            return chunk.equals(chunk1.chunk) && world.equals(chunk1.world);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = chunk.hashCode();
+            result = 31 * result + world.hashCode();
+            return result;
+        }
     }
 }

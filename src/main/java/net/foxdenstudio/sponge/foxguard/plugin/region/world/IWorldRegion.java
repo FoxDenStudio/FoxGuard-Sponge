@@ -25,29 +25,14 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.region.world;
 
-import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxcore.plugin.util.IWorldBounded;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import org.spongepowered.api.world.World;
 
 public interface IWorldRegion extends IRegion, IWorldBounded {
 
+    @Override
     World getWorld();
 
     void setWorld(World world);
-
-    @Override
-    default boolean contains(int x, int y, int z, World world) {
-        return world == getWorld() && contains(x, y, z);
-    }
-
-    @Override
-    default boolean contains(double x, double y, double z, World world) {
-        return world == getWorld() && contains(x, y, z);
-    }
-
-    @Override
-    default boolean isInChunk(Vector3i chunk, World world) {
-        return world == getWorld() && isInChunk(chunk);
-    }
 }
