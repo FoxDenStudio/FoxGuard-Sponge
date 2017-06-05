@@ -99,7 +99,7 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
         List<Transaction<BlockSnapshot>> transactions = event.getTransactions();
         Set<IHandler> handlerSet = new HashSet<>();
         if (transactions.size() == 1) {
-            Vector3i pos = transactions.get(0).getFinal().getLocation().get().getBlockPosition();
+            Vector3i pos = transactions.get(0).getOriginal().getLocation().get().getBlockPosition();
             FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                     .filter(region -> region.contains(pos, world))
                     .forEach(region -> region.getHandlers().stream()
@@ -109,7 +109,7 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
             FGManager.getInstance().getRegionsAtMultiPosI(
                     world,
                     transactions.stream()
-                            .map(trans -> trans.getFinal().getLocation().get().getBlockPosition())
+                            .map(trans -> trans.getOriginal().getLocation().get().getBlockPosition())
                             .collect(Collectors.toList())
             ).forEach(region -> region.getHandlers().stream()
                     .filter(IFGObject::isEnabled)

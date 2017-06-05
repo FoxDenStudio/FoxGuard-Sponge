@@ -94,7 +94,7 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
             FGManager.getInstance().getRegionsAtMultiPosI(
                     world,
                     postEvent.getTransactions().stream()
-                            .map(trans -> trans.getFinal().getLocation().get().getBlockPosition())
+                            .map(trans -> trans.getOriginal().getLocation().get().getBlockPosition())
                             .collect(Collectors.toList())
             ).forEach(region -> region.getHandlers().stream()
                     .filter(IFGObject::isEnabled)
