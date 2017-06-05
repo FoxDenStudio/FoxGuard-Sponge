@@ -81,7 +81,6 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
             } else user = null;
         }
 
-        World world = event.getTargetWorld();
         FlagBitSet flags = FLAG_SET.clone();
 
         Set<IHandler> handlerSet = new HashSet<>();
@@ -91,10 +90,9 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
             flags.set(CHANGE);
 
             ExplosionEvent.Post postEvent = (ExplosionEvent.Post) event;
-            FGManager.getInstance().getRegionsAtMultiPosI(
-                    world,
+            FGManager.getInstance().getRegionsAtMultiLocI(
                     postEvent.getTransactions().stream()
-                            .map(trans -> trans.getFinal().getLocation().get().getBlockPosition())
+                            .map(trans -> trans.getFinal().getLocation().get())
                             .collect(Collectors.toList())
             ).forEach(region -> region.getHandlers().stream()
                     .filter(IFGObject::isEnabled)
@@ -103,18 +101,15 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
             flags.set(DETONATE);
 
             ExplosionEvent.Detonate detonateEvent = ((ExplosionEvent.Detonate) event);
-            FGManager.getInstance().getRegionsAtMultiPosI(
-                    world,
-                    detonateEvent.getAffectedLocations().stream()
-                            .map(Location::getBlockPosition)
-                            .collect(Collectors.toList())
-            ).forEach(region -> region.getHandlers().stream()
-                    .filter(IFGObject::isEnabled)
-                    .forEach(handlerSet::add));
+            FGManager.getInstance().getRegionsAtMultiLocI(detonateEvent.getAffectedLocations())
+                    .forEach(region -> region.getHandlers().stream()
+                            .filter(IFGObject::isEnabled)
+                            .forEach(handlerSet::add));
         } else if (event instanceof ExplosionEvent.Pre) {
             flags.set(PRE);
-
-            Vector3d pos = event.getExplosion().getLocation().getPosition();
+            Location<World> loc = event.getExplosion().getLocation();
+            Vector3d pos = loc.getPosition();
+            World world = loc.getExtent();
             FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                     .filter(region -> region.contains(pos, world))
                     .forEach(region -> region.getHandlers().stream()
