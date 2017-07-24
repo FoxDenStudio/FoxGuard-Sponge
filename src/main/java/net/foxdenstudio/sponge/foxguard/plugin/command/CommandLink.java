@@ -118,7 +118,7 @@ public class CommandLink extends FCCommandBase {
             if (!handlerOpt.isPresent())
                 throw new CommandException(Text.of("No handler with name \"" + parse.args[1] + "\"!"));
             IHandler handler = handlerOpt.get();
-            if (region.getHandlers().contains(handler))
+            if (region.getLinks().contains(handler))
                 throw new CommandException(Text.of("Already linked!"));
             boolean success = FGManager.getInstance().link(region, handler);
             if (success) {
@@ -182,7 +182,7 @@ public class CommandLink extends FCCommandBase {
                 if (region != null) {
                     IRegion finalRegion = region;
                     return FGManager.getInstance().getHandlers().stream()
-                            .filter(handler -> !finalRegion.getHandlers().contains(handler) && !(handler instanceof IGlobal))
+                            .filter(handler -> !finalRegion.getLinks().contains(handler) && !(handler instanceof IGlobal))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)

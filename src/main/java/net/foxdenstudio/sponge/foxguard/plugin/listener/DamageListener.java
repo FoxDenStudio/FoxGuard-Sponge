@@ -99,7 +99,7 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
         Set<IHandler> handlerSet = new HashSet<>();
         FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                 .filter(region -> region.contains(pos, world))
-                .forEach(region -> region.getHandlers().stream()
+                .forEach(region -> region.getLinks().stream()
                         .filter(IFGObject::isEnabled)
                         .forEach(handlerSet::add));
         Tristate flagState = UNDEFINED;

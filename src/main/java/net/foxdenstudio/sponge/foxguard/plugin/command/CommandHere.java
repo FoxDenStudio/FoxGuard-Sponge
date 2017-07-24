@@ -179,7 +179,7 @@ public class CommandHere extends FCCommandBase {
         if (!parse.flags.containsKey("region") || parse.flags.containsKey("handler")) {
             if (flag) output.append(Text.NEW_LINE);
 
-            regionList.forEach(region -> region.getHandlers().stream()
+            regionList.forEach(region -> region.getLinks().stream()
                     .filter(handler -> !handlerList.contains(handler))
                     .forEach(handlerList::add));
             output.append(Text.of(TextColors.GREEN, "------- Handlers Located Here -------\n"));

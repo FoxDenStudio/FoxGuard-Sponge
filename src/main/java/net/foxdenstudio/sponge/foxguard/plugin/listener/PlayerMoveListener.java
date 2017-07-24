@@ -132,7 +132,7 @@ public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
                         Vector3d from = event.getFromTransform().getPosition().add(0, 0.1, 0);
                         FGManager.getInstance().getRegionsInChunkAtPos(world, from).stream()
                                 .filter(region -> region.contains(from, world))
-                                .forEach(region -> region.getHandlers().stream()
+                                .forEach(region -> region.getLinks().stream()
                                         .filter(IFGObject::isEnabled)
                                         .filter(handler -> !temp.contains(handler))
                                         .forEach(temp::add));
@@ -143,7 +143,7 @@ public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
                             .filter(region -> region.contains(to, world))
                             .forEach(region -> {
                                 if (regionHUD) regionList.add(region);
-                                region.getHandlers().stream()
+                                region.getLinks().stream()
                                         .filter(IFGObject::isEnabled)
                                         .filter(handler -> !toList.contains(handler))
                                         .forEach(toList::add);

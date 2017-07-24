@@ -92,7 +92,7 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
                     postEvent.getTransactions().stream()
                             .map(trans -> trans.getOriginal().getLocation().get())
                             .collect(Collectors.toList())
-            ).forEach(region -> region.getHandlers().stream()
+            ).forEach(region -> region.getLinks().stream()
                     .filter(IFGObject::isEnabled)
                     .forEach(handlerSet::add));
         } else if (event instanceof ExplosionEvent.Detonate) {
@@ -104,7 +104,7 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
             if (locations.isEmpty()) return;
 
             FGManager.getInstance().getRegionsAtMultiLocI(locations)
-                    .forEach(region -> region.getHandlers().stream()
+                    .forEach(region -> region.getLinks().stream()
                             .filter(IFGObject::isEnabled)
                             .forEach(handlerSet::add));
 
@@ -115,7 +115,7 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
             World world = loc.getExtent();
             FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                     .filter(region -> region.contains(pos, world))
-                    .forEach(region -> region.getHandlers().stream()
+                    .forEach(region -> region.getLinks().stream()
                             .filter(IFGObject::isEnabled)
                             .forEach(handlerSet::add));
         }

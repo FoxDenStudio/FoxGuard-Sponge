@@ -49,29 +49,29 @@ public abstract class ControllerBase extends HandlerBase implements IController 
     }
 
     @Override
-    public List<IHandler> getHandlers() {
+    public List<IHandler> getLinks() {
         return ImmutableList.copyOf(this.handlers);
     }
 
     @Override
-    public boolean addHandler(IHandler handler) {
+    public boolean addLink(IHandler handler) {
         if (!FGManager.getInstance().isRegistered(handler)) return false;
         int maxLinks = this.maxLinks();
         return !(maxLinks >= 0 && this.handlers.size() >= maxLinks) && this.handlers.add(handler);
     }
 
     @Override
-    public boolean removeHandler(IHandler handler) {
+    public boolean removeLink(IHandler handler) {
         return this.handlers.remove(handler);
     }
 
     @Override
-    public void clearHandlers() {
+    public void clearLinks() {
         this.handlers.clear();
     }
 
     @Override
-    public void loadLinks(Path directory) {
+    public void loadLinks(Path directory, List<IHandler> savedList) {
         try (DB linksDB = FGStorageManager.openFoxDB(directory.resolve("links.foxdb"))) {
             List<String> linksList = linksDB.indexTreeList("links", Serializer.STRING).createOrOpen();
             handlers.clear();

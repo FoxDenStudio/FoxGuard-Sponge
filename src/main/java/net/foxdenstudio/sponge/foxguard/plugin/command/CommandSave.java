@@ -31,6 +31,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
+import net.foxdenstudio.sponge.foxguard.plugin.storage.FGStorageManagerNew;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -72,6 +73,7 @@ public class CommandSave extends FCCommandBase {
         FGStorageManager.getInstance().saveRegions(force);
         Sponge.getServer().getWorlds().forEach(world -> FGStorageManager.getInstance().saveWorldRegions(world, force));
         FGStorageManager.getInstance().saveHandlers(force);
+        FGStorageManagerNew.getInstance().saveHandlerIndex();
         source.sendMessage(Text.of(TextColors.GREEN, "Successfully saved!"));
         return CommandResult.success();
     }

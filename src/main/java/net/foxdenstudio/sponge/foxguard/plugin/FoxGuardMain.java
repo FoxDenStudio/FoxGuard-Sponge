@@ -47,6 +47,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.factory.ControllersStateFieldFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.state.factory.HandlersStateFieldFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.state.factory.RegionsStateFieldFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.storage.FGStorageManagerNew;
 import net.minecrell.mcstats.SpongeStatsLite;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
@@ -238,8 +239,10 @@ public final class FoxGuardMain {
 
     @Listener
     public void serverStopping(GameStoppingServerEvent event) {
-        FGStorageManager.getInstance().saveRegions();
-        FGStorageManager.getInstance().saveHandlers();
+        //FGStorageManager.getInstance().saveRegions();
+        //FGStorageManager.getInstance().saveHandlers();
+        FGStorageManagerNew.getInstance().saveRegionIndex();
+        FGStorageManagerNew.getInstance().saveHandlerIndex();
         logger.info("Saving configs");
         FGConfigManager.getInstance().save();
         FGManager.getInstance().unloadServer();
@@ -248,7 +251,8 @@ public final class FoxGuardMain {
     @Listener
     public void worldUnload(UnloadWorldEvent event) {
         logger.info("Unloading world \"" + event.getTargetWorld().getName() + "\"");
-        FGStorageManager.getInstance().saveWorldRegions(event.getTargetWorld());
+        //FGStorageManager.getInstance().saveWorldRegions(event.getTargetWorld());
+        FGStorageManagerNew.getInstance().saveWorldRegionIndex(event.getTargetWorld());
         FGManager.getInstance().unloadWorld(event.getTargetWorld());
     }
 

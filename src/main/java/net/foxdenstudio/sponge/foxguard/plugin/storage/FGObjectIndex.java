@@ -23,63 +23,42 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.object;
+package net.foxdenstudio.sponge.foxguard.plugin.storage;
 
-import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 
-import javax.annotation.Nullable;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
-public abstract class FGObjectBase implements IFGObject {
+/**
+ * Created by Fox on 7/9/2017.
+ * Project: SpongeForge
+ */
+public class FGObjectIndex extends FGObjectMeta {
 
-    protected String name;
-    protected UUID owner;
-    protected boolean isEnabled = true;
+    boolean enabled;
+    UUID owner;
+    List<String> links;
 
-    public FGObjectBase(String name, @Nullable UUID owner, boolean isEnabled) {
-        this.name = name;
-        this.owner = owner == null ? FGManager.SERVER_UUID : owner;
-        this.isEnabled = isEnabled;
-    }
-
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public UUID getOwner() {
-        return owner;
-    }
-
-    @Override
-    public void setOwner(UUID owner) {
+    public FGObjectIndex(String name, String category, String type, boolean enabled, UUID owner, List<String> links) {
+        super(name, category, type);
+        this.enabled = enabled;
         this.owner = owner;
+        this.links = links;
     }
 
-    @Override
-    public boolean isEnabled() {
-        return isEnabled;
+    public FGObjectIndex() {
     }
 
-    @Override
-    public void setIsEnabled(boolean state) {
-        this.isEnabled = state;
-    }
-
-    public abstract void markDirty();
-
-    @Override
-    public String toString() {
-        return "FGObjectBase{" +
-                "name='" + name + '\'' +
-                ", owner=" + owner +
-                ", isEnabled=" + isEnabled +
-                '}';
+    public FGObjectIndex(IFGObject object) {
+        super(object);
+        this.enabled = object.isEnabled();
+        this.owner = object.getOwner();
+        if (object instanceof ILinkable && ((ILinkable) object).saveLinks()) {
+            this.links = ((ILinkable) object).getLinks().stream().map(IHandler::getName).collect(Collectors.toList());
+        }
     }
 }

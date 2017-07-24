@@ -84,7 +84,7 @@ public final class FGManager {
         globalHandler = new GlobalHandler();
         regions.put(SERVER_UUID, globalRegion);
         handlers.put(SERVER_UUID, globalHandler);
-        globalRegion.addHandler(globalHandler);
+        globalRegion.addLink(globalHandler);
 
         this.regionCache = new RegionCache(regions, worldRegions);
     }
@@ -517,8 +517,8 @@ public final class FGManager {
     public boolean removeHandler(IHandler handler) {
         if (handler == null || handler instanceof GlobalHandler) return false;
         this.worldRegions.forEach((world, set) -> set.values().stream()
-                .filter(region -> region.getHandlers().contains(handler))
-                .forEach(region -> region.removeHandler(handler)));
+                .filter(region -> region.getLinks().contains(handler))
+                .forEach(region -> region.removeLink(handler)));
         if (!this.handlers.values().contains(handler)) {
             return false;
         }
@@ -568,15 +568,15 @@ public final class FGManager {
     }
 
     public boolean link(ILinkable linkable, IHandler handler) {
-        if (linkable == null || handler == null || linkable.getHandlers().contains(handler)) return false;
+        if (linkable == null || handler == null || linkable.getLinks().contains(handler)) return false;
         Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateEvent(FoxGuardMain.getCause()));
-        return !(handler instanceof IGlobal) && linkable.addHandler(handler);
+        return !(handler instanceof IGlobal) && linkable.addLink(handler);
     }
 
     public boolean unlink(ILinkable linkable, IHandler handler) {
-        if (linkable == null || handler == null || !linkable.getHandlers().contains(handler)) return false;
+        if (linkable == null || handler == null || !linkable.getLinks().contains(handler)) return false;
         Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateEvent(FoxGuardMain.getCause()));
-        return !(handler instanceof IGlobal) && linkable.removeHandler(handler);
+        return !(handler instanceof IGlobal) && linkable.removeLink(handler);
     }
 
     public boolean rename(IFGObject object, String newName) {

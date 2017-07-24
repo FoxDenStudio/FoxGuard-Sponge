@@ -126,7 +126,7 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
                 Set<IHandler> fromHandlers, toHandlers = new HashSet<>(), finalHandlers;
 
                 fromRegions = manager.getRegionsAtPos(world, from);
-                fromHandlers = fromRegions.stream().flatMap(region -> region.getHandlers().stream()).collect(Collectors.toSet());
+                fromHandlers = fromRegions.stream().flatMap(region -> region.getLinks().stream()).collect(Collectors.toSet());
 
                 manager.getRegionsInChunkAtPos(world, to).stream()
                         .filter(region -> region.contains(to, world))
@@ -134,7 +134,7 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
                             finalRegions.add(region);
                             if (!fromRegions.remove(region)) toRegions.add(region);
                         });
-                finalHandlers = finalRegions.stream().flatMap(region -> region.getHandlers().stream()).collect(Collectors.toSet());
+                finalHandlers = finalRegions.stream().flatMap(region -> region.getLinks().stream()).collect(Collectors.toSet());
                 finalHandlers.forEach(handler -> {
                     if (!fromHandlers.remove(handler)) toHandlers.add(handler);
                 });

@@ -114,7 +114,7 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
             World world = loc.getExtent();
             FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                     .filter(region -> region.contains(pos, world))
-                    .forEach(region -> region.getHandlers().stream()
+                    .forEach(region -> region.getLinks().stream()
                             .filter(IFGObject::isEnabled)
                             .forEach(handlerSet::add));
         }

@@ -52,22 +52,22 @@ public abstract class RegionBase extends FGObjectBase implements IRegion {
     }
 
     @Override
-    public List<IHandler> getHandlers() {
+    public List<IHandler> getLinks() {
         return ImmutableList.copyOf(this.handlers);
     }
 
     @Override
-    public boolean addHandler(IHandler handler) {
+    public boolean addLink(IHandler handler) {
         return FGManager.getInstance().isRegistered(handler) && this.handlers.add(handler);
     }
 
     @Override
-    public boolean removeHandler(IHandler handler) {
+    public boolean removeLink(IHandler handler) {
         return this.handlers.remove(handler);
     }
 
     @Override
-    public void clearHandlers() {
+    public void clearLinks() {
         this.handlers.clear();
     }
 

@@ -23,63 +23,38 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.object;
+package net.foxdenstudio.sponge.foxguard.plugin.storage;
 
-import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 
-import javax.annotation.Nullable;
-import java.util.UUID;
+/**
+ * Created by Fox on 7/9/2017.
+ * Project: SpongeForge
+ */
+public class FGObjectMeta {
 
-public abstract class FGObjectBase implements IFGObject {
+    String name;
+    String category;
+    String type;
 
-    protected String name;
-    protected UUID owner;
-    protected boolean isEnabled = true;
+    transient IFGObject object;
 
-    public FGObjectBase(String name, @Nullable UUID owner, boolean isEnabled) {
+    public FGObjectMeta(String name, String category, String type) {
         this.name = name;
-        this.owner = owner == null ? FGManager.SERVER_UUID : owner;
-        this.isEnabled = isEnabled;
+        this.category = category;
+        this.type = type;
     }
 
-    @Override
-    public String getName() {
-        return name;
+    public FGObjectMeta() {
     }
 
-    @Override
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public UUID getOwner() {
-        return owner;
-    }
-
-    @Override
-    public void setOwner(UUID owner) {
-        this.owner = owner;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return isEnabled;
-    }
-
-    @Override
-    public void setIsEnabled(boolean state) {
-        this.isEnabled = state;
-    }
-
-    public abstract void markDirty();
-
-    @Override
-    public String toString() {
-        return "FGObjectBase{" +
-                "name='" + name + '\'' +
-                ", owner=" + owner +
-                ", isEnabled=" + isEnabled +
-                '}';
+    public FGObjectMeta(IFGObject object) {
+        this(
+                object.getName(),
+                FGUtil.getCategory(object),
+                object.getUniqueTypeString()
+        );
+        this.object = object;
     }
 }

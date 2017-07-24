@@ -169,7 +169,7 @@ public final class FGStorageManager {
                     logger.info("Region " + logName + " does not need saving. Skipping...");
                 }
                 if (fgObject.saveLinks()) {
-                    linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
+                    linksMap.put(name, serializeHandlerList(fgObject.getLinks()));
                 } else {
                     logger.info("Region " + logName + " does not need its links saved. Skipping...");
                 }
@@ -250,7 +250,7 @@ public final class FGStorageManager {
                     logger.info("World region " + logName + " does not need saving. Skipping...");
                 }
                 if (fgObject.saveLinks()) {
-                    linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
+                    linksMap.put(name, serializeHandlerList(fgObject.getLinks()));
                 } else {
                     logger.info("World region " + logName + " does not need its links saved. Skipping...");
                 }
@@ -405,7 +405,7 @@ public final class FGStorageManager {
                     logger.info("Region " + logName + " does not need saving. Skipping...");
                 }
                 if (fgObject.saveLinks()) {
-                    linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
+                    linksMap.put(name, serializeHandlerList(fgObject.getLinks()));
                 } else {
                     logger.info("Region " + logName + " does not need its links saved. Skipping...");
                 }
@@ -483,7 +483,7 @@ public final class FGStorageManager {
             }
             if (fgObject.saveLinks()) {
                 logger.info("Saving links for world region " + logName + "");
-                linksMap.put(name, serializeHandlerList(fgObject.getHandlers()));
+                linksMap.put(name, serializeHandlerList(fgObject.getLinks()));
             } else {
                 logger.info("World region " + logName + " does not need its links saved. Skipping...");
             }
@@ -1006,7 +1006,7 @@ public final class FGStorageManager {
         Path dir = directory.resolve("handlers");
         for (IController controller : FGManager.getInstance().getControllers()) {
             logger.info("Loading links for controller \"" + controller.getName() + "\"");
-            controller.loadLinks(dir.resolve(controller.getName().toLowerCase()));
+            controller.loadLinks(dir.resolve(controller.getName().toLowerCase()), null);
         }
     }
 

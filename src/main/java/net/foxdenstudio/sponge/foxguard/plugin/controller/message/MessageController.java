@@ -92,7 +92,7 @@ public class MessageController extends ControllerBase {
     }
 
     @Override
-    public void loadLinks(Path directory) {
+    public void loadLinks(Path directory, List<IHandler> savedList) {
 
     }
 
@@ -103,23 +103,23 @@ public class MessageController extends ControllerBase {
 
 
     @Override
-    public boolean addHandler(IHandler handler) {
+    public boolean addLink(IHandler handler) {
         if (this.handlers.size() < 1) {
             slot = new HandlerWrapper(handler);
-            return super.addHandler(handler);
+            return super.addLink(handler);
         } else return false;
     }
 
     @Override
-    public boolean removeHandler(IHandler handler) {
+    public boolean removeLink(IHandler handler) {
         if (slot != null && slot.handler == handler) slot = HandlerWrapper.PASSTHROUGH;
-        return super.removeHandler(handler);
+        return super.removeLink(handler);
     }
 
     @Override
-    public void clearHandlers() {
+    public void clearLinks() {
         slot = HandlerWrapper.PASSTHROUGH;
-        super.clearHandlers();
+        super.clearLinks();
     }
 
     public IHandler getHandler() {

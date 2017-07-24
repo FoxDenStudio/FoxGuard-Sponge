@@ -31,12 +31,13 @@ import java.util.Collection;
 
 public interface ILinkable {
 
-    Collection<IHandler> getHandlers();
+    Collection<IHandler> getLinks();
 
-    boolean addHandler(IHandler handler);
+    boolean addLink(IHandler handler);
 
-    boolean removeHandler(IHandler handler);
+    boolean removeLink(IHandler handler);
 
-    void clearHandlers();
+    void clearLinks();
 
+    boolean saveLinks();
 }

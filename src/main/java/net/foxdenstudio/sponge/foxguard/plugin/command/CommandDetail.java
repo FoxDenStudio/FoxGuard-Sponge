@@ -211,11 +211,11 @@ public class CommandDetail extends FCCommandBase {
                 }
                 builder.append(Text.of(TextColors.GREEN, "\n------- Inbound Links -------"));
                 List<IController> controllerList = FGManager.getInstance().getControllers().stream()
-                        .filter(controller -> controller.getHandlers().contains(handler))
+                        .filter(controller -> controller.getLinks().contains(handler))
                         .sorted((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()))
                         .collect(GuavaCollectors.toImmutableList());
                 List<IRegion> regionList = FGManager.getInstance().getAllRegions().stream()
-                        .filter(region -> region.getHandlers().contains(handler))
+                        .filter(region -> region.getLinks().contains(handler))
                         .sorted((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()))
                         .collect(GuavaCollectors.toImmutableList());
                 if (controllerList.size() == 0 && regionList.size() == 0)
@@ -313,9 +313,9 @@ public class CommandDetail extends FCCommandBase {
 
     private void outboundLinks(Text.Builder builder, ILinkable linkable, CommandSource source) {
         builder.append(Text.of(TextColors.GREEN, "\n------- Outbound Links -------"));
-        if (linkable.getHandlers().size() == 0)
+        if (linkable.getLinks().size() == 0)
             builder.append(Text.of(TextStyles.ITALIC, "\nNo outbound links!"));
-        Stream<IHandler> handlerStream = linkable.getHandlers().stream();
+        Stream<IHandler> handlerStream = linkable.getLinks().stream();
         if (!(linkable instanceof IController))
             handlerStream = handlerStream.sorted((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
         handlerStream.forEach(handler -> {

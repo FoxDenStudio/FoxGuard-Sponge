@@ -85,7 +85,7 @@ public class InteractBlockListener implements EventListener<InteractBlockEvent> 
         List<IHandler> handlerList = new ArrayList<>();
         FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                 .filter(region -> region.contains(pos, world))
-                .forEach(region -> region.getHandlers().stream()
+                .forEach(region -> region.getLinks().stream()
                         .filter(IFGObject::isEnabled)
                         .filter(handler -> !handlerList.contains(handler))
                         .forEach(handlerList::add));

@@ -29,10 +29,11 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 
 import java.nio.file.Path;
+import java.util.List;
 
 public interface IController extends IHandler, ILinkable {
 
-    void loadLinks(Path directory);
+    void loadLinks(Path directory, List<IHandler> savedList);
 
     /**
      * Method to get the maximum number of links the controller allows in a given configuration.
@@ -49,4 +50,8 @@ public interface IController extends IHandler, ILinkable {
         return false;
     }
 
+    @Override
+    default boolean saveLinks(){
+        return false;
+    }
 }
