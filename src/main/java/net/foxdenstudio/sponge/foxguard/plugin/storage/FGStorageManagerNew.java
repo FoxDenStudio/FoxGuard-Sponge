@@ -118,7 +118,7 @@ public class FGStorageManagerNew {
     }
 
     private void saveIndex(Set<? extends IFGObject> objects, Path file) {
-        List<FGObjectIndex> indexList = objects.stream().map(FGObjectIndex::new).collect(Collectors.toList());
+        List<FGSObjectIndex> indexList = objects.stream().map(FGSObjectIndex::new).collect(Collectors.toList());
         try (JsonWriter jsonWriter = new JsonWriter(Files.newBufferedWriter(file, CHARSET))) {
             jsonWriter.setIndent("    ");
             GSON.toJson(indexList, List.class, jsonWriter);

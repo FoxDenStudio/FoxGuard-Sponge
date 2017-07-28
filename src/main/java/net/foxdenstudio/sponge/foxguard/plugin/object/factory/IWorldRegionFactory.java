@@ -25,6 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.object.factory;
 
+import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectData;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
@@ -33,8 +34,10 @@ import java.nio.file.Path;
 
 public interface IWorldRegionFactory extends IRegionFactory {
 
+    @Override
     IWorldRegion create(String name, String arguments, CommandSource source) throws CommandException;
 
-    IWorldRegion create(Path directory, String name, boolean isEnabled);
+    @Override
+    IWorldRegion create(Path directory, FGObjectData data);
 
 }

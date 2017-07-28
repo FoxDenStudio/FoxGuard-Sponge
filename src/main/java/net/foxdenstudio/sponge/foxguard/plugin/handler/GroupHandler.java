@@ -64,6 +64,7 @@ import org.spongepowered.api.world.World;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -99,20 +100,20 @@ public class GroupHandler extends HandlerBase {
     private final Map<FlagBitSet, Tristate> defaultPermCache;
     private final Map<Set<Group>, Map<FlagBitSet, Tristate>> groupSetPermCache;
 
-    public GroupHandler(String name, int priority) {
-        this(name, true, priority,
+    public GroupHandler(HandlerData data) {
+        this(data,
                 new ArrayList<>(),
                 new HashMap<>(),
                 new Group("default", "", TextColors.RED, "Default"),
                 new ArrayList<>());
     }
 
-    public GroupHandler(String name, boolean isEnabled, int priority,
+    public GroupHandler(HandlerData data,
                         List<Group> groups,
                         Map<Group, List<TristateEntry>> groupPermissions,
                         Group defaultGroup,
                         List<TristateEntry> defaultPermissions) {
-        super(name, priority, isEnabled);
+        super(data);
         this.groups = groups;
         this.defaultGroup = defaultGroup;
 
@@ -1228,9 +1229,9 @@ public class GroupHandler extends HandlerBase {
         private static final String[] ALIASES = {"group", "permgroup"};
 
         @Override
-        public IHandler create(String name, int priority, String arguments, CommandSource source) throws CommandException {
+        public IHandler create(String name, String arguments, CommandSource source) throws CommandException {
             AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).parse();
-            GroupHandler handler = new GroupHandler(name, priority);
+            GroupHandler handler = new GroupHandler(new HandlerData().setName(name));
             if (parse.args.length < 1 || !parse.args[0].equalsIgnoreCase("bare")) {
                 Group members = handler.createGroup("members").get();
                 members.displayName = "Members";
@@ -1240,7 +1241,14 @@ public class GroupHandler extends HandlerBase {
         }
 
         @Override
-        public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
+        public IHandler create(Path directory, HandlerData data) {
+            if(Files.exists(directory.resolve("groups.foxdb")) || Files.exists(directory.resolve("flags.foxdb"))){
+                return createOld(directory, data);
+            }
+            return null;
+        }
+
+        public IHandler createOld(Path directory, HandlerData data) {
             List<String> groupNames = new ArrayList<>();
             try (DB flagMapDB = FGStorageManager.openFoxDB(directory.resolve("groups.foxdb"))) {
                 groupNames.addAll(flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen());
@@ -1275,7 +1283,7 @@ public class GroupHandler extends HandlerBase {
                 defaultPermissions = stringEntries.stream().map(TristateEntry::deserialize).collect(Collectors.toList());
             }
 
-            return new GroupHandler(name, isEnabled, priority,
+            return new GroupHandler(data,
                     groups,
                     groupPermissions,
                     new Group("default", "", defaultColor, defaultDisplayName),

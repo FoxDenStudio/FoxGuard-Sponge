@@ -23,48 +23,38 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.handler;
+package net.foxdenstudio.sponge.foxguard.plugin.storage;
 
-import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectBase;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 
-public abstract class HandlerBase extends FGObjectBase implements IHandler {
+/**
+ * Created by Fox on 7/9/2017.
+ * Project: SpongeForge
+ */
+public class FGSObjectMeta {
 
-    int priority;
+    String name;
+    String category;
+    String type;
 
-    public HandlerBase(HandlerData data) {
-        super(data);
-        setPriority(data.getPriority());
+    transient IFGObject object;
+
+    public FGSObjectMeta(String name, String category, String type) {
+        this.name = name;
+        this.category = category;
+        this.type = type;
     }
 
-    @Override
-    public int getPriority() {
-        return this.priority;
+    public FGSObjectMeta() {
     }
 
-    @Override
-    public void setPriority(int priority) {
-        if (priority < Integer.MIN_VALUE / 2 + 1) priority = Integer.MIN_VALUE / 2 + 1;
-        else if (priority > Integer.MAX_VALUE / 2) priority = Integer.MAX_VALUE / 2;
-        this.priority = priority > Integer.MIN_VALUE ? priority : Integer.MIN_VALUE + 1;
+    public FGSObjectMeta(IFGObject object) {
+        this(
+                object.getName(),
+                FGUtil.getCategory(object),
+                object.getUniqueTypeString()
+        );
+        this.object = object;
     }
-
-    @Override
-    public int compareTo(IHandler o) {
-        return o.getPriority() - this.priority;
-    }
-
-    public void markDirty() {
-        FGUtil.markHandlerDirty(this);
-    }
-
-    @Override
-    public String toString() {
-        return this.getClass().getSimpleName() + "{" +
-                "name='" + name + '\'' +
-                ", enabled=" + enabled +
-                ", priority=" + priority +
-                '}';
-    }
-
 }

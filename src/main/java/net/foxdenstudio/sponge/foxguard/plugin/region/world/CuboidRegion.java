@@ -33,6 +33,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.selection.CuboidSelection;
 import net.foxdenstudio.sponge.foxcore.plugin.util.BoundingBox3;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
+import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectData;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IWorldRegionFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IIterableRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.ISelectableRegion;
@@ -62,14 +63,14 @@ public class CuboidRegion extends WorldRegionBase implements IIterableRegion, IS
     private BoundingBox3 boundingBox;
 
 
-    public CuboidRegion(String name, boolean isEnabled, BoundingBox3 boundingBox) {
-        super(name, isEnabled);
+    public CuboidRegion(FGObjectData data, BoundingBox3 boundingBox) {
+        super(data);
         this.boundingBox = boundingBox;
     }
 
-    public CuboidRegion(String name, List<? extends Vector3i> positions, String[] args, CommandSource source)
+    public CuboidRegion(FGObjectData data, List<? extends Vector3i> positions, String[] args, CommandSource source)
             throws CommandException {
-        super(name, true);
+        super(data);
         List<Vector3i> allPositions = new ArrayList<>(positions);
         Vector3i sourcePos = source instanceof Locatable ? ((Locatable) source).getLocation().getBlockPosition() : Vector3i.ZERO;
         for (int i = 0; i < args.length - 2; i += 3) {
@@ -223,11 +224,11 @@ public class CuboidRegion extends WorldRegionBase implements IIterableRegion, IS
             AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                     .arguments(arguments)
                     .parse();
-            return new CuboidRegion(name, FCPUtil.getPositions(source), parse.args, source);
+            return new CuboidRegion(new FGObjectData().setName(name), FCPUtil.getPositions(source), parse.args, source);
         }
 
         @Override
-        public IWorldRegion create(Path directory, String name, boolean isEnabled) {
+        public IWorldRegion create(Path directory, FGObjectData data) {
             Path boundsFile = directory.resolve("bounds.cfg");
             CommentedConfigurationNode root;
             ConfigurationLoader<CommentedConfigurationNode> loader =
@@ -247,8 +248,7 @@ public class CuboidRegion extends WorldRegionBase implements IIterableRegion, IS
             int x2 = root.getNode("upperX").getInt(0);
             int y2 = root.getNode("upperY").getInt(0);
             int z2 = root.getNode("upperZ").getInt(0);
-            return new CuboidRegion(name, isEnabled, new BoundingBox3(new Vector3i(x1, y1, z1), new Vector3i(x2, y2, z2)));
-
+            return new CuboidRegion(data, new BoundingBox3(new Vector3i(x1, y1, z1), new Vector3i(x2, y2, z2)));
         }
 
         @Override

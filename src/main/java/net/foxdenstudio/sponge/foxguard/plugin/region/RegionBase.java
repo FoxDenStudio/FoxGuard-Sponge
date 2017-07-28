@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectBase;
+import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectData;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.util.RegionCache;
 
@@ -40,14 +41,14 @@ public abstract class RegionBase extends FGObjectBase implements IRegion {
 
     private final Set<IHandler> handlers;
 
-    protected RegionBase(String name, boolean isEnabled) {
-        super(name, null, isEnabled);
+    protected RegionBase(FGObjectData data) {
+        super(data);
         this.handlers = new HashSet<>();
     }
 
     @Override
-    public void setIsEnabled(boolean state) {
-        super.setIsEnabled(state);
+    public void setEnabled(boolean state) {
+        super.setEnabled(state);
         FGManager.getInstance().markDirty(this, RegionCache.DirtyType.MODIFIED);
     }
 

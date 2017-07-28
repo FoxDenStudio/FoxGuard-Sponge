@@ -31,8 +31,10 @@ public class GlobalHandler extends StaticHandler implements IGlobal {
 
     public static final String NAME = "_global";
 
+    private static final HandlerData DATA = new HandlerData().setName(NAME).setPriority(Integer.MIN_VALUE / 2).setEnabled(true);
+
     public GlobalHandler() {
-        super(NAME, Integer.MIN_VALUE / 2, true);
+        super(DATA);
     }
 
     @Override
@@ -67,8 +69,8 @@ public class GlobalHandler extends StaticHandler implements IGlobal {
     }
 
     @Override
-    public void setIsEnabled(boolean state) {
-        this.isEnabled = true;
+    public void setEnabled(boolean state) {
+        this.enabled = true;
     }
 
 }

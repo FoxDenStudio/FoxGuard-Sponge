@@ -30,6 +30,7 @@ import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.BoundingBox2;
+import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectData;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
@@ -50,8 +51,8 @@ public class EllipticalRegion extends WorldRegionBase {
     private final double centerX, centerY, width, height;
     private final double widthSq, heightSq;
 
-    public EllipticalRegion(String name, boolean isEnabled, double centerX, double centerY, double height, double width) {
-        super(name, isEnabled);
+    public EllipticalRegion(FGObjectData data, double centerX, double centerY, double height, double width) {
+        super(data);
         this.centerX = centerX;
         this.centerY = centerY;
         this.width = width;

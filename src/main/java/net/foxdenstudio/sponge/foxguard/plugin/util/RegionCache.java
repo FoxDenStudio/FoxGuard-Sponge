@@ -125,19 +125,19 @@ public class RegionCache {
                 }
             }
             /*worldRegions.get(world).values().stream()
-                    .filter(IFGObject::isEnabled)
+                    .filter(IFGObject::enabled)
                     .filter(r -> r.isInChunk(chunk))
                     .forEach(contains::add);
             regions.values().stream()
-                    .filter(IFGObject::isEnabled)
+                    .filter(IFGObject::enabled)
                     .filter(r -> r.isInChunk(chunk, world))
                     .forEach(contains::add);
             worldRegions.get(world).values().stream()
-                    .filter(r -> !r.isEnabled())
+                    .filter(r -> !r.enabled())
                     .filter(r -> r.isInChunk(chunk))
                     .forEach(disabled::add);
             regions.values().stream()
-                    .filter(IFGObject::isEnabled)
+                    .filter(IFGObject::enabled)
                     .filter(r -> r.isInChunk(chunk, world))
                     .forEach(disabled::add);*/
         }

@@ -29,6 +29,7 @@ import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
+import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectData;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
@@ -39,13 +40,17 @@ import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.List;
 
+import static java.lang.Boolean.TRUE;
+
 public class GlobalWorldRegion extends WorldRegionBase implements IGlobal {
 
     public static final String NAME = "_wglobal";
     public static final String TYPE = "wglobal";
 
+    private static final FGObjectData DATA = new FGObjectData().setName(NAME).setEnabled(true);
+
     public GlobalWorldRegion() {
-        super(NAME, true);
+        super(DATA);
     }
 
     @Override
@@ -89,8 +94,8 @@ public class GlobalWorldRegion extends WorldRegionBase implements IGlobal {
     }
 
     @Override
-    public void setIsEnabled(boolean state) {
-        this.isEnabled = true;
+    public void setEnabled(boolean state) {
+        this.enabled = true;
     }
 
     @Override

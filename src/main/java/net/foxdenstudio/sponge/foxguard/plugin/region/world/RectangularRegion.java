@@ -33,6 +33,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.BoundingBox2;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
+import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectData;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IWorldRegionFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IIterableRegion;
 import ninja.leaping.configurate.ConfigurationOptions;
@@ -61,14 +62,14 @@ public class RectangularRegion extends WorldRegionBase implements IIterableRegio
     private BoundingBox2 boundingBox;
 
 
-    public RectangularRegion(String name, boolean isEnabled, BoundingBox2 boundingBox) {
-        super(name, isEnabled);
+    public RectangularRegion(FGObjectData data, BoundingBox2 boundingBox) {
+        super(data);
         this.boundingBox = boundingBox;
     }
 
-    public RectangularRegion(String name, List<? extends Vector3i> positions, String[] args, CommandSource source)
+    public RectangularRegion(FGObjectData data, List<? extends Vector3i> positions, String[] args, CommandSource source)
             throws CommandException {
-        super(name, true);
+        super(data);
         List<Vector3i> allPositions = new ArrayList<>(positions);
         Vector3i sourcePos = source instanceof Locatable ? ((Locatable) source).getLocation().getBlockPosition() : Vector3i.ZERO;
         for (int i = 0; i < args.length - 1; i += 2) {
@@ -201,11 +202,11 @@ public class RectangularRegion extends WorldRegionBase implements IIterableRegio
             AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                     .arguments(arguments)
                     .parse();
-            return new RectangularRegion(name, FCPUtil.getPositions(source), parse.args, source);
+            return new RectangularRegion(new FGObjectData().setName(name), FCPUtil.getPositions(source), parse.args, source);
         }
 
         @Override
-        public IWorldRegion create(Path directory, String name, boolean isEnabled) {
+        public IWorldRegion create(Path directory, FGObjectData data) {
             Path boundsFile = directory.resolve("bounds.cfg");
             CommentedConfigurationNode root;
             ConfigurationLoader<CommentedConfigurationNode> loader =
@@ -223,7 +224,7 @@ public class RectangularRegion extends WorldRegionBase implements IIterableRegio
             int z1 = root.getNode("lowerZ").getInt(0);
             int x2 = root.getNode("upperX").getInt(0);
             int z2 = root.getNode("upperZ").getInt(0);
-            return new RectangularRegion(name, isEnabled, new BoundingBox2(new Vector2i(x1, z1), new Vector2i(x2, z2)));
+            return new RectangularRegion(data, new BoundingBox2(new Vector2i(x1, z1), new Vector2i(x2, z2)));
         }
 
         @Override

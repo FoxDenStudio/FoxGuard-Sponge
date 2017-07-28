@@ -104,7 +104,7 @@ public interface IFGObject extends IModifiable {
      *
      * @param state
      */
-    void setIsEnabled(boolean state);
+    void setEnabled(boolean state);
 
     /**
      * Gets the details for the object as a SpongeAPI {@link Text} Object. Used in the {@link CommandDetail Detail} command.

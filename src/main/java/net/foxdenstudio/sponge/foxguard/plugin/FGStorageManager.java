@@ -28,7 +28,9 @@ package net.foxdenstudio.sponge.foxguard.plugin;
 import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.HandlerData;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectData;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
 import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
@@ -695,7 +697,7 @@ public final class FGStorageManager {
                     IRegion object = null;
                     try {
                         if (category.equalsIgnoreCase("region"))
-                            object = FGFactoryManager.getInstance().createRegion(singleDir, name, type, enabled);
+                            object = FGFactoryManager.getInstance().createRegion(singleDir,type, new FGObjectData().setName(name).setEnabled(enabled));
                         else logger.warn("Category \"" + category + "\" is invalid!");
                     } catch (Exception e) {
                         logger.error("There was an error creating the region!", e);
@@ -786,7 +788,7 @@ public final class FGStorageManager {
                     IWorldRegion object = null;
                     try {
                         if (category.equalsIgnoreCase("worldregion"))
-                            object = FGFactoryManager.getInstance().createWorldRegion(singleDir, name, type, enabled);
+                            object = FGFactoryManager.getInstance().createWorldRegion(singleDir, type, new FGObjectData().setName(name).setEnabled(enabled));
                         else logger.warn("Category \"" + category + "\" is invalid!");
                     } catch (Exception e) {
                         logger.error("There was an error creating the world region!", e);
@@ -871,10 +873,11 @@ public final class FGStorageManager {
                     if (type == null) type = "";
                     IHandler object = null;
                     try {
+                        final HandlerData data = new HandlerData().setName(name).setEnabled(enabled).setPriority(priority);
                         if (category.equalsIgnoreCase("handler"))
-                            object = FGFactoryManager.getInstance().createHandler(singleDir, name, type, enabled, priority);
+                            object = FGFactoryManager.getInstance().createHandler(singleDir, type, data);
                         else if (category.equalsIgnoreCase("controller"))
-                            object = FGFactoryManager.getInstance().createController(singleDir, name, type, enabled, priority);
+                            object = FGFactoryManager.getInstance().createController(singleDir, type, data);
                         else logger.warn("Category \"" + category + "\" is invalid!");
                     } catch (Exception e) {
                         logger.error("There was an error creating the handler!", e);

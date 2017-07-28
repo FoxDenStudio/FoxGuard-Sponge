@@ -25,6 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.object.factory;
 
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.world.Location;
@@ -34,6 +35,8 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 public interface IFGFactory {
+
+    IFGObject create(String name, String arguments, CommandSource source) throws CommandException;
 
     String[] getAliases();
 

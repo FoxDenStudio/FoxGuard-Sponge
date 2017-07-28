@@ -31,6 +31,7 @@ import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
+import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectData;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IWorldRegionFactory;
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
@@ -57,15 +58,15 @@ public class ElevationRegion extends WorldRegionBase {
     private int upperBound;
     private int lowerBound;
 
-    public ElevationRegion(String name, boolean isEnabled, int lowerBound, int upperBound) {
-        super(name, isEnabled);
+    public ElevationRegion(FGObjectData data, int lowerBound, int upperBound) {
+        super(data);
         this.upperBound = upperBound;
         this.lowerBound = lowerBound;
     }
 
-    public ElevationRegion(String name, List<? extends Vector3i> positions, String[] args, CommandSource source)
+    public ElevationRegion(FGObjectData data, List<? extends Vector3i> positions, String[] args, CommandSource source)
             throws CommandException {
-        super(name, true);
+        super(data);
         List<Vector3i> allPositions = new ArrayList<>(positions);
         int sourceY = source instanceof Locatable ? ((Locatable) source).getLocation().getBlockY() : 0;
         for (String arg : args) {
@@ -195,11 +196,11 @@ public class ElevationRegion extends WorldRegionBase {
             AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                     .arguments(arguments)
                     .parse();
-            return new ElevationRegion(name, FCPUtil.getPositions(source), parse.args, source);
+            return new ElevationRegion(new FGObjectData().setName(name), FCPUtil.getPositions(source), parse.args, source);
         }
 
         @Override
-        public IWorldRegion create(Path directory, String name, boolean isEnabled) {
+        public IWorldRegion create(Path directory, FGObjectData data) {
             Path boundsFile = directory.resolve("bounds.cfg");
             CommentedConfigurationNode root;
             ConfigurationLoader<CommentedConfigurationNode> loader =
@@ -215,7 +216,7 @@ public class ElevationRegion extends WorldRegionBase {
             }
             int lower = root.getNode("lower").getInt(0);
             int upper = root.getNode("upper").getInt(0);
-            return new ElevationRegion(name, isEnabled, lower, upper);
+            return new ElevationRegion(data, lower, upper);
         }
 
         @Override

@@ -27,19 +27,20 @@ package net.foxdenstudio.sponge.foxguard.plugin.object;
 
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 
-import javax.annotation.Nullable;
 import java.util.UUID;
 
 public abstract class FGObjectBase implements IFGObject {
 
     protected String name;
     protected UUID owner;
-    protected boolean isEnabled = true;
+    protected boolean enabled = true;
 
-    public FGObjectBase(String name, @Nullable UUID owner, boolean isEnabled) {
-        this.name = name;
+    public FGObjectBase(FGObjectData data) {
+        String name = data.getName();
+        this.name = name == null ? "" : name;
+        UUID owner = data.getOwner();
         this.owner = owner == null ? FGManager.SERVER_UUID : owner;
-        this.isEnabled = isEnabled;
+        this.enabled = data.isEnabled();
     }
 
     @Override
@@ -64,12 +65,12 @@ public abstract class FGObjectBase implements IFGObject {
 
     @Override
     public boolean isEnabled() {
-        return isEnabled;
+        return enabled;
     }
 
     @Override
-    public void setIsEnabled(boolean state) {
-        this.isEnabled = state;
+    public void setEnabled(boolean state) {
+        this.enabled = state;
     }
 
     public abstract void markDirty();
@@ -79,7 +80,7 @@ public abstract class FGObjectBase implements IFGObject {
         return "FGObjectBase{" +
                 "name='" + name + '\'' +
                 ", owner=" + owner +
-                ", isEnabled=" + isEnabled +
+                ", enabled=" + enabled +
                 '}';
     }
 }

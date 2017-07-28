@@ -37,26 +37,31 @@ import java.util.stream.Collectors;
  * Created by Fox on 7/9/2017.
  * Project: SpongeForge
  */
-public class FGObjectIndex extends FGObjectMeta {
+public class FGSObjectIndex extends FGSObjectMeta {
 
     boolean enabled;
+    Integer priority;
     UUID owner;
     List<String> links;
 
-    public FGObjectIndex(String name, String category, String type, boolean enabled, UUID owner, List<String> links) {
+    public FGSObjectIndex(String name, String category, String type, boolean enabled, Integer priority, UUID owner, List<String> links) {
         super(name, category, type);
         this.enabled = enabled;
+        this.priority = priority;
         this.owner = owner;
         this.links = links;
     }
 
-    public FGObjectIndex() {
+    public FGSObjectIndex() {
     }
 
-    public FGObjectIndex(IFGObject object) {
+    public FGSObjectIndex(IFGObject object) {
         super(object);
         this.enabled = object.isEnabled();
         this.owner = object.getOwner();
+        if (object instanceof IHandler) {
+            this.priority = ((IHandler) object).getPriority();
+        }
         if (object instanceof ILinkable && ((ILinkable) object).saveLinks()) {
             this.links = ((ILinkable) object).getLinks().stream().map(IHandler::getName).collect(Collectors.toList());
         }

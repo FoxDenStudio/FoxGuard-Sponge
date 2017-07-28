@@ -107,20 +107,27 @@ public class BasicHandler extends HandlerBase {
     private Group passiveGroup;
     private Map<FlagBitSet, Tristate> passiveGroupCacheRef;
 
-    public BasicHandler(String name, int priority) {
-        this(name, true, priority,
+    public BasicHandler(String name){
+        this(new HandlerData()
+                .setName(name)
+                .setEnabled(true)
+                .setPriority(0));
+    }
+
+    public BasicHandler(HandlerData data) {
+        this(data,
                 new ArrayList<>(),
                 new HashMap<>(),
                 new Group("default", EverythingSet.get(), TextColors.RED, "Default"),
                 new ArrayList<>());
     }
 
-    public BasicHandler(String name, boolean isEnabled, int priority,
+    public BasicHandler(HandlerData data,
                         List<Group> groups,
                         Map<Group, List<TristateEntry>> groupPermissions,
                         Group defaultGroup,
                         List<TristateEntry> defaultPermissions) {
-        super(name, priority, isEnabled);
+        super(data);
         this.groups = groups;
         this.defaultGroup = defaultGroup;
 
@@ -1567,9 +1574,9 @@ public class BasicHandler extends HandlerBase {
         private static final String[] ALIASES = {"basic", "base"};
 
         @Override
-        public IHandler create(String name, int priority, String arguments, CommandSource source) throws CommandException {
+        public IHandler create(String name, String arguments, CommandSource source) throws CommandException {
             AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).parse();
-            BasicHandler handler = new BasicHandler(name, priority);
+            BasicHandler handler = new BasicHandler(name);
             if (parse.args.length > 0) {
                 if (parse.args[0].equalsIgnoreCase("bare")) {
                     return handler;
@@ -1652,7 +1659,7 @@ public class BasicHandler extends HandlerBase {
         }
 
         @Override
-        public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
+        public IHandler create(Path directory, HandlerData data) {
             FGStorageManager storageManager = FGStorageManager.getInstance();
             List<String> groupNames = new ArrayList<>();
             try (DB flagMapDB = FGStorageManager.openFoxDB(directory.resolve("groups.foxdb"))) {
@@ -1707,7 +1714,7 @@ public class BasicHandler extends HandlerBase {
             String defaultDisplayName = defaultNode.getNode("displayname").getString("Default");
             TextColor defaultColor = Sponge.getRegistry().getType(TextColor.class, defaultNode.getNode("color").getString("red")).orElse(TextColors.RED);
 
-            BasicHandler handler = new BasicHandler(name, isEnabled, priority,
+            BasicHandler handler = new BasicHandler(data,
                     groups,
                     groupPermissions,
                     new Group("default", EverythingSet.get(), defaultColor, defaultDisplayName),

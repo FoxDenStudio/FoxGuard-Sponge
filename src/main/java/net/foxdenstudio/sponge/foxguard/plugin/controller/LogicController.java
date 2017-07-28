@@ -30,6 +30,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.HandlerData;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IControllerFactory;
@@ -77,12 +78,12 @@ public class LogicController extends ControllerBase {
     private Tristate mode = UNDEFINED;
     private boolean shortCircuit = false;
 
-    public LogicController(String name, int priority) {
-        super(name, true, priority);
+    public LogicController(String name) {
+        super(new HandlerData().setName(name));
     }
 
-    public LogicController(String name, boolean isEnabled, int priority, Operator operator, Tristate mode, boolean shortCircuit) {
-        super(name, isEnabled, priority);
+    public LogicController(HandlerData data, Operator operator, Tristate mode, boolean shortCircuit) {
+        super(data);
         this.operator = operator;
         this.mode = mode;
         this.shortCircuit = shortCircuit;
@@ -388,8 +389,8 @@ public class LogicController extends ControllerBase {
         public static final String[] LOGIC_ALIASES = {"logic", "logical"};
 
         @Override
-        public IController create(String name, int priority, String arguments, CommandSource source) throws CommandException {
-            return new LogicController(name, priority);
+        public IController create(String name, String arguments, CommandSource source) throws CommandException {
+            return new LogicController(name);
         }
 
         @Override
@@ -398,7 +399,7 @@ public class LogicController extends ControllerBase {
         }
 
         @Override
-        public IController create(Path directory, String name, int priority, boolean isEnabled) {
+        public IController create(Path directory, HandlerData data) {
             Path configFile = directory.resolve("settings.cfg");
             CommentedConfigurationNode root;
             ConfigurationLoader<CommentedConfigurationNode> loader =
@@ -420,7 +421,7 @@ public class LogicController extends ControllerBase {
             else if (isIn(FALSE_ALIASES, modeName)) mode = FALSE;
             else mode = UNDEFINED;
             boolean shortCircuit = root.getNode("shortCircuit").getBoolean(false);
-            return new LogicController(name, isEnabled, priority, operator, mode, shortCircuit);
+            return new LogicController(data, operator, mode, shortCircuit);
         }
 
         @Override

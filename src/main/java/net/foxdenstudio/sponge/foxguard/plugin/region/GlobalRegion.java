@@ -29,6 +29,7 @@ import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
+import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectData;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
@@ -40,14 +41,18 @@ import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.List;
 
+import static java.lang.Boolean.TRUE;
+
 /**
  * Created by Fox on 4/2/2016.
  */
 public class GlobalRegion extends RegionBase implements IGlobal {
     public static final String NAME = "_sglobal";
 
+    private static final FGObjectData DATA = new FGObjectData().setName(NAME).setEnabled(true);
+
     public GlobalRegion() {
-        super(NAME, true);
+        super(DATA);
     }
 
     @Override
@@ -101,8 +106,8 @@ public class GlobalRegion extends RegionBase implements IGlobal {
     }
 
     @Override
-    public void setIsEnabled(boolean state) {
-        this.isEnabled = true;
+    public void setEnabled(boolean state) {
+        this.enabled = true;
     }
 
     @Override

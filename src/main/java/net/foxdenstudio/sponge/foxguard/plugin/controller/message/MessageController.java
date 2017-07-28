@@ -31,6 +31,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.ControllerBase;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.util.HandlerWrapper;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.HandlerData;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
@@ -54,8 +55,8 @@ public class MessageController extends ControllerBase {
     private Map<String, ISendableMessage> messages;
 
 
-    public MessageController(String name, boolean isEnabled, int priority) {
-        super(name, isEnabled, priority);
+    public MessageController(HandlerData data) {
+        super(data);
         slot = HandlerWrapper.PASSTHROUGH;
         messages = new HashMap<>();
     }
@@ -176,12 +177,12 @@ public class MessageController extends ControllerBase {
         private static final String[] messageAliases = {"message", "mess", "msg"};
 
         @Override
-        public IHandler create(String name, int priority, String arguments, CommandSource source) {
+        public IHandler create(String name, String arguments, CommandSource source) {
             return null;
         }
 
         @Override
-        public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
+        public IHandler create(Path directory, HandlerData data) {
             return null;
         }
 

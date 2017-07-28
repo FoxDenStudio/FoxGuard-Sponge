@@ -23,38 +23,37 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.storage;
+package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
-import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
+import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectData;
 
-/**
- * Created by Fox on 7/9/2017.
- * Project: SpongeForge
- */
-public class FGObjectMeta {
+import java.util.UUID;
 
-    String name;
-    String category;
-    String type;
+public class HandlerData extends FGObjectData {
 
-    transient IFGObject object;
+    protected int priority = 0;
 
-    public FGObjectMeta(String name, String category, String type) {
-        this.name = name;
-        this.category = category;
-        this.type = type;
+    public int getPriority() {
+        return priority;
     }
 
-    public FGObjectMeta() {
+    public HandlerData setPriority(int priority) {
+        this.priority = priority;
+        return this;
     }
 
-    public FGObjectMeta(IFGObject object) {
-        this(
-                object.getName(),
-                FGUtil.getCategory(object),
-                object.getUniqueTypeString()
-        );
-        this.object = object;
+    @Override
+    public HandlerData setName(String name) {
+        return (HandlerData) super.setName(name);
+    }
+
+    @Override
+    public HandlerData setOwner(UUID owner) {
+        return (HandlerData) super.setOwner(owner);
+    }
+
+    @Override
+    public HandlerData setEnabled(boolean enabled) {
+        return (HandlerData) super.setEnabled(enabled);
     }
 }

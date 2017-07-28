@@ -70,13 +70,13 @@ public class PermissionHandler extends HandlerBase {
     private final Map<FlagBitSet, List<String>> permCache;
     private String defaultPermission;
 
-    public PermissionHandler(String name, int priority, boolean isEnabled) {
-        this(name, priority, isEnabled,
+    public PermissionHandler(HandlerData data) {
+        this(data,
                 new ArrayList<>(), "");
     }
 
-    public PermissionHandler(String name, int priority, boolean isEnabled, List<PermissionEntry> entries, String defaultPermission) {
-        super(name, priority, isEnabled);
+    public PermissionHandler(HandlerData data, List<PermissionEntry> entries, String defaultPermission) {
+        super(data);
         this.entries = entries;
         this.defaultPermission = defaultPermission;
         this.permCache = new CacheMap<>((k, m) -> {
@@ -674,12 +674,12 @@ public class PermissionHandler extends HandlerBase {
         public static final String[] ALIASES = {"perm", "perms", "permission", "permissions"};
 
         @Override
-        public IHandler create(String name, int priority, String arguments, CommandSource source) throws CommandException {
-            return new PermissionHandler(name, priority, true);
+        public IHandler create(String name, String arguments, CommandSource source) throws CommandException {
+            return new PermissionHandler(new HandlerData().setName(name));
         }
 
         @Override
-        public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
+        public IHandler create(Path directory, HandlerData data) {
             Path permissionsFile = directory.resolve("permissions.cfg");
             ConfigurationLoader<CommentedConfigurationNode> loader =
                     HoconConfigurationLoader.builder().setPath(permissionsFile).build();
@@ -695,7 +695,7 @@ public class PermissionHandler extends HandlerBase {
                     .map(PermissionEntry::deserialize)
                     .collect(Collectors.toList());
             String defaultPermission = root.getNode("default").getString("");
-            return new PermissionHandler(name, priority, isEnabled, entries, defaultPermission);
+            return new PermissionHandler(data, entries, defaultPermission);
         }
 
         @Override

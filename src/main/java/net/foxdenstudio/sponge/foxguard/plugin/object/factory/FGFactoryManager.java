@@ -27,7 +27,9 @@ package net.foxdenstudio.sponge.foxguard.plugin.object.factory;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.HandlerData;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectData;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import org.spongepowered.api.command.CommandException;
@@ -70,10 +72,10 @@ public final class FGFactoryManager {
         return null;
     }
 
-    public IRegion createRegion(Path directory, String name, String type, boolean isEnabled) {
+    public IRegion createRegion(Path directory, String type, FGObjectData data) {
         for (IRegionFactory rf : regionFactories) {
             if (rf.getType().equalsIgnoreCase(type)) {
-                IRegion region = rf.create(directory, name, isEnabled);
+                IRegion region = rf.create(directory, data);
                 if (region != null) return region;
             }
         }
@@ -90,10 +92,10 @@ public final class FGFactoryManager {
         return null;
     }
 
-    public IWorldRegion createWorldRegion(Path directory, String name, String type, boolean isEnabled) {
+    public IWorldRegion createWorldRegion(Path directory, String type, FGObjectData data) {
         for (IWorldRegionFactory wrf : worldRegionFactories) {
             if (wrf.getType().equalsIgnoreCase(type)) {
-                IWorldRegion region = wrf.create(directory, name, isEnabled);
+                IWorldRegion region = wrf.create(directory, data);
                 if (region != null) return region;
             }
         }
@@ -104,17 +106,17 @@ public final class FGFactoryManager {
     public IHandler createHandler(String name, String type, int priority, String args, CommandSource source) throws CommandException {
         for (IHandlerFactory hf : handlerFactories) {
             if (isIn(hf.getAliases(), type)) {
-                IHandler handler = hf.create(name, priority, args, source);
+                IHandler handler = hf.create(name, args, source);
                 if (handler != null) return handler;
             }
         }
         return null;
     }
 
-    public IHandler createHandler(Path directory, String name, String type, boolean isEnabled, int priority) {
+    public IHandler createHandler(Path directory, String type, HandlerData data) {
         for (IHandlerFactory hf : handlerFactories) {
             if (hf.getType().equalsIgnoreCase(type)) {
-                IHandler handler = hf.create(directory, name, priority, isEnabled);
+                IHandler handler = hf.create(directory, data);
                 if (handler != null) return handler;
             }
         }
@@ -124,17 +126,17 @@ public final class FGFactoryManager {
     public IController createController(String name, String type, int priority, String args, CommandSource source) throws CommandException {
         for (IControllerFactory cf : controllerFactories) {
             if (isIn(cf.getAliases(), type)) {
-                IController controller = cf.create(name, priority, args, source);
+                IController controller = cf.create(name, args, source);
                 if (controller != null) return controller;
             }
         }
         return null;
     }
 
-    public IController createController(Path directory, String name, String type, boolean isEnabled, int priority) {
+    public IController createController(Path directory, String type, HandlerData data) {
         for (IControllerFactory cf : controllerFactories) {
             if (cf.getType().equalsIgnoreCase(type)) {
-                IController controller = cf.create(directory, name, priority, isEnabled);
+                IController controller = cf.create(directory, data);
                 if (controller != null) return controller;
             }
         }

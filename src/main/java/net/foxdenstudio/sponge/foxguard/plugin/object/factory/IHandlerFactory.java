@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.object.factory;
 
 
+import net.foxdenstudio.sponge.foxguard.plugin.handler.HandlerData;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
@@ -34,8 +35,9 @@ import java.nio.file.Path;
 
 public interface IHandlerFactory extends IFGFactory {
 
-    IHandler create(String name, int priority, String arguments, CommandSource source) throws CommandException;
+    @Override
+    IHandler create(String name, String arguments, CommandSource source) throws CommandException;
 
-    IHandler create(Path directory, String name, int priority, boolean isEnabled);
+    IHandler create(Path directory, HandlerData data);
 
 }

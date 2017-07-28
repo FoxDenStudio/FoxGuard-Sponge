@@ -23,48 +23,42 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.handler;
+package net.foxdenstudio.sponge.foxguard.plugin.object;
 
-import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectBase;
-import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
+import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 
-public abstract class HandlerBase extends FGObjectBase implements IHandler {
+import java.util.UUID;
 
-    int priority;
+public class FGObjectData {
 
-    public HandlerBase(HandlerData data) {
-        super(data);
-        setPriority(data.getPriority());
+    protected String name = "";
+    protected UUID owner = FGManager.SERVER_UUID;
+    protected boolean enabled = true;
+
+    public String getName() {
+        return name;
     }
 
-    @Override
-    public int getPriority() {
-        return this.priority;
+    public FGObjectData setName(String name) {
+        this.name = name;
+        return this;
     }
 
-    @Override
-    public void setPriority(int priority) {
-        if (priority < Integer.MIN_VALUE / 2 + 1) priority = Integer.MIN_VALUE / 2 + 1;
-        else if (priority > Integer.MAX_VALUE / 2) priority = Integer.MAX_VALUE / 2;
-        this.priority = priority > Integer.MIN_VALUE ? priority : Integer.MIN_VALUE + 1;
+    public UUID getOwner() {
+        return owner;
     }
 
-    @Override
-    public int compareTo(IHandler o) {
-        return o.getPriority() - this.priority;
+    public FGObjectData setOwner(UUID owner) {
+        this.owner = owner;
+        return this;
     }
 
-    public void markDirty() {
-        FGUtil.markHandlerDirty(this);
+    public boolean isEnabled() {
+        return enabled;
     }
 
-    @Override
-    public String toString() {
-        return this.getClass().getSimpleName() + "{" +
-                "name='" + name + '\'' +
-                ", enabled=" + enabled +
-                ", priority=" + priority +
-                '}';
+    public FGObjectData setEnabled(boolean enabled) {
+        this.enabled = enabled;
+        return this;
     }
-
 }

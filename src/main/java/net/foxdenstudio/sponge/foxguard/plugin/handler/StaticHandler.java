@@ -78,12 +78,15 @@ public class StaticHandler extends HandlerBase {
     private final List<TristateEntry> entries;
     private final Map<FlagBitSet, Tristate> permCache;
 
-    public StaticHandler(String name, int priority) {
-        this(name, priority, true);
+    public StaticHandler(String name) {
+        this(new HandlerData()
+                .setName(name)
+                .setEnabled(true)
+                .setPriority(0));
     }
 
-    public StaticHandler(String name, int priority, boolean isEnabled) {
-        super(name, priority, isEnabled);
+    public StaticHandler(HandlerData data) {
+        super(data);
         this.entries = new ArrayList<>();
         this.permCache = new CacheMap<>((k, m) -> {
             if (k instanceof FlagBitSet) {
@@ -613,13 +616,13 @@ public class StaticHandler extends HandlerBase {
         public static final String[] ALIASES = {"static", "stub", "blind"};
 
         @Override
-        public IHandler create(String name, int priority, String arguments, CommandSource source) throws CommandException {
-            return new StaticHandler(name, priority);
+        public IHandler create(String name, String arguments, CommandSource source) throws CommandException {
+            return new StaticHandler(name);
         }
 
         @Override
-        public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
-            StaticHandler handler = new StaticHandler(name, priority, isEnabled);
+        public IHandler create(Path directory, HandlerData data) {
+            StaticHandler handler = new StaticHandler(data);
             handler.load(directory);
             return handler;
         }

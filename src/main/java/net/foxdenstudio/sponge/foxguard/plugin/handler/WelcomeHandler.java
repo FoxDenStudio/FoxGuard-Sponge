@@ -70,12 +70,9 @@ public class WelcomeHandler extends HandlerBase {
     private TextTemplate enterTemplate = TextTemplate.EMPTY;
     private TextTemplate exitTemplate = TextTemplate.EMPTY;
 
-    public WelcomeHandler(String name, int priority) {
-        this(name, true, priority);
-    }
 
-    public WelcomeHandler(String name, boolean isEnabled, int priority) {
-        super(name, priority, isEnabled);
+    public WelcomeHandler(HandlerData data) {
+        super(data);
     }
 
     @Override
@@ -201,12 +198,12 @@ public class WelcomeHandler extends HandlerBase {
         private static final String[] ALIASES = {"welcome"};
 
         @Override
-        public IHandler create(String name, int priority, String arguments, CommandSource source) throws CommandException {
-            return new WelcomeHandler(name, priority);
+        public IHandler create(String name, String arguments, CommandSource source) throws CommandException {
+            return new WelcomeHandler(new HandlerData().setName(name));
         }
 
         @Override
-        public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
+        public IHandler create(Path directory, HandlerData data) {
             return null;
         }
 

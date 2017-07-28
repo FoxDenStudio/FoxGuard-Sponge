@@ -105,7 +105,7 @@ public class CommandEnableDisable extends FCCommandBase {
                     if (object instanceof GlobalWorldRegion || object instanceof GlobalHandler || object.isEnabled() == this.enableState)
                         failures++;
                     else {
-                        object.setIsEnabled(this.enableState);
+                        object.setEnabled(this.enableState);
                         successes++;
                     }
                 }
@@ -153,7 +153,7 @@ public class CommandEnableDisable extends FCCommandBase {
             for (IRegion region : regions) {
                 if (region instanceof IGlobal || region.isEnabled() == this.enableState) failures++;
                 else {
-                    region.setIsEnabled(this.enableState);
+                    region.setEnabled(this.enableState);
                     successes++;
                 }
             }
@@ -190,7 +190,7 @@ public class CommandEnableDisable extends FCCommandBase {
             for (IHandler handler : handlers) {
                 if (handler instanceof IGlobal || handler.isEnabled() == this.enableState) failures++;
                 else {
-                    handler.setIsEnabled(this.enableState);
+                    handler.setEnabled(this.enableState);
                     successes++;
                 }
             }

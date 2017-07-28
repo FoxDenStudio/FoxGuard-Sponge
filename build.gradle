@@ -22,6 +22,7 @@ buildscript {
 
 apply plugin: 'org.spongepowered.plugin'
 apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'idea'
 
 group 'net.foxdenstudio.sponge'
 version 'api6-SNAPSHOT'

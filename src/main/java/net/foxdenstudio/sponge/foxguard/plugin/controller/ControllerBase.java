@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.HandlerBase;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.HandlerData;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import org.mapdb.DB;
@@ -43,8 +44,8 @@ public abstract class ControllerBase extends HandlerBase implements IController 
 
     protected final List<IHandler> handlers;
 
-    public ControllerBase(String name, boolean isEnabled, int priority) {
-        super(name, priority, isEnabled);
+    public ControllerBase(HandlerData data) {
+        super(data);
         this.handlers = new ArrayList<>();
     }
 
