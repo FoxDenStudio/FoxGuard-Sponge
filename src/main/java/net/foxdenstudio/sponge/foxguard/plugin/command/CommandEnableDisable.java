@@ -180,7 +180,7 @@ public class CommandEnableDisable extends FCCommandBase {
             List<IHandler> handlers = new ArrayList<>();
             FGUtil.getSelectedHandlers(source).forEach(handlers::add);
             for (String name : Arrays.copyOfRange(parse.args, 1, parse.args.length)) {
-                IHandler handler = FGManager.getInstance().gethandler(name).orElse(null);
+                IHandler handler = FGManager.getInstance().getHandler(name).orElse(null);
                 if (handler == null) failures++;
                 else {
                     handlers.add(handler);

@@ -133,7 +133,7 @@ public class CommandModify extends FCCommandBase {
             }
         } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a handler name!"));
-            IHandler handler = FGManager.getInstance().gethandler(parse.args[1]).orElse(null);
+            IHandler handler = FGManager.getInstance().getHandler(parse.args[1]).orElse(null);
             if (handler == null)
                 throw new CommandException(Text.of("No handler with name \"" + parse.args[1] + "\"!"));
             ProcessResult result = handler.modify(source, parse.args.length < 3 ? "" : parse.args[2]);
@@ -252,7 +252,7 @@ public class CommandModify extends FCCommandBase {
                         .collect(GuavaCollectors.toImmutableList());
             } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
                 if (parse.args.length < 2) return ImmutableList.of();
-                Optional<IHandler> handlerOpt = FGManager.getInstance().gethandler(parse.args[1]);
+                Optional<IHandler> handlerOpt = FGManager.getInstance().getHandler(parse.args[1]);
                 if (!handlerOpt.isPresent()) return ImmutableList.of();
                 List<String> suggestions = handlerOpt.get().modifySuggestions(source, parse.current.token, null);
                 if (suggestions == null) return ImmutableList.of();

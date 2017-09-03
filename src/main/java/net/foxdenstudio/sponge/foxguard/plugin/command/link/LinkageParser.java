@@ -243,7 +243,7 @@ public final class LinkageParser {
                             Optional<IRegion> regionOpt = FGManager.getInstance().getRegionFromWorld(currentWorld, token);
                             regionOpt.ifPresent(stubObjects::add);
                         } else {
-                            Optional<IHandler> handlerOpt = FGManager.getInstance().gethandler(token);
+                            Optional<IHandler> handlerOpt = FGManager.getInstance().getHandler(token);
                             handlerOpt.ifPresent(stubObjects::add);
                         }
                     }

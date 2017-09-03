@@ -119,25 +119,26 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
                             .forEach(handlerSet::add));
         }
         Tristate flagState = Tristate.UNDEFINED;
-        if (!handlerSet.isEmpty()) {
-            List<IHandler> handlerList = new ArrayList<>(handlerSet);
-            Collections.sort(handlerList);
-            int currPriority = handlerList.get(0).getPriority();
-            for (IHandler handler : handlerList) {
-                if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
-                    break;
-                }
-                EventResult result = handler.handle(user, flags, ExtraContext.of(event));
-                if (result != null) {
-                    flagState = flagState.and(result.getState());
-                } else {
-                    FoxGuardMain.instance().getLogger().error("Handler \"" + handler.getName() + "\" returned null!");
-                }
-                currPriority = handler.getPriority();
-            }
-        } else {
+        if (handlerSet.isEmpty()) {
             FoxGuardMain.instance().getLogger().error("Handlers list is empty for event: " + event);
+            return;
         }
+        List<IHandler> handlerList = new ArrayList<>(handlerSet);
+        Collections.sort(handlerList);
+        int currPriority = handlerList.get(0).getPriority();
+        for (IHandler handler : handlerList) {
+            if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
+                break;
+            }
+            EventResult result = handler.handle(user, flags, ExtraContext.of(event));
+            if (result != null) {
+                flagState = flagState.and(result.getState());
+            } else {
+                FoxGuardMain.instance().getLogger().error("Handler \"" + handler.getName() + "\" returned null!");
+            }
+            currPriority = handler.getPriority();
+        }
+
 
         if (flagState == Tristate.FALSE) {
             if (user instanceof Player)

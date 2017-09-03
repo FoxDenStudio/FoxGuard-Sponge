@@ -27,6 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
@@ -46,9 +47,7 @@ import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 import static org.spongepowered.api.util.Tristate.FALSE;
@@ -107,18 +106,24 @@ public class InteractEntityListener implements EventListener<InteractEntityEvent
             flags.set(HANGING);
         }
 
-        List<IHandler> handlerList = new ArrayList<>();
+        Set<IHandler> handlerSet = new HashSet<>();
         FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                 .filter(region -> region.contains(pos, world))
                 .forEach(region -> region.getLinks().stream()
                         .filter(IFGObject::isEnabled)
-                        .filter(handler -> !handlerList.contains(handler))
-                        .forEach(handlerList::add));
+                        .filter(handler -> !handlerSet.contains(handler))
+                        .forEach(handlerSet::add));
 
+        if (handlerSet.isEmpty()) {
+            FoxGuardMain.instance().getLogger().error("Handlers list is empty for event: " + event);
+            return;
+        }
+
+        List<IHandler> handlerList = new ArrayList<>(handlerSet);
         Collections.sort(handlerList);
         int currPriority = handlerList.get(0).getPriority();
         Tristate flagState = UNDEFINED;
-        for (IHandler handler : handlerList) {
+        for (IHandler handler : handlerSet) {
             if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                 break;
             }

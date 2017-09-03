@@ -31,9 +31,23 @@ import java.util.UUID;
 
 public class FGObjectData {
 
-    protected String name = "";
-    protected UUID owner = FGManager.SERVER_UUID;
-    protected boolean enabled = true;
+    protected String name;
+    protected UUID owner;
+    protected boolean enabled;
+
+    public FGObjectData(String name, UUID owner, boolean enabled) {
+        if (name == null) this.name = "";
+        else this.name = name;
+
+        if(owner == null) this.owner = FGManager.SERVER_UUID;
+        else this.owner = owner;
+
+        this.enabled = enabled;
+    }
+
+    public FGObjectData() {
+        this("", FGManager.SERVER_UUID, true);
+    }
 
     public String getName() {
         return name;

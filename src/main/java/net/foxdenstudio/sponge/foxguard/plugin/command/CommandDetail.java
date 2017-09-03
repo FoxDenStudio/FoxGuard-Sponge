@@ -35,6 +35,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
+import net.foxdenstudio.sponge.foxguard.plugin.object.owners.OwnerProviderRegistry;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
@@ -54,12 +55,15 @@ import org.spongepowered.api.world.Locatable;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
+import javax.annotation.Nullable;
+
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
+import static net.foxdenstudio.sponge.foxguard.plugin.FGManager.SERVER_UUID;
 
 public class CommandDetail extends FCCommandBase {
 
@@ -93,27 +97,11 @@ public class CommandDetail extends FCCommandBase {
             return CommandResult.empty();
         } else if (isIn(REGIONS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
-            IRegion region = null;
-            /*FGManager.getInstance().getRegion(parse.args[1]);
-            if (region == null) {
-                String worldName = parse.flags.get("world");
-                World world = null;
-                if (source instanceof Locatable) world = ((Locatable) source).getWorld();
-                if (!worldName.isEmpty()) {
-                    Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
-                    if (optWorld.isPresent()) {
-                        world = optWorld.get();
-                    } else {
-                        if (world == null)
-                            throw new CommandException(Text.of("No world exists with name \"" + worldName + "\"!"));
-                    }
-                }
-                if (world == null) throw new CommandException(Text.of("Must specify a world!"));
-                region = FGManager.getInstance().getWorldRegion(world, parse.args[1]);
-            }
-            if (region == null)
-                throw new CommandException(Text.of("No region exists with the name \"" + parse.args[1] + "\"!"));*/
 
+            FGUtil.OwnerResult ownerResult = FGUtil.processUserInput(parse.args[1]);
+            String worldName = parse.flags.get("world");
+
+            IRegion region = FGUtil.getRegionFromCommand(source, ownerResult, worldName);
 
             Text.Builder builder = Text.builder();
             builder.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
@@ -125,11 +113,22 @@ public class CommandDetail extends FCCommandBase {
                 builder.append(Text.of(TextColors.GOLD, "Type: "), Text.of(TextColors.RESET, region.getLongTypeName() + "\n"));
                 builder.append(Text.builder()
                         .append(Text.of(TextColors.GOLD, "Enabled: "))
-                        .append(Text.of(TextColors.RESET, (region.isEnabled() ? "True" : "False") + "\n"))
+                        .append(Text.of((region.isEnabled() ? TextColors.GREEN : TextColors.RED), (region.isEnabled() ? "True" : "False") + "\n"))
                         .onClick(TextActions.runCommand("/foxguard " + (region.isEnabled() ? "disable" : "enable") +
                                 " r " + FGUtil.genWorldFlag(region) + region.getName()))
                         .onHover(TextActions.showText(Text.of("Click to " + (region.isEnabled() ? "disable" : "enable"))))
                         .build());
+                UUID owner = region.getOwner();
+                if (owner != null && owner != FGManager.SERVER_UUID) {
+                    OwnerProviderRegistry registry = OwnerProviderRegistry.getInstance();
+                    builder.append(Text.builder()
+                            .append(Text.of(TextColors.GOLD, "Owner: "))
+                            .append(registry.getDisplayText(owner, null, source))
+                            .append(Text.NEW_LINE)
+                            .onHover(TextActions.showText(registry.getHoverText(owner, null, source)))
+                            .build()
+                    );
+                }
                 if (region instanceof IWorldRegion)
                     builder.append(Text.of(TextColors.GOLD, "World: "), Text.of(TextColors.RESET, ((IWorldRegion) region).getWorld().getName() + "\n"));
                 builder.append(Text.of(TextActions.suggestCommand("/foxguard modify region " + FGUtil.genWorldFlag(region) + region.getName() + " "),
@@ -169,13 +168,21 @@ public class CommandDetail extends FCCommandBase {
             }
             source.sendMessage(builder.build());
             return CommandResult.empty();
+            //--------------------------------------------------------------------------------------------------------------------------------------------------------
+            //--------------------------------------------------------------------------------------------------------------------------------------------------------
+            //--------------------------------------------------------------------------------------------------------------------------------------------------------
         } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
 
-            Optional<IHandler> handlerOpt = FGManager.getInstance().gethandler(parse.args[1]);
+            FGUtil.OwnerResult ownerResult = FGUtil.processUserInput(parse.args[1]);
+
+            Optional<IHandler> handlerOpt = FGManager.getInstance().getHandler(ownerResult.getName(), ownerResult.getOwner());
             if (!handlerOpt.isPresent())
-                throw new CommandException(Text.of("No handler with name \"" + parse.args[1] + "\"!"));
+                throw new CommandException(Text.of("No handler exists with the name \"" + ownerResult.getName() + "\""
+                        + (ownerResult.getOwner() != SERVER_UUID ? " and owner \"" + ownerResult.getOwnerName() + "\"" : "")
+                        + "!"));
             IHandler handler = handlerOpt.get();
+
             Text.Builder builder = Text.builder();
             builder.append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"));
             if (parse.args.length <= 2 || parse.args[2].isEmpty() || parse.flags.containsKey("all")) {
@@ -184,12 +191,26 @@ public class CommandDetail extends FCCommandBase {
                         TextColors.GREEN, "------- General -------\n",
                         TextColors.GOLD, "Name: ", TextColors.RESET, handler.getName() + "\n"));
                 builder.append(Text.of(TextColors.GOLD, "Type: "), Text.of(TextColors.RESET, handler.getLongTypeName() + "\n"));
+
                 builder.append(Text.builder()
                         .append(Text.of(TextColors.GOLD, "Enabled: "))
-                        .append(Text.of(TextColors.RESET, (handler.isEnabled() ? "True" : "False") + "\n"))
+                        .append(Text.of((handler.isEnabled() ? TextColors.GREEN : TextColors.RED), (handler.isEnabled() ? "True" : "False") + "\n"))
                         .onClick(TextActions.runCommand("/foxguard " + (handler.isEnabled() ? "disable" : "enable") + " h " + handler.getName()))
                         .onHover(TextActions.showText(Text.of("Click to " + (handler.isEnabled() ? "disable" : "enable"))))
                         .build());
+
+                UUID owner = handler.getOwner();
+                if (owner != null && owner != FGManager.SERVER_UUID) {
+                    OwnerProviderRegistry registry = OwnerProviderRegistry.getInstance();
+                    builder.append(Text.builder()
+                            .append(Text.of(TextColors.GOLD, "Owner: "))
+                            .append(registry.getDisplayText(owner, null, source))
+                            .append(Text.NEW_LINE)
+                            .onHover(TextActions.showText(registry.getHoverText(owner, null, source)))
+                            .build()
+                    );
+                }
+
                 builder.append(Text.builder()
                         .append(Text.of(TextColors.GOLD, "Priority: "))
                         .append(Text.of(TextColors.RESET, handler.getPriority() + "\n"))
@@ -285,7 +306,7 @@ public class CommandDetail extends FCCommandBase {
                     builder.append(Text.of(FGUtil.getColorForObject(region),
                             TextActions.runCommand("/foxguard detail region " + FGUtil.genWorldFlag(region) + region.getName()),
                             TextActions.showText(Text.of("View details for region \"" + region.getName() + "\"")),
-                            FGUtil.getRegionName(region, true)
+                            FGUtil.getRegionDisplayName(region, true)
                     ));
                 });
                 if (handler instanceof IController) {
@@ -446,4 +467,5 @@ public class CommandDetail extends FCCommandBase {
     public Text getUsage(CommandSource source) {
         return Text.of("detail <region [--w:<worldname>] | handler> <name> [args...]");
     }
+
 }

@@ -114,7 +114,7 @@ public class CommandLink extends FCCommandBase {
             if (region == null)
                 throw new CommandException(Text.of("No region with name \"" + parse.args[0] + "\" in world \"" + world.getName() + "\"!"));
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a handler!"));
-            Optional<IHandler> handlerOpt = FGManager.getInstance().gethandler(parse.args[1]);
+            Optional<IHandler> handlerOpt = FGManager.getInstance().getHandler(parse.args[1]);
             if (!handlerOpt.isPresent())
                 throw new CommandException(Text.of("No handler with name \"" + parse.args[1] + "\"!"));
             IHandler handler = handlerOpt.get();

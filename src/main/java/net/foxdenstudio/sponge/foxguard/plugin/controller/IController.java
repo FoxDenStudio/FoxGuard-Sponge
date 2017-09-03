@@ -29,9 +29,13 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 
 public interface IController extends IHandler, ILinkable {
+
+    @Override
+    List<IHandler> getLinks();
 
     void loadLinks(Path directory, List<IHandler> savedList);
 

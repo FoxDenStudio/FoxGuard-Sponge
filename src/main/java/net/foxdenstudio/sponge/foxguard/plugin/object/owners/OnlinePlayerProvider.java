@@ -11,9 +11,9 @@ import java.util.UUID;
 /**
  * Created by Fox on 12/31/2016.
  */
-public class OnlinePlayerProvider implements IOwnerProvider {
+public class OnlinePlayerProvider implements IDisplayableOwnerProvider {
 
-    private static final String[] ALIASES = {"online", "on"};
+    private static final String[] ALIASES = {"player", "p"};
 
     @Override
     public List<String> getOwnerKeywords() {
@@ -25,12 +25,13 @@ public class OnlinePlayerProvider implements IOwnerProvider {
 
     @Override
     public Optional<UUID> getOwnerUUID(String keyword) {
+        if (keyword == null || keyword.isEmpty()) return Optional.empty();
         return Sponge.getServer().getPlayer(keyword).map(Player::getUniqueId);
     }
 
     @Override
-    public Optional<String> getKeyword(UUID uuid) {
-        return Sponge.getServer().getPlayer(uuid).map(Player::getName);
+    public Optional<String> getKeyword(UUID owner) {
+        return Sponge.getServer().getPlayer(owner).map(Player::getName);
     }
 
     @Override

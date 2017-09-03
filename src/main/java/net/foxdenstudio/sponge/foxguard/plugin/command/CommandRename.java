@@ -126,7 +126,7 @@ public class CommandRename extends FCCommandBase {
             source.sendMessage(Text.of(TextColors.GREEN, "Region \"" + oldName + "\" successfully renamed to \"" + parse.args[2] + "\"!"));
         } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("You must specify a name!"));
-            Optional<IHandler> handlerOpt = FGManager.getInstance().gethandler(parse.args[1]);
+            Optional<IHandler> handlerOpt = FGManager.getInstance().getHandler(parse.args[1]);
             if (!handlerOpt.isPresent())
                 throw new CommandException(Text.of("No handler exists with the name \"" + parse.args[1] + "\"!"));
             IHandler handler = handlerOpt.get();
@@ -140,7 +140,7 @@ public class CommandRename extends FCCommandBase {
                 throw new ArgumentParseException(Text.of("New name (\"" + parse.args[2] + "\") can't start with a number!"), parse.args[2], 1);
             if (handler.getName().equalsIgnoreCase(parse.args[2]))
                 throw new CommandException(Text.of("You cannot rename a handler to its own name."));
-            if (FGManager.getInstance().gethandler(parse.args[2]) != null)
+            if (FGManager.getInstance().getHandler(parse.args[2]) != null)
                 throw new CommandException(Text.of("There is already a handler with the name \"" + parse.args[2] + "\"!"));
             String oldName = handler.getName();
             FGManager.getInstance().rename(handler, parse.args[2]);
@@ -220,7 +220,7 @@ public class CommandRename extends FCCommandBase {
                         available = Tristate.fromBoolean(FGManager.getInstance().isRegionNameAvailable(parse.current.token));
                     }
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0]) || isIn(CONTROLLERS_ALIASES, parse.args[0])) {
-                    available = Tristate.fromBoolean(FGManager.getInstance().gethandler(parse.current.token) == null);
+                    available = Tristate.fromBoolean(FGManager.getInstance().getHandler(parse.current.token) == null);
                 }
                 if (available != null) {
                     switch (available) {

@@ -37,7 +37,7 @@ public abstract class FGObjectBase implements IFGObject {
 
     public FGObjectBase(FGObjectData data) {
         String name = data.getName();
-        this.name = name == null ? "" : name;
+        this.name = (name == null || name.isEmpty()) ? "null" : name;
         UUID owner = data.getOwner();
         this.owner = owner == null ? FGManager.SERVER_UUID : owner;
         this.enabled = data.isEnabled();

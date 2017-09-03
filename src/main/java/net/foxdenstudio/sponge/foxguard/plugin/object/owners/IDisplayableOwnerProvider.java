@@ -23,48 +23,35 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.handler;
+package net.foxdenstudio.sponge.foxguard.plugin.object.owners;
 
-import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectData;
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.text.Text;
 
+import java.util.Optional;
 import java.util.UUID;
 
-public class HandlerData extends FGObjectData {
+import javax.annotation.Nullable;
 
-    protected int priority = 0;
+/**
+ * Created by Fox on 8/28/2017.
+ * Project: SpongeForge
+ */
+public interface IDisplayableOwnerProvider extends IOwnerProvider {
 
-    public HandlerData() {
-        super();
+    default Optional<String> getDisplayName(UUID owner, @Nullable CommandSource viewer) {
+        if (viewer instanceof Player)
+            return getKeyword(owner);
+        else return getKeyword(owner).map(str->str + "(" + owner.toString() + ")");
     }
 
-    public HandlerData(FGObjectData data, int priority) {
-        this.name = data.getName();
-        this.owner = data.getOwner();
-        this.enabled = data.isEnabled();
-        this.priority = priority;
+    default Optional<Text> getDisplayText(UUID owner, @Nullable CommandSource viewer) {
+        return getDisplayName(owner, viewer).map(Text::of);
     }
 
-    public int getPriority() {
-        return priority;
+    default Optional<Text> getHoverText(UUID owner, @Nullable CommandSource viewer) {
+        return Optional.of(Text.of(owner.toString()));
     }
 
-    public HandlerData setPriority(int priority) {
-        this.priority = priority;
-        return this;
-    }
-
-    @Override
-    public HandlerData setName(String name) {
-        return (HandlerData) super.setName(name);
-    }
-
-    @Override
-    public HandlerData setOwner(UUID owner) {
-        return (HandlerData) super.setOwner(owner);
-    }
-
-    @Override
-    public HandlerData setEnabled(boolean enabled) {
-        return (HandlerData) super.setEnabled(enabled);
-    }
 }

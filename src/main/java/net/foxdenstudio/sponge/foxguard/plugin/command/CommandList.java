@@ -99,15 +99,15 @@ public class CommandList extends FCCommandBase {
             if (!worldName.isEmpty()) {
                 Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
                 if (optWorld.isPresent()) {
-                    FGManager.getInstance().getWorldRegions(optWorld.get()).forEach(regionList::add);
+                    regionList.addAll(FGManager.getInstance().getWorldRegions(optWorld.get()));
                     if (parse.flags.containsKey("super"))
-                        FGManager.getInstance().getRegions().forEach(regionList::add);
+                        regionList.addAll(FGManager.getInstance().getRegions());
                     allFlag = false;
                 }
             }
             if (allFlag) {
-                if (parse.flags.containsKey("super")) FGManager.getInstance().getRegions().forEach(regionList::add);
-                else FGManager.getInstance().getAllRegions().forEach(regionList::add);
+                if (parse.flags.containsKey("super")) regionList.addAll(FGManager.getInstance().getRegions());
+                else regionList.addAll(FGManager.getInstance().getAllRegions());
             }
             if (parse.flags.containsKey("query")) {
                 String query = parse.flags.get("query");
@@ -183,7 +183,7 @@ public class CommandList extends FCCommandBase {
                 builder.append(Text.of(FGUtil.getColorForObject(region),
                         TextActions.runCommand("/foxguard det r " + FGUtil.genWorldFlag(region) + region.getName()),
                         TextActions.showText(Text.of("View details")),
-                        FGUtil.getRegionName(region, allFlag)));
+                        FGUtil.getRegionDisplayName(region, allFlag)));
                 count++;
                 if (regionIterator.hasNext() && count < number) builder.append(Text.NEW_LINE);
             }
@@ -194,7 +194,7 @@ public class CommandList extends FCCommandBase {
             //----------------------------------------------------------------------------------------------------------
         } else if (isIn(Aliases.HANDLERS_ALIASES, parse.args[0])) {
             boolean controllers = parse.flags.containsKey("all");
-            List<IHandler> handlerList = FGManager.getInstance().getHandlers(controllers).stream().collect(Collectors.toList());
+            List<IHandler> handlerList = new ArrayList<>(FGManager.getInstance().getHandlers(controllers));
             if (parse.flags.containsKey("query")) {
                 String query = parse.flags.get("query");
                 if (query.startsWith("/")) {
@@ -309,7 +309,7 @@ public class CommandList extends FCCommandBase {
 
             //----------------------------------------------------------------------------------------------------------
         } else if (isIn(Aliases.CONTROLLERS_ALIASES, parse.args[0])) {
-            List<IController> controllerList = FGManager.getInstance().getControllers().stream().collect(Collectors.toList());
+            List<IController> controllerList = new ArrayList<>(FGManager.getInstance().getControllers());
             if (parse.flags.containsKey("query")) {
                 String query = parse.flags.get("query");
                 if (query.startsWith("/")) {

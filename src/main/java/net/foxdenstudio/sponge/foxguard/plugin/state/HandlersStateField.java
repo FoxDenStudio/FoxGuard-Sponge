@@ -168,7 +168,7 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).parse();
 
         if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name!"));
-        Optional<IHandler> handlerOpt = FGManager.getInstance().gethandler(parse.args[0]);
+        Optional<IHandler> handlerOpt = FGManager.getInstance().getHandler(parse.args[0]);
         if (!handlerOpt.isPresent())
             throw new ArgumentParseException(Text.of("No handlers with this name!"), parse.args[0], 1);
         IHandler handler = handlerOpt.get();
@@ -188,7 +188,7 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
                 int index = Integer.parseInt(parse.args[0]);
                 handler = this.list.get(index - 1);
             } catch (NumberFormatException e) {
-                handler = FGManager.getInstance().gethandler(parse.args[0]).orElse(null);
+                handler = FGManager.getInstance().getHandler(parse.args[0]).orElse(null);
             } catch (IndexOutOfBoundsException e) {
                 throw new ArgumentParseException(Text.of("Index out of bounds! (1 - " + this.list.size()), parse.args[0], 1);
             }
@@ -206,7 +206,7 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
                     int index = Integer.parseInt(arg);
                     handler = this.list.get(index - 1);
                 } catch (NumberFormatException e) {
-                    handler = FGManager.getInstance().gethandler(arg).orElse(null);
+                    handler = FGManager.getInstance().getHandler(arg).orElse(null);
                 } catch (IndexOutOfBoundsException e) {
                     failures++;
                     continue;

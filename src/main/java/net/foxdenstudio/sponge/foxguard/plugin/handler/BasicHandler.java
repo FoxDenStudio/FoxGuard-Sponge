@@ -34,7 +34,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
-import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManagerOld;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
@@ -43,6 +43,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Operation;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.TristateEntry;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.storage.FGStorageManagerNew;
 import net.foxdenstudio.sponge.foxguard.plugin.util.EverythingSet;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
@@ -243,7 +244,7 @@ public class BasicHandler extends HandlerBase {
     public static boolean isNameValid(String name) {
         return !name.matches("^.*[ :\\.=;\"\'\\\\/\\{\\}\\(\\)\\[\\]<>#@\\|\\?\\*].*$") &&
                 !name.equalsIgnoreCase("default") &&
-                !isIn(FGStorageManager.FS_ILLEGAL_NAMES, name);
+                !isIn(FGStorageManagerNew.FS_ILLEGAL_NAMES, name);
     }
 
     public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
@@ -1154,14 +1155,14 @@ public class BasicHandler extends HandlerBase {
 
     @Override
     public void save(Path directory) {
-        FGStorageManager storageManager = FGStorageManager.getInstance();
+        FGStorageManagerOld storageManager = FGStorageManagerOld.getInstance();
         UserStorageService userStorageService = FoxGuardMain.instance().getUserStorage();
-        try (DB flagMapDB = FGStorageManager.openFoxDB(directory.resolve("groups.foxdb"))) {
+        try (DB flagMapDB = FGStorageManagerOld.openFoxDB(directory.resolve("groups.foxdb"))) {
             List<String> groupNames = flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen();
             groupNames.clear();
             groupNames.addAll(this.groups.stream().map(group -> group.name).collect(Collectors.toList()));
         }
-        try (DB flagMapDB = FGStorageManager.openFoxDB(directory.resolve("flags.foxdb"))) {
+        try (DB flagMapDB = FGStorageManagerOld.openFoxDB(directory.resolve("flags.foxdb"))) {
             for (Group group : this.groups) {
                 List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
                 stringEntries.clear();
@@ -1660,9 +1661,9 @@ public class BasicHandler extends HandlerBase {
 
         @Override
         public IHandler create(Path directory, HandlerData data) {
-            FGStorageManager storageManager = FGStorageManager.getInstance();
+            FGStorageManagerOld storageManager = FGStorageManagerOld.getInstance();
             List<String> groupNames = new ArrayList<>();
-            try (DB flagMapDB = FGStorageManager.openFoxDB(directory.resolve("groups.foxdb"))) {
+            try (DB flagMapDB = FGStorageManagerOld.openFoxDB(directory.resolve("groups.foxdb"))) {
                 groupNames.addAll(flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen());
             }
             Path groupsDirectory = directory.resolve("groups");
@@ -1689,7 +1690,7 @@ public class BasicHandler extends HandlerBase {
             }
             Map<Group, List<TristateEntry>> groupPermissions = new HashMap<>();
             List<TristateEntry> defaultPermissions;
-            try (DB flagMapDB = FGStorageManager.openFoxDB(directory.resolve("flags.foxdb"))) {
+            try (DB flagMapDB = FGStorageManagerOld.openFoxDB(directory.resolve("flags.foxdb"))) {
                 for (Group group : groups) {
                     List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
                     groupPermissions.put(group, stringEntries.stream()

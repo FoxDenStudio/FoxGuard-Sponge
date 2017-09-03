@@ -103,10 +103,10 @@ public final class FGFactoryManager {
     }
 
 
-    public IHandler createHandler(String name, String type, int priority, String args, CommandSource source) throws CommandException {
+    public IHandler createHandler(String name, String type, String arguments, CommandSource source) throws CommandException {
         for (IHandlerFactory hf : handlerFactories) {
             if (isIn(hf.getAliases(), type)) {
-                IHandler handler = hf.create(name, args, source);
+                IHandler handler = hf.create(name, arguments, source);
                 if (handler != null) return handler;
             }
         }
@@ -123,10 +123,10 @@ public final class FGFactoryManager {
         return null;
     }
 
-    public IController createController(String name, String type, int priority, String args, CommandSource source) throws CommandException {
+    public IController createController(String name, String type, String arguments, CommandSource source) throws CommandException {
         for (IControllerFactory cf : controllerFactories) {
             if (isIn(cf.getAliases(), type)) {
-                IController controller = cf.create(name, args, source);
+                IController controller = cf.create(name, arguments, source);
                 if (controller != null) return controller;
             }
         }

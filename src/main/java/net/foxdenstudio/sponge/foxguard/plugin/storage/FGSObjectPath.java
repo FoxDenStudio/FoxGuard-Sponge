@@ -26,60 +26,47 @@
 package net.foxdenstudio.sponge.foxguard.plugin.storage;
 
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
-import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 
 import java.util.UUID;
 
 /**
- * Created by Fox on 7/9/2017.
+ * Created by Fox on 8/28/2017.
  * Project: SpongeForge
  */
-public class FGSObjectMeta extends FGSObjectPath {
+public class FGSObjectPath {
+    String name;
+    UUID owner;
+    transient IFGObject object;
 
-    String category;
-    String type;
-
-    public FGSObjectMeta(String name, UUID owner, String category, String type) {
-        super(name, owner);
-        this.category = category;
-        this.type = type;
+    public FGSObjectPath() {
     }
 
-    public FGSObjectMeta() {
+    public FGSObjectPath(String name, UUID owner) {
+        this.name = name;
+        this.owner = owner;
     }
 
-    public FGSObjectMeta(IFGObject object) {
-        super(object);
-        this.category = FGUtil.getCategory(object);
-        this.type = object.getUniqueTypeString();
+    public FGSObjectPath(IFGObject object) {
+        this(
+                object.getName(),
+                object.getOwner()
+        );
         this.object = object;
     }
 
-    public String getCategory() {
-        return category;
+    public String getName() {
+        return name;
     }
 
-    public void setCategory(String category) {
-        this.category = category;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getType() {
-        return type;
+    public UUID getOwner() {
+        return owner;
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("FGSObjectMeta{");
-        sb.append("category='").append(category).append("', ");
-        sb.append("type='").append(type).append("', ");
-        sb.append("name='").append(name).append("', ");
-        sb.append("owner='").append(owner).append("', ");
-        if (object != null) sb.append(", object=").append(object);
-        sb.append('}');
-        return sb.toString();
+    public void setOwner(UUID owner) {
+        this.owner = owner;
     }
 }

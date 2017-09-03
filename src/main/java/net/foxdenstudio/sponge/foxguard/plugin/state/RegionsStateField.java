@@ -91,7 +91,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                         "  [-] "));
             }
             builder.append(Text.of(FGUtil.getColorForObject(region),
-                    (index++) + ": " + FGUtil.getRegionName(region, true)));
+                    (index++) + ": " + FGUtil.getRegionDisplayName(region, true)));
             if (regionIterator.hasNext()) builder.append(Text.NEW_LINE);
         }
         return builder.build();
@@ -202,7 +202,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         int[] index = {1};
         return this.list.stream()
                 .map(region -> Text.of(FGUtil.getColorForObject(region),
-                        "  " + index[0]++ + ": " + FGUtil.getRegionName(region, true)))
+                        "  " + index[0]++ + ": " + FGUtil.getRegionDisplayName(region, true)))
                 .collect(Collectors.toList());
     }
 

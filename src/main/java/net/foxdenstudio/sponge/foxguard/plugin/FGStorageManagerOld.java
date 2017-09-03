@@ -55,20 +55,20 @@ import static net.foxdenstudio.sponge.foxguard.plugin.FGManager.SERVER_UUID;
 /**
  * Created by Fox on 4/6/2016.
  */
-public final class FGStorageManager {
+public final class FGStorageManagerOld {
 
     public static final String[] FS_ILLEGAL_NAMES = {"con", "prn", "aux", "nul",
             "com0", "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8", "com9",
             "lpt0", "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9"};
-    private static FGStorageManager instance;
-    public final HashMap<IFGObject, Boolean> defaultModifiedMap;
+    private static FGStorageManagerOld instance;
+    private final HashMap<IFGObject, Boolean> defaultModifiedMap;
     private final UserStorageService userStorageService;
     private final Logger logger = FoxGuardMain.instance().getLogger();
     private final Set<LoadEntry> loaded = new HashSet<>();
     private final Path directory = getDirectory();
     private final Map<String, Path> worldDirectories;
 
-    private FGStorageManager() {
+    private FGStorageManagerOld() {
         userStorageService = FoxGuardMain.instance().getUserStorage();
         defaultModifiedMap = new CacheMap<>((k, m) -> {
             if (k instanceof IFGObject) {
@@ -85,8 +85,8 @@ public final class FGStorageManager {
         });
     }
 
-    public static FGStorageManager getInstance() {
-        if (instance == null) instance = new FGStorageManager();
+    public static FGStorageManagerOld getInstance() {
+        if (instance == null) instance = new FGStorageManagerOld();
         return instance;
     }
 
@@ -795,7 +795,7 @@ public final class FGStorageManager {
                     }
                     if (object != null) {
                         loaded.add(new LoadEntry(object, world.getName()));
-                        FGManager.getInstance().addWorldRegion(world, object);
+                        FGManager.getInstance().addWorldRegion(object, world);
                         logger.info("Successfully created and added world region \"" + name + "\"!");
                     } else {
                         logger.warn("A world region was unable to be created. Either the metadata is incorrect, or there is no longer a factory available to create it.");
@@ -947,7 +947,7 @@ public final class FGStorageManager {
                     if (handlersString != null && !handlersString.isEmpty()) {
                         String[] handlersNames = handlersString.split(",");
                         Arrays.stream(handlersNames).forEach(handlerName -> {
-                            Optional<IHandler> handlerOpt = FGManager.getInstance().gethandler(handlerName);
+                            Optional<IHandler> handlerOpt = FGManager.getInstance().getHandler(handlerName);
                             if (handlerOpt.isPresent()) {
                                 IHandler handler = handlerOpt.get();
                                 if (FGManager.getInstance().link(region, handler)) {
@@ -982,7 +982,7 @@ public final class FGStorageManager {
                     if (handlersString != null && !handlersString.isEmpty()) {
                         String[] handlersNames = handlersString.split(",");
                         Arrays.stream(handlersNames).forEach(handlerName -> {
-                            Optional<IHandler> handlerOpt = FGManager.getInstance().gethandler(handlerName);
+                            Optional<IHandler> handlerOpt = FGManager.getInstance().getHandler(handlerName);
                             if (handlerOpt.isPresent()) {
                                 IHandler handler = handlerOpt.get();
                                 if (FGManager.getInstance().link(region, handler)) {

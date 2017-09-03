@@ -79,6 +79,7 @@ import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
+import org.spongepowered.api.world.World;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -101,6 +102,7 @@ public final class FoxGuardMain {
      */
     private static FoxGuardMain instanceField;
     public final Cause pluginCause = Cause.builder().named("plugin", this).build();
+
     @Inject
     private Logger logger;
 
@@ -219,30 +221,24 @@ public final class FoxGuardMain {
     public void configurePermissions(GamePostInitializationEvent event) {
         logger.info("Configuring permissions");
         PermissionService service = game.getServiceManager().provide(PermissionService.class).get();
-        service.getDefaults().getTransientSubjectData().setPermission(SubjectData.GLOBAL_CONTEXT, "foxguard.override", Tristate.FALSE);
+        //service.getDefaults().getTransientSubjectData().setPermission(SubjectData.GLOBAL_CONTEXT, "foxguard.override", Tristate.FALSE);
         service.registerContextCalculator(new FGContextCalculator());
-    }
-
-    @Listener
-    public void serverStarting(GameStartingServerEvent event) {
-        logger.info("Loading regions");
-        FGStorageManager.getInstance().loadRegions();
-        logger.info("Loading global handler");
-        FGStorageManager.getInstance().loadGlobalHandler();
-        logger.info("Loading handlers");
-        FGStorageManager.getInstance().loadHandlers();
-        logger.info("Loading linkages");
-        FGStorageManager.getInstance().loadLinks();
-        loaded = true;
-        logger.info("Finished loading FoxGuard!");
     }
 
     @Listener
     public void serverStopping(GameStoppingServerEvent event) {
         //FGStorageManager.getInstance().saveRegions();
         //FGStorageManager.getInstance().saveHandlers();
-        FGStorageManagerNew.getInstance().saveRegionIndex();
-        FGStorageManagerNew.getInstance().saveHandlerIndex();
+        FGStorageManagerNew storage = FGStorageManagerNew.getInstance();
+        storage.saveRegionIndex();
+        storage.saveHandlerIndex();
+
+        FGManager manager = FGManager.getInstance();
+        logger.info("Saving regions");
+        storage.saveObjects(manager.getRegions());
+        logger.info("Saving handlers");
+        storage.saveObjects(manager.getHandlers());
+
         logger.info("Saving configs");
         FGConfigManager.getInstance().save();
         FGManager.getInstance().unloadServer();
@@ -250,22 +246,27 @@ public final class FoxGuardMain {
 
     @Listener
     public void worldUnload(UnloadWorldEvent event) {
-        logger.info("Unloading world \"" + event.getTargetWorld().getName() + "\"");
-        //FGStorageManager.getInstance().saveWorldRegions(event.getTargetWorld());
-        FGStorageManagerNew.getInstance().saveWorldRegionIndex(event.getTargetWorld());
-        FGManager.getInstance().unloadWorld(event.getTargetWorld());
+        World world = event.getTargetWorld();
+        logger.info("Unloading world \"" + world.getName() + "\"");
+        FGStorageManagerNew storage = FGStorageManagerNew.getInstance();
+        storage.saveWorldRegionIndex(event.getTargetWorld());
+
+        FGManager manager = FGManager.getInstance();
+        logger.info("Saving worldregions for world: " + world.getName());
+        storage.saveObjects(manager.getWorldRegions(world));
+        manager.unloadWorld(event.getTargetWorld());
     }
 
     @Listener
     public void worldLoad(LoadWorldEvent event) {
-        logger.info("Initializing global worldregion for world: \"" + event.getTargetWorld().getName() + "\"");
-        FGManager.getInstance().initWorld(event.getTargetWorld());
-        logger.info("Loading worldregions for world: \"" + event.getTargetWorld().getName() + "\"");
-        FGStorageManager.getInstance().loadWorldRegions(event.getTargetWorld());
-        if (loaded) {
-            logger.info("Loading links for world : \"" + event.getTargetWorld().getName() + "\"");
-            FGStorageManager.getInstance().loadWorldRegionLinks(event.getTargetWorld());
-        }
+        World world = event.getTargetWorld();
+        FGStorageManagerNew storage = FGStorageManagerNew.getInstance();
+        storage.loadServer();
+
+        logger.info("Initializing global worldregion for world: \"" + world.getName() + "\"");
+        FGManager.getInstance().initWorld(world);
+
+        storage.loadWorld(world);
     }
 
     private void registerCoreCommands(FCCommandDispatcher dispatcher) {

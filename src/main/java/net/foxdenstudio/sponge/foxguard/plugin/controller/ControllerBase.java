@@ -27,7 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.controller;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManagerOld;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.HandlerBase;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.HandlerData;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
@@ -73,12 +73,12 @@ public abstract class ControllerBase extends HandlerBase implements IController 
 
     @Override
     public void loadLinks(Path directory, List<IHandler> savedList) {
-        try (DB linksDB = FGStorageManager.openFoxDB(directory.resolve("links.foxdb"))) {
+        try (DB linksDB = FGStorageManagerOld.openFoxDB(directory.resolve("links.foxdb"))) {
             List<String> linksList = linksDB.indexTreeList("links", Serializer.STRING).createOrOpen();
             handlers.clear();
             linksList.stream()
                     .filter(name -> !this.name.equalsIgnoreCase(name))
-                    .map(name -> FGManager.getInstance().gethandler(name))
+                    .map(name -> FGManager.getInstance().getHandler(name))
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .forEach(handlers::add);
@@ -87,7 +87,7 @@ public abstract class ControllerBase extends HandlerBase implements IController 
     }
 
     protected void saveLinks(Path directory) {
-        try (DB linksDB = FGStorageManager.openFoxDB(directory.resolve("links.foxdb"))) {
+        try (DB linksDB = FGStorageManagerOld.openFoxDB(directory.resolve("links.foxdb"))) {
             List<String> linksList = linksDB.indexTreeList("links", Serializer.STRING).createOrOpen();
             linksList.clear();
             handlers.stream().map(IFGObject::getName).forEach(linksList::add);

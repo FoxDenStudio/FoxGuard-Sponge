@@ -33,7 +33,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
-import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManagerOld;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
@@ -41,6 +41,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Operation;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.TristateEntry;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.storage.FGStorageManagerNew;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
@@ -62,13 +63,14 @@ import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.annotation.Nullable;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 import static org.spongepowered.api.util.Tristate.UNDEFINED;
@@ -185,7 +187,7 @@ public class GroupHandler extends HandlerBase {
     public static boolean isNameValid(String name) {
         return !name.matches("^.*[ :\\.=;\"\'\\\\/\\{\\}\\(\\)\\[\\]<>#@\\|\\?\\*].*$") &&
                 !name.equalsIgnoreCase("default") &&
-                !isIn(FGStorageManager.FS_ILLEGAL_NAMES, name);
+                !isIn(FGStorageManagerNew.FS_ILLEGAL_NAMES, name);
     }
 
     public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
@@ -910,12 +912,12 @@ public class GroupHandler extends HandlerBase {
 
     @Override
     public void save(Path directory) {
-        try (DB flagMapDB = FGStorageManager.openFoxDB(directory.resolve("groups.foxdb"))) {
+        try (DB flagMapDB = FGStorageManagerOld.openFoxDB(directory.resolve("groups.foxdb"))) {
             List<String> groupNames = flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen();
             groupNames.clear();
             groupNames.addAll(this.groups.stream().map(group -> group.name).collect(Collectors.toList()));
         }
-        try (DB flagMapDB = FGStorageManager.openFoxDB(directory.resolve("flags.foxdb"))) {
+        try (DB flagMapDB = FGStorageManagerOld.openFoxDB(directory.resolve("flags.foxdb"))) {
             for (Group group : this.groups) {
                 List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
                 stringEntries.clear();
@@ -1242,7 +1244,7 @@ public class GroupHandler extends HandlerBase {
 
         @Override
         public IHandler create(Path directory, HandlerData data) {
-            if(Files.exists(directory.resolve("groups.foxdb")) || Files.exists(directory.resolve("flags.foxdb"))){
+            if (Files.exists(directory.resolve("groups.foxdb")) || Files.exists(directory.resolve("flags.foxdb"))) {
                 return createOld(directory, data);
             }
             return null;
@@ -1250,7 +1252,7 @@ public class GroupHandler extends HandlerBase {
 
         public IHandler createOld(Path directory, HandlerData data) {
             List<String> groupNames = new ArrayList<>();
-            try (DB flagMapDB = FGStorageManager.openFoxDB(directory.resolve("groups.foxdb"))) {
+            try (DB flagMapDB = FGStorageManagerOld.openFoxDB(directory.resolve("groups.foxdb"))) {
                 groupNames.addAll(flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen());
             }
             List<Group> groups = new ArrayList<>();
@@ -1272,7 +1274,7 @@ public class GroupHandler extends HandlerBase {
 
             Map<Group, List<TristateEntry>> groupPermissions = new HashMap<>();
             List<TristateEntry> defaultPermissions;
-            try (DB flagMapDB = FGStorageManager.openFoxDB(directory.resolve("flags.foxdb"))) {
+            try (DB flagMapDB = FGStorageManagerOld.openFoxDB(directory.resolve("flags.foxdb"))) {
                 for (Group group : groups) {
                     List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
                     groupPermissions.put(group, stringEntries.stream()

@@ -27,11 +27,11 @@ package net.foxdenstudio.sponge.foxguard.plugin.object;
 
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.IModifiable;
-import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
 import net.foxdenstudio.sponge.foxguard.plugin.command.CommandDetail;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.storage.FGStorageManagerNew;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
@@ -168,7 +168,7 @@ public interface IFGObject extends IModifiable {
     ProcessResult modify(CommandSource source, String arguments) throws CommandException;
 
     default boolean shouldSave() {
-        return FGStorageManager.getInstance().defaultModifiedMap.get(this);
+        return FGStorageManagerNew.getInstance().defaultModifiedMap.get(this);
     }
 
 }

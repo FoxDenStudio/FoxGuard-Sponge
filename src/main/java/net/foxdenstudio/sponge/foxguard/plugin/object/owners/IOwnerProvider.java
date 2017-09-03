@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 /**
  * Created by Fox on 12/21/2016.
  */
@@ -38,13 +40,9 @@ public interface IOwnerProvider {
 
     List<String> getOwnerKeywords();
 
-    Optional<UUID> getOwnerUUID(String keyword);
+    Optional<UUID> getOwnerUUID(@Nullable String keyword);
 
-    Optional<String> getKeyword(UUID uuid);
-
-    default Optional<String> getName(UUID uuid){
-        return getKeyword(uuid);
-    }
+    Optional<String> getKeyword(UUID owner);
 
     String[] getAliases();
 

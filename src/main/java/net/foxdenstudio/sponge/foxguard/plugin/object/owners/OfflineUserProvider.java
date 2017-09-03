@@ -10,10 +10,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 /**
  * Created by Fox on 12/31/2016.
  */
-public class OfflineUserProvider implements IOwnerProvider {
+public class OfflineUserProvider implements IDisplayableOwnerProvider {
 
     private static final String[] ALIASES = {"offline", "off", "o"};
 
@@ -31,13 +33,14 @@ public class OfflineUserProvider implements IOwnerProvider {
     }
 
     @Override
-    public Optional<UUID> getOwnerUUID(String keyword) {
+    public Optional<UUID> getOwnerUUID(@Nullable String keyword) {
+        if(keyword == null || keyword.isEmpty()) return Optional.empty();
         return service.get(keyword).map(User::getUniqueId);
     }
 
     @Override
-    public Optional<String> getKeyword(UUID uuid) {
-        return service.get(uuid).map(User::getName);
+    public Optional<String> getKeyword(UUID owner) {
+        return service.get(owner).map(User::getName);
     }
 
     @Override

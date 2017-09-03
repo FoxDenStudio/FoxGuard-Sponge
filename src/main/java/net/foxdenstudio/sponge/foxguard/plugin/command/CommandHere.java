@@ -170,7 +170,7 @@ public class CommandHere extends FCCommandBase {
                 output.append(Text.of(FGUtil.getColorForObject(region),
                         TextActions.runCommand("/foxguard detail region " + FGUtil.genWorldFlag(region) + region.getName()),
                         TextActions.showText(Text.of("View details")),
-                        FGUtil.getRegionName(region, false)));
+                        FGUtil.getRegionDisplayName(region, false)));
                 if (regionListIterator.hasNext()) output.append(Text.NEW_LINE);
             }
             flag = true;

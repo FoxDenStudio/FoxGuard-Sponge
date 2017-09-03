@@ -29,9 +29,10 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
-import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.storage.FGStorageManagerNew;
+import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -41,9 +42,10 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
+
+import javax.annotation.Nullable;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.FORCE_ALIASES;
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isIn;
@@ -70,10 +72,27 @@ public class CommandSave extends FCCommandBase {
         boolean force = parse.flags.containsKey("force");
 
         FoxGuardMain.instance().getLogger().info(force ? "Force saving objects" : "Saving objects");
-        FGStorageManager.getInstance().saveRegions(force);
-        Sponge.getServer().getWorlds().forEach(world -> FGStorageManager.getInstance().saveWorldRegions(world, force));
-        FGStorageManager.getInstance().saveHandlers(force);
-        FGStorageManagerNew.getInstance().saveHandlerIndex();
+        //FGStorageManager.getInstance().saveRegions(force);
+        //Sponge.getServer().getWorlds().forEach(world -> FGStorageManager.getInstance().saveWorldRegions(world, force));
+        //FGStorageManager.getInstance().saveHandlers(force);
+
+        Logger logger = FoxGuardMain.instance().getLogger();
+
+        FGStorageManagerNew storage = FGStorageManagerNew.getInstance();
+        storage.saveRegionIndex();
+        Sponge.getServer().getWorlds().forEach(storage::saveWorldRegionIndex);
+        storage.saveHandlerIndex();
+
+        FGManager manager = FGManager.getInstance();
+        logger.info("Saving regions");
+        storage.saveObjects(manager.getRegions(), force);
+        Sponge.getServer().getWorlds().forEach(world -> {
+            logger.info("Saving worldregions for world: " + world.getName());
+            storage.saveObjects(manager.getWorldRegions(world), force);
+        });
+        logger.info("Saving handlers");
+        storage.saveObjects(manager.getHandlers(), force);
+
         source.sendMessage(Text.of(TextColors.GREEN, "Successfully saved!"));
         return CommandResult.success();
     }

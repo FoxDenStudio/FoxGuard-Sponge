@@ -39,16 +39,14 @@ import java.util.stream.Collectors;
  */
 public class FGSObjectIndex extends FGSObjectMeta {
 
-    boolean enabled;
+    Boolean enabled;
     Integer priority;
-    UUID owner;
-    List<String> links;
+    List<FGSObjectPath> links;
 
-    public FGSObjectIndex(String name, String category, String type, boolean enabled, Integer priority, UUID owner, List<String> links) {
-        super(name, category, type);
+    public FGSObjectIndex(String name, UUID owner, String category, String type, Boolean enabled, Integer priority, List<FGSObjectPath> links) {
+        super(name, owner, category, type);
         this.enabled = enabled;
         this.priority = priority;
-        this.owner = owner;
         this.links = links;
     }
 
@@ -58,12 +56,37 @@ public class FGSObjectIndex extends FGSObjectMeta {
     public FGSObjectIndex(IFGObject object) {
         super(object);
         this.enabled = object.isEnabled();
-        this.owner = object.getOwner();
         if (object instanceof IHandler) {
             this.priority = ((IHandler) object).getPriority();
         }
         if (object instanceof ILinkable && ((ILinkable) object).saveLinks()) {
-            this.links = ((ILinkable) object).getLinks().stream().map(IHandler::getName).collect(Collectors.toList());
+            this.links = ((ILinkable) object).getLinks().stream()
+                    .map(FGSObjectPath::new)
+                    .collect(Collectors.toList());
         }
+    }
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+
+    public List<FGSObjectPath> getLinks() {
+        return links;
+    }
+
+    public void setLinks(List<FGSObjectPath> links) {
+        this.links = links;
     }
 }

@@ -119,7 +119,7 @@ public class CommandDelete extends FCCommandBase {
             return CommandResult.success();
         } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
-            Optional<IHandler> handlerOpt = FGManager.getInstance().gethandler(parse.args[1]);
+            Optional<IHandler> handlerOpt = FGManager.getInstance().getHandler(parse.args[1]);
             if (!handlerOpt.isPresent())
                 throw new ArgumentParseException(Text.of("No handler exists with that name!"), parse.args[1], 1);
             IHandler handler = handlerOpt.get();
