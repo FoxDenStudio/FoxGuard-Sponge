@@ -97,8 +97,8 @@ public class CommandEnableDisable extends FCCommandBase {
                 return CommandResult.empty();
             } else {
                 List<IFGObject> objects = new ArrayList<>();
-                FGUtil.getSelectedRegions(source).forEach(objects::add);
-                FGUtil.getSelectedHandlers(source).forEach(objects::add);
+                objects.addAll(FGUtil.getSelectedRegions(source));
+                objects.addAll(FGUtil.getSelectedHandlers(source));
                 int successes = 0;
                 int failures = 0;
                 for (IFGObject object : objects) {
@@ -139,7 +139,7 @@ public class CommandEnableDisable extends FCCommandBase {
             int successes = 0;
             int failures = 0;
             List<IRegion> regions = new ArrayList<>();
-            FGUtil.getSelectedRegions(source).forEach(regions::add);
+            regions.addAll(FGUtil.getSelectedRegions(source));
             if (parse.args.length > 1) {
                 for (String name : Arrays.copyOfRange(parse.args, 1, parse.args.length)) {
                     IWorldRegion region = FGManager.getInstance().getWorldRegion(world, name).orElse(null);
@@ -178,7 +178,7 @@ public class CommandEnableDisable extends FCCommandBase {
             int successes = 0;
             int failures = 0;
             List<IHandler> handlers = new ArrayList<>();
-            FGUtil.getSelectedHandlers(source).forEach(handlers::add);
+            handlers.addAll(FGUtil.getSelectedHandlers(source));
             for (String name : Arrays.copyOfRange(parse.args, 1, parse.args.length)) {
                 IHandler handler = FGManager.getInstance().getHandler(name).orElse(null);
                 if (handler == null) failures++;

@@ -97,7 +97,7 @@ public final class FGConfigManager {
         root.getNode("storage", "location")
                 .setComment("These options control where FoxGuard objects are stored.\n" +
                         "BE WARNED that changing these settings will not automatically move files to a new location.\n" +
-                        "YOU MUST do that move yourself. It is advised that you");
+                        "YOU MUST do that move yourself. It is advised that you do the move at the same time you change these settings.");
 
         root.getNode("storage", "location", "saveInWorldDirectory")
                 .setValue(saveInWorldDirectory)
@@ -198,7 +198,7 @@ public final class FGConfigManager {
             if (o instanceof Path) path = (Path) o;
             else if (o instanceof String) path = Paths.get((String) o);
             if (path == null) return null;
-            if (Files.notExists(path) || Files.isDirectory(path)) return path;
+            if (Files.notExists(path) || Files.isDirectory(path)) return path.normalize();
             else return null;
         }, Paths.get("foxguard"));
         gcAndFinalize = root.getNode("storage", "gcAndFinalize").getBoolean(false);
@@ -234,6 +234,14 @@ public final class FGConfigManager {
 
     public boolean useConfigFolder() {
         return useConfigDirectory;
+    }
+
+    public boolean useCustomDirectory() {
+        return useCustomDirectory;
+    }
+
+    public Path customDirectory() {
+        return customDirectory;
     }
 
     public boolean gcAndFinalize() {

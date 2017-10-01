@@ -25,7 +25,9 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.util;
 
+import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
+import net.foxdenstudio.sponge.foxcore.plugin.util.IWorldBound;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
@@ -33,6 +35,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.event.factory.FGEventFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
+import net.foxdenstudio.sponge.foxguard.plugin.object.owners.IOwnerProvider;
 import net.foxdenstudio.sponge.foxguard.plugin.object.owners.OwnerProviderRegistry;
 import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
@@ -41,7 +44,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.state.ControllersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.storage.FGStorageManagerNew;
-import org.jetbrains.annotations.NotNull;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
@@ -50,15 +52,19 @@ import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.GuavaCollectors;
+import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.Locatable;
 import org.spongepowered.api.world.World;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
-import static net.foxdenstudio.sponge.foxguard.plugin.FGManager.SERVER_UUID;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public final class FGUtil {
 
@@ -95,7 +101,7 @@ public final class FGUtil {
     public static String getLogName(IFGObject object) {
         if (userStorageService == null) userStorageService = FoxGuardMain.instance().getUserStorage();
         UUID owner = object.getOwner();
-        boolean isOwned = !owner.equals(SERVER_UUID);
+        boolean isOwned = !owner.equals(FGManager.SERVER_UUID);
         Optional<User> userOwner = isOwned ? userStorageService.get(owner) : Optional.empty();
         return (userOwner.map(user -> user.getName() + ":").orElse("")) + (isOwned ? owner + ":" : "") + object.getName();
     }
@@ -110,8 +116,8 @@ public final class FGUtil {
         } else return "object";
     }
 
-    public static String genWorldFlag(IRegion region) {
-        return region instanceof IWorldRegion ? "--w:" + ((IWorldRegion) region).getWorld().getName() + " " : "";
+    public static String genWorldFlag(IFGObject object) {
+        return object instanceof IWorldBound ? "--w:" + ((IWorldBound) object).getWorld().getName() + " " : "";
     }
 
     public static Text readableTristateText(Tristate state) {
@@ -138,13 +144,34 @@ public final class FGUtil {
         Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), handler));
     }
 
-    @NotNull
+    @Nonnull
+    public static IHandler getHandlerFromCommand(OwnerResult qualifier) throws CommandException {
+        String name = qualifier.getName();
+        UUID owner = qualifier.getOwner();
+        Optional<IHandler> handlerOpt;
+
+        handlerOpt = FGManager.getInstance().getHandler(name, owner);
+
+        if (!handlerOpt.isPresent()) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("No handler exists with the name \"").append(name).append("\"");
+            if (owner != FGManager.SERVER_UUID) {
+                builder.append(" and owner \"").append(qualifier.getOwnerName()).append("\"");
+            }
+            builder.append("!");
+
+            throw new CommandException(Text.of(builder.toString()));
+        }
+        return handlerOpt.get();
+    }
+
+    @Nonnull
     public static IRegion getRegionFromCommand(CommandSource source, OwnerResult qualifier, String worldName) throws CommandException {
         String name = qualifier.getName();
         UUID owner = qualifier.getOwner();
 
-        Optional<? extends IRegion> regionOpt;
-        regionOpt = FGManager.getInstance().getRegion(name, owner);
+        IRegion returnRegion = null;
+        /*regionOpt = FGManager.getInstance().getRegion(name, owner);
         if (!regionOpt.isPresent()) {
             World world = null;
             if (source instanceof Locatable) world = ((Locatable) source).getWorld();
@@ -159,16 +186,54 @@ public final class FGUtil {
             }
             if (world == null) throw new CommandException(Text.of("Must specify a world!"));
             regionOpt = FGManager.getInstance().getWorldRegion(world, name, owner);
+        }*/
+
+        Set<IRegion> regions = FGManager.getInstance().getAllRegions(qualifier.getName(), qualifier.getOwner());
+        World world = null;
+        if (regions.size() == 1) {
+            returnRegion = regions.iterator().next();
+        } else if (regions.size() > 1) {
+            if (source instanceof Locatable) world = ((Locatable) source).getWorld();
+            if (!worldName.isEmpty()) {
+                Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
+                if (optWorld.isPresent()) {
+                    world = optWorld.get();
+                } else {
+                    if (world == null)
+                        throw new CommandException(Text.of("No world exists with name \"" + worldName + "\"!"));
+                }
+            }
+            for (IRegion region : regions) {
+                if (region instanceof IWorldRegion) {
+                    if (world == null) continue;
+                    if (((IWorldRegion) region).getWorld() == world) returnRegion = region;
+                } else {
+                    returnRegion = region;
+                    break;
+                }
+            }
+            if (returnRegion == null && world == null) throw new CommandException(Text.of("Must specify a world!"));
         }
 
-        if (!regionOpt.isPresent())
-            throw new CommandException(Text.of("No region exists with the name \"" + name + "\""
-                    + (owner != SERVER_UUID ? " and owner \"" + qualifier.getOwnerName() + "\"" : "")
-                    + "!"));
-        return regionOpt.get();
+        if (returnRegion == null) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("No region exists with the name \"").append(name).append("\"");
+            if (owner != FGManager.SERVER_UUID) {
+                builder.append(" and owner \"").append(qualifier.getOwnerName()).append("\"");
+            }
+            if (world != null && regions.size() > 0) {
+                builder.append(" in world \"").append(world.getName()).append("\"");
+            }
+            builder.append("!");
+
+            throw new CommandException(Text.of(builder.toString()));
+        }
+        return returnRegion;
     }
 
+
     public static OwnerResult processUserInput(String input) throws CommandException {
+        if (input.startsWith(":")) input = input.substring(1);
         String[] parts = input.split(":", 3);
 
         String name = null;
@@ -189,8 +254,10 @@ public final class FGUtil {
                 break;
         }
 
-        if (name == null || name.isEmpty())
-            throw new CommandException(Text.of("Name must not be... blank?"));
+        if (name == null)
+            throw new CommandException(Text.of("Name must not be... null?"));
+        else if (name.isEmpty())
+            throw new CommandException(Text.of("Name must not be empty!"));
 
         Optional<UUID> ownerOpt = OwnerProviderRegistry.getInstance().getUUIDForOwner(provider, ownerQualifier);
         if (!ownerOpt.isPresent()) {
@@ -198,6 +265,111 @@ public final class FGUtil {
             throw new CommandException(Text.of("\"" + errorName + "\" is not a valid owner!"));
         }
         return new OwnerResult(name, ownerOpt.get(), ownerQualifier);
+    }
+
+    public static OwnerTabResult getOwnerSuggestions(String input) {
+        boolean prefixed = false;
+        if (input.startsWith(":")) {
+            input = input.substring(1);
+            prefixed = true;
+        }
+        String[] parts = input.split(":", 3);
+        if (parts.length == 1) {
+            if (prefixed) {
+                List<String> list = OwnerProviderRegistry.getInstance().getProviders().stream()
+                        .map(IOwnerProvider::getPrimaryAlias)
+                        .filter(str -> str != null && !str.isEmpty())
+                        .filter(new StartsWithPredicate(parts[0]))
+                        .map(str -> ":" + str)
+                        .collect(GuavaCollectors.toImmutableList());
+                if (list.size() == 1) {
+                    list = ImmutableList.of(list.get(0).substring(1) + ":");
+                }
+                return new OwnerTabResult(list);
+            } else {
+                return new OwnerTabResult("", parts[0], FGManager.SERVER_UUID);
+            }
+        } else if (parts.length == 2) {
+            OwnerProviderRegistry registry = OwnerProviderRegistry.getInstance();
+            Optional<IOwnerProvider> providerOpt = registry.getProvider(parts[0]);
+            if (providerOpt.isPresent()) {
+                IOwnerProvider provider = providerOpt.get();
+                List<String> list = provider.getOwnerKeywords().stream()
+                        .filter(str -> str != null && !str.isEmpty())
+                        .filter(new StartsWithPredicate(parts[1]))
+                        .map(str -> parts[0] + ":" + str)
+                        .collect(GuavaCollectors.toImmutableList());
+                int size = list.size();
+                if (size == 0) {
+                    if (prefixed) {
+                        list = ImmutableList.of(parts[0] + ":" + parts[1]);
+                    }
+                } else if (size == 1) {
+                    ImmutableList.of(list.get(0) + ":");
+                }
+                return new OwnerTabResult(list);
+            } else {
+                Optional<UUID> ownerOpt = registry.getUUIDForOwner(null, parts[0]);
+                return ownerOpt.map(uuid -> new OwnerTabResult(parts[0] + ":", parts[1], uuid))
+                        .orElseGet(OwnerTabResult::new);
+
+            }
+        } else if (parts.length == 3) {
+            Optional<IOwnerProvider> providerOpt = OwnerProviderRegistry.getInstance().getProvider(parts[0]);
+            if (providerOpt.isPresent()) {
+                IOwnerProvider provider = providerOpt.get();
+                Optional<UUID> ownerOpt = provider.getOwnerUUID(parts[1]);
+                return ownerOpt.map(uuid -> new OwnerTabResult(parts[0] + ":" + parts[1] + ":", parts[2], uuid))
+                        .orElseGet(OwnerTabResult::new);
+            }
+
+        }
+        return new OwnerTabResult();
+    }
+
+    public static class OwnerTabResult {
+        private boolean complete;
+        private List<String> suggestions;
+        private String prefix;
+        private String token;
+        private UUID owner;
+
+        public OwnerTabResult() {
+            this.complete = true;
+            this.suggestions = ImmutableList.of();
+        }
+
+        public OwnerTabResult(List<String> suggestions) {
+            this.complete = true;
+            this.suggestions = suggestions;
+        }
+
+        public OwnerTabResult(String prefix, String token, UUID owner) {
+            this.complete = false;
+            this.prefix = prefix;
+            this.token = token;
+            this.owner = owner;
+        }
+
+        public boolean isComplete() {
+            return complete;
+        }
+
+        public List<String> getSuggestions() {
+            return suggestions;
+        }
+
+        public String getPrefix() {
+            return prefix;
+        }
+
+        public String getToken() {
+            return token;
+        }
+
+        public UUID getOwner() {
+            return owner;
+        }
     }
 
     public static class OwnerResult {

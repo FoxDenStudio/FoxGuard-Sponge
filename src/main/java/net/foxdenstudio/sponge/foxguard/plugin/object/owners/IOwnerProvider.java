@@ -25,8 +25,6 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.object.owners;
 
-import net.minecraft.command.CommandException;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -45,5 +43,12 @@ public interface IOwnerProvider {
     Optional<String> getKeyword(UUID owner);
 
     String[] getAliases();
+
+    default String getPrimaryAlias() {
+        String[] aliases = getAliases();
+        if (aliases.length > 0) {
+            return aliases[0];
+        } else return "";
+    }
 
 }

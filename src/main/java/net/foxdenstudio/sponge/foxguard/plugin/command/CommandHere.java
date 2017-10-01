@@ -146,7 +146,7 @@ public class CommandHere extends FCCommandBase {
         output.append(Text.of(TextColors.AQUA, "----- Position: (" + String.format("%.1f, %.1f, %.1f", x, y, z) + ") -----\n"));
         if (!parse.flags.containsKey("handler") || parse.flags.containsKey("region")) {
             output.append(Text.of(TextColors.GREEN, "------- Regions Located Here -------\n"));
-            Collections.sort(regionList, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
+            regionList.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
             ListIterator<IRegion> regionListIterator = regionList.listIterator();
             while (regionListIterator.hasNext()) {
                 IRegion region = regionListIterator.next();
@@ -184,10 +184,10 @@ public class CommandHere extends FCCommandBase {
                     .forEach(handlerList::add));
             output.append(Text.of(TextColors.GREEN, "------- Handlers Located Here -------\n"));
             if (parse.flags.containsKey("priority")) {
-                Collections.sort(handlerList, (o1, o2) -> o2.getPriority() - o1.getPriority());
+                handlerList.sort((o1, o2) -> o2.getPriority() - o1.getPriority());
                 hudConfig.priority = true;
             } else {
-                Collections.sort(handlerList, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
+                handlerList.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
             }
             ListIterator<IHandler> handlerListIterator = handlerList.listIterator();
             while (handlerListIterator.hasNext()) {

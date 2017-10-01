@@ -32,6 +32,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
+import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.util.IWorldBound;
 import net.foxdenstudio.sponge.foxguard.plugin.FGConfigManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
@@ -192,12 +193,12 @@ public class FGStorageManagerNew {
                     logger.error("Failed to open metadata for writing: " + metadataFile, e);
                 }
             } else {
-                logger.info(type.nameUppercase + " " + logName + " is already up to date. Skipping...");
+                logger.info(type.uName + " " + logName + " is already up to date. Skipping...");
             }
 
             defaultModifiedMap.put(object, false);
         } else {
-            logger.info(type.nameUppercase + " " + logName + " does not need saving. Skipping...");
+            logger.info(type.uName + " " + logName + " does not need saving. Skipping...");
         }
     }
 
@@ -442,7 +443,7 @@ public class FGStorageManagerNew {
         if (fgCat == null || fgCat == FGCat.OBJECT) return Optional.empty();
 
         if (isGlobal(fgCat, type, name)) {
-            logger.info("Found global " + fgCat.name + ". Skipping...");
+            logger.info("Found global " + fgCat.lName + ". Skipping...");
             return Optional.empty();
         }
 
@@ -458,7 +459,7 @@ public class FGStorageManagerNew {
 
         if (name == null || name.isEmpty()) {
             name = category + "-" + type;
-            logger.warn("No name for loaded " + fgCat.name + ". Using generated name: " + name);
+            logger.warn("No name for loaded " + fgCat.lName + ". Using generated name: " + name);
         }
         if (!fgCat.isNameAvailable(name, owner, world)) {
             String oldName = name;
@@ -468,7 +469,7 @@ public class FGStorageManagerNew {
                 name = nameBase + id;
                 id++;
             } while (!fgCat.isNameAvailable(name, owner, world));
-            logger.warn("Name " + oldName + " for " + fgCat.name + " already in use. Changed to: " + name);
+            logger.warn("Name " + oldName + " for " + fgCat.lName + " already in use. Changed to: " + name);
         }
 
         FGObjectData data;
@@ -495,11 +496,11 @@ public class FGStorageManagerNew {
         try {
             fgObject = fgCat.loadInstance(directory, type, data);
         } catch (Exception e) {
-            logger.error("There was an error creating the " + fgCat.name, e);
+            logger.error("There was an error creating the " + fgCat.lName, e);
         }
 
         if (fgObject == null) {
-            logger.warn("The " + fgCat.name + " was unable to be created.");
+            logger.warn("The " + fgCat.lName + " was unable to be created.");
             if (FGConfigManager.getInstance().cleanupFiles()) {
                 logger.warn("Cleaning up unused files");
                 deleteDirectory(directory);
@@ -532,13 +533,17 @@ public class FGStorageManagerNew {
             constructDirectories(directory);
             return directory;
         }
+        FGConfigManager manager = FGConfigManager.getInstance();
         Path path;
-        if (FGConfigManager.getInstance().saveWorldRegionsInWorldFolders()) {
+        if (manager.saveWorldRegionsInWorldFolders()) {
             path = world.getDirectory();
             path = path.resolve("foxguard");
         } else {
-            if(FGConfigManager.getInstance().)
-            path = getFGDirectory();
+            if (manager.useCustomDirectory()) {
+                path = manager.customDirectory();
+            } else {
+                path = getFGDirectory();
+            }
             path = path.resolve("worlds").resolve(world.getName());
         }
         constructDirectories(path);
@@ -774,7 +779,7 @@ public class FGStorageManagerNew {
     }
 
     private enum FGCat {
-        REGION("region", "Region", "regions") {
+        REGION("regions") {
             @Override
             public boolean isNameAvailable(String name, UUID owner, @Nullable World world) {
                 return FGManager.getInstance().isRegionNameAvailable(name, owner);
@@ -785,7 +790,7 @@ public class FGStorageManagerNew {
                 return FGFactoryManager.getInstance().createRegion(directory, type, data);
             }
         },
-        WORLDREGION("worldregion", "World region", "wregions") {
+        WORLDREGION("wregions") {
             @Override
             public boolean isNameAvailable(String name, UUID owner, @Nullable World world) {
                 if (world == null)
@@ -798,7 +803,7 @@ public class FGStorageManagerNew {
                 return FGFactoryManager.getInstance().createWorldRegion(directory, type, data);
             }
         },
-        HANDLER("handler", "Handler", "handlers") {
+        HANDLER("handlers") {
             @Override
             public boolean isNameAvailable(String name, UUID owner, @Nullable World world) {
                 return FGManager.getInstance().isHandlerNameAvailable(name, owner);
@@ -815,7 +820,7 @@ public class FGStorageManagerNew {
                 return FGFactoryManager.getInstance().createHandler(directory, type, handlerData);
             }
         },
-        CONTROLLER("controller", "Controller", HANDLER.pathName) {
+        CONTROLLER(HANDLER.pathName) {
             @Override
             public boolean isNameAvailable(String name, UUID owner, @Nullable World world) {
                 return HANDLER.isNameAvailable(name, owner, world);
@@ -832,7 +837,7 @@ public class FGStorageManagerNew {
                 return FGFactoryManager.getInstance().createController(directory, type, handlerData);
             }
         },
-        OBJECT("object", "Object", "objects") {
+        OBJECT("objects") {
             @Override
             public boolean isNameAvailable(String name, UUID owner, @Nullable World world) {
                 return true;
@@ -844,19 +849,17 @@ public class FGStorageManagerNew {
             }
         };
 
-        String name;
-        String nameUppercase;
+        String lName = name().toLowerCase();
+        String uName = FCCUtil.toCapitalCase(name());
         String pathName;
 
-        FGCat(String name, String nameUppercase, String pathName) {
-            this.nameUppercase = nameUppercase;
-            this.name = name;
+        FGCat(String pathName) {
             this.pathName = pathName;
         }
 
         public static FGCat from(String name) {
             for (FGCat type : values()) {
-                if (type.name.equals(name)) return type;
+                if (type.lName.equals(name)) return type;
             }
             return null;
         }

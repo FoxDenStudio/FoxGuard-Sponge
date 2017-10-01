@@ -159,6 +159,7 @@ public class CommandList extends FCCommandBase {
             int count = 0;
             while (regionIterator.hasNext() && count < number) {
                 IRegion region = regionIterator.next();
+                String fullName = region.getOwner().toString() + ":" + region.getName();
                 if (source instanceof Player) {
                     List<IRegion> selectedRegions = FGUtil.getSelectedRegions(source);
                     if (selectedRegions.contains(region)) {
@@ -181,7 +182,7 @@ public class CommandList extends FCCommandBase {
                     builder.append(Text.of(" "));
                 }
                 builder.append(Text.of(FGUtil.getColorForObject(region),
-                        TextActions.runCommand("/foxguard det r " + FGUtil.genWorldFlag(region) + region.getName()),
+                        TextActions.runCommand("/foxguard det r " + FGUtil.genWorldFlag(region) + fullName),
                         TextActions.showText(Text.of("View details")),
                         FGUtil.getRegionDisplayName(region, allFlag)));
                 count++;
@@ -245,6 +246,7 @@ public class CommandList extends FCCommandBase {
             int count = 0;
             while (handlerIterator.hasNext() && count < number) {
                 IHandler handler = handlerIterator.next();
+                String fullName = handler.getOwner().toString() + ":" + handler.getName();
                 if (source instanceof Player) {
                     List<IHandler> selectedHandlers = FGUtil.getSelectedHandlers(source);
                     if (controllers) {
@@ -298,7 +300,7 @@ public class CommandList extends FCCommandBase {
                     builder.append(Text.of(" "));
                 }
                 builder.append(Text.of(FGUtil.getColorForObject(handler),
-                        TextActions.runCommand("/foxguard det h " + handler.getName()),
+                        TextActions.runCommand("/foxguard det h " + fullName),
                         TextActions.showText(Text.of("View details")),
                         handler.getShortTypeName() + " : " + handler.getName()));
                 if (handlerIterator.hasNext() && count < number) builder.append(Text.NEW_LINE);

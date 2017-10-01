@@ -237,14 +237,26 @@ public final class LinkageParser {
                                 set.add(new ExpressionStub(ImmutableSet.copyOf(FGUtil.getSelectedControllers(source))));
                             }
                         } else if (token.startsWith("^")) {
-                            Optional<IController> controllerOpt = FGManager.getInstance().getController(token.substring(1));
-                            controllerOpt.ifPresent(stubObjects::add);
+                            try {
+                                FGUtil.OwnerResult ownerResult = FGUtil.processUserInput(token.substring(1));
+                                Optional<IController> controllerOpt = FGManager.getInstance().getController(ownerResult.getName(), ownerResult.getOwner());
+                                controllerOpt.ifPresent(stubObjects::add);
+                            } catch (CommandException ignored) {
+                            }
                         } else if (stage == Stage.START) {
-                            Optional<IRegion> regionOpt = FGManager.getInstance().getRegionFromWorld(currentWorld, token);
-                            regionOpt.ifPresent(stubObjects::add);
+                            try {
+                                FGUtil.OwnerResult ownerResult = FGUtil.processUserInput(token);
+                                Optional<IRegion> regionOpt = FGManager.getInstance().getRegionFromWorld(currentWorld, ownerResult.getName(), ownerResult.getOwner());
+                                regionOpt.ifPresent(stubObjects::add);
+                            } catch (CommandException ignored) {
+                            }
                         } else {
-                            Optional<IHandler> handlerOpt = FGManager.getInstance().getHandler(token);
-                            handlerOpt.ifPresent(stubObjects::add);
+                            try {
+                                FGUtil.OwnerResult ownerResult = FGUtil.processUserInput(token);
+                                Optional<IHandler> handlerOpt = FGManager.getInstance().getHandler(ownerResult.getName(), ownerResult.getOwner());
+                                handlerOpt.ifPresent(stubObjects::add);
+                            } catch (CommandException ignored) {
+                            }
                         }
                     }
                 }

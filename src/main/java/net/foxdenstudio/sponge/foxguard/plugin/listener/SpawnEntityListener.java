@@ -53,7 +53,7 @@ import java.util.*;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 
-public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
+public class    SpawnEntityListener implements EventListener<SpawnEntityEvent> {
 
     private static final FlagBitSet BASE_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, SPAWN, ENTITY);
 

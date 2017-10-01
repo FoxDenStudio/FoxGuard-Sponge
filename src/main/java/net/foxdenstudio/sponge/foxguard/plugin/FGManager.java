@@ -103,7 +103,8 @@ public final class FGManager {
     }
 
     public static boolean isNameValid(String name) {
-        return !name.matches("^.*[ :.=;\"\'\\\\/{}()\\[\\]<>#@|?*].*$") &&
+        return !name.isEmpty() &&
+                !name.matches("^.*[ :.=;\"\'\\\\/{}()\\[\\]<>#@|?*].*$") &&
                 !Aliases.isIn(FGStorageManagerNew.FS_ILLEGAL_NAMES, name) &&
                 !Aliases.isIn(ILLEGAL_NAMES, name);
     }
@@ -115,7 +116,9 @@ public final class FGManager {
     }
 
     public boolean addHandler(IHandler handler, UUID owner) {
-        if (handler == null || getHandler(handler.getName()).isPresent() || !isNameValid(handler.getName()))
+        if (handler == null
+                || !isNameValid(handler.getName())
+                || !isHandlerNameAvailable(handler.getName(), owner))
             return false;
         handler.setOwner(owner);
         handlers.put(owner, handler);
@@ -132,8 +135,8 @@ public final class FGManager {
 
     public boolean addRegion(IRegion region, UUID owner) {
         if (region == null
-                || !isRegionNameAvailable(region.getName(), owner)
                 || !isNameValid(region.getName())
+                || !isRegionNameAvailable(region.getName(), owner)
                 || region instanceof IWorldRegion) return false;
         region.setOwner(owner);
         this.regions.put(owner, region);
@@ -162,8 +165,11 @@ public final class FGManager {
     }
 
     public boolean addWorldRegion(IWorldRegion region, UUID owner, World world) {
-        if (region == null || world == null || region.getWorld() != null ||
-                !isWorldRegionNameAvailable(region.getName(), world) || !isNameValid(region.getName()))
+        if (region == null
+                || world == null
+                || region.getWorld() != null
+                || !isNameValid(region.getName())
+                || !isWorldRegionNameAvailable(region.getName(), owner, world))
             return false;
         region.setWorld(world);
         region.setOwner(owner);
@@ -180,32 +186,73 @@ public final class FGManager {
 
     public Set<IRegion> getAllRegions() {
         Set<IRegion> set = new HashSet<>();
-        this.worldRegions.forEach((world, worldMultimap) -> worldMultimap.values().forEach(set::add));
-        this.regions.values().forEach(set::add);
+        this.worldRegions.forEach((world, worldMultimap) -> set.addAll(worldMultimap.values()));
+        set.addAll(this.regions.values());
         return ImmutableSet.copyOf(set);
     }
 
     public Set<IRegion> getAllRegions(UUID owner) {
         Set<IRegion> set = new HashSet<>();
-        this.worldRegions.forEach((world, worldMultimap) -> worldMultimap.get(owner).forEach(set::add));
-        this.regions.get(owner).forEach(set::add);
+        this.worldRegions.forEach((world, worldMultimap) -> set.addAll(worldMultimap.get(owner)));
+        set.addAll(this.regions.get(owner));
         return ImmutableSet.copyOf(set);
     }
 
     public Set<IRegion> getAllRegions(World world) {
         if (world == null) return getRegions();
         Set<IRegion> set = new HashSet<>();
-        this.worldRegions.get(world).values().forEach(set::add);
-        this.regions.values().forEach(set::add);
+        set.addAll(this.worldRegions.get(world).values());
+        set.addAll(this.regions.values());
+        return ImmutableSet.copyOf(set);
+    }
+
+    public Set<IRegion> getAllRegions(String name, UUID owner) {
+        Set<IRegion> set = new HashSet<>();
+        for (IRegion region : this.regions.get(owner)) {
+            if (region.getName().equalsIgnoreCase(name)) set.add(region);
+        }
+
+        for (Multimap<UUID, IWorldRegion> map : this.worldRegions.values()) {
+            for (IWorldRegion region : map.get(owner)) {
+                if (region.getName().equalsIgnoreCase(name)) set.add(region);
+            }
+        }
         return ImmutableSet.copyOf(set);
     }
 
     public Set<IRegion> getAllRegions(World world, UUID owner) {
         if (world == null) return getRegions();
         Set<IRegion> set = new HashSet<>();
-        this.worldRegions.get(world).get(owner).forEach(set::add);
-        this.regions.get(owner).forEach(set::add);
+        set.addAll(this.worldRegions.get(world).get(owner));
+        set.addAll(this.regions.get(owner));
         return ImmutableSet.copyOf(set);
+    }
+
+    public Set<IRegion> getAllRegionsWithUniqueNames(UUID owner) {
+        return getAllRegionsWithUniqueNames(owner, null);
+    }
+
+    public Set<IRegion> getAllRegionsWithUniqueNames(UUID owner, @Nullable World world) {
+        Set<IRegion> returnSet = new HashSet<>();
+        returnSet.addAll(this.regions.get(owner));
+        Map<String, Boolean> duplicates = new HashMap<>();
+        Map<String, IRegion> regions = new HashMap<>();
+        this.worldRegions.forEach((wld, map) -> map.get(owner).forEach(region -> {
+            String name = region.getName();
+            Boolean duplicate = duplicates.get(name);
+            if (wld == world) {
+                duplicates.put(name, true);
+                regions.put(name, region);
+            } else if (duplicate == null) {
+                duplicates.put(name, false);
+                regions.put(name, region);
+            } else if (!duplicate) {
+                duplicates.put(name, true);
+                regions.remove(name);
+            }
+        }));
+        returnSet.addAll(regions.values());
+        return ImmutableSet.copyOf(returnSet);
     }
 
     public Set<IRegion> getAllServerRegions() {
@@ -577,6 +624,11 @@ public final class FGManager {
         regionCache.markDirty(region, type);
     }
 
+    public boolean removeObject(IFGObject object) {
+        if (object instanceof IRegion) return removeRegion(((IRegion) object));
+        else return object instanceof IHandler && removeHandler(((IHandler) object));
+    }
+
     public boolean removeHandler(IHandler handler) {
         if (handler == null || handler instanceof GlobalHandler) return false;
         this.worldRegions.forEach((world, set) -> set.values().stream()
@@ -609,10 +661,11 @@ public final class FGManager {
         if (region == null || region instanceof GlobalWorldRegion) return false;
         boolean removed = false;
         if (region.getWorld() != null) {
-            if (!this.worldRegions.get(region.getWorld()).values().contains(region)) {
+            Collection<IWorldRegion> regions = this.worldRegions.get(region.getWorld()).values();
+            if (!regions.contains(region)) {
                 return false;
             }
-            this.worldRegions.get(region.getWorld()).values().remove(region);
+            regions.remove(region);
             removed = true;
         } else {
             for (Multimap<UUID, IWorldRegion> multimap : this.worldRegions.values()) {
