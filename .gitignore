@@ -6,3 +6,4 @@ libsarchive/
 printouts/
 *.iml
 out/
+gradle/devenv.gradle

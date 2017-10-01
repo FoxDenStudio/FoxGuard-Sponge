@@ -1,5 +1,5 @@
 
-apply from: project(":FoxCore").file("gradle/versions.gradle")
+apply from: project("$gradle.foxCoreName").file("gradle/versions.gradle")
 
 buildscript {
     repositories {
@@ -27,13 +27,14 @@ apply plugin: 'idea'
 group 'net.foxdenstudio.sponge'
 version 'api6-SNAPSHOT'
 
-apply from: project(":FoxCore").file("gradle/fox.gradle")
-apply from: project(":FoxCore").file("gradle/publish.gradle")
+
+apply from: project("$gradle.foxCoreName").file("gradle/fox.gradle")
+apply from: project("$gradle.foxCoreName").file("gradle/publish.gradle")
 apply from: project.file("gradle/foxguard.gradle")
-apply from: project(":FoxCore").file("gradle/minecraft.gradle")
+apply from: project("$gradle.foxCoreName").file("gradle/minecraft.gradle")
 
 dependencies {
-    compile project(':FoxCore')
+    compile project("$gradle.foxCoreName")
     compile "org.spongepowered:spongeapi:$spongeVersion"
     //testCompile group: 'junit', name: 'junit', version: '4.11'
 }
