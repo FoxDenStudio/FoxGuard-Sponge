@@ -109,7 +109,7 @@ public class CommandDetail extends FCCommandBase {
             IFGObject object;
             switch (fgCat) {
                 case REGION:
-                    object = FGUtil.getRegionFromCommand(source, ownerResult, parse.flags.get("world"));
+                    object = FGUtil.getRegionFromCommand(source, ownerResult, parse.flags.containsKey("world"), parse.flags.get("world"));
                     if (object instanceof IWorldRegion) fgCat = FGCat.WORLDREGION;
                     break;
                 case HANDLER:
@@ -607,8 +607,16 @@ public class CommandDetail extends FCCommandBase {
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             else if (parse.current.index == 1) {
+                FGUtil.OwnerTabResult result = FGUtil.getOwnerSuggestions(parse.current.token);
+                if (result.isComplete()) {
+                    return result.getSuggestions().stream()
+                            .map(str -> parse.current.prefix)
+                            .collect(GuavaCollectors.toImmutableList());
+                }
+
                 if (isIn(REGIONS_ALIASES, parse.args[0])) {
                     String worldName = parse.flags.get("world");
+                    boolean key = parse.flags.containsKey("world");
                     World world = null;
                     if (source instanceof Locatable) world = ((Locatable) source).getWorld();
                     if (!worldName.isEmpty()) {
@@ -617,21 +625,24 @@ public class CommandDetail extends FCCommandBase {
                             world = optWorld.get();
                         }
                     }
-                    if (world == null) return FGManager.getInstance().getRegions().stream()
-                            .map(IFGObject::getName)
-                            .filter(new StartsWithPredicate(parse.current.token))
-                            .map(args -> parse.current.prefix + args)
-                            .collect(GuavaCollectors.toImmutableList());
-                    return FGManager.getInstance().getAllRegions(world).stream()
-                            .map(IFGObject::getName)
-                            .filter(new StartsWithPredicate(parse.current.token))
-                            .map(args -> parse.current.prefix + args)
-                            .collect(GuavaCollectors.toImmutableList());
+                    if (key && world != null) {
+                        return FGManager.getInstance().getAllRegions(world, result.getOwner()).stream()
+                                .map(IFGObject::getName)
+                                .filter(new StartsWithPredicate(result.getToken()))
+                                .map(args -> parse.current.prefix + result.getPrefix() + args)
+                                .collect(GuavaCollectors.toImmutableList());
+                    } else {
+                        return FGManager.getInstance().getAllRegionsWithUniqueNames(result.getOwner(), world).stream()
+                                .map(IFGObject::getName)
+                                .filter(new StartsWithPredicate(result.getToken()))
+                                .map(args -> parse.current.prefix + result.getPrefix() + args)
+                                .collect(GuavaCollectors.toImmutableList());
+                    }
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
                     return FGManager.getInstance().getHandlers().stream()
                             .map(IFGObject::getName)
-                            .filter(new StartsWithPredicate(parse.current.token))
-                            .map(args -> parse.current.prefix + args)
+                            .filter(new StartsWithPredicate(result.getToken()))
+                            .map(args -> parse.current.prefix + result.getPrefix() + args)
                             .collect(GuavaCollectors.toImmutableList());
                 }
             }

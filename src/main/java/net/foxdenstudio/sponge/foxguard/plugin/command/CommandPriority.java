@@ -72,7 +72,7 @@ public class CommandPriority extends FCCommandBase {
             int successes = 0;
             int failures = 0;
             List<IHandler> handlers = new ArrayList<>();
-            FGUtil.getSelectedHandlers(source).forEach(handlers::add);
+            handlers.addAll(FGUtil.getSelectedHandlers(source));
             PriorityMachine machine = null;
             for (String arg : parse.args) {
                 try {

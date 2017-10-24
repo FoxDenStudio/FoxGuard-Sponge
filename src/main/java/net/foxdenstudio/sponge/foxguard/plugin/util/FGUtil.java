@@ -133,15 +133,12 @@ public final class FGUtil {
         }
     }
 
-    public static void markRegionDirty(IRegion region) {
-        FGManager.getInstance().markDirty(region, RegionCache.DirtyType.MODIFIED);
-        FGStorageManagerNew.getInstance().defaultModifiedMap.put(region, true);
-        Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), region));
-    }
-
-    public static void markHandlerDirty(IHandler handler) {
-        FGStorageManagerNew.getInstance().defaultModifiedMap.put(handler, true);
-        Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), handler));
+    public static void markDirty(IFGObject object){
+        if(object instanceof IRegion){
+            FGManager.getInstance().markDirty(((IRegion) object), RegionCache.DirtyType.MODIFIED);
+        }
+        FGStorageManagerNew.getInstance().defaultModifiedMap.put(object, true);
+        Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), object));
     }
 
     @Nonnull
@@ -166,7 +163,7 @@ public final class FGUtil {
     }
 
     @Nonnull
-    public static IRegion getRegionFromCommand(CommandSource source, OwnerResult qualifier, String worldName) throws CommandException {
+    public static IRegion getRegionFromCommand(CommandSource source, OwnerResult qualifier, boolean worldFlag, @Nullable String worldName) throws CommandException {
         String name = qualifier.getName();
         UUID owner = qualifier.getOwner();
 
@@ -190,31 +187,39 @@ public final class FGUtil {
 
         Set<IRegion> regions = FGManager.getInstance().getAllRegions(qualifier.getName(), qualifier.getOwner());
         World world = null;
-        if (regions.size() == 1) {
-            returnRegion = regions.iterator().next();
-        } else if (regions.size() > 1) {
-            if (source instanceof Locatable) world = ((Locatable) source).getWorld();
-            if (!worldName.isEmpty()) {
+        if (source instanceof Locatable) world = ((Locatable) source).getWorld();
+        if (worldFlag) {
+            if (worldName != null && !worldName.isEmpty()) {
                 Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
                 if (optWorld.isPresent()) {
                     world = optWorld.get();
                 } else {
-                    if (world == null)
-                        throw new CommandException(Text.of("No world exists with name \"" + worldName + "\"!"));
+                    throw new CommandException(Text.of("No world exists with name \"" + worldName + "\"!"));
                 }
             }
-            for (IRegion region : regions) {
-                if (region instanceof IWorldRegion) {
-                    if (world == null) continue;
-                    if (((IWorldRegion) region).getWorld() == world) returnRegion = region;
-                } else {
-                    returnRegion = region;
-                    break;
-                }
+            if (world == null)
+                throw new CommandException(Text.of("Must specify a world with the world flag!"));
+            Optional<IWorldRegion> regionOpt = FGManager.getInstance().getWorldRegion(world, qualifier.getName(), qualifier.getOwner());
+            if (regionOpt.isPresent()) {
+                returnRegion = regionOpt.get();
             }
-            if (returnRegion == null && world == null) throw new CommandException(Text.of("Must specify a world!"));
+        } else {
+            if (regions.size() == 1) {
+                returnRegion = regions.iterator().next();
+            } else if (regions.size() > 1) {
+                for (IRegion region : regions) {
+                    if (region instanceof IWorldRegion) {
+                        if (world == null) continue;
+                        if (((IWorldRegion) region).getWorld() == world) returnRegion = region;
+                    } else {
+                        returnRegion = region;
+                        break;
+                    }
+                }
+                if (returnRegion == null && world == null)
+                    throw new CommandException(Text.of("Multiple regions exist !"));
+            }
         }
-
         if (returnRegion == null) {
             StringBuilder builder = new StringBuilder();
             builder.append("No region exists with the name \"").append(name).append("\"");

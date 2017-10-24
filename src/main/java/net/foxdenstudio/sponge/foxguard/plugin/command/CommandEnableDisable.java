@@ -56,12 +56,13 @@ import org.spongepowered.api.world.Locatable;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+
+import javax.annotation.Nullable;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
@@ -79,6 +80,17 @@ public class CommandEnableDisable extends FCCommandBase {
 
     public CommandEnableDisable(boolean enableState) {
         this.enableState = enableState;
+    }
+
+    public CommandResult process2(CommandSource source, String arguments) throws CommandException {
+        if (!testPermission(source)) {
+            source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
+            return CommandResult.empty();
+        }
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(MAPPER).parse();
+        
+
+        return CommandResult.empty();
     }
 
     @Override
@@ -228,8 +240,16 @@ public class CommandEnableDisable extends FCCommandBase {
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             else if (parse.current.index > 0) {
+                FGUtil.OwnerTabResult result = FGUtil.getOwnerSuggestions(parse.current.token);
+                if (result.isComplete()) {
+                    return result.getSuggestions().stream()
+                            .map(str -> parse.current.prefix)
+                            .collect(GuavaCollectors.toImmutableList());
+                }
+
                 if (isIn(REGIONS_ALIASES, parse.args[0])) {
                     String worldName = parse.flags.get("world");
+                    boolean key = parse.flags.containsKey("world");
                     World world = null;
                     if (source instanceof Locatable) world = ((Locatable) source).getWorld();
                     if (!worldName.isEmpty()) {
@@ -238,29 +258,27 @@ public class CommandEnableDisable extends FCCommandBase {
                             world = optWorld.get();
                         }
                     }
-                    String[] existing = Arrays.copyOfRange(parse.args, 1, parse.args.length);
-                    if (world == null) return FGManager.getInstance().getRegions().stream()
-                            .filter(region -> region.isEnabled() != this.enableState && !(region instanceof IGlobal))
-                            .map(IFGObject::getName)
-                            .filter(new StartsWithPredicate(parse.current.token))
-                            .filter(alias -> !isIn(existing, alias))
-                            .map(args -> parse.current.prefix + args)
-                            .collect(GuavaCollectors.toImmutableList());
-                    return FGManager.getInstance().getAllRegions(world).stream()
-                            .filter(region -> region.isEnabled() != this.enableState && !(region instanceof IGlobal))
-                            .map(IFGObject::getName)
-                            .filter(new StartsWithPredicate(parse.current.token))
-                            .filter(alias -> !isIn(existing, alias))
-                            .map(args -> parse.current.prefix + args)
-                            .collect(GuavaCollectors.toImmutableList());
+                    if (key && world != null) {
+                        return FGManager.getInstance().getAllRegions(world, result.getOwner()).stream()
+                                .filter(object -> object.isEnabled() != this.enableState && !(object instanceof IGlobal))
+                                .map(IFGObject::getName)
+                                .filter(new StartsWithPredicate(result.getToken()))
+                                .map(args -> parse.current.prefix + result.getPrefix() + args)
+                                .collect(GuavaCollectors.toImmutableList());
+                    } else {
+                        return FGManager.getInstance().getAllRegionsWithUniqueNames(result.getOwner(), world).stream()
+                                .filter(object -> object.isEnabled() != this.enableState && !(object instanceof IGlobal))
+                                .map(IFGObject::getName)
+                                .filter(new StartsWithPredicate(result.getToken()))
+                                .map(args -> parse.current.prefix + result.getPrefix() + args)
+                                .collect(GuavaCollectors.toImmutableList());
+                    }
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
-                    String[] existing = Arrays.copyOfRange(parse.args, 1, parse.args.length);
                     return FGManager.getInstance().getHandlers().stream()
-                            .filter(handler -> handler.isEnabled() != this.enableState && !(handler instanceof IGlobal))
+                            .filter(object -> object.isEnabled() != this.enableState && !(object instanceof IGlobal))
                             .map(IFGObject::getName)
-                            .filter(new StartsWithPredicate(parse.current.token))
-                            .filter(alias -> !isIn(existing, alias))
-                            .map(args -> parse.current.prefix + args)
+                            .filter(new StartsWithPredicate(result.getToken()))
+                            .map(args -> parse.current.prefix + result.getPrefix() + args)
                             .collect(GuavaCollectors.toImmutableList());
                 }
             }

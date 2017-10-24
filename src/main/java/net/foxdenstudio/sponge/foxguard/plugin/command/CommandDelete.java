@@ -96,7 +96,7 @@ public class CommandDelete extends FCCommandBase {
             FGManager fgManager = FGManager.getInstance();
             switch (fgCat) {
                 case REGION:
-                    object = FGUtil.getRegionFromCommand(source, ownerResult, parse.flags.get("world"));
+                    object = FGUtil.getRegionFromCommand(source, ownerResult, parse.flags.containsKey("world"), parse.flags.get("world"));
                     if (object instanceof IWorldRegion) fgCat = FGCat.WORLDREGION;
                     break;
                 case HANDLER:

@@ -26,22 +26,25 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
+import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
@@ -49,10 +52,11 @@ import org.spongepowered.api.world.Locatable;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+
+import javax.annotation.Nullable;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
@@ -83,87 +87,54 @@ public class CommandModify extends FCCommandBase {
                     .append(getUsage(source))
                     .build());
             return CommandResult.empty();
-        } else if (isIn(REGIONS_ALIASES, parse.args[0])) {
-            if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a region name!"));
-            IRegion region = null;
-            if (!parse.flags.containsKey("world"))
-                region = FGManager.getInstance().getRegion(parse.args[1]).orElse(null);
-            if (region == null) {
-                String worldName = parse.flags.get("world");
-                World world = null;
-                if (source instanceof Locatable) world = ((Locatable) source).getWorld();
-                if (!worldName.isEmpty()) {
-                    Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
-                    if (optWorld.isPresent()) {
-                        world = optWorld.get();
-                    } else {
-                        if (world == null)
-                            throw new CommandException(Text.of("No world exists with name \"" + worldName + "\"!"));
-                    }
-                }
-                if (world == null) throw new CommandException(Text.of("Must specify a world!"));
-                region = FGManager.getInstance().getWorldRegion(world, parse.args[1]).orElse(null);
-            }
-            if (region == null)
-                throw new ArgumentParseException(Text.of("No region exists with that name!"), parse.args[1], 1);
-            ProcessResult result = region.modify(source, parse.args.length < 3 ? "" : parse.args[2]);
-            Optional<Text> messageOptional = result.getMessage();
-            if (result.isSuccess()) {
-                FGUtil.markRegionDirty(region);
-
-                if (messageOptional.isPresent()) {
-                    if (!FCPUtil.hasColor(messageOptional.get())) {
-                        source.sendMessage(messageOptional.get().toBuilder().color(TextColors.GREEN).build());
-                    } else {
-                        source.sendMessage(messageOptional.get());
-                    }
-                } else {
-                    source.sendMessage(Text.of(TextColors.GREEN, "Successfully modified region!"));
-                }
-            } else {
-                if (messageOptional.isPresent()) {
-                    if (!FCPUtil.hasColor(messageOptional.get())) {
-                        source.sendMessage(messageOptional.get().toBuilder().color(TextColors.RED).build());
-                    } else {
-                        source.sendMessage(messageOptional.get());
-                    }
-                } else {
-                    source.sendMessage(Text.of(TextColors.RED, "Modification failed for region!"));
-                }
-            }
-        } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
-            if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a handler name!"));
-            IHandler handler = FGManager.getInstance().getHandler(parse.args[1]).orElse(null);
-            if (handler == null)
-                throw new CommandException(Text.of("No handler with name \"" + parse.args[1] + "\"!"));
-            ProcessResult result = handler.modify(source, parse.args.length < 3 ? "" : parse.args[2]);
-            Optional<Text> messageOptional = result.getMessage();
-            if (result.isSuccess()) {
-                FGUtil.markHandlerDirty(handler);
-                if (messageOptional.isPresent()) {
-                    if (!FCPUtil.hasColor(messageOptional.get())) {
-                        source.sendMessage(messageOptional.get().toBuilder().color(TextColors.GREEN).build());
-                    } else {
-                        source.sendMessage(messageOptional.get());
-                    }
-                } else {
-                    source.sendMessage(Text.of(TextColors.GREEN, "Successfully modified handler!"));
-                }
-            } else {
-                if (messageOptional.isPresent()) {
-                    if (!FCPUtil.hasColor(messageOptional.get())) {
-                        source.sendMessage(messageOptional.get().toBuilder().color(TextColors.RED).build());
-                    } else {
-                        source.sendMessage(messageOptional.get());
-                    }
-                } else {
-                    source.sendMessage(Text.of(TextColors.RED, "Modification failed for handler!"));
-                }
-            }
         } else {
-            throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);
+            String category = parse.args[0];
+            FGCat fgCat = FGCat.from(category);
+            if (fgCat == null) throw new CommandException(Text.of("\"" + category + "\" is not a valid category!"));
+
+            if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
+
+            FGUtil.OwnerResult ownerResult = FGUtil.processUserInput(parse.args[1]);
+
+            IFGObject object;
+            switch (fgCat) {
+                case REGION:
+                    object = FGUtil.getRegionFromCommand(source, ownerResult, parse.flags.containsKey("world"), parse.flags.get("world"));
+                    if (object instanceof IWorldRegion) fgCat = FGCat.WORLDREGION;
+                    break;
+                case HANDLER:
+                    object = FGUtil.getHandlerFromCommand(ownerResult);
+                    if (object instanceof IController) fgCat = FGCat.CONTROLLER;
+                    break;
+                default:
+                    throw new CommandException(Text.of("Something went horribly wrong."));
+            }
+
+            ProcessResult result = object.modify(source, parse.args.length < 3 ? "" : parse.args[2]);
+            Optional<Text> messageOptional = result.getMessage();
+            boolean success = result.isSuccess();
+            TextColor color;
+            if (success) {
+                color = TextColors.GREEN;
+                FGUtil.markDirty(object);
+            } else {
+                color = TextColors.RED;
+            }
+
+            if (messageOptional.isPresent()) {
+                if (!FCPUtil.hasColor(messageOptional.get())) {
+                    source.sendMessage(messageOptional.get().toBuilder().color(color).build());
+                } else {
+                    source.sendMessage(messageOptional.get());
+                }
+            } else {
+                source.sendMessage(Text.of(TextColors.GREEN, success ?
+                        "Successfully modified " + fgCat.lName + "!" :
+                        "Modification failed for " + fgCat.lName + "!"));
+            }
+
+            return CommandResult.empty();
         }
-        return CommandResult.empty();
     }
 
     @Override
@@ -283,5 +254,27 @@ public class CommandModify extends FCCommandBase {
     @Override
     public Text getUsage(CommandSource source) {
         return Text.of("modify <region [--w:<worldname>] | handler> <name> [args...]");
+    }
+
+    private enum FGCat {
+        REGION(REGIONS_ALIASES),
+        WORLDREGION(null),
+        HANDLER(HANDLERS_ALIASES),
+        CONTROLLER(null);
+
+        public final String[] catAliases;
+        public final String lName = name().toLowerCase();
+
+        FGCat(String[] catAliases) {
+            this.catAliases = catAliases;
+
+        }
+
+        public static FGCat from(String category) {
+            for (FGCat cat : values()) {
+                if (isIn(cat.catAliases, category)) return cat;
+            }
+            return null;
+        }
     }
 }
