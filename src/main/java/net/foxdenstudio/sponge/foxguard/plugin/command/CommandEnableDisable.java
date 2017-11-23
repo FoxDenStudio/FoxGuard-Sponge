@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
+import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
@@ -82,18 +83,118 @@ public class CommandEnableDisable extends FCCommandBase {
         this.enableState = enableState;
     }
 
-    public CommandResult process2(CommandSource source, String arguments) throws CommandException {
+    @SuppressWarnings("Duplicates")
+    @Override
+    public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(MAPPER).parse();
-        
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
+                .arguments(arguments)
+                .flagMapper(MAPPER)
+                .parse();
 
-        return CommandResult.empty();
+
+        List<IRegion> selectedRegions = FGUtil.getSelectedRegions(source);
+        List<IHandler> selectedHandlers = FGUtil.getSelectedHandlers(source);
+        if (parse.args.length == 0 && selectedRegions.isEmpty() && selectedHandlers.isEmpty()) {
+            source.sendMessage(Text.builder()
+                    .append(Text.of(TextColors.GREEN, "Usage: "))
+                    .append(getUsage(source))
+                    .build());
+            return CommandResult.empty();
+        }
+
+        List<IFGObject> objects = new ArrayList<>();
+
+        FGCat cat = FGCat.OBJECT;
+        if (parse.args.length > 0) {
+            cat = FGCat.from(parse.args[0]);
+            if (cat == null) throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);
+        }
+
+        switch (cat) {
+            case OBJECT:
+                objects.addAll(selectedHandlers);
+                FCStateManager.instance().getStateMap().get(source).flush(HandlersStateField.ID);
+            case REGION:
+                objects.addAll(selectedRegions);
+                FCStateManager.instance().getStateMap().get(source).flush(RegionsStateField.ID);
+                break;
+            case HANDLER:
+                objects.addAll(selectedHandlers);
+                FCStateManager.instance().getStateMap().get(source).flush(HandlersStateField.ID);
+        }
+
+        boolean worldKey = parse.flags.containsKey("world");
+        String worldValue = parse.flags.get("world");
+        for (int i = 1; i < parse.args.length; i++) {
+            FGUtil.OwnerResult ownerResult = FGUtil.processUserInput(parse.args[i]);
+            IFGObject object;
+            switch (cat) {
+                case REGION:
+                    object = FGUtil.getRegionFromCommand(source, ownerResult, worldKey, worldValue);
+                    break;
+                case HANDLER:
+                    object = FGUtil.getHandlerFromCommand(ownerResult);
+                    break;
+                default:
+                    throw new CommandException(Text.of("Something went horribly wrong."));
+            }
+            objects.add(object);
+        }
+
+        int successes = 0;
+        int failures = 0;
+        for (IFGObject object : objects) {
+            if (object instanceof GlobalWorldRegion || object instanceof GlobalHandler || object.isEnabled() == this.enableState)
+                failures++;
+            else {
+                object.setEnabled(this.enableState);
+                successes++;
+            }
+        }
+
+        if (successes == 1 && failures == 0) {
+            Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateEvent(FoxGuardMain.getCause()));
+            source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " " + cat.lName + "!"));
+            return CommandResult.success();
+        } else if (successes > 0) {
+            Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateEvent(FoxGuardMain.getCause()));
+            source.sendMessage(Text.of(TextColors.GREEN, "Successfully " + (this.enableState ? "enabled" : "disabled") + " " + cat.lName + "s with "
+                    + successes + " successes" + (failures > 0 ? " and " + failures + " failures!" : "!")));
+            return CommandResult.builder().successCount(successes).build();
+        } else {
+            throw new CommandException(Text.of(failures + " failures while trying to " + (this.enableState ? "enable" : "disable") +
+                    " " + failures + (failures > 1 ? " " + cat.lName + "s" : " " + cat.lName)
+                    + ". Check to make sure you spelled their names correctly and that they are not already "
+                    + (this.enableState ? "enabled." : "disabled.")));
+        }
     }
 
-    @Override
+    private enum FGCat {
+        REGION(REGIONS_ALIASES),
+        HANDLER(HANDLERS_ALIASES),
+        OBJECT(null);
+
+        public final String[] catAliases;
+        public final String lName = name().toLowerCase();
+        public final String uName = FCCUtil.toCapitalCase(name());
+
+        FGCat(String[] catAliases) {
+            this.catAliases = catAliases;
+        }
+
+        public static FGCat from(String category) {
+            for (FGCat cat : values()) {
+                if (isIn(cat.catAliases, category)) return cat;
+            }
+            return null;
+        }
+    }
+
+    /*@Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
@@ -222,8 +323,9 @@ public class CommandEnableDisable extends FCCommandBase {
                         + (this.enableState ? "enabled." : "disabled.")));
             }
         } else throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);
-    }
+    }*/
 
+    @SuppressWarnings("Duplicates")
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
         if (!testPermission(source)) return ImmutableList.of();
@@ -243,7 +345,7 @@ public class CommandEnableDisable extends FCCommandBase {
                 FGUtil.OwnerTabResult result = FGUtil.getOwnerSuggestions(parse.current.token);
                 if (result.isComplete()) {
                     return result.getSuggestions().stream()
-                            .map(str -> parse.current.prefix)
+                            .map(str -> parse.current.prefix + str)
                             .collect(GuavaCollectors.toImmutableList());
                 }
 
@@ -274,7 +376,7 @@ public class CommandEnableDisable extends FCCommandBase {
                                 .collect(GuavaCollectors.toImmutableList());
                     }
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
-                    return FGManager.getInstance().getHandlers().stream()
+                    return FGManager.getInstance().getHandlers(result.getOwner()).stream()
                             .filter(object -> object.isEnabled() != this.enableState && !(object instanceof IGlobal))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(result.getToken()))

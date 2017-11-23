@@ -69,7 +69,7 @@ public class HandlersStateField extends ListStateFieldBase<IHandler> {
             IHandler handler = it.next();
             if (source instanceof Player) {
                 builder.append(Text.of(TextColors.RED,
-                        TextActions.runCommand("/foxguard s h remove " + handler.getName()),
+                        TextActions.runCommand("/foxguard s h remove " + FGUtil.getFullName(handler)),
                         TextActions.showText(Text.of("Remove from Handler State Buffer")),
                         "  [-] "));
             }

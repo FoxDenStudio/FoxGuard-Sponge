@@ -85,17 +85,21 @@ public class FGStorageManagerNew {
     private static final Type INDEX_LIST_TYPE = new TypeToken<List<FGSObjectIndex>>() {
     }.getType();
     private static FGStorageManagerNew instance;
-    public final Gson GSON;
     public final HashMap<IFGObject, Boolean> defaultModifiedMap;
+    private final FGConfigManager config;
     private final UserStorageService userStorageService;
     private final Logger logger = FoxGuardMain.instance().getLogger();
     private final FGManager manager = FGManager.getInstance();
     private final Map<World, Path> worldDirectories;
+    private Gson gson;
+    private boolean prettyPrint;
+    private String gsonIndentString;
     private Path fgDirectory;
     private boolean serverLoaded = false;
     private boolean reentry = false;
 
     private FGStorageManagerNew() {
+        config = FGConfigManager.getInstance();
         userStorageService = FoxGuardMain.instance().getUserStorage();
         defaultModifiedMap = new CacheMap<>((k, m) -> {
             if (k instanceof IFGObject) {
@@ -104,8 +108,17 @@ public class FGStorageManagerNew {
             } else return null;
         });
         worldDirectories = new HashMap<>();
+        prettyPrint = config.prettyPrint();
+        StringBuilder builder = new StringBuilder();
+        int indent = config.prettyPrintIndent();
+        for (int i = 0; i < indent; i++) {
+            builder.append(" ");
+        }
+        gsonIndentString = builder.toString();
         GsonBuilder gsonBuilder = new GsonBuilder();
-        GSON = gsonBuilder.create();
+        gsonBuilder.setPrettyPrinting();
+        gson = gsonBuilder.create();
+
     }
 
     public static FGStorageManagerNew getInstance() {
@@ -152,8 +165,8 @@ public class FGStorageManagerNew {
         }
 
         try (JsonWriter jsonWriter = new JsonWriter(Files.newBufferedWriter(file, CHARSET))) {
-            //jsonWriter.setIndent("    ");
-            GSON.toJson(indexList, List.class, jsonWriter);
+            if (this.prettyPrint) jsonWriter.setIndent(gsonIndentString);
+            gson.toJson(indexList, List.class, jsonWriter);
         } catch (IOException e) {
             logger.error("Failed to open index for writing: " + file, e);
         }
@@ -187,8 +200,8 @@ public class FGStorageManagerNew {
                 FGSObjectMeta metadata = new FGSObjectMeta(object);
                 Path metadataFile = directory.resolve(METADATA_FILE_NAME);
                 try (JsonWriter jsonWriter = new JsonWriter(Files.newBufferedWriter(metadataFile, CHARSET))) {
-                    //jsonWriter.setIndent("    ");
-                    GSON.toJson(metadata, FGSObjectMeta.class, jsonWriter);
+                    if(this.prettyPrint) jsonWriter.setIndent(this.gsonIndentString);
+                    gson.toJson(metadata, FGSObjectMeta.class, jsonWriter);
                 } catch (IOException e) {
                     logger.error("Failed to open metadata for writing: " + metadataFile, e);
                 }
@@ -399,7 +412,7 @@ public class FGStorageManagerNew {
         List<FGSObjectIndex> index = null;
         if (Files.exists(indexFile) && !Files.isDirectory(indexFile)) {
             try (JsonReader jsonReader = new JsonReader(Files.newBufferedReader(indexFile))) {
-                index = GSON.fromJson(jsonReader, INDEX_LIST_TYPE);
+                index = gson.fromJson(jsonReader, INDEX_LIST_TYPE);
             } catch (IOException e) {
                 logger.error("Failed to open index for reading: " + indexFile, e);
             }
@@ -416,7 +429,7 @@ public class FGStorageManagerNew {
         Path metadataFile = directory.resolve(METADATA_FILE_NAME);
         if (Files.exists(metadataFile) && !Files.isDirectory(metadataFile)) {
             try (JsonReader jsonReader = new JsonReader(Files.newBufferedReader(metadataFile))) {
-                metadata = GSON.fromJson(jsonReader, FGSObjectMeta.class);
+                metadata = gson.fromJson(jsonReader, FGSObjectMeta.class);
             } catch (IOException e) {
                 logger.error("Failed to open metadata for reading: " + metadataFile, e);
             }
@@ -508,6 +521,14 @@ public class FGStorageManagerNew {
         }
 
         return Optional.ofNullable(fgObject);
+    }
+
+    public Gson getGson() {
+        return gson;
+    }
+
+    public String getGsonIndent(){
+        return gsonIndentString;
     }
 
     private Path getFGDirectory() {
@@ -872,4 +893,12 @@ public class FGStorageManagerNew {
 
         public abstract IFGObject loadInstance(Path directory, String type, FGObjectData data);
     }
+
+    /*private void setPrettyPrint(boolean prettyPrint) {
+        if (this.prettyPrint == prettyPrint) return;
+        this.prettyPrint = prettyPrint;
+        GsonBuilder builder = new GsonBuilder();
+        if (prettyPrint) builder.setPrettyPrinting();
+        this.gson = builder.create();
+    }*/
 }

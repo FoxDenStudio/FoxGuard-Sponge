@@ -55,7 +55,7 @@ public abstract class HandlerBase extends FGObjectBase implements IHandler {
     }
 
     public void markDirty() {
-        FGUtil.markHandlerDirty(this);
+        FGUtil.markDirty(this);
     }
 
     @Override

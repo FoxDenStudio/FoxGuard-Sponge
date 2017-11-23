@@ -76,6 +76,15 @@ public abstract class FGObjectBase implements IFGObject {
     public abstract void markDirty();
 
     @Override
+    public String getFullName() {
+        String fullName = this.name;
+        if (this.owner != null && !this.owner.equals(FGManager.SERVER_UUID)) {
+            fullName = this.owner + ":" + fullName;
+        }
+        return fullName;
+    }
+
+    @Override
     public String toString() {
         return "FGObjectBase{" +
                 "name='" + name + '\'' +

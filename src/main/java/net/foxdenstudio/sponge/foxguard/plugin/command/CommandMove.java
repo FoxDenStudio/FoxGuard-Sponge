@@ -58,7 +58,7 @@ import java.util.stream.Stream;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
-public class CommandRename extends FCCommandBase {
+public class CommandMove extends FCCommandBase {
 
     private static final FlagMapper MAPPER = map -> key -> value -> {
         map.put(key, value);
@@ -220,7 +220,7 @@ public class CommandRename extends FCCommandBase {
                         available = Tristate.fromBoolean(FGManager.getInstance().isRegionNameAvailable(parse.current.token));
                     }
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0]) || isIn(CONTROLLERS_ALIASES, parse.args[0])) {
-                    available = Tristate.fromBoolean(FGManager.getInstance().getHandler(parse.current.token) == null);
+                    available = Tristate.fromBoolean(!FGManager.getInstance().getHandler(parse.current.token).isPresent());
                 }
                 if (available != null) {
                     switch (available) {

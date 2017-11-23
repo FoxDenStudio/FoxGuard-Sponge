@@ -846,12 +846,12 @@ public class GroupHandler extends HandlerBase {
     public Text details(CommandSource source, String arguments) {
         Text.Builder builder = Text.builder();
         builder.append(Text.of(TextColors.GOLD,
-                TextActions.suggestCommand("/foxguard md h " + this.getName() + " group add "),
+                TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " group add "),
                 TextActions.showText(Text.of("Click to add a group")),
                 "----- Group Permission Strings -----\n"));
         for (Group group : groups) {
             builder.append(Text.of(group.color,
-                    TextActions.suggestCommand("/foxguard md h " + this.getName() + " group modify " + group.name + " "),
+                    TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " group modify " + group.name + " "),
                     TextActions.showText(Text.of("Click to modify \"", group.color, group.displayName, TextColors.RESET, "\"" + (group.name.equals(group.displayName) ? "" : " (" + group.name + ")"))),
                     group.displayName,
                     TextColors.RESET, ": "));
@@ -862,17 +862,17 @@ public class GroupHandler extends HandlerBase {
                 permBuilder.append(Text.of("foxguard.handler.", TextColors.YELLOW, this.name.toLowerCase(), TextColors.RESET, ".", group.color, group.name));
             }
             permBuilder.onHover(TextActions.showText(Text.of("Click to modify the permissions string for \"", group.color, group.displayName, TextColors.RESET, "\"" + (group.name.equals(group.displayName) ? "" : " (" + group.name + ")"))));
-            permBuilder.onClick(TextActions.suggestCommand("/foxguard md h " + this.getName() + " group modify " + group.name + " --p:"));
+            permBuilder.onClick(TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " group modify " + group.name + " --p:"));
             builder.append(permBuilder.build());
             builder.append(Text.NEW_LINE);
         }
         builder.append(Text.of(TextColors.GOLD,
-                TextActions.suggestCommand("/foxguard md h " + this.getName() + " groups add "),
+                TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " groups add "),
                 TextActions.showText(Text.of("Click to add a group")),
                 "----- Group Flags -----\n"));
         for (Group group : groups) {
             builder.append(Text.of(group.color,
-                    TextActions.suggestCommand("/foxguard md h " + this.name + " flags " + group.name + " add "),
+                    TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " flags " + group.name + " add "),
                     TextActions.showText(Text.of("Click to add a flag entry")),
                     group.displayName + ":\n"));
             int index = 0;
@@ -883,12 +883,12 @@ public class GroupHandler extends HandlerBase {
                 entryBuilder.append(Text.of("  " + index + ": " + stringBuilder.toString(), TextColors.AQUA, ": "))
                         .append(FGUtil.readableTristateText(entry.tristate))
                         .onHover(TextActions.showText(Text.of("Click to change this flag entry")))
-                        .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " flags " + group.name + " set " + (index++) + " "));
+                        .onClick(TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " flags " + group.name + " set " + (index++) + " "));
                 builder.append(entryBuilder.build()).append(Text.NEW_LINE);
             }
         }
         builder.append(Text.of(this.defaultGroup.color,
-                TextActions.suggestCommand("/foxguard md h " + this.name + " flags default add "),
+                TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " flags default add "),
                 TextActions.showText(Text.of("Click to add a flag entry")),
                 this.defaultGroup.displayName + ":"));
         int index = 0;
@@ -899,7 +899,7 @@ public class GroupHandler extends HandlerBase {
             entryBuilder.append(Text.of("  " + index + ": " + stringBuilder.toString(), TextColors.AQUA, ": "))
                     .append(FGUtil.readableTristateText(entry.tristate))
                     .onHover(TextActions.showText(Text.of("Click to change this flag entry")))
-                    .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " flags default set " + (index++) + " "));
+                    .onClick(TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " flags default set " + (index++) + " "));
             builder.append(Text.NEW_LINE).append(entryBuilder.build());
         }
         return builder.build();

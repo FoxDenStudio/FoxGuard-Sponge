@@ -1065,17 +1065,17 @@ public class BasicHandler extends HandlerBase {
         if (this.passiveSetting == PassiveSetting.GROUP)
             passiveBuilder.append(Text.of(passiveGroup.color, passiveGroup.displayName));
         passiveBuilder
-                .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " passive "))
+                .onClick(TextActions.suggestCommand("/foxguard md h " + this.getFullName()+ " passive "))
                 .onHover(TextActions.showText(Text.of("Click to change the passive config")));
         builder.append(passiveBuilder.build());
         builder.append(Text.NEW_LINE);
         builder.append(Text.of(TextColors.GOLD,
-                TextActions.suggestCommand("/foxguard md h " + this.getName() + " group add "),
+                TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " group add "),
                 TextActions.showText(Text.of("Click to add a group")),
                 "----- Group Members -----\n"));
         for (Group group : groups) {
             builder.append(Text.of(group.color,
-                    TextActions.suggestCommand("/foxguard md h " + this.getName() + " users " + group.name + " add "),
+                    TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " users " + group.name + " add "),
                     TextActions.showText(Text.of("Click to add player(s) to \"", group.color, group.displayName, TextColors.RESET, "\"" + (group.name.equals(group.displayName) ? "" : " (" + group.name + ")"))),
                     group.displayName,
                     TextColors.RESET, ": "));
@@ -1096,26 +1096,26 @@ public class BasicHandler extends HandlerBase {
                         if (source instanceof Player && ((Player) source).getUniqueId().equals(user.getUniqueId()))
                             color = TextColors.YELLOW;
                         builder.append(Text.of(color,
-                                TextActions.suggestCommand("/foxguard md h " + this.getName() + " users " + group.name + " remove " + user.getName()),
+                                TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " users " + group.name + " remove " + user.getName()),
                                 TextActions.showText(Text.of("Click to remove player \"" + user.getName() + "\" from \"", group.color, group.displayName, TextColors.RESET, "\"" + (group.name.equals(group.displayName) ? "" : " (" + group.name + ")"))),
                                 user.getName())).append(Text.of(" "));
                     });
             offline.stream()
                     .sorted((u1, u2) -> u1.toString().compareTo(u2.toString()))
                     .forEach(uuid -> builder.append(Text.of(TextColors.RESET,
-                            TextActions.suggestCommand("/foxguard md h " + this.getName() + " users " + group.name + " remove " + uuid.toString()),
+                            TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " users " + group.name + " remove " + uuid.toString()),
                             TextActions.showText(Text.of("Click to remove player \"" + uuid.toString() + "\" from \"", group.color, group.displayName, TextColors.RESET, "\"" + (group.name.equals(group.displayName) ? "" : " (" + group.name + ")"))),
                             uuid.toString())).append(Text.of(" ")));
 
             builder.append(Text.NEW_LINE);
         }
         builder.append(Text.of(TextColors.GOLD,
-                TextActions.suggestCommand("/foxguard md h " + this.getName() + " groups add "),
+                TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " groups add "),
                 TextActions.showText(Text.of("Click to add a group")),
                 "----- Group Flags -----\n"));
         for (Group group : groups) {
             builder.append(Text.of(group.color,
-                    TextActions.suggestCommand("/foxguard md h " + this.name + " flags " + group.name + " add "),
+                    TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " flags " + group.name + " add "),
                     TextActions.showText(Text.of("Click to add a flag entry")),
                     group.displayName + ":\n"));
             int index = 0;
@@ -1126,12 +1126,12 @@ public class BasicHandler extends HandlerBase {
                 entryBuilder.append(Text.of("  " + index + ": " + stringBuilder.toString(), TextColors.AQUA, ": "))
                         .append(FGUtil.readableTristateText(entry.tristate))
                         .onHover(TextActions.showText(Text.of("Click to change this flag entry")))
-                        .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " flags " + group.name + " set " + (index++) + " "));
+                        .onClick(TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " flags " + group.name + " set " + (index++) + " "));
                 builder.append(entryBuilder.build()).append(Text.NEW_LINE);
             }
         }
         builder.append(Text.of(this.defaultGroup.color,
-                TextActions.suggestCommand("/foxguard md h " + this.name + " flags default add "),
+                TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " flags default add "),
                 TextActions.showText(Text.of("Click to add a flag entry")),
                 this.defaultGroup.displayName + ":"));
         int index = 0;
@@ -1142,7 +1142,7 @@ public class BasicHandler extends HandlerBase {
             entryBuilder.append(Text.of("  " + index + ": " + stringBuilder.toString(), TextColors.AQUA, ": "))
                     .append(FGUtil.readableTristateText(entry.tristate))
                     .onHover(TextActions.showText(Text.of("Click to change this flag entry")))
-                    .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " flags default set " + (index++) + " "));
+                    .onClick(TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " flags default set " + (index++) + " "));
             builder.append(Text.NEW_LINE).append(entryBuilder.build());
         }
         return builder.build();

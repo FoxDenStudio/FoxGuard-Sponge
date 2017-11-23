@@ -118,7 +118,7 @@ public class LogicController extends ControllerBase {
     public Text details(CommandSource source, String arguments) {
         Text.Builder builder = Text.builder();
         builder.append(Text.of(
-                TextActions.suggestCommand("/foxguard md h " + this.name + " operator "),
+                TextActions.suggestCommand("/foxguard md h " + this.getFullName()+ " operator "),
                 TextActions.showText(Text.of(Text.of("Click to change operator"))),
                 TextColors.GOLD, "Operator: ",
                 operator.color, operator.toString()
@@ -126,13 +126,13 @@ public class LogicController extends ControllerBase {
         builder.append(Text.builder()
                 .append(Text.of(TextColors.GOLD, "\nMode: "))
                 .append(FGUtil.readableTristateText(mode))
-                .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " mode "))
+                .onClick(TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " mode "))
                 .onHover(TextActions.showText(Text.of(Text.of("Click to change mode"))))
                 .build());
         builder.append(Text.builder()
                 .append(Text.of(TextColors.GOLD, "\nShort Circuit: "))
                 .append(Text.of(FCPUtil.readableBooleanText(shortCircuit)))
-                .onClick(TextActions.runCommand("/foxguard md h " + this.name + " shortCircuit " + !shortCircuit))
+                .onClick(TextActions.runCommand("/foxguard md h " + this.getFullName() + " shortCircuit " + !shortCircuit))
                 .onHover(TextActions.showText(Text.of(Text.of("Click to toggle short circuit"))))
                 .build());
         return builder.build();

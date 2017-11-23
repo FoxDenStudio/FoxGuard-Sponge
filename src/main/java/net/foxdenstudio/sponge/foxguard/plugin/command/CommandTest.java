@@ -139,6 +139,11 @@ public class CommandTest extends FCCommandBase {
 
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
+        return CommandResult.empty();
+    }
+
+    /*@Override
+    public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this " +
                     "command!"));
@@ -194,12 +199,13 @@ public class CommandTest extends FCCommandBase {
 
         source.sendMessage(Text.of(TextColors.GREEN, "Successfully created " + amount + " regions!"));
         return CommandResult.success();
-    }
+    }*/
 
 
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
-        return ImmutableList.of();
+        Thread.dumpStack();
+        return ImmutableList.of("b", "c", "a", "d");
     }
 
     /*@Override

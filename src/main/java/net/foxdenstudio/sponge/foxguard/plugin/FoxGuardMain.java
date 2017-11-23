@@ -74,11 +74,9 @@ import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.service.economy.EconomyService;
 import org.spongepowered.api.service.permission.PermissionService;
-import org.spongepowered.api.service.permission.SubjectData;
 import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
 import java.nio.file.Path;
@@ -188,7 +186,7 @@ public final class FoxGuardMain {
         fgDispatcher.register(new CommandCreate(), "create", "construct", "new", "make", "define", "mk", "cr");
         fgDispatcher.register(new CommandDelete(), "delete", "del", "remove", "rem", "rm", "destroy");
         fgDispatcher.register(new CommandModify(), "modify", "mod", "change", "edit", "update", "md", "ch");
-        fgDispatcher.register(new CommandRename(), "rename", "name", "rn");
+        fgDispatcher.register(new CommandMove(), "move", "mv", "rename", "name", "rn");
         fgDispatcher.register(new CommandLink(), "link", "connect", "attach");
         fgDispatcher.register(new CommandUnlink(), "unlink", "disconnect", "detach");
         fgDispatcher.register(new CommandEnableDisable(true), "enable", "activate", "engage", "on");

@@ -86,12 +86,12 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                 builder.append(Text.of(TextColors.RED,
                         TextActions.runCommand("/foxguard s r remove " +
                                 FGUtil.genWorldFlag(region) +
-                                region.getName()),
+                                FGUtil.getFullName(region)),
                         TextActions.showText(Text.of("Remove from State Buffer")),
                         "  [-] "));
             }
             builder.append(Text.of(FGUtil.getColorForObject(region),
-                    (index++) + ": " + FGUtil.getRegionDisplayName(region, true)));
+                    (index++) + ": " + FGUtil.getObjectDisplayName(region, true, null, source)));
             if (regionIterator.hasNext()) builder.append(Text.NEW_LINE);
         }
         return builder.build();
@@ -112,8 +112,8 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                 .parseLastFlags(false)
                 .leaveFinalAsIs(true)
                 .parse();
-        String newArgs = parse.args.length > 1 ? parse.args[1] : "";
         if (parse.args.length > 0) {
+            String newArgs = parse.args.length > 1 ? parse.args[1] : "";
             if (parse.args[0].equalsIgnoreCase("add")) {
                 return add(source, newArgs);
             } else if (parse.args[0].equalsIgnoreCase("remove")) {
@@ -202,7 +202,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         int[] index = {1};
         return this.list.stream()
                 .map(region -> Text.of(FGUtil.getColorForObject(region),
-                        "  " + index[0]++ + ": " + FGUtil.getRegionDisplayName(region, true)))
+                        "  " + index[0]++ + ": " + FGUtil.getObjectDisplayName(region,true, FGManager.SERVER_UUID, null)))
                 .collect(Collectors.toList());
     }
 
@@ -217,7 +217,10 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
     }
 
     public ProcessResult add(CommandSource source, String arguments) throws CommandException {
-        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(MAPPER).parse();
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
+                .arguments(arguments)
+                .flagMapper(MAPPER)
+                .parse();
 
         if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name!"));
         IRegion region = FGManager.getInstance().getRegion(parse.args[0]).orElse(null);

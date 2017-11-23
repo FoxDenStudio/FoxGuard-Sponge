@@ -217,7 +217,7 @@ public class CommandCreate extends FCCommandBase {
         logMessage.append(source.getName()).append(" created a ").append(fgCat.lName).append(":   ")
                 .append("Name: ").append(object.getName()).append("   ");
 
-        if (owner != null && owner != FGManager.SERVER_UUID) {
+        if (owner != null && !owner.equals(FGManager.SERVER_UUID)) {
             logMessage.append("Owner: ").append(OwnerProviderRegistry.getInstance().getKeyword(owner, null))
                     .append(" (").append(owner).append(")");
         }
@@ -292,22 +292,20 @@ public class CommandCreate extends FCCommandBase {
                             available = Tristate.fromBoolean(FGManager.getInstance().isWorldRegionNameAvailable(parse.current.token, world));
                         }
                     } else if (fgCat == FGCat.HANDLER || fgCat == FGCat.CONTROLLER) {
-                        available = Tristate.fromBoolean(FGManager.getInstance().getHandler(parse.current.token) == null);
+                        available = Tristate.fromBoolean(!FGManager.getInstance().getHandler(parse.current.token).isPresent());
                     } else {
                         return ImmutableList.of();
                     }
-                    if (available != null) {
-                        switch (available) {
-                            case TRUE:
-                                source.sendMessage(Text.of(TextColors.GREEN, "Name is available!"));
-                                break;
-                            case FALSE:
-                                source.sendMessage(Text.of(TextColors.RED, "Name is already taken!"));
-                                break;
-                            case UNDEFINED:
-                                source.sendMessage(Text.of(TextColors.YELLOW, "Name might be available. Must specify a world to confirm."));
+                    switch (available) {
+                        case TRUE:
+                            source.sendMessage(Text.of(TextColors.GREEN, "Name is available!"));
+                            break;
+                        case FALSE:
+                            source.sendMessage(Text.of(TextColors.RED, "Name is already taken!"));
+                            break;
+                        case UNDEFINED:
+                            source.sendMessage(Text.of(TextColors.YELLOW, "Name might be available. Must specify a world to confirm."));
 
-                        }
                     }
                 } else if (parse.current.index == 2) {
                     if (fgCat == null) return ImmutableList.of();
@@ -352,13 +350,16 @@ public class CommandCreate extends FCCommandBase {
                         .collect(GuavaCollectors.toImmutableList());
             } else if (isIn(OWNER_ALIASES, parse.current.key)) {
                 String[] parts = parse.current.token.split(":", 2);
+                System.out.println(parts.length );
                 if (parts.length == 1) {
-                    return OwnerProviderRegistry.getInstance().getProviders().stream()
+                    ImmutableList<String> collect = OwnerProviderRegistry.getInstance().getProviders().stream()
                             .map(IOwnerProvider::getPrimaryAlias)
                             .filter(string -> string != null && !string.isEmpty())
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
+                    System.out.println(collect);
+                    return collect;
 
                 } else if (parts.length == 2) {
                     Optional<IOwnerProvider> providerOpt = OwnerProviderRegistry.getInstance().getProvider(parts[0]);

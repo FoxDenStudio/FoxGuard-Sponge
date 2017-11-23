@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.util;
 
 import com.google.common.collect.ImmutableList;
+import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.util.IWorldBound;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
@@ -50,6 +51,7 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
@@ -65,6 +67,10 @@ import java.util.UUID;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.HANDLERS_ALIASES;
+import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.REGIONS_ALIASES;
+import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isIn;
 
 public final class FGUtil {
 
@@ -94,8 +100,23 @@ public final class FGUtil {
         return ((ControllersStateField) FCStateManager.instance().getStateMap().get(source).getOrCreate(ControllersStateField.ID).get()).getList();
     }
 
-    public static String getRegionDisplayName(IRegion region, boolean dispWorld) {
-        return region.getShortTypeName() + " : " + (dispWorld && region instanceof IWorldRegion ? ((IWorldRegion) region).getWorld().getName() + " : " : "") + region.getName();
+    public static String getObjectDisplayName(IFGObject object, boolean dispWorld, @Nullable UUID owner, @Nullable CommandSource viewer) {
+        if(owner == null) owner = object.getOwner();
+        boolean hasOwner;
+        hasOwner = (owner != null && !owner.equals(FGManager.SERVER_UUID));
+        return object.getShortTypeName()
+                + " : "
+                + (dispWorld && object instanceof IWorldBound ? ((IWorldBound) object).getWorld().getName() + " : " : "")
+                + (hasOwner ? OwnerProviderRegistry.getInstance().getDisplayName(owner, null, viewer) + " : " : "")
+                + object.getName();
+    }
+    public static Text getObjectDisplayTest(IFGObject object, boolean dispWorld, @Nullable UUID owner, @Nullable CommandSource viewer) {
+        if(owner == null) owner = object.getOwner();
+        boolean hasOwner;
+        hasOwner = (owner != null && !owner.equals(FGManager.SERVER_UUID));
+        Text.Builder builder = Text.builder();
+
+        return builder.build();
     }
 
     public static String getLogName(IFGObject object) {
@@ -104,6 +125,15 @@ public final class FGUtil {
         boolean isOwned = !owner.equals(FGManager.SERVER_UUID);
         Optional<User> userOwner = isOwned ? userStorageService.get(owner) : Optional.empty();
         return (userOwner.map(user -> user.getName() + ":").orElse("")) + (isOwned ? owner + ":" : "") + object.getName();
+    }
+
+    public static String getFullName(IFGObject object) {
+        UUID owner = object.getOwner();
+        String fullName = object.getName();
+        if (owner != null && !owner.equals(FGManager.SERVER_UUID)) {
+            fullName = owner + ":" + fullName;
+        }
+        return fullName;
     }
 
     public static String getCategory(IFGObject object) {
@@ -133,8 +163,8 @@ public final class FGUtil {
         }
     }
 
-    public static void markDirty(IFGObject object){
-        if(object instanceof IRegion){
+    public static void markDirty(IFGObject object) {
+        if (object instanceof IRegion) {
             FGManager.getInstance().markDirty(((IRegion) object), RegionCache.DirtyType.MODIFIED);
         }
         FGStorageManagerNew.getInstance().defaultModifiedMap.put(object, true);
@@ -152,7 +182,7 @@ public final class FGUtil {
         if (!handlerOpt.isPresent()) {
             StringBuilder builder = new StringBuilder();
             builder.append("No handler exists with the name \"").append(name).append("\"");
-            if (owner != FGManager.SERVER_UUID) {
+            if (!owner.equals(FGManager.SERVER_UUID)) {
                 builder.append(" and owner \"").append(qualifier.getOwnerName()).append("\"");
             }
             builder.append("!");
@@ -223,7 +253,7 @@ public final class FGUtil {
         if (returnRegion == null) {
             StringBuilder builder = new StringBuilder();
             builder.append("No region exists with the name \"").append(name).append("\"");
-            if (owner != FGManager.SERVER_UUID) {
+            if (!owner.equals(FGManager.SERVER_UUID)) {
                 builder.append(" and owner \"").append(qualifier.getOwnerName()).append("\"");
             }
             if (world != null && regions.size() > 0) {
@@ -332,6 +362,91 @@ public final class FGUtil {
         return new OwnerTabResult();
     }
 
+    public static void genStatePrefix(Text.Builder builder, IFGObject object, CommandSource source){
+        genStatePrefix(builder, object, source, false);
+    }
+
+    public static void genStatePrefix(Text.Builder builder, IFGObject object, CommandSource source, boolean controllerPadding) {
+        FGCat cat = FGCat.from(object);
+        if (cat == null) return;
+        if (cat == FGCat.WORLDREGION) cat = FGCat.REGION;
+        boolean contains;
+        if (cat == FGCat.REGION) {
+            contains = getSelectedRegions(source).contains(object);
+            controllerPadding = false;
+        } else {
+            contains = getSelectedHandlers(source).contains(object);
+            if (cat == FGCat.CONTROLLER) {
+                genStateButtons(builder, FGCat.HANDLER, object, contains);
+                contains = getSelectedControllers(source).contains(object);
+                controllerPadding =false;
+            }
+        }
+        genStateButtons(builder, cat, object, contains);
+        if(controllerPadding)
+            builder.append(Text.of(TextColors.DARK_GRAY, "[c+][c-]"));
+        builder.append(Text.of(" "));
+    }
+
+    private static void genStateButtons(Text.Builder builder, FGCat cat, IFGObject object, boolean contains) {
+        String plus = "[" + cat.sName + "+]";
+        String minus = "[" + cat.sName + "-]";
+        if (contains) {
+            builder.append(Text.of(TextColors.GRAY, plus));
+            builder.append(Text.of(TextColors.RED,
+                    TextActions.runCommand("/foxguard s " + cat.sName + " remove " + genWorldFlag(object) + getFullName(object)),
+                    TextActions.showText(Text.of("Remove from " + cat.lName + " state buffer")),
+                    minus));
+        } else {
+            builder.append(Text.of(TextColors.GREEN,
+                    TextActions.runCommand("/foxguard s " + cat.sName + " add " + genWorldFlag(object) + getFullName(object)),
+                    TextActions.showText(Text.of("Add to " + cat.lName + " state buffer")),
+                    plus));
+            builder.append(Text.of(TextColors.GRAY, minus));
+        }
+    }
+
+    private enum FGCat {
+        REGION(REGIONS_ALIASES, "r"),
+        WORLDREGION(null, REGION.sName),
+        HANDLER(HANDLERS_ALIASES, "h"),
+        CONTROLLER(null, HANDLER.sName);
+
+        public final String[] catAliases;
+        public final String lName = name().toLowerCase();
+        public final String uName = FCCUtil.toCapitalCase(name());
+        public final String sName;
+
+        FGCat(String[] catAliases, String sName) {
+            this.catAliases = catAliases;
+            this.sName = sName;
+        }
+
+        public static FGCat from(String category) {
+            for (FGCat cat : values()) {
+                if (isIn(cat.catAliases, category)) return cat;
+            }
+            return null;
+        }
+
+        public static FGCat from(IFGObject object) {
+            if (object instanceof IRegion) {
+                if (object instanceof IWorldRegion) {
+                    return WORLDREGION;
+                } else {
+                    return REGION;
+                }
+            } else if (object instanceof IHandler) {
+                if (object instanceof IController) {
+                    return CONTROLLER;
+                } else {
+                    return HANDLER;
+                }
+            }
+            return null;
+        }
+    }
+
     public static class OwnerTabResult {
         private boolean complete;
         private List<String> suggestions;
@@ -375,6 +490,17 @@ public final class FGUtil {
         public UUID getOwner() {
             return owner;
         }
+
+        @Override
+        public String toString() {
+            return "OwnerTabResult{" +
+                    "complete=" + complete +
+                    ", suggestions=" + suggestions +
+                    ", prefix='" + prefix + '\'' +
+                    ", token='" + token + '\'' +
+                    ", owner=" + owner +
+                    '}';
+        }
     }
 
     public static class OwnerResult {
@@ -398,6 +524,15 @@ public final class FGUtil {
 
         public String getOwnerName() {
             return ownerName;
+        }
+
+        @Override
+        public String toString() {
+            return "OwnerResult{" +
+                    "name='" + name + '\'' +
+                    ", owner=" + owner +
+                    ", ownerName='" + ownerName + '\'' +
+                    '}';
         }
     }
 }

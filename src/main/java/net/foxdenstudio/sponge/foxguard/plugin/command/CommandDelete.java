@@ -135,10 +135,11 @@ public class CommandDelete extends FCCommandBase {
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             else if (parse.current.index == 1) {
+                System.out.println(parse.current.token);
                 FGUtil.OwnerTabResult result = FGUtil.getOwnerSuggestions(parse.current.token);
                 if (result.isComplete()) {
                     return result.getSuggestions().stream()
-                            .map(str -> parse.current.prefix)
+                            .map(str -> parse.current.prefix + str)
                             .collect(GuavaCollectors.toImmutableList());
                 }
 
@@ -169,7 +170,7 @@ public class CommandDelete extends FCCommandBase {
                                 .collect(GuavaCollectors.toImmutableList());
                     }
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
-                    return FGManager.getInstance().getHandlers().stream()
+                    return FGManager.getInstance().getHandlers(result.getOwner()).stream()
                             .filter(handler -> !(handler instanceof IGlobal))
                             .map(IFGObject::getName)
                             .filter(new StartsWithPredicate(result.getToken()))

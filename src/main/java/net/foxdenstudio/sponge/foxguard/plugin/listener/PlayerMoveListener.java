@@ -232,7 +232,7 @@ public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
                 for (int i = 0; i < regionCount && i < regions.size(); i++) {
                     IRegion region = regions.get(i);
                     Score score = objective.getOrCreateScore(Text.of(FGUtil.getColorForObject(region),
-                            "  " + FGUtil.getRegionDisplayName(region, false)));
+                            "  " + FGUtil.getObjectDisplayName(region, false, FGManager.SERVER_UUID, null)));
                     score.setScore(slot--);
                 }
                 Score handlersScore = objective.getOrCreateScore(Text.of(TextColors.GREEN, "Handlers " + (config.priority ? "by Priority " : ""),
@@ -250,7 +250,7 @@ public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
                 objective.setDisplayName(Text.of(TextColors.GOLD, "  Regions Here (" + player.getWorld().getName() + ")  "));
                 for (IRegion region : regions) {
                     Score score = objective.getOrCreateScore(Text.of(FGUtil.getColorForObject(region),
-                            "  " + FGUtil.getRegionDisplayName(region, false)));
+                            "  " + FGUtil.getObjectDisplayName(region, false, FGManager.SERVER_UUID, null)));
                     score.setScore(slot--);
                     if (slot <= 0) break;
                 }

@@ -496,7 +496,7 @@ public class PermissionHandler extends HandlerBase {
                 TextColors.AQUA, ">");
         builder.append(Text.of(
                 TextActions.showText(Text.of("Click to add a permission entry")),
-                TextActions.suggestCommand("/foxguard md h " + this.name + " entries add "),
+                TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " entries add "),
                 TextColors.GREEN, "Entries:"
         ));
         int index = 0;
@@ -515,7 +515,7 @@ public class PermissionHandler extends HandlerBase {
             }
             entryBuilder.append(postfix)
                     .onHover(TextActions.showText(Text.of("Click to change this entry")))
-                    .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + "entries set " + (index++) + " "));
+                    .onClick(TextActions.suggestCommand("/foxguard md h " + this.getFullName() + "entries set " + (index++) + " "));
             builder.append(Text.NEW_LINE).append(entryBuilder.build());
         }
         Text.Builder entryBuilder = Text.builder();
@@ -530,7 +530,7 @@ public class PermissionHandler extends HandlerBase {
         }
         entryBuilder.append(postfix)
                 .onHover(TextActions.showText(Text.of("Click to change this entry")))
-                .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " default "));
+                .onClick(TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " default "));
         builder.append(Text.NEW_LINE).append(entryBuilder.build());
 
         return builder.build();

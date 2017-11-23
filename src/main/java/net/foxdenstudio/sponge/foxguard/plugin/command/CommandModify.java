@@ -128,7 +128,7 @@ public class CommandModify extends FCCommandBase {
                     source.sendMessage(messageOptional.get());
                 }
             } else {
-                source.sendMessage(Text.of(TextColors.GREEN, success ?
+                source.sendMessage(Text.of(color, success ?
                         "Successfully modified " + fgCat.lName + "!" :
                         "Modification failed for " + fgCat.lName + "!"));
             }
@@ -137,6 +137,7 @@ public class CommandModify extends FCCommandBase {
         }
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
         if (!testPermission(source)) return ImmutableList.of();
@@ -155,8 +156,16 @@ public class CommandModify extends FCCommandBase {
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             else if (parse.current.index == 1) {
+                FGUtil.OwnerTabResult result = FGUtil.getOwnerSuggestions(parse.current.token);
+                if (result.isComplete()) {
+                    return result.getSuggestions().stream()
+                            .map(str -> parse.current.prefix + str)
+                            .collect(GuavaCollectors.toImmutableList());
+                }
+
                 if (isIn(REGIONS_ALIASES, parse.args[0])) {
                     String worldName = parse.flags.get("world");
+                    boolean key = parse.flags.containsKey("world");
                     World world = null;
                     if (source instanceof Locatable) world = ((Locatable) source).getWorld();
                     if (!worldName.isEmpty()) {
@@ -165,24 +174,24 @@ public class CommandModify extends FCCommandBase {
                             world = optWorld.get();
                         }
                     }
-                    if (world == null) return FGManager.getInstance().getRegions().stream()
-                            .map(IFGObject::getName)
-                            .filter(new StartsWithPredicate(parse.current.token))
-                            .sorted(String.CASE_INSENSITIVE_ORDER)
-                            .map(args -> parse.current.prefix + args)
-                            .collect(GuavaCollectors.toImmutableList());
-                    return FGManager.getInstance().getAllRegions(world).stream()
-                            .map(IFGObject::getName)
-                            .filter(new StartsWithPredicate(parse.current.token))
-                            .sorted(String.CASE_INSENSITIVE_ORDER)
-                            .map(args -> parse.current.prefix + args)
-                            .collect(GuavaCollectors.toImmutableList());
+                    if (key && world != null) {
+                        return FGManager.getInstance().getAllRegions(world, result.getOwner()).stream()
+                                .map(IFGObject::getName)
+                                .filter(new StartsWithPredicate(result.getToken()))
+                                .map(args -> parse.current.prefix + result.getPrefix() + args)
+                                .collect(GuavaCollectors.toImmutableList());
+                    } else {
+                        return FGManager.getInstance().getAllRegionsWithUniqueNames(result.getOwner(), world).stream()
+                                .map(IFGObject::getName)
+                                .filter(new StartsWithPredicate(result.getToken()))
+                                .map(args -> parse.current.prefix + result.getPrefix() + args)
+                                .collect(GuavaCollectors.toImmutableList());
+                    }
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
-                    return FGManager.getInstance().getHandlers().stream()
+                    return FGManager.getInstance().getHandlers(result.getOwner()).stream()
                             .map(IFGObject::getName)
-                            .filter(new StartsWithPredicate(parse.current.token))
-                            .sorted(String.CASE_INSENSITIVE_ORDER)
-                            .map(args -> parse.current.prefix + args)
+                            .filter(new StartsWithPredicate(result.getToken()))
+                            .map(args -> parse.current.prefix + result.getPrefix() + args)
                             .collect(GuavaCollectors.toImmutableList());
                 }
             }

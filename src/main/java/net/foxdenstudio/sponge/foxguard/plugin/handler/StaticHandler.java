@@ -461,7 +461,7 @@ public class StaticHandler extends HandlerBase {
     public Text details(CommandSource source, String arguments) {
         Text.Builder builder = Text.builder();
         builder.append(Text.of(TextColors.AQUA,
-                TextActions.suggestCommand("/foxguard md h " + this.name + " add "),
+                TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " add "),
                 TextActions.showText(Text.of("Click to add a flag entry")),
                 "Flags:"));
         int index = 0;
@@ -472,7 +472,7 @@ public class StaticHandler extends HandlerBase {
             entryBuilder.append(Text.of("  " + index + ": " + stringBuilder.toString(), TextColors.AQUA, ": "))
                     .append(FGUtil.readableTristateText(entry.tristate))
                     .onHover(TextActions.showText(Text.of("Click to change this flag entry")))
-                    .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set " + (index++) + " "));
+                    .onClick(TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " set " + (index++) + " "));
             builder.append(Text.NEW_LINE).append(entryBuilder.build());
         }
         return builder.build();

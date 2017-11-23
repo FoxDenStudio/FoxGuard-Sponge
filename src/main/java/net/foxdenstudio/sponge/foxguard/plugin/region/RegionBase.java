@@ -72,7 +72,7 @@ public abstract class RegionBase extends FGObjectBase implements IRegion {
     }
 
     public void markDirty() {
-        FGUtil.markRegionDirty(this);
+        FGUtil.markDirty(this);
     }
 
 }

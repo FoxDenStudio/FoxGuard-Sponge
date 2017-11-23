@@ -79,10 +79,11 @@ public class CommandPriority extends FCCommandBase {
                     PriorityMachine temp = new PriorityMachine(arg);
                     if (machine == null) machine = temp;
                 } catch (NumberFormatException ignored) {
-                    IHandler handler = FGManager.getInstance().getHandler(arg).orElse(null);
-                    if (handler != null && !handlers.contains(handler)) {
+                    try {
+                        FGUtil.OwnerResult ownerResult = FGUtil.processUserInput(arg);
+                        IHandler handler = FGUtil.getHandlerFromCommand(ownerResult);
                         handlers.add(handler);
-                    } else {
+                    } catch (CommandException ignored2) {
                         failures++;
                     }
                 }
@@ -113,13 +114,20 @@ public class CommandPriority extends FCCommandBase {
                 .autoCloseQuotes(true)
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
+            FGUtil.OwnerTabResult result = FGUtil.getOwnerSuggestions(parse.current.token);
+            if (result.isComplete()) {
+                return result.getSuggestions().stream()
+                        .map(str -> parse.current.prefix + str)
+                        .collect(GuavaCollectors.toImmutableList());
+            }
+
             List<IHandler> selected = ImmutableList.copyOf(FGUtil.getSelectedHandlers(source));
-            return FGManager.getInstance().getHandlers().stream()
+            return FGManager.getInstance().getHandlers(result.getOwner()).stream()
                     .filter(handler -> !selected.contains(handler) && !(handler instanceof IGlobal))
                     .map(IFGObject::getName)
                     .filter(new StartsWithPredicate(parse.current.token))
                     .filter(alias -> !isIn(parse.args, alias))
-                    .map(args -> parse.current.prefix + args)
+                    .map(args -> parse.current.prefix + result.getPrefix() + args)
                     .collect(GuavaCollectors.toImmutableList());
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
             return ImmutableList.of(parse.current.prefix + " ");

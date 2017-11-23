@@ -56,6 +56,7 @@ import org.spongepowered.api.world.World;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public final class FGManager {
@@ -184,6 +185,7 @@ public final class FGManager {
         this.regionCache.clearCaches();
     }
 
+    @Nonnull
     public Set<IRegion> getAllRegions() {
         Set<IRegion> set = new HashSet<>();
         this.worldRegions.forEach((world, worldMultimap) -> set.addAll(worldMultimap.values()));
@@ -191,6 +193,7 @@ public final class FGManager {
         return ImmutableSet.copyOf(set);
     }
 
+    @Nonnull
     public Set<IRegion> getAllRegions(UUID owner) {
         Set<IRegion> set = new HashSet<>();
         this.worldRegions.forEach((world, worldMultimap) -> set.addAll(worldMultimap.get(owner)));
@@ -198,6 +201,7 @@ public final class FGManager {
         return ImmutableSet.copyOf(set);
     }
 
+    @Nonnull
     public Set<IRegion> getAllRegions(World world) {
         if (world == null) return getRegions();
         Set<IRegion> set = new HashSet<>();
@@ -206,6 +210,7 @@ public final class FGManager {
         return ImmutableSet.copyOf(set);
     }
 
+    @Nonnull
     public Set<IRegion> getAllRegions(String name, UUID owner) {
         Set<IRegion> set = new HashSet<>();
         for (IRegion region : this.regions.get(owner)) {
@@ -220,6 +225,7 @@ public final class FGManager {
         return ImmutableSet.copyOf(set);
     }
 
+    @Nonnull
     public Set<IRegion> getAllRegions(World world, UUID owner) {
         if (world == null) return getRegions();
         Set<IRegion> set = new HashSet<>();
@@ -228,10 +234,12 @@ public final class FGManager {
         return ImmutableSet.copyOf(set);
     }
 
+    @Nonnull
     public Set<IRegion> getAllRegionsWithUniqueNames(UUID owner) {
         return getAllRegionsWithUniqueNames(owner, null);
     }
 
+    @Nonnull
     public Set<IRegion> getAllRegionsWithUniqueNames(UUID owner, @Nullable World world) {
         Set<IRegion> returnSet = new HashSet<>();
         returnSet.addAll(this.regions.get(owner));
@@ -255,18 +263,22 @@ public final class FGManager {
         return ImmutableSet.copyOf(returnSet);
     }
 
+    @Nonnull
     public Set<IRegion> getAllServerRegions() {
         return getAllRegions(SERVER_UUID);
     }
 
+    @Nonnull
     public Set<IRegion> getAllServerRegions(World world) {
         return getAllRegions(world, SERVER_UUID);
     }
 
+    @Nonnull
     public Optional<IController> getController(String name) {
         return getController(name, SERVER_UUID);
     }
 
+    @Nonnull
     public Optional<IController> getController(String name, UUID owner) {
         for (IHandler handler : handlers.get(owner)) {
             if ((handler instanceof IController) && handler.getName().equalsIgnoreCase(name)) {
@@ -276,6 +288,7 @@ public final class FGManager {
         return Optional.empty();
     }
 
+    @Nonnull
     public Set<IController> getControllers() {
         return this.handlers.values().stream()
                 .filter(handler -> handler instanceof IController)
@@ -283,6 +296,7 @@ public final class FGManager {
                 .collect(GuavaCollectors.toImmutableSet());
     }
 
+    @Nonnull
     public Set<IController> getControllers(UUID owner) {
         return this.handlers.get(owner).stream()
                 .filter(handler -> handler instanceof IController)
@@ -290,14 +304,17 @@ public final class FGManager {
                 .collect(GuavaCollectors.toImmutableSet());
     }
 
+    @Nonnull
     public GlobalHandler getGlobalHandler() {
         return globalHandler;
     }
 
+    @Nonnull
     public Optional<IHandler> getHandler(String name) {
         return getHandler(name, SERVER_UUID);
     }
 
+    @Nonnull
     public Optional<IHandler> getHandler(String name, UUID owner) {
         for (IHandler handler : handlers.get(owner)) {
             if (handler.getName().equalsIgnoreCase(name)) {
@@ -307,14 +324,17 @@ public final class FGManager {
         return Optional.empty();
     }
 
+    @Nonnull
     public Set<IHandler> getHandlers() {
         return ImmutableSet.copyOf(this.handlers.values());
     }
 
+    @Nonnull
     public Set<IHandler> getHandlers(UUID owner) {
         return ImmutableSet.copyOf(this.handlers.get(owner));
     }
 
+    @Nonnull
     public Set<IHandler> getHandlers(boolean includeControllers) {
         if (includeControllers) {
             return getHandlers();
@@ -325,6 +345,7 @@ public final class FGManager {
         }
     }
 
+    @Nonnull
     public Set<IHandler> getHandlers(boolean includeControllers, UUID owner) {
         if (includeControllers) {
             return getHandlers(owner);
@@ -335,10 +356,12 @@ public final class FGManager {
         }
     }
 
+    @Nonnull
     public Optional<IRegion> getRegion(String name) {
         return getRegion(name, SERVER_UUID);
     }
 
+    @Nonnull
     public Optional<IRegion> getRegion(String name, UUID owner) {
         for (IRegion region : this.regions.get(owner)) {
             if (region.getName().equalsIgnoreCase(name)) {
@@ -348,10 +371,12 @@ public final class FGManager {
         return Optional.empty();
     }
 
+    @Nonnull
     public Optional<IRegion> getRegionFromWorld(World world, String name) {
         return getRegionFromWorld(world, name, SERVER_UUID);
     }
 
+    @Nonnull
     public Optional<IRegion> getRegionFromWorld(World world, String name, UUID owner) {
         Optional<IWorldRegion> region = getWorldRegion(world, name, owner);
         if (!region.isPresent()) {
@@ -359,18 +384,22 @@ public final class FGManager {
         } else return Optional.of(region.get());
     }
 
+    @Nonnull
     public Set<IRegion> getRegions() {
         return ImmutableSet.copyOf(this.regions.values());
     }
 
+    @Nonnull
     public Set<IRegion> getRegions(UUID owner) {
         return ImmutableSet.copyOf(this.regions.get(owner));
     }
 
+    @Nonnull
     public Set<IRegion> getRegionsAtMultiLocD(Iterable<Location<World>> locations) {
         return getRegionsAtMultiLocD(locations, false);
     }
 
+    @Nonnull
     public Set<IRegion> getRegionsAtMultiLocD(Iterable<Location<World>> locations, boolean includeDisabled) {
         Set<IRegion> set = new HashSet<>();
         SetMultimap<Chunk, Vector3d> chunkPosMap = HashMultimap.create();
@@ -409,10 +438,12 @@ public final class FGManager {
         return set;
     }
 
+    @Nonnull
     public Set<IRegion> getRegionsAtMultiLocI(Iterable<Location<World>> locations) {
         return getRegionsAtMultiLocI(locations, false);
     }
 
+    @Nonnull
     public Set<IRegion> getRegionsAtMultiLocI(Iterable<Location<World>> locations, boolean includeDisabled) {
         Set<IRegion> set = new HashSet<>();
         SetMultimap<Chunk, Vector3i> chunkPosMap = HashMultimap.create();
@@ -451,42 +482,50 @@ public final class FGManager {
         return set;
     }
 
+    @Nonnull
     public Set<IRegion> getRegionsAtPos(World world, Vector3i position) {
         return FGManager.getInstance().getRegionsInChunkAtPos(world, position).stream()
                 .filter(region -> region.contains(position, world))
                 .collect(Collectors.toSet());
     }
 
+    @Nonnull
     public Set<IRegion> getRegionsAtPos(World world, Vector3i position, boolean includeDisabled) {
         return FGManager.getInstance().getRegionsInChunkAtPos(world, position, includeDisabled).stream()
                 .filter(region -> region.contains(position, world))
                 .collect(Collectors.toSet());
     }
 
+    @Nonnull
     public Set<IRegion> getRegionsAtPos(World world, Vector3d position) {
         return FGManager.getInstance().getRegionsInChunkAtPos(world, position).stream()
                 .filter(region -> region.contains(position, world))
                 .collect(Collectors.toSet());
     }
 
+    @Nonnull
     public Set<IRegion> getRegionsAtPos(World world, Vector3d position, boolean includeDisabled) {
         return FGManager.getInstance().getRegionsInChunkAtPos(world, position, includeDisabled).stream()
                 .filter(region -> region.contains(position, world))
                 .collect(Collectors.toSet());
     }
 
+    @Nonnull
     public Set<IRegion> getRegionsInChunk(World world, Vector3i chunk) {
         return getRegionsInChunk(world, chunk, false);
     }
 
+    @Nonnull
     public Set<IRegion> getRegionsInChunk(World world, Vector3i chunk, boolean includeDisabled) {
         return this.regionCache.getData(world, chunk).getRegions(includeDisabled);
     }
 
+    @Nonnull
     public Set<IRegion> getRegionsInChunkAtPos(World world, Vector3i pos) {
         return getRegionsInChunkAtPos(world, pos, false);
     }
 
+    @Nonnull
     public Set<IRegion> getRegionsInChunkAtPos(World world, Vector3i pos, boolean includeDisabled) {
         return this.regionCache.getData(world,
                 new Vector3i(
@@ -496,10 +535,12 @@ public final class FGManager {
         ).getRegions(includeDisabled);
     }
 
+    @Nonnull
     public Set<IRegion> getRegionsInChunkAtPos(World world, Vector3d pos) {
         return getRegionsInChunkAtPos(world, pos, false);
     }
 
+    @Nonnull
     public Set<IRegion> getRegionsInChunkAtPos(World world, Vector3d pos, boolean includeDisabled) {
         return this.regionCache.getData(world,
                 new Vector3i(
@@ -509,30 +550,37 @@ public final class FGManager {
         ).getRegions(includeDisabled);
     }
 
+    @Nonnull
     public Set<IController> getServerControllers() {
         return getControllers(SERVER_UUID);
     }
 
+    @Nonnull
     public Set<IHandler> getServerHandlers() {
         return getHandlers(SERVER_UUID);
     }
 
+    @Nonnull
     public Set<IHandler> getServerHandlers(boolean includeControllers) {
         return getHandlers(includeControllers, SERVER_UUID);
     }
 
+    @Nonnull
     public Set<IRegion> getServerRegions() {
         return getRegions(SERVER_UUID);
     }
 
+    @Nonnull
     public Set<IWorldRegion> getServerWorldRegions(World world) {
         return getWorldRegions(world, SERVER_UUID);
     }
 
+    @Nonnull
     public Optional<IWorldRegion> getWorldRegion(World world, String name) {
         return getWorldRegion(world, name, SERVER_UUID);
     }
 
+    @Nonnull
     public Optional<IWorldRegion> getWorldRegion(World world, String name, UUID owner) {
         for (IWorldRegion region : this.worldRegions.get(world).get(owner)) {
             if (region.getName().equalsIgnoreCase(name)) {
@@ -542,10 +590,12 @@ public final class FGManager {
         return Optional.empty();
     }
 
+    @Nonnull
     public Set<IWorldRegion> getWorldRegions(World world) {
         return ImmutableSet.copyOf(this.worldRegions.get(world).values());
     }
 
+    @Nonnull
     public Set<IWorldRegion> getWorldRegions(World world, UUID owner) {
         return ImmutableSet.copyOf(this.worldRegions.get(world).get(owner));
     }
@@ -589,10 +639,12 @@ public final class FGManager {
         return !(getWorldRegion(world, name, owner).isPresent() || getRegion(name, owner).isPresent());
     }
 
+    @Nonnull
     public Tristate isWorldRegionNameAvailable(String name) {
         return isWorldRegionNameAvailable(name, SERVER_UUID);
     }
 
+    @Nonnull
     public Tristate isWorldRegionNameAvailable(String name, UUID owner) {
         if (getRegion(name, owner).isPresent()) return Tristate.FALSE;
         Tristate available = null;
@@ -611,6 +663,7 @@ public final class FGManager {
                 }
             }
         }
+        if(available == null) available = Tristate.TRUE;
         return available;
     }
 

@@ -151,26 +151,12 @@ public class CommandHere extends FCCommandBase {
             while (regionListIterator.hasNext()) {
                 IRegion region = regionListIterator.next();
                 if (source instanceof Player) {
-                    List<IRegion> selectedRegions = FGUtil.getSelectedRegions(source);
-                    if (selectedRegions.contains(region)) {
-                        output.append(Text.of(TextColors.GRAY, "[+]"));
-                        output.append(Text.of(TextColors.RED,
-                                TextActions.runCommand("/foxguard s r remove " + FGUtil.genWorldFlag(region) + region.getName()),
-                                TextActions.showText(Text.of("Remove from state buffer")),
-                                "[-]"));
-                    } else {
-                        output.append(Text.of(TextColors.GREEN,
-                                TextActions.runCommand("/foxguard s r add " + FGUtil.genWorldFlag(region) + region.getName()),
-                                TextActions.showText(Text.of("Add to state buffer")),
-                                "[+]"));
-                        output.append(Text.of(TextColors.GRAY, "[-]"));
-                    }
-                    output.append(Text.of(" "));
+                    FGUtil.genStatePrefix(output, region, source);
                 }
                 output.append(Text.of(FGUtil.getColorForObject(region),
-                        TextActions.runCommand("/foxguard detail region " + FGUtil.genWorldFlag(region) + region.getName()),
+                        TextActions.runCommand("/foxguard detail r " + FGUtil.genWorldFlag(region) + FGUtil.getFullName(region)),
                         TextActions.showText(Text.of("View details")),
-                        FGUtil.getRegionDisplayName(region, false)));
+                        FGUtil.getObjectDisplayName(region, false, null, source)));
                 if (regionListIterator.hasNext()) output.append(Text.NEW_LINE);
             }
             flag = true;
@@ -182,6 +168,13 @@ public class CommandHere extends FCCommandBase {
             regionList.forEach(region -> region.getLinks().stream()
                     .filter(handler -> !handlerList.contains(handler))
                     .forEach(handlerList::add));
+            boolean hasControllers = false;
+            for(IHandler handler: handlerList){
+                if(handler instanceof IController){
+                    hasControllers = true;
+                    break;
+                }
+            }
             output.append(Text.of(TextColors.GREEN, "------- Handlers Located Here -------\n"));
             if (parse.flags.containsKey("priority")) {
                 handlerList.sort((o1, o2) -> o2.getPriority() - o1.getPriority());
@@ -193,45 +186,12 @@ public class CommandHere extends FCCommandBase {
             while (handlerListIterator.hasNext()) {
                 IHandler handler = handlerListIterator.next();
                 if (source instanceof Player) {
-                    List<IHandler> selectedHandlers = FGUtil.getSelectedHandlers(source);
-                    List<IController> selectedControllers = FGUtil.getSelectedControllers(source);
-                    if (selectedHandlers.contains(handler)) {
-                        output.append(Text.of(TextColors.GRAY, "[h+]"));
-                        output.append(Text.of(TextColors.RED,
-                                TextActions.runCommand("/foxguard s h remove " + handler.getName()),
-                                TextActions.showText(Text.of("Remove from handler state buffer")),
-                                "[h-]"));
-                    } else {
-                        output.append(Text.of(TextColors.GREEN,
-                                TextActions.runCommand("/foxguard s h add " + handler.getName()),
-                                TextActions.showText(Text.of("Add to handler state buffer")),
-                                "[h+]"));
-                        output.append(Text.of(TextColors.GRAY, "[h-]"));
-                    }
-                    if (handler instanceof IController) {
-                        IController controller = ((IController) handler);
-                        if (selectedControllers.contains(controller)) {
-                            output.append(Text.of(TextColors.GRAY, "[c+]"));
-                            output.append(Text.of(TextColors.RED,
-                                    TextActions.runCommand("/foxguard s c remove " + controller.getName()),
-                                    TextActions.showText(Text.of("Remove from controller state buffer")),
-                                    "[c-]"));
-                        } else {
-                            output.append(Text.of(TextColors.GREEN,
-                                    TextActions.runCommand("/foxguard s c add " + controller.getName()),
-                                    TextActions.showText(Text.of("Add to controller state buffer")),
-                                    "[c+]"));
-                            output.append(Text.of(TextColors.GRAY, "[c-]"));
-                        }
-                    } else {
-                        output.append(Text.of(TextColors.DARK_GRAY, "[c+][c-]"));
-                    }
-                    output.append(Text.of(" "));
+                    FGUtil.genStatePrefix(output, handler, source, hasControllers);
                 }
                 output.append(Text.of(FGUtil.getColorForObject(handler),
-                        TextActions.runCommand("/foxguard detail handler " + handler.getName()),
+                        TextActions.runCommand("/foxguard detail handler " + FGUtil.getFullName(handler)),
                         TextActions.showText(Text.of("View details")),
-                        handler.getShortTypeName() + " : " + handler.getName()));
+                        FGUtil.getObjectDisplayName(handler, false, null, source)));
                 if (handlerListIterator.hasNext()) output.append(Text.NEW_LINE);
             }
             hudConfig.handlers = true;
@@ -249,6 +209,7 @@ public class CommandHere extends FCCommandBase {
         return CommandResult.empty();
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
         if (!testPermission(source)) return ImmutableList.of();

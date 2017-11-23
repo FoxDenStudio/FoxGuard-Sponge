@@ -32,6 +32,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.storage.FGStorageManagerNew;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
@@ -169,6 +170,10 @@ public interface IFGObject extends IModifiable {
 
     default boolean shouldSave() {
         return FGStorageManagerNew.getInstance().defaultModifiedMap.get(this);
+    }
+
+    default String getFullName(){
+        return FGUtil.getFullName(this);
     }
 
 }
