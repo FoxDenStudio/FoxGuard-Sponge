@@ -11,6 +11,10 @@ buildscript {
             name = "forge"
             url = "http://files.minecraftforge.net/maven"
         }
+        maven {
+            name = "sponge"
+            url = "https://repo.spongepowered.org/maven"
+        }
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
@@ -24,7 +28,7 @@ apply plugin: 'org.spongepowered.plugin'
 apply plugin: 'net.minecraftforge.gradle.forge'
 
 group 'net.foxdenstudio.sponge'
-version 'api6-SNAPSHOT'
+version 'api7-SNAPSHOT'
 
 apply from: project("$gradle.foxCoreName").file("gradle/fox.gradle")
 apply from: project("$gradle.foxCoreName").file("gradle/publish.gradle")
