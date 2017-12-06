@@ -52,7 +52,7 @@ public class DebugHelper {
             sb.append(o).append("\n");
         }
         sb.append("\n");
-        event.getCause().getNamedCauses().forEach((k, v) -> sb.append(k).append("::").append(v).append("\n"));
+        event.getContext().asMap().forEach((k, v) -> sb.append(k).append("::").append(v).append("\n"));
         FoxGuardMain.instance().getLogger().info(sb.toString());
     }
 }
