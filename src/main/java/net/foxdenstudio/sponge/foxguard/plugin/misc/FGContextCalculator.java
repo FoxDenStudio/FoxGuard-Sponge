@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.misc;
 
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import org.spongepowered.api.Sponge;
@@ -54,6 +55,8 @@ public class FGContextCalculator implements ContextCalculator<Subject> {
             StringBuilder builder = new StringBuilder();
             for (Iterator<IRegion> iterator = regions.iterator(); iterator.hasNext(); ) {
                 IRegion region = iterator.next();
+                if (region instanceof IGlobal || !region.getOwner().equals(FGManager.SERVER_UUID)) continue;
+
                 if (region instanceof IWorldRegion) {
                     builder.append(((IWorldRegion) region).getWorld().getName()).append(":");
                 }

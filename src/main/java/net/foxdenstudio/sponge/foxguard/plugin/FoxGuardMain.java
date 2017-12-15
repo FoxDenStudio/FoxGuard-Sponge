@@ -157,8 +157,8 @@ public final class FoxGuardMain {
         logger.info("Initializing FoxGuard manager instance");
         FGManager.init();
 
-        logger.info("Starting MCStats metrics extension");
-        stats.start();
+        //logger.info("Starting MCStats metrics extension");
+        //stats.start();
     }
 
     @Listener

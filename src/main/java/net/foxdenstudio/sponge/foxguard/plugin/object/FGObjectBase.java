@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.object;
 
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
@@ -60,7 +61,7 @@ public abstract class FGObjectBase implements IFGObject {
 
     @Override
     public void setOwner(UUID owner) {
-        this.owner = owner;
+        this.owner = owner == null ? FGManager.SERVER_UUID : owner;
     }
 
     @Override
@@ -82,6 +83,13 @@ public abstract class FGObjectBase implements IFGObject {
             fullName = this.owner + ":" + fullName;
         }
         return fullName;
+    }
+
+    @Override
+    public int compareTo(@NotNull IFGObject o) {
+        int ret = this.owner.compareTo(o.getOwner());
+        if (ret != 0) return ret;
+        return this.name.compareToIgnoreCase(o.getName());
     }
 
     @Override

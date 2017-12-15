@@ -53,16 +53,17 @@ import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class FGManager {
 
     public static final UUID SERVER_UUID = new UUID(0, 0);
-    public static final String[] ILLEGAL_NAMES = {"all", "state", "full", "everything", "users"};
+    public static final String[] ILLEGAL_NAMES = {"all", "state", "full", "everything", "users", "owners"};
 
     private static FGManager instance;
     private final Map<World, Multimap<UUID, IWorldRegion>> worldRegions;
@@ -123,7 +124,7 @@ public final class FGManager {
             return false;
         handler.setOwner(owner);
         handlers.put(owner, handler);
-        //FGStorageManager.getInstance().addObject(handler);
+        FGStorageManagerNew.getInstance().addObject(handler);
         Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), handler));
         return true;
     }
@@ -134,7 +135,8 @@ public final class FGManager {
         return addRegion(region, owner);
     }
 
-    public boolean addRegion(IRegion region, UUID owner) {
+    public boolean addRegion(IRegion region, @Nonnull UUID owner) {
+        checkNotNull(owner);
         if (region == null
                 || !isNameValid(region.getName())
                 || !isRegionNameAvailable(region.getName(), owner)
@@ -142,7 +144,7 @@ public final class FGManager {
         region.setOwner(owner);
         this.regions.put(owner, region);
         this.regionCache.markDirty(region, RegionCache.DirtyType.ADDED);
-        //FGStorageManager.getInstance().addObject(region);
+        FGStorageManagerNew.getInstance().addObject(region);
         Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), region));
         return true;
     }
@@ -165,7 +167,8 @@ public final class FGManager {
         return addWorldRegion(region, owner, world);
     }
 
-    public boolean addWorldRegion(IWorldRegion region, UUID owner, World world) {
+    public boolean addWorldRegion(IWorldRegion region, @Nonnull UUID owner, World world) {
+        checkNotNull(owner);
         if (region == null
                 || world == null
                 || region.getWorld() != null
@@ -176,7 +179,7 @@ public final class FGManager {
         region.setOwner(owner);
         this.worldRegions.get(world).put(owner, region);
         this.regionCache.markDirty(region, RegionCache.DirtyType.ADDED);
-        //FGStorageManager.getInstance().addObject(region);
+        FGStorageManagerNew.getInstance().addObject(region);
         Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), region));
         return true;
     }
@@ -194,7 +197,8 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Set<IRegion> getAllRegions(UUID owner) {
+    public Set<IRegion> getAllRegions(@Nonnull UUID owner) {
+        checkNotNull(owner);
         Set<IRegion> set = new HashSet<>();
         this.worldRegions.forEach((world, worldMultimap) -> set.addAll(worldMultimap.get(owner)));
         set.addAll(this.regions.get(owner));
@@ -211,7 +215,8 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Set<IRegion> getAllRegions(String name, UUID owner) {
+    public Set<IRegion> getAllRegions(String name, @Nonnull UUID owner) {
+        checkNotNull(owner);
         Set<IRegion> set = new HashSet<>();
         for (IRegion region : this.regions.get(owner)) {
             if (region.getName().equalsIgnoreCase(name)) set.add(region);
@@ -226,7 +231,8 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Set<IRegion> getAllRegions(World world, UUID owner) {
+    public Set<IRegion> getAllRegions(World world, @Nonnull UUID owner) {
+        checkNotNull(owner);
         if (world == null) return getRegions();
         Set<IRegion> set = new HashSet<>();
         set.addAll(this.worldRegions.get(world).get(owner));
@@ -235,12 +241,13 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Set<IRegion> getAllRegionsWithUniqueNames(UUID owner) {
+    public Set<IRegion> getAllRegionsWithUniqueNames(@Nonnull UUID owner) {
         return getAllRegionsWithUniqueNames(owner, null);
     }
 
     @Nonnull
-    public Set<IRegion> getAllRegionsWithUniqueNames(UUID owner, @Nullable World world) {
+    public Set<IRegion> getAllRegionsWithUniqueNames(@Nonnull UUID owner, @Nullable World world) {
+        checkNotNull(owner);
         Set<IRegion> returnSet = new HashSet<>();
         returnSet.addAll(this.regions.get(owner));
         Map<String, Boolean> duplicates = new HashMap<>();
@@ -279,7 +286,8 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Optional<IController> getController(String name, UUID owner) {
+    public Optional<IController> getController(String name, @Nonnull UUID owner) {
+        checkNotNull(owner);
         for (IHandler handler : handlers.get(owner)) {
             if ((handler instanceof IController) && handler.getName().equalsIgnoreCase(name)) {
                 return Optional.of((IController) handler);
@@ -297,7 +305,8 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Set<IController> getControllers(UUID owner) {
+    public Set<IController> getControllers(@Nonnull UUID owner) {
+        checkNotNull(owner);
         return this.handlers.get(owner).stream()
                 .filter(handler -> handler instanceof IController)
                 .map(handler -> ((IController) handler))
@@ -315,7 +324,8 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Optional<IHandler> getHandler(String name, UUID owner) {
+    public Optional<IHandler> getHandler(String name, @Nonnull UUID owner) {
+        checkNotNull(owner);
         for (IHandler handler : handlers.get(owner)) {
             if (handler.getName().equalsIgnoreCase(name)) {
                 return Optional.of(handler);
@@ -330,7 +340,8 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Set<IHandler> getHandlers(UUID owner) {
+    public Set<IHandler> getHandlers(@Nonnull UUID owner) {
+        checkNotNull(owner);
         return ImmutableSet.copyOf(this.handlers.get(owner));
     }
 
@@ -377,11 +388,11 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Optional<IRegion> getRegionFromWorld(World world, String name, UUID owner) {
+    public Optional<IRegion> getRegionFromWorld(World world, String name, @Nonnull UUID owner) {
+        checkNotNull(owner);
+
         Optional<IWorldRegion> region = getWorldRegion(world, name, owner);
-        if (!region.isPresent()) {
-            return getRegion(name, owner);
-        } else return Optional.of(region.get());
+        return region.<Optional<IRegion>>map(Optional::of).orElseGet(() -> getRegion(name, owner));
     }
 
     @Nonnull
@@ -390,7 +401,8 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Set<IRegion> getRegions(UUID owner) {
+    public Set<IRegion> getRegions(@Nonnull UUID owner) {
+        checkNotNull(owner);
         return ImmutableSet.copyOf(this.regions.get(owner));
     }
 
@@ -581,7 +593,8 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Optional<IWorldRegion> getWorldRegion(World world, String name, UUID owner) {
+    public Optional<IWorldRegion> getWorldRegion(World world, String name, @Nonnull UUID owner) {
+        checkNotNull(owner);
         for (IWorldRegion region : this.worldRegions.get(world).get(owner)) {
             if (region.getName().equalsIgnoreCase(name)) {
                 return Optional.of(region);
@@ -596,7 +609,8 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Set<IWorldRegion> getWorldRegions(World world, UUID owner) {
+    public Set<IWorldRegion> getWorldRegions(World world, @Nonnull UUID owner) {
+        checkNotNull(owner);
         return ImmutableSet.copyOf(this.worldRegions.get(world).get(owner));
     }
 
@@ -611,7 +625,7 @@ public final class FGManager {
         return isHandlerNameAvailable(name, SERVER_UUID);
     }
 
-    public boolean isHandlerNameAvailable(String name, UUID owner) {
+    public boolean isHandlerNameAvailable(String name, @Nonnull UUID owner) {
         return !getHandler(name, owner).isPresent();
     }
 
@@ -619,8 +633,8 @@ public final class FGManager {
         return isRegionNameAvailable(name, SERVER_UUID);
     }
 
-    public boolean isRegionNameAvailable(String name, UUID owner) {
-        if (getRegion(name).isPresent()) return false;
+    public boolean isRegionNameAvailable(String name, @Nonnull UUID owner) {
+        if (getRegion(name, owner).isPresent()) return false;
         for (World world : worldRegions.keySet()) {
             if (getWorldRegion(world, name, owner).isPresent()) return false;
         }
@@ -635,7 +649,7 @@ public final class FGManager {
         return isWorldRegionNameAvailable(name, SERVER_UUID, world);
     }
 
-    public boolean isWorldRegionNameAvailable(String name, UUID owner, World world) {
+    public boolean isWorldRegionNameAvailable(String name, @Nonnull UUID owner, World world) {
         return !(getWorldRegion(world, name, owner).isPresent() || getRegion(name, owner).isPresent());
     }
 
@@ -645,7 +659,8 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Tristate isWorldRegionNameAvailable(String name, UUID owner) {
+    public Tristate isWorldRegionNameAvailable(String name, @Nonnull UUID owner) {
+        checkNotNull(owner);
         if (getRegion(name, owner).isPresent()) return Tristate.FALSE;
         Tristate available = null;
         for (World world : worldRegions.keySet()) {
@@ -663,7 +678,7 @@ public final class FGManager {
                 }
             }
         }
-        if(available == null) available = Tristate.TRUE;
+        if (available == null) available = Tristate.TRUE;
         return available;
     }
 
@@ -690,7 +705,7 @@ public final class FGManager {
         if (!this.handlers.values().contains(handler)) {
             return false;
         }
-        //FGStorageManager.getInstance().removeObject(handler);
+        FGStorageManagerNew.getInstance().removeObject(handler);
         Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), handler));
         handlers.values().remove(handler);
         return true;
@@ -703,7 +718,7 @@ public final class FGManager {
             if (region == null) return false;
             if (!this.regions.values().contains(region)) return false;
             this.regions.values().remove(region);
-            //FGStorageManager.getInstance().removeObject(region);
+            FGStorageManagerNew.getInstance().removeObject(region);
             Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), region));
             this.regionCache.markDirty(region, RegionCache.DirtyType.REMOVED);
             return true;
@@ -729,27 +744,80 @@ public final class FGManager {
             }
         }
         if (removed) {
-            //FGStorageManager.getInstance().removeObject(region);
+            FGStorageManagerNew.getInstance().removeObject(region);
             Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), region));
             this.regionCache.markDirty(region, RegionCache.DirtyType.REMOVED);
         }
         return removed;
     }
 
-    public boolean rename(IFGObject object, String newName) {
+    public boolean move(IFGObject object, @Nullable String newName, @Nullable UUID newOwner, @Nullable World newWorld) {
+        boolean changed = false, nameChanged = false, ownerChanged = false, worldChanged = false;
+        String tryName = object.getName();
+        if (newName != null && !newName.isEmpty() && isNameValid(newName)) {
+            changed = true;
+            nameChanged = true;
+            tryName = newName;
+        }
+        UUID tryOwner = object.getOwner();
+        if (newOwner != null) {
+            changed = true;
+            ownerChanged = true;
+            tryOwner = newOwner;
+        }
+        World tryWorld = null;
+        if (object instanceof IWorldRegion && newWorld != null) {
+            changed = true;
+            worldChanged = true;
+            tryWorld = ((IWorldRegion) object).getWorld();
+        }
+        if (!changed) return false;
+
         if (object instanceof IRegion) {
             if (object instanceof IWorldRegion) {
-                IWorldRegion region = (IWorldRegion) object;
-                if (!isWorldRegionNameAvailable(newName, region.getWorld())) return false;
+                if (!this.worldRegions.containsKey(tryWorld)) return false;
+                if (!isWorldRegionNameAvailable(tryName, tryOwner, tryWorld)) return false;
             } else {
-                if (this.getRegion(newName).isPresent()) return false;
+                if (this.getRegion(tryName, tryOwner).isPresent()) return false;
             }
         } else if (object instanceof IHandler) {
-            if (this.getHandler(newName).isPresent()) return false;
+            if (this.getHandler(tryName, tryOwner).isPresent()) return false;
         }
-        //FGStorageManager.getInstance().removeObject(object);
-        object.setName(newName);
-        //FGStorageManager.getInstance().addObject(object);
+
+        FGStorageManagerNew.getInstance().removeObject(object);
+        if (nameChanged)
+            object.setName(newName);
+        if (ownerChanged || worldChanged) {
+            if (object instanceof IHandler) {
+                this.handlers.remove(object.getOwner(), object);
+            } else if (object instanceof IRegion) {
+                if (object instanceof IWorldRegion) {
+                    this.worldRegions.get(((IWorldRegion) object).getWorld()).remove(object.getOwner(), object);
+                } else {
+                    this.regions.remove(object.getOwner(), object);
+                }
+            }
+            if (ownerChanged)
+                object.setOwner(newOwner);
+            if (worldChanged) {
+                ((IWorldRegion) object).setWorld(newWorld);
+            }
+            if (object instanceof IHandler) {
+                this.handlers.put(object.getOwner(), (IHandler) object);
+            } else if (object instanceof IRegion) {
+                if (object instanceof IWorldRegion) {
+                    this.worldRegions.get(((IWorldRegion) object).getWorld()).put(object.getOwner(), (IWorldRegion) object);
+                } else {
+                    this.regions.put(object.getOwner(), (IRegion) object);
+                }
+            }
+            if (worldChanged) {
+                IWorldRegion region = ((IWorldRegion) object);
+                this.regionCache.markDirty(region, RegionCache.DirtyType.ADDED);
+                Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), region));
+            }
+        }
+        FGStorageManagerNew.getInstance().addObject(object);
         return true;
     }
 

@@ -44,9 +44,7 @@ public abstract class WorldRegionBase extends RegionBase implements IWorldRegion
 
     @Override
     public void setWorld(World world) {
-        if (this.world == null) {
-            this.world = world;
-        }
+        this.world = world;
     }
 
     @Override

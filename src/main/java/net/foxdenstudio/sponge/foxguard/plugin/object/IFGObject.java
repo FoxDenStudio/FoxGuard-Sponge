@@ -49,7 +49,7 @@ import java.util.UUID;
  * and {@link IHandler Handlers}.
  * Essentially the core of the code, this is the most used interface.
  */
-public interface IFGObject extends IModifiable {
+public interface IFGObject extends IModifiable, Comparable<IFGObject> {
 
     /**
      * Gets the name of the object. It should be alphanumeric with limited use of special characters.

@@ -122,7 +122,7 @@ public class CommandMove extends FCCommandBase {
                     throw new CommandException(Text.of("There is already a region with the name \"" + parse.args[2] + "\"!"));
             }
             String oldName = region.getName();
-            FGManager.getInstance().rename(region, parse.args[2]);
+            FGManager.getInstance().move(region, parse.args[2], null, null);
             source.sendMessage(Text.of(TextColors.GREEN, "Region \"" + oldName + "\" successfully renamed to \"" + parse.args[2] + "\"!"));
         } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
             if (parse.args.length < 2) throw new CommandException(Text.of("You must specify a name!"));
@@ -140,10 +140,10 @@ public class CommandMove extends FCCommandBase {
                 throw new ArgumentParseException(Text.of("New name (\"" + parse.args[2] + "\") can't start with a number!"), parse.args[2], 1);
             if (handler.getName().equalsIgnoreCase(parse.args[2]))
                 throw new CommandException(Text.of("You cannot rename a handler to its own name."));
-            if (FGManager.getInstance().getHandler(parse.args[2]) != null)
+            if (FGManager.getInstance().getHandler(parse.args[2]).isPresent())
                 throw new CommandException(Text.of("There is already a handler with the name \"" + parse.args[2] + "\"!"));
             String oldName = handler.getName();
-            FGManager.getInstance().rename(handler, parse.args[2]);
+            FGManager.getInstance().move(handler, parse.args[2], null, null);
             source.sendMessage(Text.of(TextColors.GREEN, "Handler \"" + oldName + "\" successfully renamed to \"" + parse.args[2] + "\"!"));
         } else throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);
         return CommandResult.empty();

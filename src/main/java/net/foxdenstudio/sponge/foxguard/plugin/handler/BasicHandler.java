@@ -1157,7 +1157,8 @@ public class BasicHandler extends HandlerBase {
     public void save(Path directory) {
         FGStorageManagerOld storageManager = FGStorageManagerOld.getInstance();
         UserStorageService userStorageService = FoxGuardMain.instance().getUserStorage();
-        try (DB flagMapDB = FGStorageManagerOld.openFoxDB(directory.resolve("groups.foxdb"))) {
+
+        /*try (DB flagMapDB = FGStorageManagerOld.openFoxDB(directory.resolve("groups.foxdb"))) {
             List<String> groupNames = flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen();
             groupNames.clear();
             groupNames.addAll(this.groups.stream().map(group -> group.name).collect(Collectors.toList()));
@@ -1171,7 +1172,10 @@ public class BasicHandler extends HandlerBase {
             List<String> stringEntries = flagMapDB.indexTreeList("default", Serializer.STRING).createOrOpen();
             stringEntries.clear();
             stringEntries.addAll(this.defaultPermissions.stream().map(TristateEntry::serialize).collect(Collectors.toList()));
-        }
+        }*/
+
+
+
         Path groupsDirectory = directory.resolve("groups");
         storageManager.constructDirectory(groupsDirectory);
         for (Group group : this.groups) {

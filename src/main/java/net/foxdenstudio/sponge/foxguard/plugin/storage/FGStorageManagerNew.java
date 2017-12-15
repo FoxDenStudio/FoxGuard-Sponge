@@ -58,7 +58,9 @@ import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
+import java.io.Writer;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -66,8 +68,6 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.FGManager.SERVER_UUID;
 
@@ -150,7 +150,7 @@ public class FGStorageManagerNew {
     private void saveIndex(Set<? extends IFGObject> objects, Path file) {
         List<FGSObjectIndex> indexList = new ArrayList<>();
 
-        for (IFGObject object : objects) {
+        objects.stream().sorted().forEach(object -> {
             boolean saveLinks = (object instanceof ILinkable && ((ILinkable) object).saveLinks());
             boolean autoSave = object.autoSave();
             if (autoSave || saveLinks) {
@@ -162,13 +162,24 @@ public class FGStorageManagerNew {
                 }
                 indexList.add(index);
             }
-        }
+        });
 
-        try (JsonWriter jsonWriter = new JsonWriter(Files.newBufferedWriter(file, CHARSET))) {
-            if (this.prettyPrint) jsonWriter.setIndent(gsonIndentString);
+        try (JsonWriter jsonWriter = getJsonWriter(Files.newBufferedWriter(file, CHARSET))) {
             gson.toJson(indexList, List.class, jsonWriter);
         } catch (IOException e) {
             logger.error("Failed to open index for writing: " + file, e);
+        }
+    }
+
+    private void updateIndexFor(IFGObject object) {
+        if (object instanceof IHandler) {
+            saveHandlerIndex();
+        } else if (object instanceof IRegion) {
+            if (object instanceof IWorldRegion) {
+                saveWorldRegionIndex(((IWorldRegion) object).getWorld());
+            } else {
+                saveRegionIndex();
+            }
         }
     }
 
@@ -199,8 +210,7 @@ public class FGStorageManagerNew {
                 logger.info("Saving metadata for " + category + " " + logName);
                 FGSObjectMeta metadata = new FGSObjectMeta(object);
                 Path metadataFile = directory.resolve(METADATA_FILE_NAME);
-                try (JsonWriter jsonWriter = new JsonWriter(Files.newBufferedWriter(metadataFile, CHARSET))) {
-                    if(this.prettyPrint) jsonWriter.setIndent(this.gsonIndentString);
+                try (JsonWriter jsonWriter = getJsonWriter(Files.newBufferedWriter(metadataFile, CHARSET))) {
                     gson.toJson(metadata, FGSObjectMeta.class, jsonWriter);
                 } catch (IOException e) {
                     logger.error("Failed to open metadata for writing: " + metadataFile, e);
@@ -224,16 +234,60 @@ public class FGStorageManagerNew {
         objects.forEach(object -> saveObject(object, force));
     }
 
+    public void addObject(IFGObject object) {
+        if (reentry) return;
+        Path directory = getObjectDirectory(object);
+        if (Files.exists(directory)) {
+            if (Files.isDirectory(directory)) {
+                deleteDirectory(directory, true);
+            } else {
+                logger.warn("Found file instead of directory. Deleting.");
+                try {
+                    Files.delete(directory);
+                } catch (IOException e) {
+                    logger.error("Unable to delete file: " + directory, e);
+                    return;
+                }
+            }
+            saveObject(object);
+            updateIndexFor(object);
+
+        }
+    }
+
+    public void removeObject(IFGObject object) {
+        if (reentry) return;
+        Path directory = getObjectDirectory(object);
+        if (config.cleanupFiles()) {
+            if (Files.exists(directory)) {
+                if (Files.isDirectory(directory)) {
+                    deleteDirectory(directory);
+                } else {
+                    try {
+                        Files.delete(directory);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+
     public void loadServer() {
         if (serverLoaded) return;
         boolean oldReentry = reentry;
         reentry = true;
 
         FGManager manager = FGManager.getInstance();
+        FGSLegacyLoader legacyLoader = FGSLegacyLoader.getInstance();
 
         logger.info("Loading regions");
         Path regionIndexFile = getFGDirectory().resolve(FGCat.REGION.getIndexFile());
         Optional<List<FGSObjectIndex>> regionIndexOpt = loadIndex(regionIndexFile);
+        if (!regionIndexOpt.isPresent()) {
+            regionIndexFile = getFGDirectory().resolve(legacyLoader.getIndexDBName(FGCat.REGION.pathName));
+            regionIndexOpt = legacyLoader.getLegacyIndex(regionIndexFile);
+        }
         class RegionEntry {
             IRegion region;
             FGSObjectIndex index;
@@ -271,6 +325,10 @@ public class FGStorageManagerNew {
         logger.info("Loading handlers");
         Path handlerIndexFile = getFGDirectory().resolve(FGCat.HANDLER.getIndexFile());
         Optional<List<FGSObjectIndex>> handlerIndexOpt = loadIndex(handlerIndexFile);
+        if (!handlerIndexOpt.isPresent()) {
+            handlerIndexFile = getFGDirectory().resolve(legacyLoader.getIndexDBName(FGCat.HANDLER.pathName));
+            handlerIndexOpt = legacyLoader.getLegacyIndex(handlerIndexFile);
+        }
         class ControllerEntry {
             IController controller;
             FGSObjectIndex index;
@@ -361,10 +419,15 @@ public class FGStorageManagerNew {
         reentry = true;
 
         FGManager manager = FGManager.getInstance();
+        FGSLegacyLoader legacyLoader = FGSLegacyLoader.getInstance();
 
         logger.info("Loading worldregions for world: " + world.getName());
         Path regionIndexFile = getWorldDirectory(world).resolve(FGCat.WORLDREGION.getIndexFile());
         Optional<List<FGSObjectIndex>> worldRegionIndexOpt = loadIndex(regionIndexFile);
+        if (!worldRegionIndexOpt.isPresent()) {
+            regionIndexFile = getWorldDirectory(world).resolve(legacyLoader.getIndexDBName(FGCat.WORLDREGION.pathName));
+            worldRegionIndexOpt = legacyLoader.getLegacyIndex(regionIndexFile);
+        }
         if (worldRegionIndexOpt.isPresent()) {
             List<FGSObjectIndex> worldRegionIndex = worldRegionIndexOpt.get();
             for (FGSObjectIndex index : worldRegionIndex) {
@@ -417,7 +480,7 @@ public class FGStorageManagerNew {
                 logger.error("Failed to open index for reading: " + indexFile, e);
             }
         } else {
-            logger.error("Index file does not exist: " + indexFile);
+            logger.warn("Index file does not exist: " + indexFile);
         }
         return Optional.ofNullable(index);
     }
@@ -523,13 +586,24 @@ public class FGStorageManagerNew {
         return Optional.ofNullable(fgObject);
     }
 
-    public Gson getGson() {
-        return gson;
+    public GsonBuilder getGsonBuilder() {
+        GsonBuilder builder = new GsonBuilder();
+        if(prettyPrint) builder.setPrettyPrinting();
+        return builder;
     }
 
-    public String getGsonIndent(){
-        return gsonIndentString;
+    public JsonWriter getJsonWriter(Writer out){
+        JsonWriter writer = new JsonWriter(out);
+        if(this.prettyPrint) writer.setIndent(this.gsonIndentString);
+
+        return writer;
     }
+
+    /*public String getGsonIndent() {
+        return gsonIndentString;
+    }*/
+
+
 
     private Path getFGDirectory() {
         if (fgDirectory != null) {

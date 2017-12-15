@@ -53,7 +53,7 @@ public class OfflineUserProvider implements IDisplayableOwnerProvider {
     }
 
     @Override
-    public Optional<Text> getDisplayText(UUID owner, @Nullable CommandSource viewer) {a
+    public Optional<Text> getDisplayText(UUID owner, @Nullable CommandSource viewer) {
         return getDisplayName(owner, viewer).map(name -> Text.of(TextColors.YELLOW, name));
     }
 }
