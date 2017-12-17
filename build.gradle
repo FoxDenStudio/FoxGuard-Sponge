@@ -27,7 +27,6 @@ apply plugin: 'idea'
 group 'net.foxdenstudio.sponge'
 version 'api6-SNAPSHOT'
 
-
 apply from: project("$gradle.foxCoreName").file("gradle/fox.gradle")
 apply from: project("$gradle.foxCoreName").file("gradle/publish.gradle")
 apply from: project.file("gradle/foxguard.gradle")

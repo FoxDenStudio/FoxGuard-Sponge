@@ -1,4 +1,4 @@
-rootProject.name = 'FoxGuard'
+rootProject.name = 'FoxGuard-Sponge'
 
 apply from: 'gradle/devenv.gradle'
 
@@ -6,6 +6,6 @@ if (gradle.isDevEnv) {
     includeFlat "$gradle.foxCorePath"
     gradle.ext.foxCoreName = ':' + "$gradle.foxCorePath"
 } else {
-    include 'FoxCore'
-    gradle.ext.foxCoreName = ':FoxCore'
+    include 'FoxCore-Sponge'
+    gradle.ext.foxCoreName = ':FoxCore-Sponge'
 }
