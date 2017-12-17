@@ -1,3 +1,6 @@
-[submodule "FoxCore"]
-	path = FoxCore
-	url = https://github.com/FoxDenStudio/FoxCore.git
+[submodule "FoxCore-Sponge"]
+	path = FoxCore-Sponge
+	url = git@github.com:FoxDenStudio/FoxCore-Sponge.git
+[submodule "FoxGuard-Common"]
+	path = FoxGuard-Common
+	url = git@github.com:FoxDenStudio/FoxGuard-Common.git

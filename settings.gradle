@@ -1,4 +1,4 @@
-rootProject.name = 'FoxGuard'
+rootProject.name = 'FoxGuard-Sponge'
 
 apply from: 'gradle/devenv.gradle'
 
