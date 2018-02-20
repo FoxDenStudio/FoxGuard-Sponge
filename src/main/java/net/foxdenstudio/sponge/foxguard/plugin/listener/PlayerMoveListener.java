@@ -217,7 +217,7 @@ public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
             Collections.sort(regions, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
             if (config.handlers) {
                 if (config.priority) {
-                    Collections.sort(handlers, (o1, o2) -> o2.getPriority() - o1.getPriority());
+                    Collections.sort(handlers, IHandler.PRIORITY);
                 } else {
                     Collections.sort(handlers, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
                 }
@@ -326,7 +326,8 @@ public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
 
         @Override
         public int compareTo(HandlerWrapper w) {
-            int val = handler.compareTo(w.handler);
+            int val = IHandler.PRIORITY.compare(handler, w.handler);
+//            int val = handler.compareTo(w.handler);
             return val != 0 ? val : type.compareTo(w.type);
         }
 

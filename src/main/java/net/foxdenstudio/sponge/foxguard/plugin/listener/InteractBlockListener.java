@@ -95,7 +95,7 @@ public class InteractBlockListener implements EventListener<InteractBlockEvent> 
         }
 
         List<IHandler> handlerList = new ArrayList<>(handlerSet);
-        Collections.sort(handlerList);
+        handlerList.sort(IHandler.PRIORITY);
         int currPriority = handlerList.get(0).getPriority();
         Tristate flagState = UNDEFINED;
         for (IHandler handler : handlerList) {

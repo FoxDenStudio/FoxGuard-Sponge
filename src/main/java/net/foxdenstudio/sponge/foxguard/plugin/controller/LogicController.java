@@ -91,7 +91,7 @@ public class LogicController extends ControllerBase {
 
     @Override
     public EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra) {
-        return EventResult.of(operator.operate(this.handlers, mode, shortCircuit, user, flags, extra));
+        return EventResult.of(operator.operate(this.links, mode, shortCircuit, user, flags, extra));
     }
 
     @Override

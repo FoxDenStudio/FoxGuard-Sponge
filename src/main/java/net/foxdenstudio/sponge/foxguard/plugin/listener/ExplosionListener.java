@@ -127,7 +127,7 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
         }
 
         List<IHandler> handlerList = new ArrayList<>(handlerSet);
-        Collections.sort(handlerList);
+        handlerList.sort(IHandler.PRIORITY);
 
         int currPriority = handlerList.get(0).getPriority();
         for (IHandler handler : handlerList) {

@@ -32,13 +32,15 @@ import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.living.player.User;
 
 import javax.annotation.Nullable;
+import java.util.Comparator;
 
-public interface IHandler extends IFGObject, Comparable<IHandler> {
+public interface IHandler extends IFGObject {
+
+    Comparator<IHandler> PRIORITY = (h1, h2) -> h2.getPriority() - h1.getPriority();
 
     EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra);
 
     int getPriority();
 
     void setPriority(int priority);
-
 }

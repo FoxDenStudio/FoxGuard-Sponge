@@ -177,7 +177,7 @@ public class CommandHere extends FCCommandBase {
             }
             output.append(Text.of(TextColors.GREEN, "------- Handlers Located Here -------\n"));
             if (parse.flags.containsKey("priority")) {
-                handlerList.sort((o1, o2) -> o2.getPriority() - o1.getPriority());
+                handlerList.sort(IHandler.PRIORITY);
                 hudConfig.priority = true;
             } else {
                 handlerList.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));

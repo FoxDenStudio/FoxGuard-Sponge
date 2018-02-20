@@ -86,13 +86,6 @@ public abstract class FGObjectBase implements IFGObject {
     }
 
     @Override
-    public int compareTo(@NotNull IFGObject o) {
-        int ret = this.owner.compareTo(o.getOwner());
-        if (ret != 0) return ret;
-        return this.name.compareToIgnoreCase(o.getName());
-    }
-
-    @Override
     public String toString() {
         return "FGObjectBase{" +
                 "name='" + name + '\'' +

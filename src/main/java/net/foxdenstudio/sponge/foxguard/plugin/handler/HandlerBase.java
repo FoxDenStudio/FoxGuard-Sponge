@@ -49,11 +49,6 @@ public abstract class HandlerBase extends FGObjectBase implements IHandler {
         this.priority = priority > Integer.MIN_VALUE ? priority : Integer.MIN_VALUE + 1;
     }
 
-    @Override
-    public int compareTo(IHandler o) {
-        return o.getPriority() - this.priority;
-    }
-
     public void markDirty() {
         FGUtil.markDirty(this);
     }

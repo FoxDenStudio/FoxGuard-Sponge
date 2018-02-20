@@ -105,7 +105,7 @@ public class MessageController extends ControllerBase {
 
     @Override
     public boolean addLink(IHandler handler) {
-        if (this.handlers.size() < 1) {
+        if (this.links.size() < 1) {
             slot = new HandlerWrapper(handler);
             return super.addLink(handler);
         } else return false;
@@ -124,8 +124,8 @@ public class MessageController extends ControllerBase {
     }
 
     public IHandler getHandler() {
-        if (this.handlers.size() == 0) return null;
-        else return this.handlers.get(0);
+        if (this.links.size() == 0) return null;
+        else return this.links.get(0);
     }
 
     @Override

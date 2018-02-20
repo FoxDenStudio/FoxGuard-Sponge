@@ -120,7 +120,7 @@ public class InteractEntityListener implements EventListener<InteractEntityEvent
         }
 
         List<IHandler> handlerList = new ArrayList<>(handlerSet);
-        Collections.sort(handlerList);
+        handlerList.sort(IHandler.PRIORITY);
         int currPriority = handlerList.get(0).getPriority();
         Tristate flagState = UNDEFINED;
         for (IHandler handler : handlerSet) {

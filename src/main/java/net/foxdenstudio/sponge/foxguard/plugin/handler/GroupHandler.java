@@ -26,6 +26,11 @@
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.SerializedName;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
 import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
@@ -33,7 +38,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
-import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManagerOld;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
@@ -41,6 +46,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Operation;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.TristateEntry;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.storage.FGSLegacyLoader;
 import net.foxdenstudio.sponge.foxguard.plugin.storage.FGStorageManagerNew;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
@@ -49,10 +55,12 @@ import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
 import org.mapdb.DB;
 import org.mapdb.Serializer;
+import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColor;
@@ -63,14 +71,13 @@ import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import javax.annotation.Nullable;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 import static org.spongepowered.api.util.Tristate.UNDEFINED;
@@ -912,7 +919,10 @@ public class GroupHandler extends HandlerBase {
 
     @Override
     public void save(Path directory) {
-        try (DB flagMapDB = FGStorageManagerOld.openFoxDB(directory.resolve("groups.foxdb"))) {
+        FGStorageManagerNew storageManager = FGStorageManagerNew.getInstance();
+        UserStorageService userStorageService = FoxGuardMain.instance().getUserStorage();
+        Logger logger = FoxGuardMain.instance().getLogger();
+        /*try (DB flagMapDB = FGStorageManagerOld.openFoxDB(directory.resolve("groups.foxdb"))) {
             List<String> groupNames = flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen();
             groupNames.clear();
             groupNames.addAll(this.groups.stream().map(group -> group.name).collect(Collectors.toList()));
@@ -926,27 +936,44 @@ public class GroupHandler extends HandlerBase {
             List<String> stringEntries = flagMapDB.indexTreeList("default", Serializer.STRING).createOrOpen();
             stringEntries.clear();
             stringEntries.addAll(this.defaultPermissions.stream().map(TristateEntry::serialize).collect(Collectors.toList()));
+        }*/
+
+        Path dataFile = directory.resolve("data.foxcf");
+        GsonBuilder gsonBuilder = FGStorageManagerNew.getInstance().getGsonBuilder();
+        gsonBuilder.registerTypeAdapter(TristateEntry.class, TristateEntry.ADAPTER);
+        Gson gson = gsonBuilder.create();
+
+        GsonData data = new GsonData();
+        data.groups = new HashMap<>();
+        for (Map.Entry<Group, List<TristateEntry>> entry : this.groupPermissions.entrySet()) {
+            data.groups.put(entry.getKey().name, entry.getValue());
         }
-        {
-            Path groupsFile = directory.resolve("groups.cfg");
-            ConfigurationLoader<CommentedConfigurationNode> loader =
-                    HoconConfigurationLoader.builder().setPath(groupsFile).build();
-            CommentedConfigurationNode root = FCPUtil.getHOCONConfiguration(groupsFile, loader);
-            CommentedConfigurationNode defaultNode = root.getNode("default");
-            defaultNode.getNode("displayname").setValue(this.defaultGroup.displayName);
-            defaultNode.getNode("color").setValue(this.defaultGroup.color.getName());
-            CommentedConfigurationNode groupsNode = root.getNode("groups");
-            for (Group group : this.groups) {
-                CommentedConfigurationNode groupNode = groupsNode.getNode(group.name);
-                groupNode.getNode("displayname").setValue(group.displayName);
-                groupNode.getNode("color").setValue(group.color.getName());
-                groupNode.getNode("permission").setValue(group.permission);
-            }
-            try {
-                loader.save(root);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        data.defaultGroup = this.defaultPermissions;
+
+        try (JsonWriter jsonWriter = storageManager.getJsonWriter(Files.newBufferedWriter(dataFile, FGStorageManagerNew.CHARSET))) {
+            gson.toJson(data, GsonData.class, jsonWriter);
+        } catch (IOException e) {
+            logger.error("Failed to open data file for writing: " + data, e);
+        }
+
+        Path groupsFile = directory.resolve("groups.cfg");
+        ConfigurationLoader<CommentedConfigurationNode> loader =
+                HoconConfigurationLoader.builder().setPath(groupsFile).build();
+        CommentedConfigurationNode root = FCPUtil.getHOCONConfiguration(groupsFile, loader);
+        CommentedConfigurationNode defaultNode = root.getNode("default");
+        defaultNode.getNode("displayname").setValue(this.defaultGroup.displayName);
+        defaultNode.getNode("color").setValue(this.defaultGroup.color.getName());
+        CommentedConfigurationNode groupsNode = root.getNode("groups");
+        for (Group group : this.groups) {
+            CommentedConfigurationNode groupNode = groupsNode.getNode(group.name);
+            groupNode.getNode("displayname").setValue(group.displayName);
+            groupNode.getNode("color").setValue(group.color.getName());
+            groupNode.getNode("permission").setValue(group.permission);
+        }
+        try {
+            loader.save(root);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -1178,6 +1205,12 @@ public class GroupHandler extends HandlerBase {
         }
     }
 
+    private static class GsonData {
+        Map<String, List<TristateEntry>> groups;
+        @SerializedName("default")
+        List<TristateEntry> defaultGroup;
+    }
+
     public static class Group {
         private String name;
         private String displayName;
@@ -1242,20 +1275,42 @@ public class GroupHandler extends HandlerBase {
             return handler;
         }
 
+        @SuppressWarnings("Duplicates")
         @Override
         public IHandler create(Path directory, HandlerData data) {
-            if (Files.exists(directory.resolve("groups.foxdb")) || Files.exists(directory.resolve("flags.foxdb"))) {
-                return createOld(directory, data);
-            }
-            return null;
-        }
+            Logger logger = FoxGuardMain.instance().getLogger();
+            FGStorageManagerNew storageManagerNew = FGStorageManagerNew.getInstance();
 
-        public IHandler createOld(Path directory, HandlerData data) {
-            List<String> groupNames = new ArrayList<>();
-            try (DB flagMapDB = FGStorageManagerOld.openFoxDB(directory.resolve("groups.foxdb"))) {
-                groupNames.addAll(flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen());
+            GsonBuilder gsonBuilder = storageManagerNew.getGsonBuilder();
+            gsonBuilder.registerTypeAdapter(TristateEntry.class, TristateEntry.ADAPTER);
+            Gson gson = gsonBuilder.create();
+
+            GsonData gsonData = null;
+            Path gsonDataFile = directory.resolve("data.foxcf");
+            if (Files.exists(gsonDataFile) && !Files.isDirectory(gsonDataFile)) {
+                try (JsonReader jsonReader = new JsonReader(Files.newBufferedReader(gsonDataFile))) {
+                    gsonData = gson.fromJson(jsonReader, GsonData.class);
+                    if (gsonData == null) gsonData = new GsonData();
+                    if (gsonData.groups == null) gsonData.groups = new HashMap<>();
+                    if (gsonData.defaultGroup == null) gsonData.defaultGroup = new ArrayList<>();
+                } catch (IOException e) {
+                    logger.error("Failed to open data file for reading: " + data, e);
+                }
             }
+
+            List<String> groupNames = new ArrayList<>();
+            if (gsonData != null) {
+                groupNames.addAll(gsonData.groups.keySet());
+            } else {
+                Path dbFile = directory.resolve("groups.foxdb");
+                if (Files.exists(dbFile) && !Files.isDirectory(dbFile))
+                    try (DB flagMapDB = FGSLegacyLoader.openFoxDB(directory.resolve("groups.foxdb"))) {
+                        groupNames.addAll(flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen());
+                    }
+            }
+
             List<Group> groups = new ArrayList<>();
+
             Path groupsFile = directory.resolve("groups.cfg");
             ConfigurationLoader<CommentedConfigurationNode> loader =
                     HoconConfigurationLoader.builder().setPath(groupsFile).build();
@@ -1274,7 +1329,7 @@ public class GroupHandler extends HandlerBase {
 
             Map<Group, List<TristateEntry>> groupPermissions = new HashMap<>();
             List<TristateEntry> defaultPermissions;
-            try (DB flagMapDB = FGStorageManagerOld.openFoxDB(directory.resolve("flags.foxdb"))) {
+            try (DB flagMapDB = FGSLegacyLoader.openFoxDB(directory.resolve("flags.foxdb"))) {
                 for (Group group : groups) {
                     List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
                     groupPermissions.put(group, stringEntries.stream()

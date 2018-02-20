@@ -125,7 +125,7 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
         }
 
         List<IHandler> handlerList = new ArrayList<>(handlerSet);
-        Collections.sort(handlerList);
+        handlerList.sort(IHandler.PRIORITY);
         int currPriority = handlerList.get(0).getPriority();
         for (IHandler handler : handlerList) {
             if (handler.getPriority() < currPriority && flagState != UNDEFINED) {

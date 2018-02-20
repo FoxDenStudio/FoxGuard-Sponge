@@ -157,12 +157,12 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
         Scoreboard scoreboard = this.scoreboardMap.get(player);
         Objective objective = scoreboard.getObjective("foxguardhere").get();
         if (config.regions) {
-            Collections.sort(regions, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
+            regions.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
             if (config.handlers) {
                 if (config.priority) {
-                    Collections.sort(handlers, (o1, o2) -> o2.getPriority() - o1.getPriority());
+                    handlers.sort(IHandler.PRIORITY);
                 } else {
-                    Collections.sort(handlers, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
+                    handlers.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
                 }
                 objective.setDisplayName(Text.of(TextColors.GOLD, "  Regions and Handlers Here  "));
                 final int total = regions.size() + handlers.size();
@@ -209,7 +209,7 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
             } else {
                 int slot = handlers.size();
                 objective.setDisplayName(Text.of(TextColors.GOLD, "  Handlers Here  "));
-                Collections.sort(handlers, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
+                handlers.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
                 for (IHandler handler : handlers) {
                     Score score = objective.getOrCreateScore(Text.of(FGUtil.getColorForObject(handler),
                             "  " + handler.getShortTypeName() + " : " + handler.getName()));
@@ -259,7 +259,8 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
 
         @Override
         public int compareTo(HandlerWrapper w) {
-            int val = handler.compareTo(w.handler);
+//            int val = handler.compareTo(w.handler);
+            int val = IHandler.PRIORITY.compare(handler, w.handler);
             return val != 0 ? val : direction.compareTo(w.direction);
         }
 

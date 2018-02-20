@@ -41,6 +41,7 @@ import org.spongepowered.api.world.World;
 
 import javax.annotation.Nullable;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -49,7 +50,13 @@ import java.util.UUID;
  * and {@link IHandler Handlers}.
  * Essentially the core of the code, this is the most used interface.
  */
-public interface IFGObject extends IModifiable, Comparable<IFGObject> {
+public interface IFGObject extends IModifiable {
+
+    Comparator<IFGObject> OWNER_AND_NAME = (o1,o2)->{
+        int ret = o1.getOwner().compareTo(o2.getOwner());
+        if (ret != 0) return ret;
+        return o1.getName().compareToIgnoreCase(o2.getName());
+    };
 
     /**
      * Gets the name of the object. It should be alphanumeric with limited use of special characters.

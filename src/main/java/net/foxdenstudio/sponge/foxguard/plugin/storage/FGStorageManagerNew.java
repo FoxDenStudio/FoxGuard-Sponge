@@ -149,8 +149,7 @@ public class FGStorageManagerNew {
 
     private void saveIndex(Set<? extends IFGObject> objects, Path file) {
         List<FGSObjectIndex> indexList = new ArrayList<>();
-
-        objects.stream().sorted().forEach(object -> {
+        objects.stream().sorted(IFGObject.OWNER_AND_NAME).forEach(object -> {
             boolean saveLinks = (object instanceof ILinkable && ((ILinkable) object).saveLinks());
             boolean autoSave = object.autoSave();
             if (autoSave || saveLinks) {
@@ -589,6 +588,7 @@ public class FGStorageManagerNew {
     public GsonBuilder getGsonBuilder() {
         GsonBuilder builder = new GsonBuilder();
         if(prettyPrint) builder.setPrettyPrinting();
+
         return builder;
     }
 

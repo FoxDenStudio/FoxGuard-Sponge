@@ -110,7 +110,7 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
         }
 
         List<IHandler> handlerList = new ArrayList<>(handlerSet);
-        Collections.sort(handlerList);
+        handlerList.sort(IHandler.PRIORITY);
 
         int currPriority;
         if (entity instanceof Player) {

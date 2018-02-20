@@ -124,7 +124,7 @@ public class    SpawnEntityListener implements EventListener<SpawnEntityEvent> {
             return;
         }
         List<IHandler> handlerList = new ArrayList<>(handlerSet);
-        Collections.sort(handlerList);
+        handlerList.sort(IHandler.PRIORITY);
         int currPriority = handlerList.get(0).getPriority();
         for (IHandler handler : handlerList) {
             if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
