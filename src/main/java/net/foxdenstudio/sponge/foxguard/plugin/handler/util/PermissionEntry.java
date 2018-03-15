@@ -136,6 +136,7 @@ public class PermissionEntry extends Entry {
                     break;
                 }
             }
+            in.endObject();
             if (set.isEmpty()) {
                 // TODO add custom exception for stacktrace
                 logger.error("Tried to deserialize a TristateEntry with an empty flag set!", new RuntimeException("Error deserializing TristateEntry"));

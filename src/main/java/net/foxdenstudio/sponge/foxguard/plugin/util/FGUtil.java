@@ -36,8 +36,8 @@ import net.foxdenstudio.sponge.foxguard.plugin.event.factory.FGEventFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
-import net.foxdenstudio.sponge.foxguard.plugin.object.owners.IOwnerProvider;
-import net.foxdenstudio.sponge.foxguard.plugin.object.owners.OwnerProviderRegistry;
+import net.foxdenstudio.sponge.foxguard.plugin.object.owner.provider.IOwnerProvider;
+import net.foxdenstudio.sponge.foxguard.plugin.object.owner.OwnerManager;
 import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
@@ -107,7 +107,7 @@ public final class FGUtil {
         return object.getShortTypeName()
                 + " : "
                 + (dispWorld && object instanceof IWorldBound ? ((IWorldBound) object).getWorld().getName() + " : " : "")
-                + (hasOwner ? OwnerProviderRegistry.getInstance().getDisplayName(owner, null, viewer) + " : " : "")
+                + (hasOwner ? OwnerManager.getInstance().getDisplayName(owner, null, viewer) + " : " : "")
                 + object.getName();
     }
     public static Text getObjectDisplayTest(IFGObject object, boolean dispWorld, @Nullable UUID owner, @Nullable CommandSource viewer) {
@@ -294,7 +294,7 @@ public final class FGUtil {
         else if (name.isEmpty())
             throw new CommandException(Text.of("Name must not be empty!"));
 
-        Optional<UUID> ownerOpt = OwnerProviderRegistry.getInstance().getUUIDForOwner(provider, ownerQualifier);
+        Optional<UUID> ownerOpt = OwnerManager.getInstance().getUUIDForOwner(provider, ownerQualifier);
         if (!ownerOpt.isPresent()) {
             String errorName = (provider != null ? provider + ":" : "") + ownerQualifier;
             throw new CommandException(Text.of("\"" + errorName + "\" is not a valid owner!"));
@@ -311,7 +311,7 @@ public final class FGUtil {
         String[] parts = input.split(":", 3);
         if (parts.length == 1) {
             if (prefixed) {
-                List<String> list = OwnerProviderRegistry.getInstance().getProviders().stream()
+                List<String> list = OwnerManager.getInstance().getProviders().stream()
                         .map(IOwnerProvider::getPrimaryAlias)
                         .filter(str -> str != null && !str.isEmpty())
                         .filter(new StartsWithPredicate(parts[0]))
@@ -325,7 +325,7 @@ public final class FGUtil {
                 return new OwnerTabResult("", parts[0], FGManager.SERVER_UUID);
             }
         } else if (parts.length == 2) {
-            OwnerProviderRegistry registry = OwnerProviderRegistry.getInstance();
+            OwnerManager registry = OwnerManager.getInstance();
             Optional<IOwnerProvider> providerOpt = registry.getProvider(parts[0]);
             if (providerOpt.isPresent()) {
                 IOwnerProvider provider = providerOpt.get();
@@ -350,7 +350,7 @@ public final class FGUtil {
 
             }
         } else if (parts.length == 3) {
-            Optional<IOwnerProvider> providerOpt = OwnerProviderRegistry.getInstance().getProvider(parts[0]);
+            Optional<IOwnerProvider> providerOpt = OwnerManager.getInstance().getProvider(parts[0]);
             if (providerOpt.isPresent()) {
                 IOwnerProvider provider = providerOpt.get();
                 Optional<UUID> ownerOpt = provider.getOwnerUUID(parts[1]);

@@ -23,7 +23,7 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.object.owners;
+package net.foxdenstudio.sponge.foxguard.plugin.object.owner.provider;
 
 import java.util.List;
 import java.util.Optional;

@@ -1,4 +1,4 @@
-package net.foxdenstudio.sponge.foxguard.plugin.object.owners;
+package net.foxdenstudio.sponge.foxguard.plugin.object.owner.provider;
 
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;

@@ -1,6 +1,5 @@
-package net.foxdenstudio.sponge.foxguard.plugin.object.owners;
+package net.foxdenstudio.sponge.foxguard.plugin.object.owner.provider;
 
-import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.User;

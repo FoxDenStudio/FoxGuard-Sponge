@@ -32,9 +32,11 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
+import net.foxdenstudio.sponge.foxguard.plugin.object.owner.OwnerManager;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
@@ -51,6 +53,7 @@ import org.spongepowered.api.world.World;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -115,6 +118,26 @@ public class CommandDelete extends FCCommandBase {
             if (!success)
                 throw new CommandException(Text.of("There was an error trying to delete the " + fgCat.lName + "!"));
             source.sendMessage(Text.of(TextColors.GREEN, fgCat.uName + " deleted successfully!"));
+
+            StringBuilder logMessage = new StringBuilder();
+            logMessage.append(source.getName())
+                    .append(" deleted the ")
+                    .append(fgCat.lName)
+                    .append(":   Name: ")
+                    .append(object.getName());
+
+            UUID owner = ownerResult.getOwner();
+            if (owner != null && !owner.equals(FGManager.SERVER_UUID)) {
+                logMessage.append("   Owner: ").append(OwnerManager.getInstance().getKeyword(owner, null))
+                        .append(" (").append(owner).append(")");
+            }
+
+            if (object instanceof IWorldRegion) {
+                logMessage.append("   World: ").append(((IWorldRegion) object).getWorld().getName());
+            }
+
+            FoxGuardMain.instance().getLogger().info(logMessage.toString());
+
             return CommandResult.success();
         }
     }

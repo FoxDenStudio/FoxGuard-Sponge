@@ -120,7 +120,8 @@ public final class FGManager {
     public boolean addHandler(IHandler handler, UUID owner) {
         if (handler == null
                 || !isNameValid(handler.getName())
-                || !isHandlerNameAvailable(handler.getName(), owner))
+                || !isHandlerNameAvailable(handler.getName(), owner)
+                || this.handlers.containsValue(handler))
             return false;
         handler.setOwner(owner);
         handlers.put(owner, handler);
@@ -140,7 +141,8 @@ public final class FGManager {
         if (region == null
                 || !isNameValid(region.getName())
                 || !isRegionNameAvailable(region.getName(), owner)
-                || region instanceof IWorldRegion) return false;
+                || region instanceof IWorldRegion
+                || this.regions.containsValue(region)) return false;
         region.setOwner(owner);
         this.regions.put(owner, region);
         this.regionCache.markDirty(region, RegionCache.DirtyType.ADDED);
@@ -705,9 +707,9 @@ public final class FGManager {
         if (!this.handlers.values().contains(handler)) {
             return false;
         }
+        handlers.values().remove(handler);
         FGStorageManagerNew.getInstance().removeObject(handler);
         Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), handler));
-        handlers.values().remove(handler);
         return true;
     }
 

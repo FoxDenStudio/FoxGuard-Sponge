@@ -46,8 +46,11 @@ public final class FGConfigManager {
     private int nameLengthLimit;
 
     // storage
-    private boolean cleanupFiles;
     private boolean gcAndFinalize;
+
+    // storage/cleanup
+    private boolean cleanOnDelete;
+    private boolean cleanOnError;
 
     // storage/json
     private boolean prettyPrint;
@@ -103,22 +106,26 @@ public final class FGConfigManager {
                         "Extremely long names can cause a variety of un-fixable issues. You have been warned.");
 
         // storage
-        root.getNode("storage", "cleanupFiles")
-                .setValue(cleanupFiles)
-                .setComment("Sets whether to aggressively delete files that are no longer used. Default: true\n" +
-                        "This is meant to keep the file store clean and free of clutter.\n" +
-                        "The caveat is that objects that fail to load are deleted without warning.\n" +
-                        "However, modifying databases and moving the files around can trigger the cleanup.\n" +
-                        "If plugin simply fails to load the database, it would just be discarded.\n" +
-                        "Setting this option to false will prevent databases from being deleted.\n" +
-                        "However, they will still be overwritten if a new database is made with the same name.");
-
         root.getNode("storage", "gcAndFinalize")
                 .setValue(gcAndFinalize)
                 .setComment("Whether to run try running gc and finalization when deleting things.\n" +
                         "This may drastically slow down the deletion of objects.\n" +
                         "Use only if you are having trouble deleting things from in game.\n" +
                         "This really only makes a difference on Windows, so you can leave this alone on Unix based operating systems.");
+
+        // storage/cleanup
+        root.getNode("storage", "cleanup", "cleanOnDelete")
+                .setValue(cleanOnDelete)
+                .setComment("Sets whether to delete object files when objects are deleted. Default: true\n" +
+                        "This is meant to keep the file store clean and free of clutter.\n" +
+                        "If set to false, files will be left intact when deleting objects.\n" +
+                        "However if a new object is made with the same name, the files will be deleted to make space.");
+
+        root.getNode("storage", "cleanup", "cleanOnError")
+                .setValue(cleanOnError)
+                .setComment("Sets whether to delete object files if they fail to load. Default: false\n" +
+                        "This is also meant to keep the file store clean and free of clutter.\n" +
+                        "However it is usually left off because it may be undesirable to delete files if they are still recoverable.");
 
         // storage/json
         root.getNode("storage", "json", "prettyPrint")
@@ -227,8 +234,11 @@ public final class FGConfigManager {
         nameLengthLimit = root.getNode("general", "nameLengthLimit").getInt(24);
 
         // storage
-        cleanupFiles = root.getNode("storage", "cleanupFiles").getBoolean(true);
         gcAndFinalize = root.getNode("storage", "gcAndFinalize").getBoolean(false);
+
+        // storage/cleaup
+        cleanOnDelete = root.getNode("storage", "cleanup", "cleanOnDelete").getBoolean(true);
+        cleanOnError = root.getNode("storage", "cleanup", "cleanOnError").getBoolean(false);
 
         // storage/json
         prettyPrint = root.getNode("storage", "json", "prettyPrint").getBoolean(false);
@@ -270,13 +280,19 @@ public final class FGConfigManager {
     }
 
     // storage
-    public boolean cleanupFiles() {
-        return cleanupFiles;
-    }
-
     public boolean gcAndFinalize() {
         return gcAndFinalize;
     }
+
+    // storage/cleanup
+    public boolean cleanOnDelete() {
+        return cleanOnDelete;
+    }
+
+    public boolean cleanOnError() {
+        return cleanOnError;
+    }
+
 
     // storage/json
     public boolean prettyPrint() {

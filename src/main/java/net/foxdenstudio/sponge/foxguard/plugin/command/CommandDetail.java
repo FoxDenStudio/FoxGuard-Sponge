@@ -37,7 +37,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
-import net.foxdenstudio.sponge.foxguard.plugin.object.owners.OwnerProviderRegistry;
+import net.foxdenstudio.sponge.foxguard.plugin.object.owner.OwnerManager;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
@@ -45,7 +45,6 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
@@ -66,7 +65,6 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
-import static net.foxdenstudio.sponge.foxguard.plugin.FGManager.SERVER_UUID;
 
 public class CommandDetail extends FCCommandBase {
 
@@ -141,7 +139,7 @@ public class CommandDetail extends FCCommandBase {
                         TextColors.GREEN, "------- General -------\n",
                         TextColors.GOLD, "Name: ", TextColors.RESET, name + "\n"));
                 if (hasOwner) {
-                    OwnerProviderRegistry registry = OwnerProviderRegistry.getInstance();
+                    OwnerManager registry = OwnerManager.getInstance();
                     builder.append(Text.builder()
                             .append(Text.of(TextColors.GOLD, "Owner: "))
                             .append(registry.getDisplayText(owner, null, source))

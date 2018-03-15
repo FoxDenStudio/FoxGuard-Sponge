@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
@@ -46,15 +47,18 @@ import org.spongepowered.api.text.TextTemplate;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.format.TextStyle;
+import org.spongepowered.api.text.format.TextStyles;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -67,12 +71,22 @@ public class WelcomeHandler extends HandlerBase {
 
     private static final Pattern PATTERN = Pattern.compile("&[0-9a-fk-or]|%|(?:\\.|&(?![0-9a-fk-or%])|[^&%])+");
 
+    private boolean enter;
+    private boolean exit;
+    private String enterString = "";
+    private String exitString = "";
     private TextTemplate enterTemplate = TextTemplate.EMPTY;
     private TextTemplate exitTemplate = TextTemplate.EMPTY;
 
 
     public WelcomeHandler(HandlerData data) {
+        this(data, "", "");
+    }
+
+    public WelcomeHandler(HandlerData data, String enterString, String exitString) {
         super(data);
+        this.setEnter(enterString);
+        this.setExit(exitString);
     }
 
     @Override
@@ -87,11 +101,11 @@ public class WelcomeHandler extends HandlerBase {
 
         if (parse.args.length < 2) return ProcessResult.failure();
 
-        if (parse.args[0].equalsIgnoreCase("enter")) enterTemplate = fromString(parse.args[1]);
-        else if (parse.args[0].equalsIgnoreCase("exit")) exitTemplate = fromString(parse.args[1]);
+        if (parse.args[0].equalsIgnoreCase("enter")) this.setEnter(parse.args[1]);
+        else if (parse.args[0].equalsIgnoreCase("exit")) this.setExit(parse.args[1]);
         else ProcessResult.of(false, "Invalid Command!");
 
-        return ProcessResult.failure();
+        return ProcessResult.success();
     }
 
     @Override
@@ -120,9 +134,13 @@ public class WelcomeHandler extends HandlerBase {
     public EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra) {
         if (flags.get(Flags.MOVE)) {
             Player player = (Player) user;
-
-            if (flags.get(Flags.ENTER)) player.sendMessage(enterTemplate.toText());
-            else if (flags.get(Flags.EXIT)) player.sendMessage(exitTemplate.toText());
+            Map<String, String> input = ImmutableMap.of("player", player.getName());
+            if (flags.get(Flags.ENTER)) {
+                player.sendMessage(enterTemplate.apply(input).build());
+                //player.sendMessage(enterTemplate.toText());
+            } else if (flags.get(Flags.EXIT)) {
+                player.sendMessage(exitTemplate.apply(input).build());
+            }
         }
         return EventResult.pass();
     }
@@ -144,11 +162,12 @@ public class WelcomeHandler extends HandlerBase {
 
     @Override
     public Text details(CommandSource source, String arguments) {
+        final Text quote = Text.of(TextColors.AQUA, "\"");
         Text.Builder builder = Text.builder();
-        builder.append(Text.of(TextColors.GREEN, "Enter:\n"));
-        builder.append(enterTemplate.toText());
-        builder.append(Text.of(TextColors.GOLD, "Exit:\n"));
-        builder.append(exitTemplate.toText());
+        builder.append(Text.of(TextColors.GREEN, "Enter:\n  "));
+        builder.append(quote).append(enterTemplate.toText()).append(quote);
+        builder.append(Text.of(TextColors.GOLD, "\nExit:\n  "));
+        builder.append(quote).append(exitTemplate.toText()).append(quote);
         return builder.build();
     }
 
@@ -163,30 +182,52 @@ public class WelcomeHandler extends HandlerBase {
         ConfigurationLoader<CommentedConfigurationNode> loader =
                 HoconConfigurationLoader.builder().setPath(file).build();
         CommentedConfigurationNode root = FCPUtil.getHOCONConfiguration(file, loader);
-        root.getNode("enter").setValue(enterTemplate);
-        root.getNode("exit").setValue(exitTemplate);
+        root.getNode("enter").setValue(enterString);
+        root.getNode("exit").setValue(exitString);
+        try {
+            loader.save(root);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setEnter(String enterString) {
+        this.enter = !enterString.isEmpty();
+        this.enterString = enterString;
+        this.enterTemplate = fromString(enterString);
+    }
+
+    public void setExit(String exitString) {
+        this.exit = !exitString.isEmpty();
+        this.exitString = exitString;
+        this.exitTemplate = fromString(exitString);
     }
 
     private static TextTemplate fromString(String string) {
         List<Object> elements = new ArrayList<>();
         Matcher matcher = PATTERN.matcher(string);
 
+        TextColor curColor = TextColors.RESET;
+        TextStyle curStyle = TextStyles.RESET;
         while (matcher.find()) {
             String str = matcher.group();
 
             if (str.equals("%")) {
-                elements.add(TextTemplate.arg("player").build());
+                elements.add(TextTemplate.arg("player")
+                        .color(curColor)
+                        .style(curStyle)
+                        .build());
             } else if (str.matches("&[0-9a-fk-or]")) {
                 str = str.substring(1);
                 if (str.matches("[0-9a-f]")) {
                     Optional<TextColor> colorOpt = FCPUtil.textColorFromHex(str);
-                    colorOpt.ifPresent(elements::add);
+                    if (colorOpt.isPresent()) curColor = colorOpt.get();
                 } else {
                     Optional<TextStyle> styleOpt = FCPUtil.textStyleFromCode(str);
-                    styleOpt.ifPresent(elements::add);
+                    if (styleOpt.isPresent()) curStyle = styleOpt.get();
                 }
             } else {
-                elements.add(str);
+                elements.add(Text.of(curColor, curStyle, str));
             }
         }
 
@@ -204,7 +245,13 @@ public class WelcomeHandler extends HandlerBase {
 
         @Override
         public IHandler create(Path directory, HandlerData data) {
-            return null;
+            Path file = directory.resolve("messages.cfg");
+            ConfigurationLoader<CommentedConfigurationNode> loader =
+                    HoconConfigurationLoader.builder().setPath(file).build();
+            CommentedConfigurationNode root = FCPUtil.getHOCONConfiguration(file, loader);
+            String enterString = root.getNode("enter").getString("");
+            String exitString = root.getNode("enter").getString("");
+            return new WelcomeHandler(data, enterString, exitString);
         }
 
         @Override

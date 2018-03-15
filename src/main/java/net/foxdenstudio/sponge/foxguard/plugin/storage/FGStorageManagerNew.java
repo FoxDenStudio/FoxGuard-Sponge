@@ -257,7 +257,7 @@ public class FGStorageManagerNew {
     public void removeObject(IFGObject object) {
         if (reentry) return;
         Path directory = getObjectDirectory(object);
-        if (config.cleanupFiles()) {
+        if (config.cleanOnDelete()) {
             if (Files.exists(directory)) {
                 if (Files.isDirectory(directory)) {
                     deleteDirectory(directory);
@@ -270,6 +270,7 @@ public class FGStorageManagerNew {
                 }
             }
         }
+        updateIndexFor(object);
     }
 
     public void loadServer() {
@@ -576,10 +577,7 @@ public class FGStorageManagerNew {
 
         if (fgObject == null) {
             logger.warn("The " + fgCat.lName + " was unable to be created.");
-            if (FGConfigManager.getInstance().cleanupFiles()) {
-                logger.warn("Cleaning up unused files");
-                deleteDirectory(directory);
-            }
+            cleanup(directory, true);
         }
 
         return Optional.ofNullable(fgObject);
@@ -587,14 +585,14 @@ public class FGStorageManagerNew {
 
     public GsonBuilder getGsonBuilder() {
         GsonBuilder builder = new GsonBuilder();
-        if(prettyPrint) builder.setPrettyPrinting();
+        if (prettyPrint) builder.setPrettyPrinting();
 
         return builder;
     }
 
-    public JsonWriter getJsonWriter(Writer out){
+    public JsonWriter getJsonWriter(Writer out) {
         JsonWriter writer = new JsonWriter(out);
-        if(this.prettyPrint) writer.setIndent(this.gsonIndentString);
+        if (this.prettyPrint) writer.setIndent(this.gsonIndentString);
 
         return writer;
     }
@@ -603,7 +601,17 @@ public class FGStorageManagerNew {
         return gsonIndentString;
     }*/
 
-
+    private void cleanup(Path directory, boolean errored) {
+        FGConfigManager manager = FGConfigManager.getInstance();
+        if (errored) {
+            if (!manager.cleanOnError()) return;
+            logger.warn("Cleaning up errored object directory: " + directory);
+        } else {
+            if (!manager.cleanOnDelete()) return;
+            logger.info("Cleaning up directory of deleted object: " + directory);
+        }
+        autoPath(directory, false, true, true);
+    }
 
     private Path getFGDirectory() {
         if (fgDirectory != null) {
@@ -644,6 +652,189 @@ public class FGStorageManagerNew {
         constructDirectories(path);
         worldDirectories.put(world, path);
         return path;
+    }
+
+    public boolean autoPath(Path path, boolean create, boolean empty, boolean force) {
+        boolean exists = Files.exists(path);
+        boolean notExists = Files.notExists(path);
+
+        if (exists == notExists) {
+            logger.error("There was an unknown file IO error trying to access path: " + path);
+            return false;
+        }
+
+        if (exists) {
+            boolean isDirectory = Files.isDirectory(path);
+            if (isDirectory) {
+                boolean isEmpty = isEmptyDirectory(path);
+                if (create) {
+                    if (!empty || isEmpty) return true;
+                } else if (isEmpty) {
+                    return tryOp(FileOp.DELETE_DIR, path);
+                }
+                try {
+                    Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+                        @Override
+                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                            tryOpEx(FileOp.DELETE_FILE, file);
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                            if (exc == null && !(create && Files.isSameFile(dir, path))) {
+                                tryOpEx(FileOp.DELETE_DIR, dir);
+                            }
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
+                    return true;
+                } catch (IOException e) {
+                    logger.error("There was an error while trying to recursively " + (create ? "clear" : "delete") + " the directory: " + path, e);
+                    return false;
+                }
+            } else {
+                if (create) {
+                    if (force) {
+                        logger.warn("Replacing file with directory: " + path);
+                    } else {
+                        logger.error("Unable to create directory because there is a file at the path: " + path);
+                        return false;
+                    }
+                } else logger.info("Deleting file: " + path);
+
+                boolean success = tryOp(FileOp.DELETE_FILE, path);
+                if (create && success) {
+                    success = tryOp(FileOp.CREATE, path);
+                }
+                return success;
+            }
+        } else {
+            if (!create) return true;
+
+            boolean multiple = false;
+
+            Path parent = path.normalize().getParent();
+            while (parent != null && Files.notExists(parent)) {
+                parent = parent.getParent();
+                multiple = true;
+            }
+            if (parent != null && !Files.exists(parent)) {
+                logger.error("There was an unknown file IO error trying to access path: " + parent);
+                return false;
+            }
+            if (parent != null && Files.exists(parent) && !Files.isDirectory(parent)) {
+                if (force) {
+                    logger.warn("Deleting file: " + parent +
+                            "\nthat is in the way of directories: " + path);
+                } else {
+                    logger.error("Unable to create directories: " + path +
+                            "\nbecause there is a file at the path: " + parent);
+                    return false;
+                }
+                tryOp(FileOp.DELETE_FILE, parent);
+                multiple = true;
+            }
+            if(multiple){
+                tryOp(FileOp.CREATE_MULTI, path);
+            } else {
+                tryOp(FileOp.CREATE, path);
+            }
+
+
+        }
+
+
+//        boolean isDirectory = Files.isDirectory(path);
+//
+//        if (!empty && exists && isDirectory && create) {
+//            return true;
+//        }
+//
+//        boolean isEmpty = isEmptyDirectory(path);
+//
+//        if (exists && isDirectory && create && isEmpty) {
+//            return true;
+//        }
+        return false;
+    }
+
+    private boolean tryOp(FileOp op, Path path) {
+        try {
+            tryOpUnsafe(op, path);
+            return true;
+        } catch (IOException e) {
+            logger.error("There was an IO error " + op.message3 + ": " + path, e);
+            return false;
+        }
+    }
+
+    private void tryOpEx(FileOp op, Path path) throws IOException {
+        try {
+            tryOpUnsafe(op, path);
+        } catch (IOException e) {
+            throw new IOException("There was an IO error " + op.message3 + ": " + path, e);
+        }
+    }
+
+    private void tryOpUnsafe(FileOp op, Path path) throws IOException {
+        int counter = 1;
+        float time = 0.25f;
+        while (true) {
+            try {
+                op.operate(path);
+                break;
+            } catch (AccessDeniedException e) {
+                if (counter > 5) {
+                    logger.error("Access denied while trying to " + op.message1 + ": " + path, e);
+                    throw e;
+                } else {
+                    logger.warn("Access denied while trying to " + op.message1 + ": " + path + "  Trying again in " + time + " second(s)");
+                    try {
+                        Thread.sleep((long) (1000 * time));
+                    } catch (InterruptedException e1) {
+                        logger.warn("Thread sleep was interrupted: ", e);
+                    }
+                }
+            }
+            counter++;
+            time *= 2;
+        }
+        logger.info(op.message2 + ": " + path);
+    }
+
+    private enum FileOp {
+        CREATE("create directory", "Created directory", "creating the directory") {
+            @Override
+            public void operate(Path path) throws IOException {
+                Files.createDirectory(path);
+            }
+        }, CREATE_MULTI("create directories", "Created directories", "creating the directories") {
+            @Override
+            public void operate(Path path) throws IOException {
+                Files.createDirectories(path);
+            }
+        }, DELETE_DIR("delete directory", "Deleted directory", "deleting the directory") {
+            @Override
+            public void operate(Path path) throws IOException {
+                Files.delete(path);
+            }
+        }, DELETE_FILE("delete file", "Deleted file", "deleting the file") {
+            @Override
+            public void operate(Path path) throws IOException {
+                DELETE_DIR.operate(path);
+            }
+        };
+
+        String message1, message2, message3;
+
+        FileOp(String message1, String message2, String message3) {
+            this.message1 = message1;
+            this.message2 = message2;
+            this.message3 = message3;
+        }
+
+        abstract public void operate(Path path) throws IOException;
     }
 
     public void constructDirectories(Path directory) {
@@ -712,10 +903,22 @@ public class FGStorageManagerNew {
         deleteDirectory(directory, false);
     }
 
-    private void deleteDirectory(Path directory, boolean innerOnly) {
-        FoxGuardMain.instance().getLogger().info("Deleting directory: " + directory);
-        if (Files.exists(directory) && Files.isDirectory(directory))
-            try {
+    /**
+     * Deletes a directory recursively.
+     * <p>
+     * If the boolean flag is set, this method attempts to return after leaving the filesystem
+     * with an empty directory at the parameter specified path.
+     * This includes doing functions such as deleting files and creating the directory if it doesn't already exist.
+     *
+     * @param directory the path at which to delete or prepare an empty directory
+     * @param makeEmpty whether to delete the directory or prepare and clear it (make it an empty directory).
+     */
+    private void deleteDirectory(Path directory, boolean makeEmpty) {
+        if (Files.exists(directory)) {
+            if (makeEmpty && isEmptyDirectory(directory)) return;
+            FoxGuardMain.instance().getLogger().info((makeEmpty ? "Clearing" : "Deleting") + " directory: " + directory);
+
+            if (Files.isDirectory(directory)) try {
                 Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -730,7 +933,7 @@ public class FGStorageManagerNew {
 
                     @Override
                     public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                        if (exc == null && !(innerOnly && Files.isSameFile(dir, directory))) {
+                        if (exc == null && !(makeEmpty && Files.isSameFile(dir, directory))) {
                             try {
                                 Files.delete(dir);
                                 logger.info("Deleted directory: " + dir);
@@ -742,15 +945,23 @@ public class FGStorageManagerNew {
                     }
                 });
             } catch (IOException e) {
-                logger.error("There was an error while trying to recursively delete the directory: " + directory, e);
+                logger.error("There was an error while trying to recursively " + (makeEmpty ? "clear" : "delete") + " the directory: " + directory, e);
             }
-        else if (Files.exists(directory)) {
-            logger.warn(directory + "is a file. A directory was expected. Deleting...");
-            try {
-                Files.delete(directory);
-            } catch (IOException e) {
-                logger.error("There was an error deleting the file: " + directory, e);
+            else {
+                logger.warn(directory + "is a file. A directory was expected. Deleting...");
+                try {
+                    Files.delete(directory);
+                    if (makeEmpty) {
+                        logger.warn("Replacing file with empty directory instead.");
+                        constructDirectory(directory);
+                    }
+                } catch (IOException e) {
+                    logger.error("There was an error deleting the file: " + directory, e);
+                }
+
             }
+        } else if (makeEmpty) {
+            constructDirectory(directory);
         }
     }
 

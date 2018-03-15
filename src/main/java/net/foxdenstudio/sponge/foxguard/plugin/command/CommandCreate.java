@@ -38,8 +38,8 @@ import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
-import net.foxdenstudio.sponge.foxguard.plugin.object.owners.IOwnerProvider;
-import net.foxdenstudio.sponge.foxguard.plugin.object.owners.OwnerProviderRegistry;
+import net.foxdenstudio.sponge.foxguard.plugin.object.owner.provider.IOwnerProvider;
+import net.foxdenstudio.sponge.foxguard.plugin.object.owner.OwnerManager;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import org.spongepowered.api.Sponge;
@@ -137,7 +137,7 @@ public class CommandCreate extends FCCommandBase {
                 }
             } else {
                 String[] parts = ownerString.split(":", 2);
-                OwnerProviderRegistry registry = OwnerProviderRegistry.getInstance();
+                OwnerManager registry = OwnerManager.getInstance();
                 Optional<UUID> ownerOpt;
                 if (parts.length == 1) {
                     ownerOpt = registry.getUUIDForOwner(null, parts[0]);
@@ -214,11 +214,14 @@ public class CommandCreate extends FCCommandBase {
         source.sendMessage(Text.of(TextColors.GREEN, fgCat.uName + " created successfully"));
 
         StringBuilder logMessage = new StringBuilder();
-        logMessage.append(source.getName()).append(" created a ").append(fgCat.lName).append(":   ")
-                .append("Name: ").append(object.getName()).append("   ");
+        logMessage.append(source.getName())
+                .append(" created a ")
+                .append(fgCat.lName)
+                .append(":   Name: ")
+                .append(object.getName());
 
         if (owner != null && !owner.equals(FGManager.SERVER_UUID)) {
-            logMessage.append("Owner: ").append(OwnerProviderRegistry.getInstance().getKeyword(owner, null))
+            logMessage.append("   Owner: ").append(OwnerManager.getInstance().getKeyword(owner, null))
                     .append(" (").append(owner).append(")");
         }
 
@@ -352,7 +355,7 @@ public class CommandCreate extends FCCommandBase {
                 String[] parts = parse.current.token.split(":", 2);
                 System.out.println(parts.length );
                 if (parts.length == 1) {
-                    ImmutableList<String> collect = OwnerProviderRegistry.getInstance().getProviders().stream()
+                    ImmutableList<String> collect = OwnerManager.getInstance().getProviders().stream()
                             .map(IOwnerProvider::getPrimaryAlias)
                             .filter(string -> string != null && !string.isEmpty())
                             .filter(new StartsWithPredicate(parse.current.token))
@@ -362,7 +365,7 @@ public class CommandCreate extends FCCommandBase {
                     return collect;
 
                 } else if (parts.length == 2) {
-                    Optional<IOwnerProvider> providerOpt = OwnerProviderRegistry.getInstance().getProvider(parts[0]);
+                    Optional<IOwnerProvider> providerOpt = OwnerManager.getInstance().getProvider(parts[0]);
                     if (providerOpt.isPresent()) {
                         IOwnerProvider provider = providerOpt.get();
                         System.out.println(provider.getOwnerKeywords());

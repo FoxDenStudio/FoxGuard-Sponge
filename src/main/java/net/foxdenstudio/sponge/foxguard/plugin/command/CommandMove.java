@@ -74,7 +74,11 @@ public class CommandMove extends FCCommandBase {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
             return CommandResult.empty();
         }
-        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(MAPPER).parse();
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
+                .arguments(arguments)
+                .flagMapper(MAPPER)
+                .parse();
+
         if (parse.args.length == 0) {
             source.sendMessage(Text.builder()
                     .append(Text.of(TextColors.GREEN, "Usage: "))
@@ -154,7 +158,6 @@ public class CommandMove extends FCCommandBase {
         if (!testPermission(source)) return ImmutableList.of();
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                 .arguments(arguments)
-                .limit(2)
                 .flagMapper(MAPPER)
                 .excludeCurrent(true)
                 .autoCloseQuotes(true)
@@ -221,6 +224,7 @@ public class CommandMove extends FCCommandBase {
                     }
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0]) || isIn(CONTROLLERS_ALIASES, parse.args[0])) {
                     available = Tristate.fromBoolean(!FGManager.getInstance().getHandler(parse.current.token).isPresent());
+                    System.out.println("asdjfkasdkfjasdlfj");
                 }
                 if (available != null) {
                     switch (available) {
