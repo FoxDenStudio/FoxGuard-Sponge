@@ -2,10 +2,10 @@ rootProject.name = 'FoxGuard-Sponge'
 
 apply from: 'gradle/devenv.gradle'
 
+include 'FoxCore-Sponge'
+
 if (gradle.isDevEnv) {
-    includeFlat "$gradle.foxCorePath"
-    gradle.ext.foxCoreName = ':' + "$gradle.foxCorePath"
-} else {
-    include 'FoxCore-Sponge'
-    gradle.ext.foxCoreName = ':FoxCore-Sponge'
+    def descriptor = project(':FoxCore-Sponge')
+    descriptor.projectDir = new File("$gradle.foxCorePath")
 }
+
