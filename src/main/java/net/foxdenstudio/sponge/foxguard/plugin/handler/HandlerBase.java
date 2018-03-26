@@ -63,6 +63,7 @@ public abstract class HandlerBase extends FGObjectBase implements IHandler {
         return this.getClass().getSimpleName() + "{" +
                 "name='" + name + '\'' +
                 ", isEnabled=" + isEnabled +
+                ", type=" + this.getUniqueTypeString() +
                 ", priority=" + priority +
                 '}';
     }

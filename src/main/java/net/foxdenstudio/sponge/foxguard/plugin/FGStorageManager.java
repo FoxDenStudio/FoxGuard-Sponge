@@ -1027,7 +1027,7 @@ public final class FGStorageManager {
         }
     }
 
-    private Path getDirectory() {
+    public Path getDirectory() {
         Path path = Sponge.getGame().getSavesDirectory();
         if (FGConfigManager.getInstance().saveInWorldFolder()) {
             path = path.resolve(Sponge.getServer().getDefaultWorldName());
@@ -1039,7 +1039,7 @@ public final class FGStorageManager {
         return path;
     }
 
-    private Path getWorldDirectory(String world) {
+    public Path getWorldDirectory(String world) {
         Path path = Sponge.getGame().getSavesDirectory();
         if (FGConfigManager.getInstance().saveWorldRegionsInWorldFolders()) {
             path = path.resolve(Sponge.getServer().getDefaultWorldName());

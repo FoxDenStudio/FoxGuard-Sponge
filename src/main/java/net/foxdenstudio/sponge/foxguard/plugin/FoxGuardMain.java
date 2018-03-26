@@ -333,7 +333,7 @@ public final class FoxGuardMain {
     }
 
     /**
-     * @return A File object corresponding to the config of the plugin.
+     * @return A Path object corresponding to the config of the plugin.
      */
     public Path getConfigDirectory() {
         return configDirectory;

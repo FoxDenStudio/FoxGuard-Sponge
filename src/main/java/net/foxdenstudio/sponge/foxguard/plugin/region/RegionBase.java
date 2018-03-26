@@ -29,12 +29,14 @@ import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectBase;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.util.RegionCache;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public abstract class RegionBase extends FGObjectBase implements IRegion {
 
@@ -73,6 +75,16 @@ public abstract class RegionBase extends FGObjectBase implements IRegion {
 
     public void markDirty() {
         FGUtil.markRegionDirty(this);
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + "{" +
+                "name='" + name + '\'' +
+                ", isEnabled=" + isEnabled +
+                ", type=" + this.getUniqueTypeString() +
+                ", links=" + this.handlers.stream().map(IFGObject::getName).collect(Collectors.toList()) +
+                '}';
     }
 
 }

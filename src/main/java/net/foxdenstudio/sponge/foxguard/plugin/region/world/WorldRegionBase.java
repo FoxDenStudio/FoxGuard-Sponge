@@ -25,8 +25,11 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.region.world;
 
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.RegionBase;
 import org.spongepowered.api.world.World;
+
+import java.util.stream.Collectors;
 
 public abstract class WorldRegionBase extends RegionBase implements IWorldRegion {
 
@@ -53,7 +56,9 @@ public abstract class WorldRegionBase extends RegionBase implements IWorldRegion
         return this.getClass().getSimpleName() + "{" +
                 "name='" + name + '\'' +
                 ", isEnabled=" + isEnabled +
+                ", type=" + this.getUniqueTypeString() +
                 ", world=" + world.getName() +
+                ", links=" + this.getHandlers().stream().map(IFGObject::getName).collect(Collectors.toList()) +
                 '}';
     }
 

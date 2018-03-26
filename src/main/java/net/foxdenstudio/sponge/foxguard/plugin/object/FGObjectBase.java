@@ -62,6 +62,7 @@ public abstract class FGObjectBase implements IFGObject {
         return this.getClass().getSimpleName() + "{" +
                 "name='" + name + '\'' +
                 ", isEnabled=" + isEnabled +
+                ", type=" + this.getUniqueTypeString() +
                 '}';
     }
 }
