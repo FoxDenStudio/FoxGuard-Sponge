@@ -31,7 +31,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.explosive.Explosive;
 import org.spongepowered.api.entity.living.player.Player;
@@ -93,7 +93,7 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
                             .map(trans -> trans.getOriginal().getLocation().get())
                             .collect(Collectors.toList())
             ).forEach(region -> region.getLinks().stream()
-                    .filter(IFGObject::isEnabled)
+                    .filter(IGuardObject::isEnabled)
                     .forEach(handlerSet::add));
         } else if (event instanceof ExplosionEvent.Detonate) {
             flags.set(DETONATE);
@@ -105,7 +105,7 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
 
             FGManager.getInstance().getRegionsAtMultiLocI(locations)
                     .forEach(region -> region.getLinks().stream()
-                            .filter(IFGObject::isEnabled)
+                            .filter(IGuardObject::isEnabled)
                             .forEach(handlerSet::add));
 
         } else if (event instanceof ExplosionEvent.Pre) {
@@ -116,7 +116,7 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
             FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                     .filter(region -> region.contains(pos, world))
                     .forEach(region -> region.getLinks().stream()
-                            .filter(IFGObject::isEnabled)
+                            .filter(IGuardObject::isEnabled)
                             .forEach(handlerSet::add));
         }
         Tristate flagState = Tristate.UNDEFINED;

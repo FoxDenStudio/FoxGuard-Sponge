@@ -33,7 +33,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
@@ -145,13 +145,13 @@ public class CommandLink extends FCCommandBase {
                 }
                 if (key && world != null) {
                     return FGManager.getInstance().getAllRegions(world, result.getOwner()).stream()
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(result.getToken()))
                             .map(args -> parse.current.prefix + result.getPrefix() + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else {
                     return FGManager.getInstance().getAllRegionsWithUniqueNames(result.getOwner(), world).stream()
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(result.getToken()))
                             .map(args -> parse.current.prefix + result.getPrefix() + args)
                             .collect(GuavaCollectors.toImmutableList());
@@ -174,14 +174,14 @@ public class CommandLink extends FCCommandBase {
                     IRegion finalRegion = region;
                     return FGManager.getInstance().getHandlers(tabResult.getOwner()).stream()
                             .filter(handler -> !finalRegion.getLinks().contains(handler) && !(handler instanceof IGlobal))
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(tabResult.getToken()))
                             .map(args -> parse.current.prefix + tabResult.getPrefix() + args)
                             .collect(GuavaCollectors.toImmutableList());
                 }
                 return FGManager.getInstance().getHandlers(tabResult.getOwner()).stream()
                         .filter(handler -> !(handler instanceof IGlobal))
-                        .map(IFGObject::getName)
+                        .map(IGuardObject::getName)
                         .filter(new StartsWithPredicate(tabResult.getToken()))
                         .map(args -> parse.current.prefix + tabResult.getPrefix() + args)
                         .collect(GuavaCollectors.toImmutableList());

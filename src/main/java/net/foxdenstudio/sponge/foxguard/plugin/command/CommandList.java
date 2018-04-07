@@ -30,13 +30,11 @@ import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
-import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
-import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
@@ -97,7 +95,7 @@ public class CommandList extends FCCommandBase {
                     .build());
             return CommandResult.empty();
         } else {
-            List<IFGObject> objects = new ArrayList<>();
+            List<IGuardObject> objects = new ArrayList<>();
             FGCat cat = FGCat.from(parse.args[0]);
             if (cat == null) throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);
 
@@ -213,7 +211,7 @@ public class CommandList extends FCCommandBase {
                     .append(Text.of(TextColors.GREEN, "------- " + title + " -------\n"));
 
             objects.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
-            Iterator<IFGObject> objectIterator = objects.iterator();
+            Iterator<IGuardObject> objectIterator = objects.iterator();
             for (int i = 0; i < skip; i++) {
                 objectIterator.next();
             }
@@ -222,7 +220,7 @@ public class CommandList extends FCCommandBase {
                 builder.append(Text.of(TextColors.GRAY, TextStyles.ITALIC, "No objects found"));
             }
             while (objectIterator.hasNext() && count < number) {
-                IFGObject object = objectIterator.next();
+                IGuardObject object = objectIterator.next();
                 String fullName = object.getOwner().toString() + ":" + object.getName();
                 if (source instanceof Player) {
                     FGUtil.genStatePrefix(builder, object, source, hasControllers);

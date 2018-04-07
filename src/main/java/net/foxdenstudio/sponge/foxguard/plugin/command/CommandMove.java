@@ -32,7 +32,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.GlobalWorldRegion;
@@ -181,20 +181,20 @@ public class CommandMove extends FCCommandBase {
                     }
                     if (world == null) return FGManager.getInstance().getRegions().stream()
                             .filter(region -> !(region instanceof GlobalWorldRegion))
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                     return FGManager.getInstance().getAllRegions(world).stream()
                             .filter(region -> !(region instanceof GlobalWorldRegion))
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
                     return FGManager.getInstance().getHandlers().stream()
                             .filter(region -> !(region instanceof GlobalHandler))
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());

@@ -26,17 +26,16 @@
 package net.foxdenstudio.sponge.foxguard.plugin.object;
 
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
-public abstract class FGObjectBase implements IFGObject {
+public abstract class GuardObjectBase implements IGuardObject {
 
     protected String name;
     protected UUID owner;
     protected boolean enabled = true;
 
-    public FGObjectBase(FGObjectData data) {
+    public GuardObjectBase(FGObjectData data) {
         String name = data.getName();
         this.name = (name == null || name.isEmpty()) ? "null" : name;
         UUID owner = data.getOwner();

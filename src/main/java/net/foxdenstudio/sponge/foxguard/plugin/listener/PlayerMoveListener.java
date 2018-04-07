@@ -34,7 +34,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
@@ -133,7 +133,7 @@ public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
                         FGManager.getInstance().getRegionsInChunkAtPos(world, from).stream()
                                 .filter(region -> region.contains(from, world))
                                 .forEach(region -> region.getLinks().stream()
-                                        .filter(IFGObject::isEnabled)
+                                        .filter(IGuardObject::isEnabled)
                                         .filter(handler -> !temp.contains(handler))
                                         .forEach(temp::add));
                     } else {
@@ -144,7 +144,7 @@ public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
                             .forEach(region -> {
                                 if (regionHUD) regionList.add(region);
                                 region.getLinks().stream()
-                                        .filter(IFGObject::isEnabled)
+                                        .filter(IGuardObject::isEnabled)
                                         .filter(handler -> !toList.contains(handler))
                                         .forEach(toList::add);
                             });

@@ -26,7 +26,6 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 import com.google.common.collect.ImmutableList;
-import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
@@ -35,7 +34,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
@@ -96,7 +95,7 @@ public class CommandModify extends FCCommandBase {
 
             FGUtil.OwnerResult ownerResult = FGUtil.processUserInput(parse.args[1]);
 
-            IFGObject object;
+            IGuardObject object;
             switch (fgCat) {
                 case REGION:
                     object = FGUtil.getRegionFromCommand(source, ownerResult, parse.flags.containsKey("world"), parse.flags.get("world"));
@@ -176,20 +175,20 @@ public class CommandModify extends FCCommandBase {
                     }
                     if (key && world != null) {
                         return FGManager.getInstance().getAllRegions(world, result.getOwner()).stream()
-                                .map(IFGObject::getName)
+                                .map(IGuardObject::getName)
                                 .filter(new StartsWithPredicate(result.getToken()))
                                 .map(args -> parse.current.prefix + result.getPrefix() + args)
                                 .collect(GuavaCollectors.toImmutableList());
                     } else {
                         return FGManager.getInstance().getAllRegionsWithUniqueNames(result.getOwner(), world).stream()
-                                .map(IFGObject::getName)
+                                .map(IGuardObject::getName)
                                 .filter(new StartsWithPredicate(result.getToken()))
                                 .map(args -> parse.current.prefix + result.getPrefix() + args)
                                 .collect(GuavaCollectors.toImmutableList());
                     }
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
                     return FGManager.getInstance().getHandlers(result.getOwner()).stream()
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(result.getToken()))
                             .map(args -> parse.current.prefix + result.getPrefix() + args)
                             .collect(GuavaCollectors.toImmutableList());

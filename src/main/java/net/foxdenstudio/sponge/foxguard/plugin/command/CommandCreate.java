@@ -36,7 +36,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.FGConfigManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
 import net.foxdenstudio.sponge.foxguard.plugin.object.owner.provider.IOwnerProvider;
 import net.foxdenstudio.sponge.foxguard.plugin.object.owner.OwnerManager;
@@ -181,7 +181,7 @@ public class CommandCreate extends FCCommandBase {
         }
 
         String finalBlock = num < 4 ? "" : parse.args[3];
-        IFGObject object;
+        IGuardObject object;
         try {
             object = fgCat.create(name, type, finalBlock, source);
         } catch (CommandException e) {
@@ -434,12 +434,12 @@ public class CommandCreate extends FCCommandBase {
             }
 
             @Override
-            public IFGObject create(String name, String type, String arguments, CommandSource source) throws CommandException {
+            public IGuardObject create(String name, String type, String arguments, CommandSource source) throws CommandException {
                 return FGFactoryManager.getInstance().createRegion(name, type, arguments, source);
             }
 
             @Override
-            public boolean add(IFGObject object, UUID owner, @Nullable World world) {
+            public boolean add(IGuardObject object, UUID owner, @Nullable World world) {
                 return object instanceof IRegion
                         && FGManager.getInstance().addRegion(((IRegion) object), owner, world);
             }
@@ -453,12 +453,12 @@ public class CommandCreate extends FCCommandBase {
             }
 
             @Override
-            public IFGObject create(String name, String type, String arguments, CommandSource source) throws CommandException {
+            public IGuardObject create(String name, String type, String arguments, CommandSource source) throws CommandException {
                 return FGFactoryManager.getInstance().createWorldRegion(name, type, arguments, source);
             }
 
             @Override
-            public boolean add(IFGObject object, UUID owner, @Nullable World world) {
+            public boolean add(IGuardObject object, UUID owner, @Nullable World world) {
                 return world != null
                         && object instanceof IWorldRegion
                         && FGManager.getInstance().addWorldRegion(((IWorldRegion) object), owner, world);
@@ -471,12 +471,12 @@ public class CommandCreate extends FCCommandBase {
             }
 
             @Override
-            public IFGObject create(String name, String type, String arguments, CommandSource source) throws CommandException {
+            public IGuardObject create(String name, String type, String arguments, CommandSource source) throws CommandException {
                 return FGFactoryManager.getInstance().createHandler(name, type, arguments, source);
             }
 
             @Override
-            public boolean add(IFGObject object, UUID owner, @Nullable World world) {
+            public boolean add(IGuardObject object, UUID owner, @Nullable World world) {
                 return object instanceof IHandler
                         && FGManager.getInstance().addHandler(((IHandler) object), owner);
             }
@@ -488,12 +488,12 @@ public class CommandCreate extends FCCommandBase {
             }
 
             @Override
-            public IFGObject create(String name, String type, String arguments, CommandSource source) throws CommandException {
+            public IGuardObject create(String name, String type, String arguments, CommandSource source) throws CommandException {
                 return FGFactoryManager.getInstance().createController(name, type, arguments, source);
             }
 
             @Override
-            public boolean add(IFGObject object, UUID owner, @Nullable World world) {
+            public boolean add(IGuardObject object, UUID owner, @Nullable World world) {
                 return HANDLER.add(object, owner, world);
             }
         };
@@ -517,8 +517,8 @@ public class CommandCreate extends FCCommandBase {
 
         public abstract boolean isNameAvailable(String name, UUID owner, @Nullable World world);
 
-        public abstract IFGObject create(String name, String type, String arguments, CommandSource source) throws CommandException;
+        public abstract IGuardObject create(String name, String type, String arguments, CommandSource source) throws CommandException;
 
-        public abstract boolean add(IFGObject object, UUID owner, @Nullable World world);
+        public abstract boolean add(IGuardObject object, UUID owner, @Nullable World world);
     }
 }

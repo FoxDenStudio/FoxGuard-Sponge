@@ -32,7 +32,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.state.ListStateFieldBase;
 import net.foxdenstudio.sponge.foxcore.plugin.state.SourceState;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
@@ -121,14 +121,14 @@ public class ControllersStateField extends ListStateFieldBase<IController> {
                 if (parse.args[0].equals("add")) {
                     return FGManager.getInstance().getControllers().stream()
                             .filter(handler -> !this.list.contains(handler))
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .sorted(String.CASE_INSENSITIVE_ORDER)
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (parse.args[0].equals("remove")) {
                     return this.list.stream()
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
@@ -240,7 +240,7 @@ public class ControllersStateField extends ListStateFieldBase<IController> {
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0)
                 return this.list.stream()
-                        .map(IFGObject::getName)
+                        .map(IGuardObject::getName)
                         .filter(new StartsWithPredicate(parse.current.token))
                         .collect(GuavaCollectors.toImmutableList());
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))

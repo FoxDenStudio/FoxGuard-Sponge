@@ -25,7 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.storage;
 
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 
 import java.util.UUID;
@@ -48,7 +48,7 @@ public class FGSObjectMeta extends FGSObjectPath {
     public FGSObjectMeta() {
     }
 
-    public FGSObjectMeta(IFGObject object) {
+    public FGSObjectMeta(IGuardObject object) {
         super(object);
         this.category = FGUtil.getCategory(object);
         this.type = object.getUniqueTypeString();

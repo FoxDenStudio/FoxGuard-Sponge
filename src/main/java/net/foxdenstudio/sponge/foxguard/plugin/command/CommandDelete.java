@@ -34,7 +34,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.object.owner.OwnerManager;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
@@ -95,7 +95,7 @@ public class CommandDelete extends FCCommandBase {
 
             FGUtil.OwnerResult ownerResult = FGUtil.processUserInput(parse.args[1]);
 
-            IFGObject object;
+            IGuardObject object;
             FGManager fgManager = FGManager.getInstance();
             switch (fgCat) {
                 case REGION:
@@ -180,14 +180,14 @@ public class CommandDelete extends FCCommandBase {
                     if (key && world != null) {
                         return FGManager.getInstance().getAllRegions(world, result.getOwner()).stream()
                                 .filter(region -> !(region instanceof IGlobal))
-                                .map(IFGObject::getName)
+                                .map(IGuardObject::getName)
                                 .filter(new StartsWithPredicate(result.getToken()))
                                 .map(args -> parse.current.prefix + result.getPrefix() + args)
                                 .collect(GuavaCollectors.toImmutableList());
                     } else {
                         return FGManager.getInstance().getAllRegionsWithUniqueNames(result.getOwner(), world).stream()
                                 .filter(region -> !(region instanceof IGlobal))
-                                .map(IFGObject::getName)
+                                .map(IGuardObject::getName)
                                 .filter(new StartsWithPredicate(result.getToken()))
                                 .map(args -> parse.current.prefix + result.getPrefix() + args)
                                 .collect(GuavaCollectors.toImmutableList());
@@ -195,7 +195,7 @@ public class CommandDelete extends FCCommandBase {
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
                     return FGManager.getInstance().getHandlers(result.getOwner()).stream()
                             .filter(handler -> !(handler instanceof IGlobal))
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(result.getToken()))
                             .map(args -> parse.current.prefix + result.getPrefix() + args)
                             .collect(GuavaCollectors.toImmutableList());

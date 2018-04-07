@@ -28,7 +28,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.region;
 import com.google.common.collect.ImmutableSet;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectBase;
+import net.foxdenstudio.sponge.foxguard.plugin.object.GuardObjectBase;
 import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectData;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.util.RegionCache;
@@ -36,7 +36,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.util.RegionCache;
 import java.util.HashSet;
 import java.util.Set;
 
-public abstract class RegionBase extends FGObjectBase implements IRegion {
+public abstract class RegionBase extends GuardObjectBase implements IRegion {
 
     private final Set<IHandler> handlers;
 

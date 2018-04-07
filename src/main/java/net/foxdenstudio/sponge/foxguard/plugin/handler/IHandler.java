@@ -27,20 +27,26 @@ package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.living.player.User;
 
 import javax.annotation.Nullable;
 import java.util.Comparator;
 
-public interface IHandler extends IFGObject {
+public interface IHandler extends IGuardObject {
 
     Comparator<IHandler> PRIORITY = (h1, h2) -> h2.getPriority() - h1.getPriority();
+    String SUFFIX = "h";
 
     EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra);
 
     int getPriority();
 
     void setPriority(int priority);
+
+    @Override
+    default String getPathSuffix() {
+        return SUFFIX;
+    }
 }

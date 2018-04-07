@@ -32,7 +32,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
@@ -98,19 +98,19 @@ public final class LinkageParser {
             } else if (expressionString.endsWith(" ")) {
                 if (stage == Stage.START) {
                     return FGManager.getInstance().getAllRegions(world).stream()
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .sorted()
                             .collect(Collectors.toList());
                 } else {
                     return FGManager.getInstance().getHandlers().stream()
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .sorted()
                             .collect(Collectors.toList());
                 }
             } else if (expressionString.endsWith(token)) {
                 if (token.startsWith("^")) {
                     return FGManager.getInstance().getControllers().stream()
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(token.substring(1)))
                             .sorted()
                             .map(str -> endPart + str.substring(token.length() - 1))
@@ -129,14 +129,14 @@ public final class LinkageParser {
                 } else {
                     if (stage == Stage.START) {
                         return FGManager.getInstance().getAllRegions(world).stream()
-                                .map(IFGObject::getName)
+                                .map(IGuardObject::getName)
                                 .filter(new StartsWithPredicate(token))
                                 .sorted()
                                 .map(str -> endPart + str.substring(token.length()))
                                 .collect(Collectors.toList());
                     } else {
                         return FGManager.getInstance().getHandlers().stream()
-                                .map(IFGObject::getName)
+                                .map(IGuardObject::getName)
                                 .filter(new StartsWithPredicate(token))
                                 .sorted()
                                 .map(str -> endPart + str.substring(token.length()))
@@ -146,7 +146,7 @@ public final class LinkageParser {
             }
         } else {
             return FGManager.getInstance().getAllRegions(world).stream()
-                    .map(IFGObject::getName)
+                    .map(IGuardObject::getName)
                     .sorted()
                     .collect(Collectors.toList());
         }
@@ -210,7 +210,7 @@ public final class LinkageParser {
 
         private Set<IExpression> parseSegment(String segmentString, CommandSource source) {
             Set<IExpression> set = new LinkedHashSet<>();
-            Set<IFGObject> stubObjects = new LinkedHashSet<>();
+            Set<IGuardObject> stubObjects = new LinkedHashSet<>();
             Matcher matcher = PATTERN.matcher(segmentString);
             while (matcher.find()) {
                 if (matcher.group().equals("(")) {
@@ -266,9 +266,9 @@ public final class LinkageParser {
         }
 
         @Override
-        public Set<IFGObject> getValue() {
+        public Set<IGuardObject> getValue() {
             if (contents.size() > 0) {
-                Set<IFGObject> set = new LinkedHashSet<>();
+                Set<IGuardObject> set = new LinkedHashSet<>();
                 for (IExpression expression : contents.get(0)) {
                     set.addAll(expression.getValue());
                 }
@@ -320,13 +320,13 @@ public final class LinkageParser {
 
     public class ExpressionStub implements IExpression {
 
-        Set<IFGObject> set;
+        Set<IGuardObject> set;
 
-        public ExpressionStub(Set<IFGObject> set) {
+        public ExpressionStub(Set<IGuardObject> set) {
             this.set = set;
         }
 
-        public Set<IFGObject> getValue() {
+        public Set<IGuardObject> getValue() {
             return set;
         }
 

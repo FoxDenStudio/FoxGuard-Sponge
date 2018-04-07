@@ -38,7 +38,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.event.factory.FGEventFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
@@ -694,7 +694,7 @@ public final class FGManager {
         regionCache.markDirty(region, type);
     }
 
-    public boolean removeObject(IFGObject object) {
+    public boolean removeObject(IGuardObject object) {
         if (object instanceof IRegion) return removeRegion(((IRegion) object));
         else return object instanceof IHandler && removeHandler(((IHandler) object));
     }
@@ -753,7 +753,7 @@ public final class FGManager {
         return removed;
     }
 
-    public boolean move(IFGObject object, @Nullable String newName, @Nullable UUID newOwner, @Nullable World newWorld) {
+    public boolean move(IGuardObject object, @Nullable String newName, @Nullable UUID newOwner, @Nullable World newWorld) {
         boolean changed = false, nameChanged = false, ownerChanged = false, worldChanged = false;
         String tryName = object.getName();
         if (newName != null && !newName.isEmpty() && isNameValid(newName)) {

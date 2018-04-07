@@ -30,7 +30,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.hanging.Hanging;
@@ -110,7 +110,7 @@ public class InteractEntityListener implements EventListener<InteractEntityEvent
         FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                 .filter(region -> region.contains(pos, world))
                 .forEach(region -> region.getLinks().stream()
-                        .filter(IFGObject::isEnabled)
+                        .filter(IGuardObject::isEnabled)
                         .filter(handler -> !handlerSet.contains(handler))
                         .forEach(handlerSet::add));
 

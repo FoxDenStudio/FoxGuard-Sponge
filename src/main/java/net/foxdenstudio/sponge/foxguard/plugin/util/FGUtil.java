@@ -34,7 +34,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.event.factory.FGEventFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.object.owner.provider.IOwnerProvider;
 import net.foxdenstudio.sponge.foxguard.plugin.object.owner.OwnerManager;
@@ -76,7 +76,7 @@ public final class FGUtil {
 
     private static UserStorageService userStorageService;
 
-    public static TextColor getColorForObject(IFGObject object) {
+    public static TextColor getColorForObject(IGuardObject object) {
         if (object instanceof GlobalRegion) return TextColors.LIGHT_PURPLE;
         else if (object instanceof IGlobal) return TextColors.YELLOW;
         else if (!object.isEnabled()) return TextColors.GRAY;
@@ -100,7 +100,7 @@ public final class FGUtil {
         return ((ControllersStateField) FCStateManager.instance().getStateMap().get(source).getOrCreate(ControllersStateField.ID).get()).getList();
     }
 
-    public static String getObjectDisplayName(IFGObject object, boolean dispWorld, @Nullable UUID owner, @Nullable CommandSource viewer) {
+    public static String getObjectDisplayName(IGuardObject object, boolean dispWorld, @Nullable UUID owner, @Nullable CommandSource viewer) {
         if(owner == null) owner = object.getOwner();
         boolean hasOwner;
         hasOwner = (owner != null && !owner.equals(FGManager.SERVER_UUID));
@@ -110,7 +110,7 @@ public final class FGUtil {
                 + (hasOwner ? OwnerManager.getInstance().getDisplayName(owner, null, viewer) + " : " : "")
                 + object.getName();
     }
-    public static Text getObjectDisplayTest(IFGObject object, boolean dispWorld, @Nullable UUID owner, @Nullable CommandSource viewer) {
+    public static Text getObjectDisplayTest(IGuardObject object, boolean dispWorld, @Nullable UUID owner, @Nullable CommandSource viewer) {
         if(owner == null) owner = object.getOwner();
         boolean hasOwner;
         hasOwner = (owner != null && !owner.equals(FGManager.SERVER_UUID));
@@ -119,7 +119,7 @@ public final class FGUtil {
         return builder.build();
     }
 
-    public static String getLogName(IFGObject object) {
+    public static String getLogName(IGuardObject object) {
         if (userStorageService == null) userStorageService = FoxGuardMain.instance().getUserStorage();
         UUID owner = object.getOwner();
         boolean isOwned = !owner.equals(FGManager.SERVER_UUID);
@@ -127,7 +127,7 @@ public final class FGUtil {
         return (userOwner.map(user -> user.getName() + ":").orElse("")) + (isOwned ? owner + ":" : "") + object.getName();
     }
 
-    public static String getFullName(IFGObject object) {
+    public static String getFullName(IGuardObject object) {
         UUID owner = object.getOwner();
         String fullName = object.getName();
         if (owner != null && !owner.equals(FGManager.SERVER_UUID)) {
@@ -136,7 +136,7 @@ public final class FGUtil {
         return fullName;
     }
 
-    public static String getCategory(IFGObject object) {
+    public static String getCategory(IGuardObject object) {
         if (object instanceof IRegion) {
             if (object instanceof IWorldRegion) return "worldregion";
             else return "region";
@@ -146,7 +146,7 @@ public final class FGUtil {
         } else return "object";
     }
 
-    public static String genWorldFlag(IFGObject object) {
+    public static String genWorldFlag(IGuardObject object) {
         return object instanceof IWorldBound ? "--w:" + ((IWorldBound) object).getWorld().getName() + " " : "";
     }
 
@@ -163,7 +163,7 @@ public final class FGUtil {
         }
     }
 
-    public static void markDirty(IFGObject object) {
+    public static void markDirty(IGuardObject object) {
         if (object instanceof IRegion) {
             FGManager.getInstance().markDirty(((IRegion) object), RegionCache.DirtyType.MODIFIED);
         }
@@ -362,11 +362,11 @@ public final class FGUtil {
         return new OwnerTabResult();
     }
 
-    public static void genStatePrefix(Text.Builder builder, IFGObject object, CommandSource source){
+    public static void genStatePrefix(Text.Builder builder, IGuardObject object, CommandSource source){
         genStatePrefix(builder, object, source, false);
     }
 
-    public static void genStatePrefix(Text.Builder builder, IFGObject object, CommandSource source, boolean controllerPadding) {
+    public static void genStatePrefix(Text.Builder builder, IGuardObject object, CommandSource source, boolean controllerPadding) {
         FGCat cat = FGCat.from(object);
         if (cat == null) return;
         if (cat == FGCat.WORLDREGION) cat = FGCat.REGION;
@@ -388,7 +388,7 @@ public final class FGUtil {
         builder.append(Text.of(" "));
     }
 
-    private static void genStateButtons(Text.Builder builder, FGCat cat, IFGObject object, boolean contains) {
+    private static void genStateButtons(Text.Builder builder, FGCat cat, IGuardObject object, boolean contains) {
         String plus = "[" + cat.sName + "+]";
         String minus = "[" + cat.sName + "-]";
         if (contains) {
@@ -429,7 +429,7 @@ public final class FGUtil {
             return null;
         }
 
-        public static FGCat from(IFGObject object) {
+        public static FGCat from(IGuardObject object) {
             if (object instanceof IRegion) {
                 if (object instanceof IWorldRegion) {
                     return WORLDREGION;

@@ -26,7 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.storage;
 
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 
 import java.util.UUID;
 
@@ -37,7 +37,7 @@ import java.util.UUID;
 public class FGSObjectPath {
     String name;
     UUID owner;
-    transient IFGObject object;
+    transient IGuardObject object;
 
     public FGSObjectPath() {
         this.owner = FGManager.SERVER_UUID;
@@ -48,7 +48,7 @@ public class FGSObjectPath {
         this.owner = owner == null ? FGManager.SERVER_UUID : owner;
     }
 
-    public FGSObjectPath(IFGObject object) {
+    public FGSObjectPath(IGuardObject object) {
         this(
                 object.getName(),
                 object.getOwner()

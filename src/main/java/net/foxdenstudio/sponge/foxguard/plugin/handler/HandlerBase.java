@@ -25,10 +25,10 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
-import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectBase;
+import net.foxdenstudio.sponge.foxguard.plugin.object.GuardObjectBase;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 
-public abstract class HandlerBase extends FGObjectBase implements IHandler {
+public abstract class HandlerBase extends GuardObjectBase implements IHandler {
 
     int priority;
 

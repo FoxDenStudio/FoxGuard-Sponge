@@ -36,11 +36,10 @@ import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.event.factory.FGEventFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.GlobalWorldRegion;
-import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
@@ -58,7 +57,6 @@ import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -106,7 +104,7 @@ public class CommandEnableDisable extends FCCommandBase {
             return CommandResult.empty();
         }
 
-        List<IFGObject> objects = new ArrayList<>();
+        List<IGuardObject> objects = new ArrayList<>();
 
         FGCat cat = FGCat.OBJECT;
         if (parse.args.length > 0) {
@@ -131,7 +129,7 @@ public class CommandEnableDisable extends FCCommandBase {
         String worldValue = parse.flags.get("world");
         for (int i = 1; i < parse.args.length; i++) {
             FGUtil.OwnerResult ownerResult = FGUtil.processUserInput(parse.args[i]);
-            IFGObject object;
+            IGuardObject object;
             switch (cat) {
                 case REGION:
                     object = FGUtil.getRegionFromCommand(source, ownerResult, worldKey, worldValue);
@@ -147,7 +145,7 @@ public class CommandEnableDisable extends FCCommandBase {
 
         int successes = 0;
         int failures = 0;
-        for (IFGObject object : objects) {
+        for (IGuardObject object : objects) {
             if (object instanceof GlobalWorldRegion || object instanceof GlobalHandler || object.isEnabled() == this.enableState)
                 failures++;
             else {
@@ -363,14 +361,14 @@ public class CommandEnableDisable extends FCCommandBase {
                     if (key && world != null) {
                         return FGManager.getInstance().getAllRegions(world, result.getOwner()).stream()
                                 .filter(object -> object.isEnabled() != this.enableState && !(object instanceof IGlobal))
-                                .map(IFGObject::getName)
+                                .map(IGuardObject::getName)
                                 .filter(new StartsWithPredicate(result.getToken()))
                                 .map(args -> parse.current.prefix + result.getPrefix() + args)
                                 .collect(GuavaCollectors.toImmutableList());
                     } else {
                         return FGManager.getInstance().getAllRegionsWithUniqueNames(result.getOwner(), world).stream()
                                 .filter(object -> object.isEnabled() != this.enableState && !(object instanceof IGlobal))
-                                .map(IFGObject::getName)
+                                .map(IGuardObject::getName)
                                 .filter(new StartsWithPredicate(result.getToken()))
                                 .map(args -> parse.current.prefix + result.getPrefix() + args)
                                 .collect(GuavaCollectors.toImmutableList());
@@ -378,7 +376,7 @@ public class CommandEnableDisable extends FCCommandBase {
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
                     return FGManager.getInstance().getHandlers(result.getOwner()).stream()
                             .filter(object -> object.isEnabled() != this.enableState && !(object instanceof IGlobal))
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(result.getToken()))
                             .map(args -> parse.current.prefix + result.getPrefix() + args)
                             .collect(GuavaCollectors.toImmutableList());

@@ -26,7 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.storage;
 
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 
 import java.util.List;
@@ -53,7 +53,7 @@ public class FGSObjectIndex extends FGSObjectMeta {
     public FGSObjectIndex() {
     }
 
-    public FGSObjectIndex(IFGObject object) {
+    public FGSObjectIndex(IGuardObject object) {
         super(object);
         this.enabled = object.isEnabled();
         if (object instanceof IHandler) {

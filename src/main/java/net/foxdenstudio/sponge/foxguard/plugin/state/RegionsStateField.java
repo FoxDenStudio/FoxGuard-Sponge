@@ -32,7 +32,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.state.ListStateFieldBase;
 import net.foxdenstudio.sponge.foxcore.plugin.state.SourceState;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
@@ -151,14 +151,14 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                 if (parse.args[0].equals("add")) {
                     if (world == null) return FGManager.getInstance().getRegions().stream()
                             .filter(region -> !this.list.contains(region))
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .sorted(String.CASE_INSENSITIVE_ORDER)
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                     else return FGManager.getInstance().getAllRegions(world).stream()
                             .filter(region -> !this.list.contains(region))
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .sorted(String.CASE_INSENSITIVE_ORDER)
                             .map(args -> parse.current.prefix + args)
@@ -167,7 +167,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                     final World finalWorld = world;
                     return this.list.stream()
                             .filter(region -> !(region instanceof IWorldRegion) || finalWorld != null && ((IWorldRegion) region).getWorld().equals(finalWorld))
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());

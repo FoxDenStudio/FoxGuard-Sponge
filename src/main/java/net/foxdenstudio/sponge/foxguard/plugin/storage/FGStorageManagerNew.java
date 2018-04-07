@@ -43,6 +43,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.HandlerData;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectData;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
@@ -85,7 +86,7 @@ public class FGStorageManagerNew {
     private static final Type INDEX_LIST_TYPE = new TypeToken<List<FGSObjectIndex>>() {
     }.getType();
     private static FGStorageManagerNew instance;
-    public final HashMap<IFGObject, Boolean> defaultModifiedMap;
+    public final HashMap<IGuardObject, Boolean> defaultModifiedMap;
     private final FGConfigManager config;
     private final UserStorageService userStorageService;
     private final Logger logger = FoxGuardMain.instance().getLogger();
@@ -102,8 +103,8 @@ public class FGStorageManagerNew {
         config = FGConfigManager.getInstance();
         userStorageService = FoxGuardMain.instance().getUserStorage();
         defaultModifiedMap = new CacheMap<>((k, m) -> {
-            if (k instanceof IFGObject) {
-                m.put((IFGObject) k, true);
+            if (k instanceof IGuardObject) {
+                m.put((IGuardObject) k, true);
                 return true;
             } else return null;
         });
@@ -147,7 +148,7 @@ public class FGStorageManagerNew {
         saveIndex(worldRegions, file);
     }
 
-    private void saveIndex(Set<? extends IFGObject> objects, Path file) {
+    private void saveIndex(Set<? extends IGuardObject> objects, Path file) {
         List<FGSObjectIndex> indexList = new ArrayList<>();
         objects.stream().sorted(IFGObject.OWNER_AND_NAME).forEach(object -> {
             boolean saveLinks = (object instanceof ILinkable && ((ILinkable) object).saveLinks());
@@ -170,7 +171,7 @@ public class FGStorageManagerNew {
         }
     }
 
-    private void updateIndexFor(IFGObject object) {
+    private void updateIndexFor(IGuardObject object) {
         if (object instanceof IHandler) {
             saveHandlerIndex();
         } else if (object instanceof IRegion) {
@@ -182,11 +183,11 @@ public class FGStorageManagerNew {
         }
     }
 
-    public void saveObject(IFGObject object) {
+    public void saveObject(IGuardObject object) {
         saveObject(object, false);
     }
 
-    public void saveObject(IFGObject object, boolean force) {
+    public void saveObject(IGuardObject object, boolean force) {
         if (reentry) return;
         FGCat type = getObjectType(object);
         String logName = FGUtil.getLogName(object);
@@ -224,16 +225,16 @@ public class FGStorageManagerNew {
         }
     }
 
-    public void saveObjects(Set<? extends IFGObject> objects) {
+    public void saveObjects(Set<? extends IGuardObject> objects) {
         saveObjects(objects, false);
     }
 
-    public void saveObjects(Set<? extends IFGObject> objects, boolean force) {
+    public void saveObjects(Set<? extends IGuardObject> objects, boolean force) {
         if (reentry) return;
         objects.forEach(object -> saveObject(object, force));
     }
 
-    public void addObject(IFGObject object) {
+    public void addObject(IGuardObject object) {
         if (reentry) return;
         Path directory = getObjectDirectory(object);
         if (Files.exists(directory)) {
@@ -254,7 +255,7 @@ public class FGStorageManagerNew {
         }
     }
 
-    public void removeObject(IFGObject object) {
+    public void removeObject(IGuardObject object) {
         if (reentry) return;
         Path directory = getObjectDirectory(object);
         if (config.cleanOnDelete()) {
@@ -305,9 +306,9 @@ public class FGStorageManagerNew {
                 FGCat fgCat = FGCat.from(index.category);
                 if (fgCat == FGCat.REGION) {
                     Path directory = getObjectDirectory(index, null);
-                    Optional<IFGObject> fgObjectOptional = loadObject(directory, index, null);
+                    Optional<IGuardObject> fgObjectOptional = loadObject(directory, index, null);
                     if (fgObjectOptional.isPresent()) {
-                        IFGObject fgObject = fgObjectOptional.get();
+                        IGuardObject fgObject = fgObjectOptional.get();
                         if (fgObject instanceof IRegion) {
                             IRegion region = (IRegion) fgObject;
                             manager.addRegion(region);
@@ -347,9 +348,9 @@ public class FGStorageManagerNew {
                 FGCat fgCat = FGCat.from(index.category);
                 if (fgCat == FGCat.HANDLER || fgCat == FGCat.CONTROLLER) {
                     Path directory = getObjectDirectory(index, null);
-                    Optional<IFGObject> fgObjectOptional = loadObject(directory, index, null);
+                    Optional<IGuardObject> fgObjectOptional = loadObject(directory, index, null);
                     if (fgObjectOptional.isPresent()) {
-                        IFGObject fgObject = fgObjectOptional.get();
+                        IGuardObject fgObject = fgObjectOptional.get();
                         if (fgObject instanceof IHandler) {
                             IHandler handler = (IHandler) fgObject;
                             manager.addHandler(handler);
@@ -434,9 +435,9 @@ public class FGStorageManagerNew {
                 FGCat fgCat = FGCat.from(index.category);
                 if (fgCat == FGCat.WORLDREGION) {
                     Path directory = getObjectDirectory(index, world);
-                    Optional<IFGObject> fgObjectOptional = loadObject(directory, index, world);
+                    Optional<IGuardObject> fgObjectOptional = loadObject(directory, index, world);
                     if (fgObjectOptional.isPresent()) {
-                        IFGObject fgObject = fgObjectOptional.get();
+                        IGuardObject fgObject = fgObjectOptional.get();
                         if (fgObject instanceof IWorldRegion) {
                             IWorldRegion worldRegion = (IWorldRegion) fgObject;
                             manager.addWorldRegion(worldRegion, world);
@@ -485,7 +486,7 @@ public class FGStorageManagerNew {
         return Optional.ofNullable(index);
     }
 
-    public Optional<IFGObject> loadObject(Path directory, @Nullable FGSObjectIndex index, @Nullable World world) {
+    public Optional<IGuardObject> loadObject(Path directory, @Nullable FGSObjectIndex index, @Nullable World world) {
         if (!Files.exists(directory) || !Files.isDirectory(directory)) return Optional.empty();
 
         FGSObjectMeta metadata = null;
@@ -568,7 +569,7 @@ public class FGStorageManagerNew {
         infoMessage.append("Enabled: \"").append(data.isEnabled()).append("\"");
         logger.info(infoMessage.toString());
 
-        IFGObject fgObject = null;
+        IGuardObject fgObject = null;
         try {
             fgObject = fgCat.loadInstance(directory, type, data);
         } catch (Exception e) {
@@ -977,7 +978,7 @@ public class FGStorageManagerNew {
         }
     }
 
-    private Path getObjectDirectory(IFGObject object) {
+    private Path getObjectDirectory(IGuardObject object) {
         World world = null;
         boolean flag = false;
         if (object instanceof IWorldBound) {
@@ -1069,7 +1070,7 @@ public class FGStorageManagerNew {
         return false;
     }
 
-    private FGCat getObjectType(IFGObject object) {
+    private FGCat getObjectType(IGuardObject object) {
         if (object instanceof IRegion) {
             if (object instanceof IWorldRegion) {
                 return FGCat.WORLDREGION;
@@ -1092,7 +1093,7 @@ public class FGStorageManagerNew {
             }
 
             @Override
-            public IFGObject loadInstance(Path directory, String type, FGObjectData data) {
+            public IGuardObject loadInstance(Path directory, String type, FGObjectData data) {
                 return FGFactoryManager.getInstance().createRegion(directory, type, data);
             }
         },
@@ -1105,7 +1106,7 @@ public class FGStorageManagerNew {
             }
 
             @Override
-            public IFGObject loadInstance(Path directory, String type, FGObjectData data) {
+            public IGuardObject loadInstance(Path directory, String type, FGObjectData data) {
                 return FGFactoryManager.getInstance().createWorldRegion(directory, type, data);
             }
         },
@@ -1116,7 +1117,7 @@ public class FGStorageManagerNew {
             }
 
             @Override
-            public IFGObject loadInstance(Path directory, String type, FGObjectData data) {
+            public IGuardObject loadInstance(Path directory, String type, FGObjectData data) {
                 HandlerData handlerData;
                 if (data instanceof HandlerData) {
                     handlerData = (HandlerData) data;
@@ -1133,7 +1134,7 @@ public class FGStorageManagerNew {
             }
 
             @Override
-            public IFGObject loadInstance(Path directory, String type, FGObjectData data) {
+            public IGuardObject loadInstance(Path directory, String type, FGObjectData data) {
                 HandlerData handlerData;
                 if (data instanceof HandlerData) {
                     handlerData = (HandlerData) data;
@@ -1150,7 +1151,7 @@ public class FGStorageManagerNew {
             }
 
             @Override
-            public IFGObject loadInstance(Path directory, String type, FGObjectData data) {
+            public IGuardObject loadInstance(Path directory, String type, FGObjectData data) {
                 return null;
             }
         };
@@ -1176,7 +1177,7 @@ public class FGStorageManagerNew {
 
         public abstract boolean isNameAvailable(String name, UUID owner, @Nullable World world);
 
-        public abstract IFGObject loadInstance(Path directory, String type, FGObjectData data);
+        public abstract IGuardObject loadInstance(Path directory, String type, FGObjectData data);
     }
 
     /*private void setPrettyPrint(boolean prettyPrint) {
