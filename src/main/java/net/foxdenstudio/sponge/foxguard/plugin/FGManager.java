@@ -41,6 +41,8 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.ServerOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.GlobalWorldRegion;
@@ -63,6 +65,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class FGManager {
 
     public static final UUID SERVER_UUID = new UUID(0, 0);
+    public static final ServerOwner SERVER_OWNER = ServerOwner.SERVER;
     public static final String[] ILLEGAL_NAMES = {"all", "state", "full", "everything", "users", "owners"};
 
     private static FGManager instance;

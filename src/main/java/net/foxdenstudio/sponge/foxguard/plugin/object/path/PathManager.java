@@ -1,44 +1,56 @@
 package net.foxdenstudio.sponge.foxguard.plugin.object.path;
 
 import com.google.gson.TypeAdapter;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.IPathElement;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.OwnerPathElement;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.RootGroupElement;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.OwnerAdapterFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.provider.PathOwnerProvider;
-import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.NameOwner;
-import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.Owner;
-import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.UUIDOwner;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.*;
+import org.spongepowered.api.command.CommandSource;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+import java.util.function.Function;
 
 /**
  * Created by fox on 3/7/18.
  */
 public class PathManager {
+    public static final String LITERAL_PREFIX = "::";
+    public static final String DYNAMIC_PREFIX = ":";
     private static PathManager ourInstance = new PathManager();
+    private Map<String, Class<? extends BaseOwner>> typeClassMap = new HashMap<>();
+    private Map<Class<? extends BaseOwner>, OwnerAdapterFactory<? extends BaseOwner>> adapterMap = new HashMap<>();
+    private Map<Class<? extends BaseOwner>, PathOwnerProvider.Literal.Factory<? extends BaseOwner>> literalPathProviderMap = new HashMap<>();
+    private Map<String, PathOwnerProvider.Factory<? extends IOwner>> dynamicPathProviderMap = new HashMap<>();
+
+
+    private Map<UUID, RootGroupElement> playerLocalGroups = new HashMap<>();
+
+    private PathManager() {
+        registerOwnerType(UUIDOwner.TYPE, UUIDOwner.class,
+                UUIDOwner.Adapter::new,
+                UUIDOwner.LiteralPathProvider::new);
+        registerOwnerType(NameOwner.TYPE, NameOwner.class,
+                NameOwner.Adapter::new,
+                NameOwner.LiteralPathProvider::new);
+        registerOwnerType(NumberOwner.TYPE, NumberOwner.class,
+                NumberOwner.Adapter::new,
+                NumberOwner.LiteralPathProvider::new);
+    }
 
     public static PathManager getInstance() {
         return ourInstance;
     }
 
-    private PathManager() {
-        registerOwnerType(UUIDOwner.TYPE, UUIDOwner.class,
-                UUIDOwner.Adapter::new,
-                UUIDOwner.PathProvider::new);
-        registerOwnerType(NameOwner.TYPE, NameOwner.class,
-                NameOwner.Adapter::new,
-                NameOwner.PathProvider::new);
-    }
-
-    private Map<String, Class<? extends Owner>> typeClassMap = new HashMap<>();
-    private Map<Class<? extends Owner>, OwnerAdapterFactory<? extends Owner>> adapterMap = new HashMap<>();
-    private Map<Class<? extends Owner>, PathOwnerProvider.Factory<? extends Owner>> literalPathProviderMap = new HashMap<>();
-
-    public <T extends Owner> boolean registerOwnerType(
+    public <T extends BaseOwner> boolean registerOwnerType(
             String type,
             Class<T> tClass,
             OwnerAdapterFactory<T> adapterFactory,
-            PathOwnerProvider.Factory<T> pathProviderFactory) {
+            PathOwnerProvider.Literal.Factory<T> pathProviderFactory) {
         if (this.typeClassMap.containsKey(type)) return false;
         this.typeClassMap.put(type, tClass);
         this.adapterMap.put(tClass, adapterFactory);
@@ -47,32 +59,50 @@ public class PathManager {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Owner> TypeAdapter<T> getOwnerTypeAdapter(Class<T> tClass) {
+    public <T extends BaseOwner> TypeAdapter<T> getOwnerTypeAdapter(Class<T> tClass) {
         return (TypeAdapter<T>) this.adapterMap.get(tClass);
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Owner> PathOwnerProvider.Factory<T> getLiteralPathOwnerProvider(Class<T> tClass) {
-        return (PathOwnerProvider.Factory<T>) this.literalPathProviderMap.get(tClass);
+    public <T extends BaseOwner> PathOwnerProvider.Literal.Factory<T> getLiteralPathOwnerProvider(Class<T> tClass) {
+        return (PathOwnerProvider.Literal.Factory<T>) this.literalPathProviderMap.get(tClass);
     }
 
-    public PathOwnerProvider.Factory<? extends Owner> getLiteralPathOwnerProvider(String type) {
+    public PathOwnerProvider.Literal.Factory<? extends BaseOwner> getLiteralPathOwnerProvider(String type) {
         return this.getLiteralPathOwnerProvider(this.typeClassMap.get(type));
     }
 
-    public PathResult process(String input) {
+    public PathOwnerProvider.Factory<? extends IOwner> getDynamicPathOwnerProvider(String type) {
+        return this.dynamicPathProviderMap.get(type);
+    }
+
+
+    public IGuardObject getObject(String input, String extension, CommandSource source) {
 
 
         return null;
     }
 
-    enum RootPaths {
+    public enum RootPath {
+
+        LITERAL_OWNER(source -> new OwnerPathElement.Literal(LITERAL_PREFIX), LITERAL_PREFIX), // - ::
+        DYNAMIC_OWNER(source -> new OwnerPathElement.Dynamic(DYNAMIC_PREFIX), DYNAMIC_PREFIX), // - :
         ;
 
-        IPathElement path;
+        public final String prefix;
+        Function<CommandSource, IPathElement> rootProvider;
 
-        RootPaths() {
+        RootPath(Function<CommandSource, IPathElement> rootProvider, String prefix) {
+            this.rootProvider = rootProvider;
+            this.prefix = prefix;
+        }
 
+        public static RootPath from(String input) {
+            if (input == null) return null;
+            for (RootPath root : values()) {
+                if (input.startsWith(root.prefix)) return root;
+            }
+            return null;
         }
     }
 

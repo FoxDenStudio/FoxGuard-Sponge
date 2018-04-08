@@ -3,15 +3,18 @@ package net.foxdenstudio.sponge.foxguard.plugin.object.path.element;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.FoxInvalidPathException;
 
+import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
 public interface IPathElement {
 
-    Optional<? extends IPathElement> resolve(String name) throws FoxInvalidPathException;
+    Optional<? extends IPathElement> resolve(String name);
 
-    Optional<IGuardObject> get(String name);
+    Optional<String> getName(IPathElement path);
+
+    Optional<IGuardObject> get(@Nonnull String name);
 
     Collection<String> getPathSuggestions();
 

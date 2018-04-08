@@ -82,6 +82,7 @@ public class FGStorageManagerNew {
             "com0", "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8", "com9",
             "lpt0", "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9"};
     public static final String METADATA_FILE_NAME = "metadata.foxcf";
+    public static final String OWNERS_DIR_NAME = "owners";
     public static final Charset CHARSET = StandardCharsets.UTF_8;
     private static final Type INDEX_LIST_TYPE = new TypeToken<List<FGSObjectIndex>>() {
     }.getType();
@@ -1016,7 +1017,7 @@ public class FGStorageManagerNew {
 
         if (!ownerFirst) dir = dir.resolve(fgCat.pathName);
         if (owner != null && !owner.equals(SERVER_UUID)) {
-            dir = dir.resolve("owners").resolve(owner.toString());
+            dir = dir.resolve(OWNERS_DIR_NAME).resolve(owner.toString());
         }
         if (ownerFirst) dir = dir.resolve(fgCat.pathName);
 

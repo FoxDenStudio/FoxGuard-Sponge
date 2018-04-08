@@ -1,5 +1,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.object;
 
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
+
 import java.util.Comparator;
 import java.util.UUID;
 

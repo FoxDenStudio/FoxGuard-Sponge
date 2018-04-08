@@ -4,26 +4,29 @@ import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.OwnerTypeAdapter;
-import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.provider.PathOwnerProvider;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-public class NameOwner extends Owner {
+public class NameOwner extends SingleKeyComparableOwner<String> {
 
     public static final String TYPE = "name";
 
-    String name;
-
-    protected NameOwner(String group, String name) {
-        super(TYPE, group);
+    protected NameOwner(@Nonnull String group, @Nonnull String name) {
+        super(TYPE, group, name);
     }
 
     @Override
     public Path getPartialDirectory() {
-        return Paths.get(name);
+        return Paths.get(key);
+    }
+
+    @Override
+    public String toString() {
+        return "NameOwner{" + this.group + ", " + this.key + '}';
     }
 
     public static class Adapter extends OwnerTypeAdapter<NameOwner> {
@@ -33,51 +36,27 @@ public class NameOwner extends Owner {
         }
 
         @Override
-        public void write(JsonWriter out, NameOwner value) throws IOException {
-
+        public void write(JsonWriter out, NameOwner value) {
+            gson.toJson(value.key, value.key.getClass(), out);
         }
 
         @Override
         public NameOwner read(JsonReader in) throws IOException {
-            return null;
+            String name = gson.fromJson(in, String.class);
+            return new NameOwner(group, name);
         }
     }
 
-    public static class PathProvider implements PathOwnerProvider<NameOwner> {
-
-        String name = null;
-        boolean valid = false;
-        int count = 0;
+    public static class LiteralPathProvider extends SingleKeyOwner.LiteralPathProvider<String, NameOwner> {
 
         @Override
-        public boolean apply(String element) {
-            valid = true;
-            if (count++ == 0 && element != null && !element.isEmpty()) {
-                name = element;
-                return true;
-            }
-            valid = false;
-            return false;
+        protected String process(String element) {
+            return element;
         }
 
         @Override
-        public int numApplied() {
-            return count;
-        }
-
-        @Override
-        public boolean isValid() {
-            return valid;
-        }
-
-        @Override
-        public int minimumElements() {
-            return 1;
-        }
-
-        @Override
-        public Optional<NameOwner> getOwner(String group) {
-            return this.valid ? Optional.of(new NameOwner(group, this.name)) : Optional.empty();
+        public Optional<NameOwner> getOwner() {
+            return this.valid ? Optional.of(new NameOwner(group, key)) : Optional.empty();
         }
     }
 }

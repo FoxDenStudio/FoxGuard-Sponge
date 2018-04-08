@@ -46,7 +46,7 @@ public abstract class HandlerBase extends GuardObjectBase implements IHandler {
     public void setPriority(int priority) {
         if (priority < Integer.MIN_VALUE / 2 + 1) priority = Integer.MIN_VALUE / 2 + 1;
         else if (priority > Integer.MAX_VALUE / 2) priority = Integer.MAX_VALUE / 2;
-        this.priority = priority > Integer.MIN_VALUE ? priority : Integer.MIN_VALUE + 1;
+        this.priority = priority;
     }
 
     public void markDirty() {
