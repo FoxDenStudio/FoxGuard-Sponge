@@ -27,8 +27,10 @@ package net.foxdenstudio.sponge.foxguard.plugin.object;
 
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.IModifiable;
+import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.command.CommandDetail;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.storage.FGStorageManagerNew;
@@ -155,17 +157,15 @@ public interface IGuardObject extends IModifiable, IFGObject {
         return FGStorageManagerNew.getInstance().defaultModifiedMap.get(this);
     }
 
-    /**
-     * Gets the path suffix when storing references in paths.
-     * This allows objects of completely disparate types to be stored under the same name.
-     * Any types that share any hierarchy or can otherwise be used in place of another should have the same suffix.
-     * @return the path suffix.
-     */
-    String getPathSuffix();
-
     @Override
     default String getFullName(){
-        return FGUtil.getFullName(this);
+        // TODO Rewrite full name impl to use paths with full owners or static IDs
+        IOwner owner = this.getOwner();
+        String fullName = this.getName();
+        if (owner != null && !owner.equals(FGManager.SERVER_OWNER)) {
+            fullName = owner + ":" + fullName;
+        }
+        return fullName;
     }
 
 }

@@ -69,7 +69,7 @@ public class ControllersStateField extends ListStateFieldBase<IController> {
             IController controller = it.next();
             if (source instanceof Player) {
                 builder.append(Text.of(TextColors.RED,
-                        TextActions.runCommand("/foxguard s c remove " + FGUtil.getFullName(controller)),
+                        TextActions.runCommand("/foxguard s c remove " + controller.getFullName()),
                         TextActions.showText(Text.of("Remove from Handler State Buffer")),
                         "  [-] "));
             }

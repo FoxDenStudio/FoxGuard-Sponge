@@ -25,7 +25,6 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.util;
 
-import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.util.IWorldBound;
@@ -34,10 +33,10 @@ import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.event.factory.FGEventFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
-import net.foxdenstudio.sponge.foxguard.plugin.object.owner.provider.IOwnerProvider;
-import net.foxdenstudio.sponge.foxguard.plugin.object.owner.OwnerManager;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.UUIDOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
@@ -46,7 +45,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.storage.FGStorageManagerNew;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.service.user.UserStorageService;
@@ -54,23 +52,13 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.util.GuavaCollectors;
-import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
-import org.spongepowered.api.world.Locatable;
-import org.spongepowered.api.world.World;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.HANDLERS_ALIASES;
-import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.REGIONS_ALIASES;
-import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isIn;
+import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
 public final class FGUtil {
 
@@ -100,41 +88,52 @@ public final class FGUtil {
         return ((ControllersStateField) FCStateManager.instance().getStateMap().get(source).getOrCreate(ControllersStateField.ID).get()).getList();
     }
 
-    public static String getObjectDisplayName(IGuardObject object, boolean dispWorld, @Nullable UUID owner, @Nullable CommandSource viewer) {
-        if(owner == null) owner = object.getOwner();
+    public static String getObjectDisplayName(IGuardObject object, boolean dispWorld, @Nullable IOwner owner, @Nullable CommandSource viewer) {
+        if (owner == null) owner = object.getOwner();
         boolean hasOwner;
-        hasOwner = (owner != null && !owner.equals(FGManager.SERVER_UUID));
+        hasOwner = (owner != null && !owner.equals(FGManager.SERVER_OWNER));
         return object.getShortTypeName()
                 + " : "
                 + (dispWorld && object instanceof IWorldBound ? ((IWorldBound) object).getWorld().getName() + " : " : "")
-                + (hasOwner ? OwnerManager.getInstance().getDisplayName(owner, null, viewer) + " : " : "")
+                // TODO make better display name thing
+                + (hasOwner ? owner.toString() + " : " : "")
                 + object.getName();
     }
-    public static Text getObjectDisplayTest(IGuardObject object, boolean dispWorld, @Nullable UUID owner, @Nullable CommandSource viewer) {
-        if(owner == null) owner = object.getOwner();
+
+    public static Text getObjectDisplayTest(IGuardObject object, boolean dispWorld, @Nullable IOwner owner, @Nullable CommandSource viewer) {
+        if (owner == null) owner = object.getOwner();
         boolean hasOwner;
-        hasOwner = (owner != null && !owner.equals(FGManager.SERVER_UUID));
+        hasOwner = (owner != null && !owner.equals(FGManager.SERVER_OWNER));
         Text.Builder builder = Text.builder();
+
+        // TODO finish display text
 
         return builder.build();
     }
 
     public static String getLogName(IGuardObject object) {
         if (userStorageService == null) userStorageService = FoxGuardMain.instance().getUserStorage();
-        UUID owner = object.getOwner();
-        boolean isOwned = !owner.equals(FGManager.SERVER_UUID);
-        Optional<User> userOwner = isOwned ? userStorageService.get(owner) : Optional.empty();
+        IOwner owner = object.getOwner();
+        boolean isOwned = !owner.equals(FGManager.SERVER_OWNER);
+        // TODO come up with better logname impl
+        Optional<User> userOwner = isOwned ? Optional.of(owner)
+                .filter(o -> o instanceof UUIDOwner)
+                .map(o -> (UUIDOwner) o)
+                .filter(o -> o.getGroup().equals(UUIDOwner.USER_GROUP))
+                .flatMap(o -> userStorageService.get(o.getKey())) :
+                Optional.empty();
         return (userOwner.map(user -> user.getName() + ":").orElse("")) + (isOwned ? owner + ":" : "") + object.getName();
     }
 
-    public static String getFullName(IGuardObject object) {
-        UUID owner = object.getOwner();
-        String fullName = object.getName();
-        if (owner != null && !owner.equals(FGManager.SERVER_UUID)) {
-            fullName = owner + ":" + fullName;
-        }
-        return fullName;
+    public static Optional<User> getUserFromOwner(IOwner owner) {
+        return owner == null || owner.equals(FGManager.SERVER_OWNER) ? Optional.empty() :
+                Optional.of(owner)
+                        .filter(o -> o instanceof UUIDOwner)
+                        .map(o -> (UUIDOwner) o)
+                        .filter(o -> o.getGroup().equals(UUIDOwner.USER_GROUP))
+                        .flatMap(o -> userStorageService.get(o.getKey()));
     }
+
 
     public static String getCategory(IGuardObject object) {
         if (object instanceof IRegion) {
@@ -170,7 +169,7 @@ public final class FGUtil {
         FGStorageManagerNew.getInstance().defaultModifiedMap.put(object, true);
         Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), object));
     }
-
+/*
     @Nonnull
     public static IHandler getHandlerFromCommand(OwnerResult qualifier) throws CommandException {
         String name = qualifier.getName();
@@ -182,7 +181,7 @@ public final class FGUtil {
         if (!handlerOpt.isPresent()) {
             StringBuilder builder = new StringBuilder();
             builder.append("No handler exists with the name \"").append(name).append("\"");
-            if (!owner.equals(FGManager.SERVER_UUID)) {
+            if (!owner.equals(FGManager.SERVER_OWNER)) {
                 builder.append(" and owner \"").append(qualifier.getOwnerName()).append("\"");
             }
             builder.append("!");
@@ -198,7 +197,7 @@ public final class FGUtil {
         UUID owner = qualifier.getOwner();
 
         IRegion returnRegion = null;
-        /*regionOpt = FGManager.getInstance().getRegion(name, owner);
+        *//*regionOpt = FGManager.getInstance().getRegion(name, owner);
         if (!regionOpt.isPresent()) {
             World world = null;
             if (source instanceof Locatable) world = ((Locatable) source).getWorld();
@@ -213,7 +212,7 @@ public final class FGUtil {
             }
             if (world == null) throw new CommandException(Text.of("Must specify a world!"));
             regionOpt = FGManager.getInstance().getWorldRegion(world, name, owner);
-        }*/
+        }*//*
 
         Set<IRegion> regions = FGManager.getInstance().getAllRegions(qualifier.getName(), qualifier.getOwner());
         World world = null;
@@ -253,7 +252,7 @@ public final class FGUtil {
         if (returnRegion == null) {
             StringBuilder builder = new StringBuilder();
             builder.append("No region exists with the name \"").append(name).append("\"");
-            if (!owner.equals(FGManager.SERVER_UUID)) {
+            if (!owner.equals(FGManager.SERVER_OWNER)) {
                 builder.append(" and owner \"").append(qualifier.getOwnerName()).append("\"");
             }
             if (world != null && regions.size() > 0) {
@@ -322,7 +321,7 @@ public final class FGUtil {
                 }
                 return new OwnerTabResult(list);
             } else {
-                return new OwnerTabResult("", parts[0], FGManager.SERVER_UUID);
+                return new OwnerTabResult("", parts[0], FGManager.SERVER_OWNER);
             }
         } else if (parts.length == 2) {
             OwnerManager registry = OwnerManager.getInstance();
@@ -360,9 +359,9 @@ public final class FGUtil {
 
         }
         return new OwnerTabResult();
-    }
+    }*/
 
-    public static void genStatePrefix(Text.Builder builder, IGuardObject object, CommandSource source){
+    public static void genStatePrefix(Text.Builder builder, IGuardObject object, CommandSource source) {
         genStatePrefix(builder, object, source, false);
     }
 
@@ -379,11 +378,11 @@ public final class FGUtil {
             if (cat == FGCat.CONTROLLER) {
                 genStateButtons(builder, FGCat.HANDLER, object, contains);
                 contains = getSelectedControllers(source).contains(object);
-                controllerPadding =false;
+                controllerPadding = false;
             }
         }
         genStateButtons(builder, cat, object, contains);
-        if(controllerPadding)
+        if (controllerPadding)
             builder.append(Text.of(TextColors.DARK_GRAY, "[c+][c-]"));
         builder.append(Text.of(" "));
     }
@@ -394,12 +393,12 @@ public final class FGUtil {
         if (contains) {
             builder.append(Text.of(TextColors.GRAY, plus));
             builder.append(Text.of(TextColors.RED,
-                    TextActions.runCommand("/foxguard s " + cat.sName + " remove " + genWorldFlag(object) + getFullName(object)),
+                    TextActions.runCommand("/foxguard s " + cat.sName + " remove " + genWorldFlag(object) + object.getFullName()),
                     TextActions.showText(Text.of("Remove from " + cat.lName + " state buffer")),
                     minus));
         } else {
             builder.append(Text.of(TextColors.GREEN,
-                    TextActions.runCommand("/foxguard s " + cat.sName + " add " + genWorldFlag(object) + getFullName(object)),
+                    TextActions.runCommand("/foxguard s " + cat.sName + " add " + genWorldFlag(object) + object.getFullName()),
                     TextActions.showText(Text.of("Add to " + cat.lName + " state buffer")),
                     plus));
             builder.append(Text.of(TextColors.GRAY, minus));
@@ -446,13 +445,13 @@ public final class FGUtil {
             return null;
         }
     }
-
+/*
     public static class OwnerTabResult {
         private boolean complete;
         private List<String> suggestions;
         private String prefix;
         private String token;
-        private UUID owner;
+        private IOwner owner;
 
         public OwnerTabResult() {
             this.complete = true;
@@ -464,7 +463,7 @@ public final class FGUtil {
             this.suggestions = suggestions;
         }
 
-        public OwnerTabResult(String prefix, String token, UUID owner) {
+        public OwnerTabResult(String prefix, String token, IOwner owner) {
             this.complete = false;
             this.prefix = prefix;
             this.token = token;
@@ -487,7 +486,7 @@ public final class FGUtil {
             return token;
         }
 
-        public UUID getOwner() {
+        public IOwner getOwner() {
             return owner;
         }
 
@@ -505,10 +504,10 @@ public final class FGUtil {
 
     public static class OwnerResult {
         private String name;
-        private UUID owner;
+        private IOwner owner;
         private String ownerName;
 
-        private OwnerResult(String name, UUID owner, String ownerName) {
+        private OwnerResult(String name, IOwner owner, String ownerName) {
             this.name = name;
             this.owner = owner;
             this.ownerName = ownerName;
@@ -518,7 +517,7 @@ public final class FGUtil {
             return name;
         }
 
-        public UUID getOwner() {
+        public IOwner getOwner() {
             return owner;
         }
 
@@ -534,5 +533,5 @@ public final class FGUtil {
                     ", ownerName='" + ownerName + '\'' +
                     '}';
         }
-    }
+    }*/
 }

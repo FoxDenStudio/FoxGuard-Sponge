@@ -27,9 +27,17 @@ public interface IFGObject {
      */
     void setName(String name);
 
-    UUID getOwner();
+    IOwner getOwner();
 
-    void setOwner(UUID owner);
+    void setOwner(IOwner owner);
+
+    /**
+     * Gets the path suffix when storing references in paths.
+     * This allows objects of completely disparate types to be stored under the same name.
+     * Any types that share any hierarchy or can otherwise be used in place of another should have the same suffix.
+     * @return the path suffix.
+     */
+    String getPathSuffix();
 
     String getFullName();
 }

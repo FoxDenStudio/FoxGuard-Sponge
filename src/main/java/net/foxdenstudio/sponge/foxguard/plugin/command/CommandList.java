@@ -221,7 +221,7 @@ public class CommandList extends FCCommandBase {
             }
             while (objectIterator.hasNext() && count < number) {
                 IGuardObject object = objectIterator.next();
-                String fullName = object.getOwner().toString() + ":" + object.getName();
+                String fullName = object.getFullName();
                 if (source instanceof Player) {
                     FGUtil.genStatePrefix(builder, object, source, hasControllers);
                 }

@@ -64,14 +64,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class FGManager {
 
-    public static final UUID SERVER_UUID = new UUID(0, 0);
     public static final ServerOwner SERVER_OWNER = ServerOwner.SERVER;
     public static final String[] ILLEGAL_NAMES = {"all", "state", "full", "everything", "users", "owners"};
 
     private static FGManager instance;
-    private final Map<World, Multimap<UUID, IWorldRegion>> worldRegions;
-    private final Multimap<UUID, IRegion> regions;
-    private final Multimap<UUID, IHandler> handlers;
+    private final Map<World, Multimap<IOwner, IWorldRegion>> worldRegions;
+    private final Multimap<IOwner, IRegion> regions;
+    private final Multimap<IOwner, IHandler> handlers;
     private final GlobalRegion globalRegion;
     private final GlobalHandler globalHandler;
 
@@ -81,7 +80,7 @@ public final class FGManager {
         instance = this;
         worldRegions = new CacheMap<>((key, map) -> {
             if (key instanceof World) {
-                Multimap<UUID, IWorldRegion> uuidMap = HashMultimap.create();
+                Multimap<IOwner, IWorldRegion> uuidMap = HashMultimap.create();
                 map.put((World) key, uuidMap);
                 return uuidMap;
             } else return null;
@@ -90,8 +89,8 @@ public final class FGManager {
         handlers = HashMultimap.create();
         globalRegion = new GlobalRegion();
         globalHandler = new GlobalHandler();
-        regions.put(SERVER_UUID, globalRegion);
-        handlers.put(SERVER_UUID, globalHandler);
+        regions.put(SERVER_OWNER, globalRegion);
+        handlers.put(SERVER_OWNER, globalHandler);
         globalRegion.addLink(globalHandler);
 
         this.regionCache = new RegionCache(regions, worldRegions);
@@ -103,8 +102,8 @@ public final class FGManager {
 
     public static void init() {
         if (instance == null) instance = new FGManager();
-        if (instance.regions.isEmpty()) instance.regions.put(SERVER_UUID, instance.globalRegion);
-        if (instance.handlers.isEmpty()) instance.handlers.put(SERVER_UUID, instance.globalHandler);
+        if (instance.regions.isEmpty()) instance.regions.put(SERVER_OWNER, instance.globalRegion);
+        if (instance.handlers.isEmpty()) instance.handlers.put(SERVER_OWNER, instance.globalHandler);
     }
 
     public static boolean isNameValid(String name) {
@@ -115,12 +114,12 @@ public final class FGManager {
     }
 
     public boolean addHandler(IHandler handler) {
-        UUID owner = handler.getOwner();
-        if (owner == null) owner = SERVER_UUID;
+        IOwner owner = handler.getOwner();
+        if (owner == null) owner = SERVER_OWNER;
         return addHandler(handler, owner);
     }
 
-    public boolean addHandler(IHandler handler, UUID owner) {
+    public boolean addHandler(IHandler handler, IOwner owner) {
         if (handler == null
                 || !isNameValid(handler.getName())
                 || !isHandlerNameAvailable(handler.getName(), owner)
@@ -134,12 +133,12 @@ public final class FGManager {
     }
 
     public boolean addRegion(IRegion region) {
-        UUID owner = region.getOwner();
-        if (owner == null) owner = SERVER_UUID;
+        IOwner owner = region.getOwner();
+        if (owner == null) owner = SERVER_OWNER;
         return addRegion(region, owner);
     }
 
-    public boolean addRegion(IRegion region, @Nonnull UUID owner) {
+    public boolean addRegion(IRegion region, @Nonnull IOwner owner) {
         checkNotNull(owner);
         if (region == null
                 || !isNameValid(region.getName())
@@ -155,24 +154,24 @@ public final class FGManager {
     }
 
     public boolean addRegion(IRegion region, @Nullable World world) {
-        UUID owner = region.getOwner();
-        if (owner == null) owner = SERVER_UUID;
+        IOwner owner = region.getOwner();
+        if (owner == null) owner = SERVER_OWNER;
         return addRegion(region, owner, world);
     }
 
-    public boolean addRegion(IRegion region, UUID owner, @Nullable World world) {
+    public boolean addRegion(IRegion region, IOwner owner, @Nullable World world) {
         if (region instanceof IWorldRegion) {
             return world != null && addWorldRegion((IWorldRegion) region, owner, world);
         } else return addRegion(region, owner);
     }
 
     public boolean addWorldRegion(IWorldRegion region, World world) {
-        UUID owner = region.getOwner();
-        if (owner == null) owner = SERVER_UUID;
+        IOwner owner = region.getOwner();
+        if (owner == null) owner = SERVER_OWNER;
         return addWorldRegion(region, owner, world);
     }
 
-    public boolean addWorldRegion(IWorldRegion region, @Nonnull UUID owner, World world) {
+    public boolean addWorldRegion(IWorldRegion region, @Nonnull IOwner owner, World world) {
         checkNotNull(owner);
         if (region == null
                 || world == null
@@ -202,7 +201,7 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Set<IRegion> getAllRegions(@Nonnull UUID owner) {
+    public Set<IRegion> getAllRegions(@Nonnull IOwner owner) {
         checkNotNull(owner);
         Set<IRegion> set = new HashSet<>();
         this.worldRegions.forEach((world, worldMultimap) -> set.addAll(worldMultimap.get(owner)));
@@ -220,14 +219,14 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Set<IRegion> getAllRegions(String name, @Nonnull UUID owner) {
+    public Set<IRegion> getAllRegions(String name, @Nonnull IOwner owner) {
         checkNotNull(owner);
         Set<IRegion> set = new HashSet<>();
         for (IRegion region : this.regions.get(owner)) {
             if (region.getName().equalsIgnoreCase(name)) set.add(region);
         }
 
-        for (Multimap<UUID, IWorldRegion> map : this.worldRegions.values()) {
+        for (Multimap<IOwner, IWorldRegion> map : this.worldRegions.values()) {
             for (IWorldRegion region : map.get(owner)) {
                 if (region.getName().equalsIgnoreCase(name)) set.add(region);
             }
@@ -236,7 +235,7 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Set<IRegion> getAllRegions(World world, @Nonnull UUID owner) {
+    public Set<IRegion> getAllRegions(World world, @Nonnull IOwner owner) {
         checkNotNull(owner);
         if (world == null) return getRegions();
         Set<IRegion> set = new HashSet<>();
@@ -246,12 +245,12 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Set<IRegion> getAllRegionsWithUniqueNames(@Nonnull UUID owner) {
+    public Set<IRegion> getAllRegionsWithUniqueNames(@Nonnull IOwner owner) {
         return getAllRegionsWithUniqueNames(owner, null);
     }
 
     @Nonnull
-    public Set<IRegion> getAllRegionsWithUniqueNames(@Nonnull UUID owner, @Nullable World world) {
+    public Set<IRegion> getAllRegionsWithUniqueNames(@Nonnull IOwner owner, @Nullable World world) {
         checkNotNull(owner);
         Set<IRegion> returnSet = new HashSet<>();
         returnSet.addAll(this.regions.get(owner));
@@ -277,21 +276,21 @@ public final class FGManager {
 
     @Nonnull
     public Set<IRegion> getAllServerRegions() {
-        return getAllRegions(SERVER_UUID);
+        return getAllRegions(SERVER_OWNER);
     }
 
     @Nonnull
     public Set<IRegion> getAllServerRegions(World world) {
-        return getAllRegions(world, SERVER_UUID);
+        return getAllRegions(world, SERVER_OWNER);
     }
 
     @Nonnull
     public Optional<IController> getController(String name) {
-        return getController(name, SERVER_UUID);
+        return getController(name, SERVER_OWNER);
     }
 
     @Nonnull
-    public Optional<IController> getController(String name, @Nonnull UUID owner) {
+    public Optional<IController> getController(String name, @Nonnull IOwner owner) {
         checkNotNull(owner);
         for (IHandler handler : handlers.get(owner)) {
             if ((handler instanceof IController) && handler.getName().equalsIgnoreCase(name)) {
@@ -310,7 +309,7 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Set<IController> getControllers(@Nonnull UUID owner) {
+    public Set<IController> getControllers(@Nonnull IOwner owner) {
         checkNotNull(owner);
         return this.handlers.get(owner).stream()
                 .filter(handler -> handler instanceof IController)
@@ -325,11 +324,11 @@ public final class FGManager {
 
     @Nonnull
     public Optional<IHandler> getHandler(String name) {
-        return getHandler(name, SERVER_UUID);
+        return getHandler(name, SERVER_OWNER);
     }
 
     @Nonnull
-    public Optional<IHandler> getHandler(String name, @Nonnull UUID owner) {
+    public Optional<IHandler> getHandler(String name, @Nonnull IOwner owner) {
         checkNotNull(owner);
         for (IHandler handler : handlers.get(owner)) {
             if (handler.getName().equalsIgnoreCase(name)) {
@@ -345,7 +344,7 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Set<IHandler> getHandlers(@Nonnull UUID owner) {
+    public Set<IHandler> getHandlers(@Nonnull IOwner owner) {
         checkNotNull(owner);
         return ImmutableSet.copyOf(this.handlers.get(owner));
     }
@@ -362,7 +361,7 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Set<IHandler> getHandlers(boolean includeControllers, UUID owner) {
+    public Set<IHandler> getHandlers(boolean includeControllers, IOwner owner) {
         if (includeControllers) {
             return getHandlers(owner);
         } else {
@@ -374,11 +373,11 @@ public final class FGManager {
 
     @Nonnull
     public Optional<IRegion> getRegion(String name) {
-        return getRegion(name, SERVER_UUID);
+        return getRegion(name, SERVER_OWNER);
     }
 
     @Nonnull
-    public Optional<IRegion> getRegion(String name, UUID owner) {
+    public Optional<IRegion> getRegion(String name, IOwner owner) {
         for (IRegion region : this.regions.get(owner)) {
             if (region.getName().equalsIgnoreCase(name)) {
                 return Optional.of(region);
@@ -389,11 +388,11 @@ public final class FGManager {
 
     @Nonnull
     public Optional<IRegion> getRegionFromWorld(World world, String name) {
-        return getRegionFromWorld(world, name, SERVER_UUID);
+        return getRegionFromWorld(world, name, SERVER_OWNER);
     }
 
     @Nonnull
-    public Optional<IRegion> getRegionFromWorld(World world, String name, @Nonnull UUID owner) {
+    public Optional<IRegion> getRegionFromWorld(World world, String name, @Nonnull IOwner owner) {
         checkNotNull(owner);
 
         Optional<IWorldRegion> region = getWorldRegion(world, name, owner);
@@ -406,7 +405,7 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Set<IRegion> getRegions(@Nonnull UUID owner) {
+    public Set<IRegion> getRegions(@Nonnull IOwner owner) {
         checkNotNull(owner);
         return ImmutableSet.copyOf(this.regions.get(owner));
     }
@@ -569,36 +568,36 @@ public final class FGManager {
 
     @Nonnull
     public Set<IController> getServerControllers() {
-        return getControllers(SERVER_UUID);
+        return getControllers(SERVER_OWNER);
     }
 
     @Nonnull
     public Set<IHandler> getServerHandlers() {
-        return getHandlers(SERVER_UUID);
+        return getHandlers(SERVER_OWNER);
     }
 
     @Nonnull
     public Set<IHandler> getServerHandlers(boolean includeControllers) {
-        return getHandlers(includeControllers, SERVER_UUID);
+        return getHandlers(includeControllers, SERVER_OWNER);
     }
 
     @Nonnull
     public Set<IRegion> getServerRegions() {
-        return getRegions(SERVER_UUID);
+        return getRegions(SERVER_OWNER);
     }
 
     @Nonnull
     public Set<IWorldRegion> getServerWorldRegions(World world) {
-        return getWorldRegions(world, SERVER_UUID);
+        return getWorldRegions(world, SERVER_OWNER);
     }
 
     @Nonnull
     public Optional<IWorldRegion> getWorldRegion(World world, String name) {
-        return getWorldRegion(world, name, SERVER_UUID);
+        return getWorldRegion(world, name, SERVER_OWNER);
     }
 
     @Nonnull
-    public Optional<IWorldRegion> getWorldRegion(World world, String name, @Nonnull UUID owner) {
+    public Optional<IWorldRegion> getWorldRegion(World world, String name, @Nonnull IOwner owner) {
         checkNotNull(owner);
         for (IWorldRegion region : this.worldRegions.get(world).get(owner)) {
             if (region.getName().equalsIgnoreCase(name)) {
@@ -614,7 +613,7 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Set<IWorldRegion> getWorldRegions(World world, @Nonnull UUID owner) {
+    public Set<IWorldRegion> getWorldRegions(World world, @Nonnull IOwner owner) {
         checkNotNull(owner);
         return ImmutableSet.copyOf(this.worldRegions.get(world).get(owner));
     }
@@ -622,23 +621,23 @@ public final class FGManager {
     public void initWorld(World world) {
         GlobalWorldRegion gwr = new GlobalWorldRegion();
         gwr.setWorld(world);
-        this.worldRegions.get(world).put(SERVER_UUID, gwr);
+        this.worldRegions.get(world).put(SERVER_OWNER, gwr);
         this.regionCache.markDirty(gwr, RegionCache.DirtyType.ADDED);
     }
 
     public boolean isHandlerNameAvailable(String name) {
-        return isHandlerNameAvailable(name, SERVER_UUID);
+        return isHandlerNameAvailable(name, SERVER_OWNER);
     }
 
-    public boolean isHandlerNameAvailable(String name, @Nonnull UUID owner) {
+    public boolean isHandlerNameAvailable(String name, @Nonnull IOwner owner) {
         return !getHandler(name, owner).isPresent();
     }
 
     public boolean isRegionNameAvailable(String name) {
-        return isRegionNameAvailable(name, SERVER_UUID);
+        return isRegionNameAvailable(name, SERVER_OWNER);
     }
 
-    public boolean isRegionNameAvailable(String name, @Nonnull UUID owner) {
+    public boolean isRegionNameAvailable(String name, @Nonnull IOwner owner) {
         if (getRegion(name, owner).isPresent()) return false;
         for (World world : worldRegions.keySet()) {
             if (getWorldRegion(world, name, owner).isPresent()) return false;
@@ -651,20 +650,20 @@ public final class FGManager {
     }
 
     public boolean isWorldRegionNameAvailable(String name, World world) {
-        return isWorldRegionNameAvailable(name, SERVER_UUID, world);
+        return isWorldRegionNameAvailable(name, SERVER_OWNER, world);
     }
 
-    public boolean isWorldRegionNameAvailable(String name, @Nonnull UUID owner, World world) {
+    public boolean isWorldRegionNameAvailable(String name, @Nonnull IOwner owner, World world) {
         return !(getWorldRegion(world, name, owner).isPresent() || getRegion(name, owner).isPresent());
     }
 
     @Nonnull
     public Tristate isWorldRegionNameAvailable(String name) {
-        return isWorldRegionNameAvailable(name, SERVER_UUID);
+        return isWorldRegionNameAvailable(name, SERVER_OWNER);
     }
 
     @Nonnull
-    public Tristate isWorldRegionNameAvailable(String name, @Nonnull UUID owner) {
+    public Tristate isWorldRegionNameAvailable(String name, @Nonnull IOwner owner) {
         checkNotNull(owner);
         if (getRegion(name, owner).isPresent()) return Tristate.FALSE;
         Tristate available = null;
@@ -741,7 +740,7 @@ public final class FGManager {
             regions.remove(region);
             removed = true;
         } else {
-            for (Multimap<UUID, IWorldRegion> multimap : this.worldRegions.values()) {
+            for (Multimap<IOwner, IWorldRegion> multimap : this.worldRegions.values()) {
                 if (multimap.values().contains(region)) {
                     multimap.values().remove(region);
                     removed = true;
@@ -756,7 +755,7 @@ public final class FGManager {
         return removed;
     }
 
-    public boolean move(IGuardObject object, @Nullable String newName, @Nullable UUID newOwner, @Nullable World newWorld) {
+    public boolean move(IGuardObject object, @Nullable String newName, @Nullable IOwner newOwner, @Nullable World newWorld) {
         boolean changed = false, nameChanged = false, ownerChanged = false, worldChanged = false;
         String tryName = object.getName();
         if (newName != null && !newName.isEmpty() && isNameValid(newName)) {
@@ -764,7 +763,7 @@ public final class FGManager {
             nameChanged = true;
             tryName = newName;
         }
-        UUID tryOwner = object.getOwner();
+        IOwner tryOwner = object.getOwner();
         if (newOwner != null) {
             changed = true;
             ownerChanged = true;

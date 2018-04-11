@@ -1,34 +1,37 @@
 package net.foxdenstudio.sponge.foxguard.plugin.object.path;
 
-import com.google.gson.TypeAdapter;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
-import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.IPathElement;
-import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.OwnerPathElement;
+import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.RootGroupElement;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.OwnerAdapterFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.OwnerTypeAdapter;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.provider.PathOwnerProvider;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.*;
-import org.spongepowered.api.command.CommandSource;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Function;
 
 /**
  * Created by fox on 3/7/18.
  */
 public class PathManager {
-    public static final String LITERAL_PREFIX = "::";
-    public static final String DYNAMIC_PREFIX = ":";
     private static PathManager ourInstance = new PathManager();
     private Map<String, Class<? extends BaseOwner>> typeClassMap = new HashMap<>();
     private Map<Class<? extends BaseOwner>, OwnerAdapterFactory<? extends BaseOwner>> adapterMap = new HashMap<>();
     private Map<Class<? extends BaseOwner>, PathOwnerProvider.Literal.Factory<? extends BaseOwner>> literalPathProviderMap = new HashMap<>();
     private Map<String, PathOwnerProvider.Factory<? extends IOwner>> dynamicPathProviderMap = new HashMap<>();
 
-
-    private Map<UUID, RootGroupElement> playerLocalGroups = new HashMap<>();
+    private Map<UUID, RootGroupElement> userLocalGroups = new CacheMap<>((key, map) -> {
+        if (key instanceof UUID) {
+            RootGroupElement element = RootGroupElement.createLocal();
+            map.put(((UUID) key), element);
+            return element;
+        } else return null;
+    });
+    private RootGroupElement serverLocalGroup = RootGroupElement.createLocal();
+    private RootGroupElement serverGroup = RootGroupElement.createServer();
 
     private PathManager() {
         registerOwnerType(UUIDOwner.TYPE, UUIDOwner.class,
@@ -59,8 +62,16 @@ public class PathManager {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends BaseOwner> TypeAdapter<T> getOwnerTypeAdapter(Class<T> tClass) {
-        return (TypeAdapter<T>) this.adapterMap.get(tClass);
+    public <T extends BaseOwner> OwnerAdapterFactory<T> getOwnerTypeAdapterFactory(Class<T> tClass) {
+        return (OwnerAdapterFactory<T>) this.adapterMap.get(tClass);
+    }
+
+    public OwnerAdapterFactory<? extends BaseOwner> getOwnerTypeAdapter(String type) {
+        return  this.adapterMap.get(this.typeClassMap.get(type));
+    }
+
+    public Class<? extends BaseOwner> getTypeClass(String type) {
+        return this.typeClassMap.get(type);
     }
 
     @SuppressWarnings("unchecked")
@@ -76,41 +87,20 @@ public class PathManager {
         return this.dynamicPathProviderMap.get(type);
     }
 
-
-    public IGuardObject getObject(String input, String extension, CommandSource source) {
-
-
-        return null;
+    public RootGroupElement getServerLocalGroup() {
+        return serverLocalGroup;
     }
 
-    public enum RootPath {
-
-        LITERAL_OWNER(source -> new OwnerPathElement.Literal(LITERAL_PREFIX), LITERAL_PREFIX), // - ::
-        DYNAMIC_OWNER(source -> new OwnerPathElement.Dynamic(DYNAMIC_PREFIX), DYNAMIC_PREFIX), // - :
-        ;
-
-        public final String prefix;
-        Function<CommandSource, IPathElement> rootProvider;
-
-        RootPath(Function<CommandSource, IPathElement> rootProvider, String prefix) {
-            this.rootProvider = rootProvider;
-            this.prefix = prefix;
-        }
-
-        public static RootPath from(String input) {
-            if (input == null) return null;
-            for (RootPath root : values()) {
-                if (input.startsWith(root.prefix)) return root;
-            }
-            return null;
-        }
+    public RootGroupElement getServerGroup() {
+        return serverGroup;
     }
 
-    public static class PathResult {
-        String objectName;
-        boolean objectPresent;
-
-        IPathElement pathElement;
-        boolean pathPresent;
+    public RootGroupElement getUserLocalGroup(@Nonnull UUID user) {
+        return this.userLocalGroups.get(user);
     }
+
+    public RootGroupElement getLocalGroup(@Nullable UUID user) {
+        return user == null ? getServerLocalGroup() : getUserLocalGroup(user);
+    }
+
 }

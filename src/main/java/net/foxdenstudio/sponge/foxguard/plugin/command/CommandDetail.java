@@ -123,7 +123,7 @@ public class CommandDetail extends FCCommandBase {
             String name = object.getName();
             String fullName = name;
             boolean hasOwner = false;
-            if (owner != null && !owner.equals(FGManager.SERVER_UUID)) {
+            if (owner != null && !owner.equals(FGManager.SERVER_OWNER)) {
                 fullName = owner + ":" + fullName;
                 hasOwner = true;
             }
@@ -212,7 +212,7 @@ public class CommandDetail extends FCCommandBase {
                             FGUtil.genStatePrefix(builder, controller, source);
                         }
                         builder.append(Text.of(FGUtil.getColorForObject(controller),
-                                TextActions.runCommand("/foxguard det c " + FGUtil.getFullName(controller)),
+                                TextActions.runCommand("/foxguard det c " + controller.getFullName()),
                                 TextActions.showText(Text.of("View details for controller \"" + controller.getName() + "\"")),
                                 FGUtil.getObjectDisplayName(controller, false, null, source)
                         ));
@@ -224,7 +224,7 @@ public class CommandDetail extends FCCommandBase {
                             FGUtil.genStatePrefix(builder, region, source);
                         }
                         builder.append(Text.of(FGUtil.getColorForObject(region),
-                                TextActions.runCommand("/foxguard det r " + FGUtil.genWorldFlag(region) + FGUtil.getFullName(region)),
+                                TextActions.runCommand("/foxguard det r " + FGUtil.genWorldFlag(region) + region.getFullName()),
                                 TextActions.showText(Text.of("View details for region \"" + region.getName() + "\"")),
                                 FGUtil.getObjectDisplayName(region, true, null, source)
                         ));
@@ -265,7 +265,7 @@ public class CommandDetail extends FCCommandBase {
                 FGUtil.genStatePrefix(builder, handler, source, hasControllers);
             }
             builder.append(Text.of(FGUtil.getColorForObject(handler),
-                    TextActions.runCommand("/foxguard det h " + FGUtil.getFullName(handler)),
+                    TextActions.runCommand("/foxguard det h " + handler.getFullName()),
                     TextActions.showText(Text.of("View details for " + (handler instanceof IController ? "controller" : "handler") + " \"" + handler.getName() + "\"")),
                     FGUtil.getObjectDisplayName(handler, false, null, source)
             ));

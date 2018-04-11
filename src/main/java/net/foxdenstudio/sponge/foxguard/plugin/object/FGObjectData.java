@@ -26,27 +26,22 @@
 package net.foxdenstudio.sponge.foxguard.plugin.object;
 
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 
 import java.util.UUID;
 
 public class FGObjectData {
 
     protected String name;
-    protected UUID owner;
+    protected IOwner owner;
     protected boolean enabled;
 
-    public FGObjectData(String name, UUID owner, boolean enabled) {
-        if (name == null) this.name = "";
-        else this.name = name;
-
-        if(owner == null) this.owner = FGManager.SERVER_UUID;
-        else this.owner = owner;
-
-        this.enabled = enabled;
+    public FGObjectData(String name, IOwner owner, boolean enabled) {
+        setName(name).setOwner(owner).setEnabled(enabled);
     }
 
     public FGObjectData() {
-        this("", FGManager.SERVER_UUID, true);
+        this("", FGManager.SERVER_OWNER, true);
     }
 
     public String getName() {
@@ -54,16 +49,18 @@ public class FGObjectData {
     }
 
     public FGObjectData setName(String name) {
-        this.name = name;
+        if (name == null) this.name = "";
+        else this.name = name;
         return this;
     }
 
-    public UUID getOwner() {
+    public IOwner getOwner() {
         return owner;
     }
 
-    public FGObjectData setOwner(UUID owner) {
-        this.owner = owner;
+    public FGObjectData setOwner(IOwner owner) {
+        if(owner == null) this.owner = FGManager.SERVER_OWNER;
+        else this.owner = owner;
         return this;
     }
 

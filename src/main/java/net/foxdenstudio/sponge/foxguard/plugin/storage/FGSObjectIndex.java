@@ -28,6 +28,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.storage;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 
 import java.util.List;
 import java.util.UUID;
@@ -43,7 +44,7 @@ public class FGSObjectIndex extends FGSObjectMeta {
     Integer priority;
     List<FGSObjectPath> links;
 
-    public FGSObjectIndex(String name, UUID owner, String category, String type, Boolean enabled, Integer priority, List<FGSObjectPath> links) {
+    public FGSObjectIndex(String name, IOwner owner, String category, String type, Boolean enabled, Integer priority, List<FGSObjectPath> links) {
         super(name, owner, category, type);
         this.enabled = enabled;
         this.priority = priority;

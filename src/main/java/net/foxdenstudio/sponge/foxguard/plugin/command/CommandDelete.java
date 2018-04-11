@@ -127,7 +127,7 @@ public class CommandDelete extends FCCommandBase {
                     .append(object.getName());
 
             UUID owner = ownerResult.getOwner();
-            if (owner != null && !owner.equals(FGManager.SERVER_UUID)) {
+            if (owner != null && !owner.equals(FGManager.SERVER_OWNER)) {
                 logMessage.append("   Owner: ").append(OwnerManager.getInstance().getKeyword(owner, null))
                         .append(" (").append(owner).append(")");
             }

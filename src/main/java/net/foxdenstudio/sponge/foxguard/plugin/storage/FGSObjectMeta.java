@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.storage;
 
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 
 import java.util.UUID;
@@ -39,7 +40,7 @@ public class FGSObjectMeta extends FGSObjectPath {
     String category;
     String type;
 
-    public FGSObjectMeta(String name, UUID owner, String category, String type) {
+    public FGSObjectMeta(String name, IOwner owner, String category, String type) {
         super(name, owner);
         this.category = category;
         this.type = type;

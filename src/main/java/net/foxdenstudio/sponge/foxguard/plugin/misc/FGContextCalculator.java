@@ -55,7 +55,7 @@ public class FGContextCalculator implements ContextCalculator<Subject> {
             StringBuilder builder = new StringBuilder();
             for (Iterator<IRegion> iterator = regions.iterator(); iterator.hasNext(); ) {
                 IRegion region = iterator.next();
-                if (region instanceof IGlobal || !region.getOwner().equals(FGManager.SERVER_UUID)) continue;
+                if (region instanceof IGlobal || !region.getOwner().equals(FGManager.SERVER_OWNER)) continue;
 
                 if (region instanceof IWorldRegion) {
                     builder.append(((IWorldRegion) region).getWorld().getName()).append(":");

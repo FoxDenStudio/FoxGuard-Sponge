@@ -12,10 +12,6 @@ public interface PathOwnerProvider<T extends IOwner> {
     boolean apply(String element);
 
     default Collection<String> getSuggestions() {
-        return this.getSuggestions(this.numApplied());
-    }
-
-    default Collection<String> getSuggestions(int index) {
         return ImmutableList.of();
     }
 

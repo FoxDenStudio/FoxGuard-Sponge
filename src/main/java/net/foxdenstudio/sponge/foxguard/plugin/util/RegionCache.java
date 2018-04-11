@@ -42,12 +42,12 @@ import java.util.*;
 
 public class RegionCache {
 
-    private final Map<World, Multimap<UUID, IWorldRegion>> worldRegions;
-    private final Multimap<UUID, IRegion> regions;
+    private final Map<World, Multimap<IOwner, IWorldRegion>> worldRegions;
+    private final Multimap<IOwner, IRegion> regions;
 
     private final Map<World, Map<Vector3i, ChunkData>> chunks;
 
-    public RegionCache(Multimap<UUID, IRegion> regions, Map<World, Multimap<UUID, IWorldRegion>> worldRegions) {
+    public RegionCache(Multimap<IOwner, IRegion> regions, Map<World, Multimap<IOwner, IWorldRegion>> worldRegions) {
         this.worldRegions = worldRegions;
         this.regions = regions;
         chunks = new CacheMap<>((world, worldDataMap) -> {

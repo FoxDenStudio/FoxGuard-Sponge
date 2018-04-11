@@ -61,7 +61,7 @@ public class FGSLegacyLoader {
                         String[] parts = handlerString.split(",");
                         for (String part : parts) {
                             if (!part.isEmpty()) {
-                                links.add(new FGSObjectPath(part, FGManager.SERVER_UUID));
+                                links.add(new FGSObjectPath(part, FGManager.SERVER_OWNER));
                             }
                         }
                     }

@@ -26,20 +26,21 @@
 package net.foxdenstudio.sponge.foxguard.plugin.object;
 
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 
 import java.util.UUID;
 
 public abstract class GuardObjectBase implements IGuardObject {
 
     protected String name;
-    protected UUID owner;
+    protected IOwner owner;
     protected boolean enabled = true;
 
     public GuardObjectBase(FGObjectData data) {
         String name = data.getName();
         this.name = (name == null || name.isEmpty()) ? "null" : name;
-        UUID owner = data.getOwner();
-        this.owner = owner == null ? FGManager.SERVER_UUID : owner;
+        IOwner owner = data.getOwner();
+        this.owner = owner == null ? FGManager.SERVER_OWNER : owner;
         this.enabled = data.isEnabled();
     }
 
@@ -54,13 +55,13 @@ public abstract class GuardObjectBase implements IGuardObject {
     }
 
     @Override
-    public UUID getOwner() {
+    public IOwner getOwner() {
         return owner;
     }
 
     @Override
-    public void setOwner(UUID owner) {
-        this.owner = owner == null ? FGManager.SERVER_UUID : owner;
+    public void setOwner(IOwner owner) {
+        this.owner = owner == null ? FGManager.SERVER_OWNER : owner;
     }
 
     @Override
@@ -76,17 +77,8 @@ public abstract class GuardObjectBase implements IGuardObject {
     public abstract void markDirty();
 
     @Override
-    public String getFullName() {
-        String fullName = this.name;
-        if (this.owner != null && !this.owner.equals(FGManager.SERVER_UUID)) {
-            fullName = this.owner + ":" + fullName;
-        }
-        return fullName;
-    }
-
-    @Override
     public String toString() {
-        return "FGObjectBase{" +
+        return "GuardObjectBase{" +
                 "name='" + name + '\'' +
                 ", owner=" + owner +
                 ", enabled=" + enabled +

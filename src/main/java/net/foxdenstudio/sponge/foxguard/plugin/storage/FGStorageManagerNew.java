@@ -46,6 +46,8 @@ import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.BaseOwner;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
@@ -70,7 +72,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static net.foxdenstudio.sponge.foxguard.plugin.FGManager.SERVER_UUID;
+import static net.foxdenstudio.sponge.foxguard.plugin.FGManager.SERVER_OWNER;
 
 /**
  * Created by Fox on 7/8/2017.
@@ -117,10 +119,7 @@ public class FGStorageManagerNew {
             builder.append(" ");
         }
         gsonIndentString = builder.toString();
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.setPrettyPrinting();
-        gson = gsonBuilder.create();
-
+        gson = getGsonBuilder().create();
     }
 
     public static FGStorageManagerNew getInstance() {
@@ -156,6 +155,7 @@ public class FGStorageManagerNew {
             boolean autoSave = object.autoSave();
             if (autoSave || saveLinks) {
                 FGSObjectIndex index = new FGSObjectIndex(object);
+                if (index.owner.equals(SERVER_OWNER)) index.owner = null;
                 if (!autoSave) {
                     index.type = null;
                     index.enabled = null;
@@ -525,13 +525,13 @@ public class FGStorageManagerNew {
             return Optional.empty();
         }
 
-        UUID owner = null;
+        IOwner owner = null;
         if (index != null) owner = index.owner;
-        if (owner == null) owner = SERVER_UUID;
+        if (owner == null) owner = SERVER_OWNER;
 
-        boolean isOwned = !owner.equals(SERVER_UUID);
-        Optional<User> userOwner = isOwned ? userStorageService.get(owner) : Optional.empty();
-        UUID finalOwner = owner;
+        boolean isOwned = !owner.equals(SERVER_OWNER);
+        Optional<User> userOwner = isOwned ? FGUtil.getUserFromOwner(owner) : Optional.empty();
+        IOwner finalOwner = owner;
         String ownerName = (userOwner.map(user -> user.getName() + ":" + finalOwner).orElse("None"));
 
 
@@ -587,6 +587,7 @@ public class FGStorageManagerNew {
 
     public GsonBuilder getGsonBuilder() {
         GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapterFactory(BaseOwner.Adapter.Factory.INSTANCE);
         if (prettyPrint) builder.setPrettyPrinting();
 
         return builder;
@@ -737,7 +738,7 @@ public class FGStorageManagerNew {
                 tryOp(FileOp.DELETE_FILE, parent);
                 multiple = true;
             }
-            if(multiple){
+            if (multiple) {
                 tryOp(FileOp.CREATE_MULTI, path);
             } else {
                 tryOp(FileOp.CREATE, path);
@@ -1002,7 +1003,7 @@ public class FGStorageManagerNew {
                 world);
     }
 
-    private Path getObjectDirectory(FGCat fgCat, UUID owner, String name, boolean inWorld, @Nullable World world) {
+    private Path getObjectDirectory(FGCat fgCat, IOwner owner, String name, boolean inWorld, @Nullable World world) {
         if (fgCat == null) fgCat = FGCat.OBJECT;
         Path dir;
         if (inWorld) {
@@ -1016,8 +1017,8 @@ public class FGStorageManagerNew {
         boolean ownerFirst = FGConfigManager.getInstance().ownerFirst();
 
         if (!ownerFirst) dir = dir.resolve(fgCat.pathName);
-        if (owner != null && !owner.equals(SERVER_UUID)) {
-            dir = dir.resolve(OWNERS_DIR_NAME).resolve(owner.toString());
+        if (owner != null && !owner.equals(SERVER_OWNER)) {
+            dir = dir.resolve(owner.getDirectory());
         }
         if (ownerFirst) dir = dir.resolve(fgCat.pathName);
 
@@ -1089,7 +1090,7 @@ public class FGStorageManagerNew {
     private enum FGCat {
         REGION("regions") {
             @Override
-            public boolean isNameAvailable(String name, UUID owner, @Nullable World world) {
+            public boolean isNameAvailable(String name, IOwner owner, @Nullable World world) {
                 return FGManager.getInstance().isRegionNameAvailable(name, owner);
             }
 
@@ -1100,7 +1101,7 @@ public class FGStorageManagerNew {
         },
         WORLDREGION("wregions") {
             @Override
-            public boolean isNameAvailable(String name, UUID owner, @Nullable World world) {
+            public boolean isNameAvailable(String name, IOwner owner, @Nullable World world) {
                 if (world == null)
                     return FGManager.getInstance().isWorldRegionNameAvailable(name, owner) == Tristate.TRUE;
                 else return FGManager.getInstance().isWorldRegionNameAvailable(name, owner, world);
@@ -1113,7 +1114,7 @@ public class FGStorageManagerNew {
         },
         HANDLER("handlers") {
             @Override
-            public boolean isNameAvailable(String name, UUID owner, @Nullable World world) {
+            public boolean isNameAvailable(String name, IOwner owner, @Nullable World world) {
                 return FGManager.getInstance().isHandlerNameAvailable(name, owner);
             }
 
@@ -1130,7 +1131,7 @@ public class FGStorageManagerNew {
         },
         CONTROLLER(HANDLER.pathName) {
             @Override
-            public boolean isNameAvailable(String name, UUID owner, @Nullable World world) {
+            public boolean isNameAvailable(String name, IOwner owner, @Nullable World world) {
                 return HANDLER.isNameAvailable(name, owner, world);
             }
 
@@ -1147,7 +1148,7 @@ public class FGStorageManagerNew {
         },
         OBJECT("objects") {
             @Override
-            public boolean isNameAvailable(String name, UUID owner, @Nullable World world) {
+            public boolean isNameAvailable(String name, IOwner owner, @Nullable World world) {
                 return true;
             }
 
@@ -1176,7 +1177,7 @@ public class FGStorageManagerNew {
             return pathName + ".foxcf";
         }
 
-        public abstract boolean isNameAvailable(String name, UUID owner, @Nullable World world);
+        public abstract boolean isNameAvailable(String name, IOwner owner, @Nullable World world);
 
         public abstract IGuardObject loadInstance(Path directory, String type, FGObjectData data);
     }

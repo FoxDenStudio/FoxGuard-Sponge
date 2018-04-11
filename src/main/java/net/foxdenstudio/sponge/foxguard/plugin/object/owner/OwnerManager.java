@@ -79,7 +79,7 @@ public class OwnerManager {
     public Optional<UUID> getUUIDForOwner(@Nullable String providerType, @Nullable String qualifier) {
         if (providerType == null || providerType.isEmpty()) {
             if (qualifier == null || qualifier.isEmpty()) {
-                return Optional.of(FGManager.SERVER_UUID);
+                return Optional.empty();//return Optional.of(FGManager.SERVER_OWNER);
             } else {
                 for (IOwnerProvider provider : ownerProviders) {
                     Optional<UUID> ownerOpt = provider.getOwnerUUID(qualifier);

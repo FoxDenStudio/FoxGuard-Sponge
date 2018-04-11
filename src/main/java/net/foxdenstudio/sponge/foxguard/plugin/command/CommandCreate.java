@@ -128,7 +128,7 @@ public class CommandCreate extends FCCommandBase {
         if (lengthLimit > 0 && name.length() > lengthLimit)
             throw new CommandException(Text.of("Name is too long! Max " + lengthLimit + " characters."));
 
-        UUID owner = FGManager.SERVER_UUID;
+        UUID owner = FGManager.SERVER_OWNER;
         if (parse.flags.containsKey("owner")) {
             String ownerString = parse.flags.get("owner");
             if (ownerString.isEmpty()) {
@@ -220,7 +220,7 @@ public class CommandCreate extends FCCommandBase {
                 .append(":   Name: ")
                 .append(object.getName());
 
-        if (owner != null && !owner.equals(FGManager.SERVER_UUID)) {
+        if (owner != null && !owner.equals(FGManager.SERVER_OWNER)) {
             logMessage.append("   Owner: ").append(OwnerManager.getInstance().getKeyword(owner, null))
                     .append(" (").append(owner).append(")");
         }

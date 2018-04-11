@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectData;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 
 import java.util.UUID;
 
@@ -59,7 +60,7 @@ public class HandlerData extends FGObjectData {
     }
 
     @Override
-    public HandlerData setOwner(UUID owner) {
+    public HandlerData setOwner(IOwner owner) {
         return (HandlerData) super.setOwner(owner);
     }
 

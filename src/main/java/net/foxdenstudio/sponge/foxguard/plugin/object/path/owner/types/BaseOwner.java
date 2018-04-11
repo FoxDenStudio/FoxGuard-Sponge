@@ -6,7 +6,11 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.PathManager;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.OwnerAdapterFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.OwnerTypeAdapter;
 import net.foxdenstudio.sponge.foxguard.plugin.storage.FGStorageManagerNew;
 
 import javax.annotation.Nonnull;
@@ -20,12 +24,14 @@ import java.util.Objects;
  */
 public abstract class BaseOwner implements IOwner {
 
+    public static final String DEFAULT_GROUP = "unknown";
+
     protected final String group;
     protected final String type;
 
     protected BaseOwner(@Nonnull String type, @Nonnull String group) {
         this.type = type;
-        this.group = group;
+        this.group = group.isEmpty() ? DEFAULT_GROUP : group;
     }
 
     public String getType() {
@@ -76,33 +82,99 @@ public abstract class BaseOwner implements IOwner {
 
     public static class Adapter extends TypeAdapter<BaseOwner> {
 
-        private final TypeAdapter<JsonElement> jsonElementTypeAdapter;
+        public static final String GROUP_KEY = "group";
+        public static final String TYPE_KEY = "type";
+        public static final String DATA_KEY = "data";
 
-        public Adapter(TypeAdapter<JsonElement> jsonElementTypeAdapter) {
+        private final TypeAdapter<JsonElement> jsonElementTypeAdapter;
+        private final Gson gson;
+
+        public Adapter(TypeAdapter<JsonElement> jsonElementTypeAdapter, Gson gson) {
             this.jsonElementTypeAdapter = jsonElementTypeAdapter;
+            this.gson = gson;
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public void write(JsonWriter out, BaseOwner value) throws IOException {
+            if (value == null) {
+                out.nullValue();
+                return;
+            }
+            out.beginObject();
+            out.name(GROUP_KEY);
+            out.value(value.group);
+            out.name(TYPE_KEY);
+            out.value(value.type);
+            out.name(DATA_KEY);
 
+            OwnerAdapterFactory factory = PathManager.getInstance().getOwnerTypeAdapterFactory(value.getClass());
+            OwnerTypeAdapter adapter = factory.apply(value.group, gson);
+            adapter.write(out, value);
+            out.endObject();
         }
 
         @Override
         public BaseOwner read(JsonReader in) throws IOException {
+            if(in.peek() == JsonToken.NULL) {
+                in.nextNull();
+                return null;
+            }
+            String group = null, type = null;
+            JsonElement tree = null;
+            BaseOwner owner = null;
 
-            return null;
+            in.beginObject();
+
+            while (in.hasNext() && in.peek() != JsonToken.END_OBJECT) {
+                String name = in.nextName();
+                switch (name) {
+                    case GROUP_KEY:
+                        group = in.nextString();
+                        break;
+                    case TYPE_KEY:
+                        type = in.nextString();
+                        break;
+                    case DATA_KEY:
+                        if (group == null || group.isEmpty() || type == null || type.isEmpty()) {
+                            tree = jsonElementTypeAdapter.read(in);
+                        } else {
+                            OwnerAdapterFactory<? extends BaseOwner> factory = PathManager.getInstance().getOwnerTypeAdapter(type);
+                            OwnerTypeAdapter<? extends BaseOwner> adapter = factory.apply(group, gson);
+                            owner = adapter.read(in);
+                        }
+
+
+                }
+            }
+            in.endObject();
+
+            if (group == null || group.isEmpty() || type == null || type.isEmpty()) return null;
+
+            if (tree != null) {
+                OwnerAdapterFactory<? extends BaseOwner> factory = PathManager.getInstance().getOwnerTypeAdapter(type);
+                OwnerTypeAdapter<? extends BaseOwner> adapter = factory.apply(group, gson);
+                owner = adapter.fromJsonTree(tree);
+            }
+
+            return owner;
+        }
+
+        public static class Factory implements TypeAdapterFactory {
+
+            public static final Factory INSTANCE = new Factory();
+
+            private Factory(){}
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
+                if (!BaseOwner.class.isAssignableFrom(type.getRawType())) return null;
+                TypeAdapter<JsonElement> jsonElementTypeAdapter = gson.getAdapter(JsonElement.class);
+                Adapter adapter = new Adapter(jsonElementTypeAdapter, gson);
+                return (TypeAdapter<T>) adapter;
+            }
         }
     }
 
-    public static class AdapterFactory implements TypeAdapterFactory {
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
-            if (!BaseOwner.class.isAssignableFrom(type.getRawType())) return null;
-            TypeAdapter<JsonElement> jsonElementTypeAdapter = gson.getAdapter(JsonElement.class);
-            Adapter adapter = new Adapter(jsonElementTypeAdapter);
-            return (TypeAdapter<T>) adapter;
-        }
-    }
 }

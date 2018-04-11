@@ -1,11 +1,10 @@
 package net.foxdenstudio.sponge.foxguard.plugin.object.path.element;
 
-import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 
-import javax.annotation.Nonnull;
 import java.util.Optional;
 
-public interface IModifiablePathElement extends IRelocatablePathElement {
+public interface IModifiablePathElement extends IPathElement {
 
     @Override
     default Optional<? extends IPathElement> resolve(String name) {
@@ -16,11 +15,11 @@ public interface IModifiablePathElement extends IRelocatablePathElement {
 
     boolean add(String name, IPathElement path);
 
-    default boolean add(IGuardObject object) {
+    default boolean add(IFGObject object) {
         return add(object, object.getName());
     }
 
-    default boolean add(IGuardObject object, String name) {
+    default boolean add(IFGObject object, String name) {
         return add(object, name, true);
     }
 
@@ -33,9 +32,9 @@ public interface IModifiablePathElement extends IRelocatablePathElement {
      * @param genExtension
      * @return
      */
-    boolean add(IGuardObject object, String name, boolean genExtension);
+    boolean add(IFGObject object, String name, boolean genExtension);
 
-    boolean remove(IGuardObject object);
+    boolean remove(IFGObject object);
 
     boolean remove(IPathElement path);
 

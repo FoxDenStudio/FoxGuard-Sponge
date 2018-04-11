@@ -154,7 +154,7 @@ public class CommandHere extends FCCommandBase {
                     FGUtil.genStatePrefix(output, region, source);
                 }
                 output.append(Text.of(FGUtil.getColorForObject(region),
-                        TextActions.runCommand("/foxguard detail r " + FGUtil.genWorldFlag(region) + FGUtil.getFullName(region)),
+                        TextActions.runCommand("/foxguard detail r " + FGUtil.genWorldFlag(region) + region.getFullName()),
                         TextActions.showText(Text.of("View details")),
                         FGUtil.getObjectDisplayName(region, false, null, source)));
                 if (regionListIterator.hasNext()) output.append(Text.NEW_LINE);
@@ -189,7 +189,7 @@ public class CommandHere extends FCCommandBase {
                     FGUtil.genStatePrefix(output, handler, source, hasControllers);
                 }
                 output.append(Text.of(FGUtil.getColorForObject(handler),
-                        TextActions.runCommand("/foxguard detail handler " + FGUtil.getFullName(handler)),
+                        TextActions.runCommand("/foxguard detail handler " + handler.getFullName()),
                         TextActions.showText(Text.of("View details")),
                         FGUtil.getObjectDisplayName(handler, false, null, source)));
                 if (handlerListIterator.hasNext()) output.append(Text.NEW_LINE);

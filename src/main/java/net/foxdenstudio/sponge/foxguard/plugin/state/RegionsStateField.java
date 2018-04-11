@@ -86,7 +86,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
                 builder.append(Text.of(TextColors.RED,
                         TextActions.runCommand("/foxguard s r remove " +
                                 FGUtil.genWorldFlag(region) +
-                                FGUtil.getFullName(region)),
+                                region.getFullName()),
                         TextActions.showText(Text.of("Remove from State Buffer")),
                         "  [-] "));
             }
@@ -202,7 +202,7 @@ public class RegionsStateField extends ListStateFieldBase<IRegion> {
         int[] index = {1};
         return this.list.stream()
                 .map(region -> Text.of(FGUtil.getColorForObject(region),
-                        "  " + index[0]++ + ": " + FGUtil.getObjectDisplayName(region,true, FGManager.SERVER_UUID, null)))
+                        "  " + index[0]++ + ": " + FGUtil.getObjectDisplayName(region,true, FGManager.SERVER_OWNER, null)))
                 .collect(Collectors.toList());
     }
 

@@ -6,7 +6,10 @@ import net.foxdenstudio.sponge.foxguard.plugin.object.path.PathManager;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.provider.PathOwnerProvider;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.BaseOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
+import org.spongepowered.api.world.World;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.*;
 
 public abstract class OwnerPathElement<P extends PathOwnerProvider<? extends IOwner>> implements IPathElement {
@@ -33,13 +36,13 @@ public abstract class OwnerPathElement<P extends PathOwnerProvider<? extends IOw
     }
 
     @Override
-    public Optional<IGuardObject> get(String name) {
+    public Optional<IGuardObject> get(@Nonnull String name, @Nullable World world) {
         if (name.isEmpty() || !this.provider.isValid()) return Optional.empty();
 
         if (this.parent != null) {
             if (name.startsWith(".")) {
                 String current = this.currentPath.get(this.currentPath.size() - 1);
-                return this.parent.get(current + name);
+                return this.parent.get(current + name, null);
             }
         }
         IOwner owner = provider.getOwner().orElse(null);
@@ -86,8 +89,8 @@ public abstract class OwnerPathElement<P extends PathOwnerProvider<? extends IOw
     }
 
     @Override
-    public IPathElement getParent() {
-        return this.parent;
+    public boolean finished() {
+        return this.provider.isValid();
     }
 
     public static class Literal extends OwnerPathElement<PathOwnerProvider.Literal<? extends BaseOwner>> {
@@ -119,13 +122,7 @@ public abstract class OwnerPathElement<P extends PathOwnerProvider<? extends IOw
         @Override
         public Optional<Literal> resolve(String name) {
             if (name == null || name.isEmpty()) return Optional.empty();
-            else if (name.equals("..")) {
-                if (this.parent != null) {
-                    return Optional.of((Literal) this.parent);
-                } else {
-                    return Optional.of(this);
-                }
-            } else return Optional.of(new Literal(this, name));
+            else return Optional.of(new Literal(this, name));
         }
     }
 
@@ -152,13 +149,7 @@ public abstract class OwnerPathElement<P extends PathOwnerProvider<? extends IOw
         @Override
         public Optional<Dynamic> resolve(String name) {
             if (name == null || name.isEmpty()) return Optional.empty();
-            else if (name.equals("..")) {
-                if (this.parent != null) {
-                    return Optional.of((Dynamic) this.parent);
-                } else {
-                    return Optional.of(this);
-                }
-            } else return Optional.of(new Dynamic(this, name));
+            else return Optional.of(new Dynamic(this, name));
         }
     }
 }
