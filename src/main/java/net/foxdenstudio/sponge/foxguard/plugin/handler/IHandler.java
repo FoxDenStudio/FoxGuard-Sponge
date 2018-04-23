@@ -30,7 +30,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.living.player.User;
-import scala.Int;
 
 import javax.annotation.Nullable;
 import java.util.Comparator;
@@ -38,7 +37,7 @@ import java.util.Comparator;
 public interface IHandler extends IGuardObject {
 
     Comparator<IHandler> PRIORITY = Comparator.comparingInt(IHandler::getPriority);
-    String SUFFIX = "h";
+    String EXTENSION = "h";
 
     EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra);
 
@@ -47,7 +46,7 @@ public interface IHandler extends IGuardObject {
     void setPriority(int priority);
 
     @Override
-    default String getPathSuffix() {
-        return SUFFIX;
+    default String getPathExtension() {
+        return EXTENSION;
     }
 }

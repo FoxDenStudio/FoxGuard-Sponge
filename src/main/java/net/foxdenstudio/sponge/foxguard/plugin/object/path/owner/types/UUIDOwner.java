@@ -6,6 +6,7 @@ import com.google.gson.stream.JsonWriter;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.OwnerTypeAdapter;
 import org.spongepowered.api.entity.living.player.User;
 
+import javax.annotation.Nonnull;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -17,7 +18,7 @@ public class UUIDOwner extends SingleKeyComparableOwner<UUID> {
     public static final String TYPE = "uuid";
     public static final String UUID_REGEX = "[\\da-f]{8}-[\\da-f]{4}-[\\da-f]{4}-[\\da-f]{4}-[\\da-f]{12}";
 
-    public UUIDOwner(String group, UUID uuid) {
+    public UUIDOwner(@Nonnull String group, @Nonnull UUID uuid) {
         super(TYPE, group, uuid);
     }
 

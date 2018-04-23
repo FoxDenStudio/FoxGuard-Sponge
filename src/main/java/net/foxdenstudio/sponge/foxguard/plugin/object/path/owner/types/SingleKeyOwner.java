@@ -1,7 +1,6 @@
 package net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types;
 
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.provider.LiteralPathProviderBase;
-import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.provider.PathOwnerProvider;
 
 import javax.annotation.Nonnull;
 import java.util.Objects;
@@ -69,7 +68,12 @@ public abstract class SingleKeyOwner<T> extends BaseOwner {
 
         @Override
         public boolean isValid() {
-            return valid;
+            return this.valid;
+        }
+
+        @Override
+        public boolean isFinished() {
+            return this.valid;
         }
 
         @Override

@@ -37,6 +37,8 @@ import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.object.owner.OwnerManager;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.UUIDOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
@@ -126,9 +128,9 @@ public class CommandDelete extends FCCommandBase {
                     .append(":   Name: ")
                     .append(object.getName());
 
-            UUID owner = ownerResult.getOwner();
+            IOwner owner = ownerResult.getOwner();
             if (owner != null && !owner.equals(FGManager.SERVER_OWNER)) {
-                logMessage.append("   Owner: ").append(OwnerManager.getInstance().getKeyword(owner, null))
+                logMessage.append("   Owner: ").append(owner.toString())
                         .append(" (").append(owner).append(")");
             }
 
@@ -178,14 +180,14 @@ public class CommandDelete extends FCCommandBase {
                         }
                     }
                     if (key && world != null) {
-                        return FGManager.getInstance().getAllRegions(world, result.getOwner()).stream()
+                        return FGManager.getInstance().getAllRegions(world, new UUIDOwner(UUIDOwner.USER_GROUP, result.getOwner())).stream()
                                 .filter(region -> !(region instanceof IGlobal))
                                 .map(IGuardObject::getName)
                                 .filter(new StartsWithPredicate(result.getToken()))
                                 .map(args -> parse.current.prefix + result.getPrefix() + args)
                                 .collect(GuavaCollectors.toImmutableList());
                     } else {
-                        return FGManager.getInstance().getAllRegionsWithUniqueNames(result.getOwner(), world).stream()
+                        return FGManager.getInstance().getAllRegionsWithUniqueNames(new UUIDOwner(UUIDOwner.USER_GROUP, result.getOwner()), world).stream()
                                 .filter(region -> !(region instanceof IGlobal))
                                 .map(IGuardObject::getName)
                                 .filter(new StartsWithPredicate(result.getToken()))
@@ -193,7 +195,7 @@ public class CommandDelete extends FCCommandBase {
                                 .collect(GuavaCollectors.toImmutableList());
                     }
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
-                    return FGManager.getInstance().getHandlers(result.getOwner()).stream()
+                    return FGManager.getInstance().getHandlers(new UUIDOwner(UUIDOwner.USER_GROUP, result.getOwner())).stream()
                             .filter(handler -> !(handler instanceof IGlobal))
                             .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(result.getToken()))

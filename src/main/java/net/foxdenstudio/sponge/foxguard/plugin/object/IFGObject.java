@@ -37,7 +37,9 @@ public interface IFGObject {
      * Any types that share any hierarchy or can otherwise be used in place of another should have the same suffix.
      * @return the path suffix.
      */
-    String getPathSuffix();
+    String getPathExtension();
 
     String getFullName();
+
+    boolean stillExists();
 }

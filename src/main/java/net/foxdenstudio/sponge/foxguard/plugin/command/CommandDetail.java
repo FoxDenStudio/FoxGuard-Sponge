@@ -38,6 +38,8 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 import net.foxdenstudio.sponge.foxguard.plugin.object.owner.OwnerManager;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.UUIDOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
@@ -119,7 +121,7 @@ public class CommandDetail extends FCCommandBase {
                 default:
                     throw new CommandException(Text.of("Something went horribly wrong."));
             }
-            UUID owner = object.getOwner();
+            IOwner owner = object.getOwner();
             String name = object.getName();
             String fullName = name;
             boolean hasOwner = false;
@@ -142,9 +144,9 @@ public class CommandDetail extends FCCommandBase {
                     OwnerManager registry = OwnerManager.getInstance();
                     builder.append(Text.builder()
                             .append(Text.of(TextColors.GOLD, "Owner: "))
-                            .append(registry.getDisplayText(owner, null, source))
+                            //.append(registry.getDisplayText(owner, null, source))
                             .append(Text.NEW_LINE)
-                            .onHover(TextActions.showText(registry.getHoverText(owner, null, source)))
+                            //.onHover(TextActions.showText(registry.getHoverText(owner, null, source)))
                             .onShiftClick(TextActions.insertText(owner.toString()))
                             .build()
                     );
@@ -309,20 +311,20 @@ public class CommandDetail extends FCCommandBase {
                         }
                     }
                     if (key && world != null) {
-                        return FGManager.getInstance().getAllRegions(world, result.getOwner()).stream()
+                        return FGManager.getInstance().getAllRegions(world, new UUIDOwner(UUIDOwner.USER_GROUP, result.getOwner())).stream()
                                 .map(IGuardObject::getName)
                                 .filter(new StartsWithPredicate(result.getToken()))
                                 .map(args -> parse.current.prefix + result.getPrefix() + args)
                                 .collect(GuavaCollectors.toImmutableList());
                     } else {
-                        return FGManager.getInstance().getAllRegionsWithUniqueNames(result.getOwner(), world).stream()
+                        return FGManager.getInstance().getAllRegionsWithUniqueNames(new UUIDOwner(UUIDOwner.USER_GROUP, result.getOwner()), world).stream()
                                 .map(IGuardObject::getName)
                                 .filter(new StartsWithPredicate(result.getToken()))
                                 .map(args -> parse.current.prefix + result.getPrefix() + args)
                                 .collect(GuavaCollectors.toImmutableList());
                     }
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
-                    return FGManager.getInstance().getHandlers(result.getOwner()).stream()
+                    return FGManager.getInstance().getHandlers(new UUIDOwner(UUIDOwner.USER_GROUP, result.getOwner())).stream()
                             .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(result.getToken()))
                             .map(args -> parse.current.prefix + result.getPrefix() + args)

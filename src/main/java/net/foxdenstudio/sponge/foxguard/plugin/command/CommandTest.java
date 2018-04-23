@@ -34,6 +34,8 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxcore.plugin.util.BoundingBox2;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectData;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.FoxPath;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.RectangularRegion;
 import org.spongepowered.api.Sponge;
@@ -139,6 +141,11 @@ public class CommandTest extends FCCommandBase {
 
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
+
+        Optional<? extends IOwner> ownerOpt = FoxPath.getOwner(arguments, source);
+
+        source.sendMessage(Text.of(ownerOpt));
+
         return CommandResult.empty();
     }
 

@@ -3,9 +3,10 @@ package net.foxdenstudio.sponge.foxguard.plugin.object.path;
 import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.RootGroupElement;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.OwnerAdapterFactory;
-import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.OwnerTypeAdapter;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.provider.PathOwnerProvider;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.*;
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.entity.living.player.User;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -31,7 +32,7 @@ public class PathManager {
         } else return null;
     });
     private RootGroupElement serverLocalGroup = RootGroupElement.createLocal();
-    private RootGroupElement serverGroup = RootGroupElement.createServer();
+    private RootGroupElement serverGroup = RootGroupElement.createServer(this);
 
     private PathManager() {
         registerOwnerType(UUIDOwner.TYPE, UUIDOwner.class,
@@ -67,7 +68,7 @@ public class PathManager {
     }
 
     public OwnerAdapterFactory<? extends BaseOwner> getOwnerTypeAdapter(String type) {
-        return  this.adapterMap.get(this.typeClassMap.get(type));
+        return this.adapterMap.get(this.typeClassMap.get(type));
     }
 
     public Class<? extends BaseOwner> getTypeClass(String type) {
@@ -102,5 +103,10 @@ public class PathManager {
     public RootGroupElement getLocalGroup(@Nullable UUID user) {
         return user == null ? getServerLocalGroup() : getUserLocalGroup(user);
     }
+
+    public RootGroupElement getLocalGroup(@Nullable CommandSource source){
+        return source instanceof User ? getUserLocalGroup(((User) source).getUniqueId()) : getServerLocalGroup();
+    }
+
 
 }

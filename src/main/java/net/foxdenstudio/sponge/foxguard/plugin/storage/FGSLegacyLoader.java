@@ -20,6 +20,8 @@ import java.util.Optional;
  */
 public class FGSLegacyLoader {
 
+    private static final int VERSION = 1;
+
     private static FGSLegacyLoader instance = new FGSLegacyLoader();
     private final Logger logger = FoxGuardMain.instance().getLogger();
 
@@ -30,13 +32,13 @@ public class FGSLegacyLoader {
     private FGSLegacyLoader() {
     }
 
-    public Optional<List<FGSObjectIndex>> getLegacyIndex(Path file) {
+    public Optional<FGStorageManagerNew.IndexConfig> getLegacyIndex(Path file) {
         if (Files.notExists(file) || Files.isDirectory(file)) return Optional.empty();
 
         logger.info("Loading legacy index: " + file);
 
         try (DB mainDB = openFoxDB(file)) {
-            List<FGSObjectIndex> ret = new ArrayList<>();
+            List<FGSObjectIndex> list = new ArrayList<>();
 
             Map<String, String> mainMap = mainDB.hashMap("main", Serializer.STRING, Serializer.STRING).createOrOpen();
             Map<String, String> typeMap = mainDB.hashMap("types", Serializer.STRING, Serializer.STRING).createOrOpen();
@@ -67,10 +69,10 @@ public class FGSLegacyLoader {
                     }
                 }
                 FGSObjectIndex index = new FGSObjectIndex(name, null, category, type, enabled, priority, links);
-                ret.add(index);
+                list.add(index);
             });
-            if (ret.isEmpty()) return Optional.empty();
-            else return Optional.of(ret);
+            if (list.isEmpty()) return Optional.empty();
+            else return Optional.of(new FGStorageManagerNew.IndexConfig(list, VERSION));
         }
     }
 

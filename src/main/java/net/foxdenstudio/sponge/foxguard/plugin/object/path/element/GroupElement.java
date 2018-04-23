@@ -30,11 +30,6 @@ public class GroupElement implements IModifiablePathElement {
     }
 
     @Override
-    public Optional<String> getName(IPathElement path) {
-        return Optional.empty();
-    }
-
-    @Override
     public boolean add(String name, IPathElement path) {
         if (name.startsWith(".")) return false;
 
@@ -57,7 +52,7 @@ public class GroupElement implements IModifiablePathElement {
     public boolean add(IFGObject object, String name, boolean genExtension) {
         String keyName = name;
         if (genExtension) {
-            keyName += "." + object.getPathSuffix();
+            keyName += "." + object.getPathExtension();
         }
         if (this.objects.containsKey(keyName)) return false;
 

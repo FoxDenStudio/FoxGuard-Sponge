@@ -19,6 +19,8 @@ public interface PathOwnerProvider<T extends IOwner> {
 
     boolean isValid();
 
+    boolean isFinished();
+
     int minimumElements();
 
     Optional<T> getOwner();

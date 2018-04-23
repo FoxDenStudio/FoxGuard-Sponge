@@ -14,15 +14,13 @@ public interface IPathElement {
 
     Optional<? extends IPathElement> resolve(String name);
 
-    Optional<String> getName(IPathElement path);
-
     Optional<? extends IFGObject> get(@Nonnull String name, @Nullable World world);
 
     Collection<String> getPathSuggestions();
 
     Map<String, ? extends IFGObject> getObjects();
 
-    default Map<String, ? extends IFGObject> getObjects(String extension){
+    /*default Map<String, ? extends IFGObject> getObjects(String extension){
         ImmutableMap.Builder<String, IFGObject> builder = ImmutableMap.builder();
 
         for(Map.Entry<String, ? extends IFGObject> entry : getObjects().entrySet()){
@@ -33,7 +31,7 @@ public interface IPathElement {
         }
 
         return builder.build();
-    }
+    }*/
 
     /**
      * Check whether this is still persistent.
@@ -43,9 +41,5 @@ public interface IPathElement {
      * @return Whether this path should continue to persist.
      */
     boolean isPersistent();
-
-    default boolean finished(){
-        return false;
-    }
 
 }

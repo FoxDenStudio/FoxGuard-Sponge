@@ -40,6 +40,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
 import net.foxdenstudio.sponge.foxguard.plugin.object.owner.provider.IOwnerProvider;
 import net.foxdenstudio.sponge.foxguard.plugin.object.owner.OwnerManager;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.UUIDOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import org.spongepowered.api.Sponge;
@@ -128,7 +129,7 @@ public class CommandCreate extends FCCommandBase {
         if (lengthLimit > 0 && name.length() > lengthLimit)
             throw new CommandException(Text.of("Name is too long! Max " + lengthLimit + " characters."));
 
-        UUID owner = FGManager.SERVER_OWNER;
+        UUID owner = FGManager.SERVER_UUID_DEPRECATED;
         if (parse.flags.containsKey("owner")) {
             String ownerString = parse.flags.get("owner");
             if (ownerString.isEmpty()) {
@@ -430,7 +431,7 @@ public class CommandCreate extends FCCommandBase {
         REGION(REGIONS_ALIASES, FGFactoryManager.getInstance()::getRegionTypeAliases) {
             @Override
             public boolean isNameAvailable(String name, UUID owner, @Nullable World world) {
-                return FGManager.getInstance().isRegionNameAvailable(name, owner);
+                return FGManager.getInstance().isRegionNameAvailable(name, new UUIDOwner(UUIDOwner.USER_GROUP, owner));
             }
 
             @Override
@@ -441,15 +442,15 @@ public class CommandCreate extends FCCommandBase {
             @Override
             public boolean add(IGuardObject object, UUID owner, @Nullable World world) {
                 return object instanceof IRegion
-                        && FGManager.getInstance().addRegion(((IRegion) object), owner, world);
+                        && FGManager.getInstance().addRegion(((IRegion) object), new UUIDOwner(UUIDOwner.USER_GROUP, owner), world);
             }
         },
         WORLDREGION(WORLDREGIONS_ALIASES, FGFactoryManager.getInstance()::getWorldRegionTypeAliases) {
             @Override
             public boolean isNameAvailable(String name, UUID owner, @Nullable World world) {
                 if (world == null)
-                    return FGManager.getInstance().isWorldRegionNameAvailable(name, owner) == Tristate.TRUE;
-                else return FGManager.getInstance().isWorldRegionNameAvailable(name, owner, world);
+                    return FGManager.getInstance().isWorldRegionNameAvailable(name, new UUIDOwner(UUIDOwner.USER_GROUP, owner)) == Tristate.TRUE;
+                else return FGManager.getInstance().isWorldRegionNameAvailable(name, new UUIDOwner(UUIDOwner.USER_GROUP, owner), world);
             }
 
             @Override
@@ -461,13 +462,13 @@ public class CommandCreate extends FCCommandBase {
             public boolean add(IGuardObject object, UUID owner, @Nullable World world) {
                 return world != null
                         && object instanceof IWorldRegion
-                        && FGManager.getInstance().addWorldRegion(((IWorldRegion) object), owner, world);
+                        && FGManager.getInstance().addWorldRegion(((IWorldRegion) object), new UUIDOwner(UUIDOwner.USER_GROUP, owner), world);
             }
         },
         HANDLER(HANDLERS_ALIASES, FGFactoryManager.getInstance()::getHandlerTypeAliases) {
             @Override
             public boolean isNameAvailable(String name, UUID owner, @Nullable World world) {
-                return FGManager.getInstance().isHandlerNameAvailable(name, owner);
+                return FGManager.getInstance().isHandlerNameAvailable(name, new UUIDOwner(UUIDOwner.USER_GROUP, owner));
             }
 
             @Override
@@ -478,7 +479,7 @@ public class CommandCreate extends FCCommandBase {
             @Override
             public boolean add(IGuardObject object, UUID owner, @Nullable World world) {
                 return object instanceof IHandler
-                        && FGManager.getInstance().addHandler(((IHandler) object), owner);
+                        && FGManager.getInstance().addHandler(((IHandler) object), new UUIDOwner(UUIDOwner.USER_GROUP, owner));
             }
         },
         CONTROLLER(CONTROLLERS_ALIASES, FGFactoryManager.getInstance()::getControllerTypeAliases) {

@@ -80,13 +80,15 @@ import static net.foxdenstudio.sponge.foxguard.plugin.FGManager.SERVER_OWNER;
  */
 public class FGStorageManagerNew {
 
+    private static final int VERSION = 2;
+
     public static final String[] FS_ILLEGAL_NAMES = {"con", "prn", "aux", "nul",
             "com0", "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8", "com9",
             "lpt0", "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9"};
     public static final String METADATA_FILE_NAME = "metadata.foxcf";
     public static final String OWNERS_DIR_NAME = "owners";
     public static final Charset CHARSET = StandardCharsets.UTF_8;
-    private static final Type INDEX_LIST_TYPE = new TypeToken<List<FGSObjectIndex>>() {
+    private static final Type INDEX_LIST_TYPE = new TypeToken<IndexConfig>() {
     }.getType();
     private static FGStorageManagerNew instance;
     public final HashMap<IGuardObject, Boolean> defaultModifiedMap;
@@ -127,6 +129,10 @@ public class FGStorageManagerNew {
         return instance;
     }
 
+    public static int getVersion() {
+        return VERSION;
+    }
+
     public void saveHandlerIndex() {
         logger.info("Saving handler index");
         Path file = getFGDirectory().resolve(FGCat.HANDLER.getIndexFile());
@@ -165,8 +171,10 @@ public class FGStorageManagerNew {
             }
         });
 
+        IndexConfig data = new IndexConfig(indexList, getVersion());
+
         try (JsonWriter jsonWriter = getJsonWriter(Files.newBufferedWriter(file, CHARSET))) {
-            gson.toJson(indexList, List.class, jsonWriter);
+            gson.toJson(data, FoxConfig.class, jsonWriter);
         } catch (IOException e) {
             logger.error("Failed to open index for writing: " + file, e);
         }
@@ -285,67 +293,69 @@ public class FGStorageManagerNew {
 
         logger.info("Loading regions");
         Path regionIndexFile = getFGDirectory().resolve(FGCat.REGION.getIndexFile());
-        Optional<List<FGSObjectIndex>> regionIndexOpt = loadIndex(regionIndexFile);
-        if (!regionIndexOpt.isPresent()) {
+        Optional<IndexConfig> regionConfigOpt = loadIndex(regionIndexFile);
+        if (!regionConfigOpt.isPresent()) {
             regionIndexFile = getFGDirectory().resolve(legacyLoader.getIndexDBName(FGCat.REGION.pathName));
-            regionIndexOpt = legacyLoader.getLegacyIndex(regionIndexFile);
+            regionConfigOpt = legacyLoader.getLegacyIndex(regionIndexFile);
         }
         class RegionEntry {
-            IRegion region;
-            FGSObjectIndex index;
+            private IRegion region;
+            private FGSObjectIndex index;
 
-            public RegionEntry(IRegion region, FGSObjectIndex index) {
+            private RegionEntry(IRegion region, FGSObjectIndex index) {
                 this.region = region;
                 this.index = index;
             }
         }
         List<RegionEntry> loadedRegions = new ArrayList<>();
         List<FGSObjectIndex> extraRegionLinks = new ArrayList<>();
-        if (regionIndexOpt.isPresent()) {
-            List<FGSObjectIndex> regionIndex = regionIndexOpt.get();
-            for (FGSObjectIndex index : regionIndex) {
-                FGCat fgCat = FGCat.from(index.category);
-                if (fgCat == FGCat.REGION) {
-                    Path directory = getObjectDirectory(index, null);
-                    Optional<IGuardObject> fgObjectOptional = loadObject(directory, index, null);
-                    if (fgObjectOptional.isPresent()) {
-                        IGuardObject fgObject = fgObjectOptional.get();
-                        if (fgObject instanceof IRegion) {
-                            IRegion region = (IRegion) fgObject;
-                            manager.addRegion(region);
-                            loadedRegions.add(new RegionEntry(region, index));
+        if (regionConfigOpt.isPresent()) {
+            FoxConfig<List<FGSObjectIndex>> regionConfig = regionConfigOpt.get();
+            if (regionConfig.data != null) {
+                for (FGSObjectIndex index : regionConfig.data) {
+                    FGCat fgCat = FGCat.from(index.category);
+                    if (fgCat == FGCat.REGION) {
+                        Path directory = getObjectDirectory(index, null);
+                        Optional<IGuardObject> fgObjectOptional = loadObject(directory, index, null);
+                        if (fgObjectOptional.isPresent()) {
+                            IGuardObject fgObject = fgObjectOptional.get();
+                            if (fgObject instanceof IRegion) {
+                                IRegion region = (IRegion) fgObject;
+                                manager.addRegion(region);
+                                loadedRegions.add(new RegionEntry(region, index));
+                            }
+                        } else if (index.links != null && !index.links.isEmpty()) {
+                            extraRegionLinks.add(index);
                         }
-                    } else if (index.links != null && !index.links.isEmpty()) {
-                        extraRegionLinks.add(index);
+                    } else {
+                        logger.warn("Found an entry of incorrect category. Expected region, found: " + index.category);
                     }
-                } else {
-                    logger.warn("Found an entry of incorrect category. Expected region, found: " + index.category);
                 }
             }
         }
 
         logger.info("Loading handlers");
         Path handlerIndexFile = getFGDirectory().resolve(FGCat.HANDLER.getIndexFile());
-        Optional<List<FGSObjectIndex>> handlerIndexOpt = loadIndex(handlerIndexFile);
-        if (!handlerIndexOpt.isPresent()) {
+        Optional<IndexConfig> handlerConfigOpt = loadIndex(handlerIndexFile);
+        if (!handlerConfigOpt.isPresent()) {
             handlerIndexFile = getFGDirectory().resolve(legacyLoader.getIndexDBName(FGCat.HANDLER.pathName));
-            handlerIndexOpt = legacyLoader.getLegacyIndex(handlerIndexFile);
+            handlerConfigOpt = legacyLoader.getLegacyIndex(handlerIndexFile);
         }
         class ControllerEntry {
-            IController controller;
-            FGSObjectIndex index;
-            Path directory;
+            private IController controller;
+            private FGSObjectIndex index;
+            private Path directory;
 
-            public ControllerEntry(IController controller, FGSObjectIndex index, Path directory) {
+            private ControllerEntry(IController controller, FGSObjectIndex index, Path directory) {
                 this.controller = controller;
                 this.index = index;
                 this.directory = directory;
             }
         }
         List<ControllerEntry> loadedControllers = new ArrayList<>();
-        if (handlerIndexOpt.isPresent()) {
-            List<FGSObjectIndex> handlerIndex = handlerIndexOpt.get();
-            for (FGSObjectIndex index : handlerIndex) {
+        if (handlerConfigOpt.isPresent()) {
+            IndexConfig handlerConfig = handlerConfigOpt.get();
+            for (FGSObjectIndex index : handlerConfig.data) {
                 FGCat fgCat = FGCat.from(index.category);
                 if (fgCat == FGCat.HANDLER || fgCat == FGCat.CONTROLLER) {
                     Path directory = getObjectDirectory(index, null);
@@ -425,14 +435,14 @@ public class FGStorageManagerNew {
 
         logger.info("Loading worldregions for world: " + world.getName());
         Path regionIndexFile = getWorldDirectory(world).resolve(FGCat.WORLDREGION.getIndexFile());
-        Optional<List<FGSObjectIndex>> worldRegionIndexOpt = loadIndex(regionIndexFile);
-        if (!worldRegionIndexOpt.isPresent()) {
+        Optional<IndexConfig> worldRegionConfigOpt = loadIndex(regionIndexFile);
+        if (!worldRegionConfigOpt.isPresent()) {
             regionIndexFile = getWorldDirectory(world).resolve(legacyLoader.getIndexDBName(FGCat.WORLDREGION.pathName));
-            worldRegionIndexOpt = legacyLoader.getLegacyIndex(regionIndexFile);
+            worldRegionConfigOpt = legacyLoader.getLegacyIndex(regionIndexFile);
         }
-        if (worldRegionIndexOpt.isPresent()) {
-            List<FGSObjectIndex> worldRegionIndex = worldRegionIndexOpt.get();
-            for (FGSObjectIndex index : worldRegionIndex) {
+        if (worldRegionConfigOpt.isPresent()) {
+            IndexConfig worldRegionConfig = worldRegionConfigOpt.get();
+            for (FGSObjectIndex index : worldRegionConfig.data) {
                 FGCat fgCat = FGCat.from(index.category);
                 if (fgCat == FGCat.WORLDREGION) {
                     Path directory = getObjectDirectory(index, world);
@@ -473,8 +483,8 @@ public class FGStorageManagerNew {
         reentry = oldReentry;
     }
 
-    public Optional<List<FGSObjectIndex>> loadIndex(Path indexFile) {
-        List<FGSObjectIndex> index = null;
+    public Optional<IndexConfig> loadIndex(Path indexFile) {
+        IndexConfig index = null;
         if (Files.exists(indexFile) && !Files.isDirectory(indexFile)) {
             try (JsonReader jsonReader = new JsonReader(Files.newBufferedReader(indexFile))) {
                 index = gson.fromJson(jsonReader, INDEX_LIST_TYPE);
@@ -1180,6 +1190,15 @@ public class FGStorageManagerNew {
         public abstract boolean isNameAvailable(String name, IOwner owner, @Nullable World world);
 
         public abstract IGuardObject loadInstance(Path directory, String type, FGObjectData data);
+    }
+
+    public static class IndexConfig extends FoxConfig<List<FGSObjectIndex>>{
+        public IndexConfig() {
+        }
+
+        public IndexConfig(List<FGSObjectIndex> data, Integer version) {
+            super(data, version);
+        }
     }
 
     /*private void setPrettyPrint(boolean prettyPrint) {

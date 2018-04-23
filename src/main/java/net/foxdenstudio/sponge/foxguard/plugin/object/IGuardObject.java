@@ -130,7 +130,6 @@ public interface IGuardObject extends IModifiable, IFGObject {
      *
      * @return Whether FoxGuard should auto-save this object.
      */
-    @SuppressWarnings("SameReturnValue")
     default boolean autoSave() {
         return true;
     }
@@ -146,7 +145,7 @@ public interface IGuardObject extends IModifiable, IFGObject {
      *
      * @param source    The {@link CommandSource} of the modify command
      * @param arguments The {@link String} arguments specifically for this object
-     * @return the result of the operation. The success flag should be true if and only if the object was changed in some way.
+     * @return the result of the operation. Should be true if and only if the object was changed in some way.
      * @throws CommandException If there is an issue parsing the command.
      */
 
@@ -166,6 +165,10 @@ public interface IGuardObject extends IModifiable, IFGObject {
             fullName = owner + ":" + fullName;
         }
         return fullName;
+    }
+
+    default boolean stillExists(){
+        return FGManager.getInstance().contains(this);
     }
 
 }

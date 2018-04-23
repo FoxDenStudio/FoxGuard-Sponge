@@ -38,6 +38,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.UUIDOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.GlobalWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
@@ -359,14 +360,14 @@ public class CommandEnableDisable extends FCCommandBase {
                         }
                     }
                     if (key && world != null) {
-                        return FGManager.getInstance().getAllRegions(world, result.getOwner()).stream()
+                        return FGManager.getInstance().getAllRegions(world, new UUIDOwner(UUIDOwner.USER_GROUP, result.getOwner())).stream()
                                 .filter(object -> object.isEnabled() != this.enableState && !(object instanceof IGlobal))
                                 .map(IGuardObject::getName)
                                 .filter(new StartsWithPredicate(result.getToken()))
                                 .map(args -> parse.current.prefix + result.getPrefix() + args)
                                 .collect(GuavaCollectors.toImmutableList());
                     } else {
-                        return FGManager.getInstance().getAllRegionsWithUniqueNames(result.getOwner(), world).stream()
+                        return FGManager.getInstance().getAllRegionsWithUniqueNames(new UUIDOwner(UUIDOwner.USER_GROUP, result.getOwner()), world).stream()
                                 .filter(object -> object.isEnabled() != this.enableState && !(object instanceof IGlobal))
                                 .map(IGuardObject::getName)
                                 .filter(new StartsWithPredicate(result.getToken()))
@@ -374,7 +375,7 @@ public class CommandEnableDisable extends FCCommandBase {
                                 .collect(GuavaCollectors.toImmutableList());
                     }
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
-                    return FGManager.getInstance().getHandlers(result.getOwner()).stream()
+                    return FGManager.getInstance().getHandlers(new UUIDOwner(UUIDOwner.USER_GROUP, result.getOwner())).stream()
                             .filter(object -> object.isEnabled() != this.enableState && !(object instanceof IGlobal))
                             .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(result.getToken()))

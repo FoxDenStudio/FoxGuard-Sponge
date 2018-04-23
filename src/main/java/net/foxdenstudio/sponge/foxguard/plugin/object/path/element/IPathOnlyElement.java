@@ -22,11 +22,6 @@ public interface IPathOnlyElement extends IPathElement {
     }
 
     @Override
-    default Optional<String> getName(IPathElement path) {
-        return Optional.empty();
-    }
-
-    @Override
     default boolean isPersistent() {
         return false;
     }

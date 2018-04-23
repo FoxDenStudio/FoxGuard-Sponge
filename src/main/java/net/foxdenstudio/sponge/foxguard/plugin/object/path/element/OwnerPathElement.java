@@ -12,7 +12,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 
-public abstract class OwnerPathElement<P extends PathOwnerProvider<? extends IOwner>> implements IPathElement {
+public abstract class OwnerPathElement<P extends PathOwnerProvider<? extends IOwner>> implements IOwnerPathElement {
 
     private static final PathManager MANAGER = PathManager.getInstance();
 
@@ -53,16 +53,6 @@ public abstract class OwnerPathElement<P extends PathOwnerProvider<? extends IOw
         return Optional.empty();
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public Optional<String> getName(IPathElement path) {
-        if (path instanceof OwnerPathElement && ((OwnerPathElement) path).parent == this) {
-            List<String> curPath = ((OwnerPathElement<P>) path).currentPath;
-            return Optional.of(curPath.get(curPath.size() - 1));
-        }
-        return Optional.empty();
-    }
-
 
     @Override
     public abstract Optional<? extends OwnerPathElement> resolve(String name);
@@ -82,15 +72,18 @@ public abstract class OwnerPathElement<P extends PathOwnerProvider<? extends IOw
     }
 
     @Override
-    public boolean isPersistent() {
-
-        // TODO actually lookup the object
-        return false;
+    public boolean isFinished() {
+        return this.provider != null && this.provider.isFinished();
     }
 
     @Override
-    public boolean finished() {
-        return this.provider.isValid();
+    public boolean isValid() {
+        return this.provider != null && this.provider.isValid();
+    }
+
+    @Override
+    public Optional<? extends IOwner> getOwner() {
+        return provider.getOwner();
     }
 
     public static class Literal extends OwnerPathElement<PathOwnerProvider.Literal<? extends BaseOwner>> {
@@ -110,17 +103,21 @@ public abstract class OwnerPathElement<P extends PathOwnerProvider<? extends IOw
             this.group = size > 0 ? this.currentPath.get(0) : null;
             this.type = size > 1 ? this.currentPath.get(1) : null;
             if (size > 1) {
-                this.provider = MANAGER.getLiteralPathOwnerProvider(this.type).get();
-                this.provider.setGroup(group);
-                for (int i = 2; i < size; i++) {
-                    String element = this.currentPath.get(i);
-                    this.provider.apply(element);
+                PathOwnerProvider.Literal.Factory<? extends BaseOwner> providerFactory = MANAGER.getLiteralPathOwnerProvider(this.type);
+                if (providerFactory != null) {
+                    this.provider = providerFactory.get();
+                    this.provider.setGroup(group);
+                    for (int i = 2; i < size; i++) {
+                        String element = this.currentPath.get(i);
+                        this.provider.apply(element);
+                    }
                 }
             } else this.provider = null;
         }
 
         @Override
         public Optional<Literal> resolve(String name) {
+            //System.out.println(name);
             if (name == null || name.isEmpty()) return Optional.empty();
             else return Optional.of(new Literal(this, name));
         }
@@ -138,12 +135,19 @@ public abstract class OwnerPathElement<P extends PathOwnerProvider<? extends IOw
         private Dynamic(Dynamic parent, String next) {
             super(parent, next);
             int size = this.currentPath.size();
+
             this.type = size > 0 ? this.currentPath.get(0) : null;
-            this.provider = size > 0 ? MANAGER.getDynamicPathOwnerProvider(this.type).get() : null;
-            for (int i = 1; i < size; i++) {
-                String element = this.currentPath.get(i);
-                this.provider.apply(element);
-            }
+
+            if (size > 0) {
+                PathOwnerProvider.Factory<? extends IOwner> providerFactory = MANAGER.getDynamicPathOwnerProvider(this.type);
+                if (providerFactory != null) {
+                    this.provider = providerFactory.get();
+                    for (int i = 1; i < size; i++) {
+                        String element = this.currentPath.get(i);
+                        this.provider.apply(element);
+                    }
+                }
+            } else this.provider = null;
         }
 
         @Override

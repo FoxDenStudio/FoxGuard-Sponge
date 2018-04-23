@@ -38,8 +38,8 @@ import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.event.factory.FGEventFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.ServerOwner;
@@ -64,6 +64,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class FGManager {
 
+    public static final UUID SERVER_UUID_DEPRECATED = new UUID(0,0);
     public static final ServerOwner SERVER_OWNER = ServerOwner.SERVER;
     public static final String[] ILLEGAL_NAMES = {"all", "state", "full", "everything", "users", "owners"};
 
@@ -111,6 +112,26 @@ public final class FGManager {
                 !name.matches("^.*[ :.=;\"\'\\\\/{}()\\[\\]<>#@|?*].*$") &&
                 !Aliases.isIn(FGStorageManagerNew.FS_ILLEGAL_NAMES, name) &&
                 !Aliases.isIn(ILLEGAL_NAMES, name);
+    }
+
+    public boolean contains(IGuardObject object) {
+        if (object instanceof IRegion) {
+            if(object instanceof IWorldRegion){
+                World world = ((IWorldRegion) object).getWorld();
+                if(world != null){
+                    return this.worldRegions.get(world).containsValue(object);
+                } else {
+                    for(Multimap<IOwner, IWorldRegion> map : this.worldRegions.values()){
+                        if(map.containsValue(object)) return true;
+                    }
+                    return false;
+                }
+            } else {
+                return this.regions.containsValue(object);
+            }
+        } else if (object instanceof IHandler) {
+            return this.handlers.containsValue(object);
+        } else return false;
     }
 
     public boolean addHandler(IHandler handler) {

@@ -25,6 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.util;
 
+import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.util.IWorldBound;
@@ -35,6 +36,8 @@ import net.foxdenstudio.sponge.foxguard.plugin.event.factory.FGEventFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.owner.OwnerManager;
+import net.foxdenstudio.sponge.foxguard.plugin.object.owner.provider.IOwnerProvider;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.UUIDOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
@@ -45,6 +48,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.storage.FGStorageManagerNew;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.service.user.UserStorageService;
@@ -52,11 +56,18 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.GuavaCollectors;
+import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
+import org.spongepowered.api.world.Locatable;
+import org.spongepowered.api.world.World;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
@@ -169,11 +180,10 @@ public final class FGUtil {
         FGStorageManagerNew.getInstance().defaultModifiedMap.put(object, true);
         Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), object));
     }
-/*
     @Nonnull
     public static IHandler getHandlerFromCommand(OwnerResult qualifier) throws CommandException {
         String name = qualifier.getName();
-        UUID owner = qualifier.getOwner();
+        IOwner owner = qualifier.getOwner();
         Optional<IHandler> handlerOpt;
 
         handlerOpt = FGManager.getInstance().getHandler(name, owner);
@@ -194,10 +204,10 @@ public final class FGUtil {
     @Nonnull
     public static IRegion getRegionFromCommand(CommandSource source, OwnerResult qualifier, boolean worldFlag, @Nullable String worldName) throws CommandException {
         String name = qualifier.getName();
-        UUID owner = qualifier.getOwner();
+        IOwner owner = qualifier.getOwner();
 
         IRegion returnRegion = null;
-        *//*regionOpt = FGManager.getInstance().getRegion(name, owner);
+        /*Optional<? extends IRegion> regionOpt = FGManager.getInstance().getRegion(name, owner);
         if (!regionOpt.isPresent()) {
             World world = null;
             if (source instanceof Locatable) world = ((Locatable) source).getWorld();
@@ -212,7 +222,7 @@ public final class FGUtil {
             }
             if (world == null) throw new CommandException(Text.of("Must specify a world!"));
             regionOpt = FGManager.getInstance().getWorldRegion(world, name, owner);
-        }*//*
+        }*/
 
         Set<IRegion> regions = FGManager.getInstance().getAllRegions(qualifier.getName(), qualifier.getOwner());
         World world = null;
@@ -298,7 +308,7 @@ public final class FGUtil {
             String errorName = (provider != null ? provider + ":" : "") + ownerQualifier;
             throw new CommandException(Text.of("\"" + errorName + "\" is not a valid owner!"));
         }
-        return new OwnerResult(name, ownerOpt.get(), ownerQualifier);
+        return new OwnerResult(name, new UUIDOwner(UUIDOwner.USER_GROUP, ownerOpt.get()), ownerQualifier);
     }
 
     public static OwnerTabResult getOwnerSuggestions(String input) {
@@ -321,7 +331,7 @@ public final class FGUtil {
                 }
                 return new OwnerTabResult(list);
             } else {
-                return new OwnerTabResult("", parts[0], FGManager.SERVER_OWNER);
+                return new OwnerTabResult("", parts[0], FGManager.SERVER_UUID_DEPRECATED);
             }
         } else if (parts.length == 2) {
             OwnerManager registry = OwnerManager.getInstance();
@@ -359,7 +369,7 @@ public final class FGUtil {
 
         }
         return new OwnerTabResult();
-    }*/
+    }
 
     public static void genStatePrefix(Text.Builder builder, IGuardObject object, CommandSource source) {
         genStatePrefix(builder, object, source, false);
@@ -445,13 +455,12 @@ public final class FGUtil {
             return null;
         }
     }
-/*
     public static class OwnerTabResult {
         private boolean complete;
         private List<String> suggestions;
         private String prefix;
         private String token;
-        private IOwner owner;
+        private UUID owner;
 
         public OwnerTabResult() {
             this.complete = true;
@@ -463,7 +472,7 @@ public final class FGUtil {
             this.suggestions = suggestions;
         }
 
-        public OwnerTabResult(String prefix, String token, IOwner owner) {
+        public OwnerTabResult(String prefix, String token, UUID owner) {
             this.complete = false;
             this.prefix = prefix;
             this.token = token;
@@ -486,7 +495,7 @@ public final class FGUtil {
             return token;
         }
 
-        public IOwner getOwner() {
+        public UUID getOwner() {
             return owner;
         }
 
@@ -533,5 +542,5 @@ public final class FGUtil {
                     ", ownerName='" + ownerName + '\'' +
                     '}';
         }
-    }*/
+    }
 }

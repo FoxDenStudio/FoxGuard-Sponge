@@ -48,7 +48,7 @@ public interface IRegion extends IGuardObject, ILinkable, IBounded {
     }
 
     @Override
-    default String getPathSuffix() {
+    default String getPathExtension() {
         return SUFFIX;
     }
 }

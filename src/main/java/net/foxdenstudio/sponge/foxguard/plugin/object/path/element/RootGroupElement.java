@@ -11,6 +11,7 @@ import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.Identifiable;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 public class RootGroupElement extends StructuredGroupElement {
@@ -28,8 +29,8 @@ public class RootGroupElement extends StructuredGroupElement {
         return true;
     }
 
-    public static RootGroupElement createServer() {
-        PathManager manager = PathManager.getInstance();
+    public static RootGroupElement createServer(@Nullable PathManager manager) {
+        if(manager == null) manager = PathManager.getInstance();
         Map<String, IPathElement> fixed = new HashMap<>();
 
         fixed.put("s", manager.getServerLocalGroup());

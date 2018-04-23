@@ -33,6 +33,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.UUIDOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -122,7 +123,7 @@ public class CommandPriority extends FCCommandBase {
             }
 
             List<IHandler> selected = ImmutableList.copyOf(FGUtil.getSelectedHandlers(source));
-            return FGManager.getInstance().getHandlers(result.getOwner()).stream()
+            return FGManager.getInstance().getHandlers(new UUIDOwner(UUIDOwner.USER_GROUP, result.getOwner())).stream()
                     .filter(handler -> !selected.contains(handler) && !(handler instanceof IGlobal))
                     .map(IGuardObject::getName)
                     .filter(new StartsWithPredicate(parse.current.token))
