@@ -43,6 +43,7 @@ import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.entity.damage.DamageModifier;
 import org.spongepowered.api.event.cause.entity.damage.DamageModifierTypes;
+import org.spongepowered.api.event.cause.entity.damage.source.DamageSource;
 import org.spongepowered.api.event.cause.entity.damage.source.EntityDamageSource;
 import org.spongepowered.api.event.cause.entity.damage.source.IndirectEntityDamageSource;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
@@ -131,6 +132,13 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
                 if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                     break;
                 }
+
+                // Check if damage is from a fall and target entity is player then change player to target entity and set fall flag
+                if (((DamageSource) event.getSource()).getType().getId() == "fall" && flags.get(PLAYER)) {
+                    player = (Player) entity;
+                    flags.set(FALL);
+                }
+
                 flagState = flagState.and(handler.handle(player, flags, ExtraContext.of(event)).getState());
                 currPriority = handler.getPriority();
             }
