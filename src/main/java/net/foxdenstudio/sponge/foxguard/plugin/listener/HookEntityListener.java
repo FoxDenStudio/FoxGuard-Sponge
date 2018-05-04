@@ -68,7 +68,6 @@ public class HookEntityListener implements EventListener<MoveEntityEvent> {
         Entity entity;
         if (hook.getHookedEntity().isPresent()) {
             entity = hook.getHookedEntity().get();
-            System.out.println("Hooked Entity: " + entity.toString());
         } else {
             return;
         }
