@@ -62,10 +62,7 @@ import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.EventContext;
-import org.spongepowered.api.event.entity.DamageEntityEvent;
-import org.spongepowered.api.event.entity.InteractEntityEvent;
-import org.spongepowered.api.event.entity.MoveEntityEvent;
-import org.spongepowered.api.event.entity.SpawnEntityEvent;
+import org.spongepowered.api.event.entity.*;
 import org.spongepowered.api.event.game.state.*;
 import org.spongepowered.api.event.world.ExplosionEvent;
 import org.spongepowered.api.event.world.LoadWorldEvent;
@@ -81,6 +78,7 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
 
+import java.lang.annotation.Target;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -305,6 +303,7 @@ public final class FoxGuardMain {
         eventManager.registerListener(this, InteractBlockEvent.class, Order.LATE, new InteractBlockListener());
         eventManager.registerListener(this, InteractEntityEvent.class, Order.LATE, new InteractEntityListener());
         eventManager.registerListener(this, SpawnEntityEvent.class, Order.LATE, new SpawnEntityListener());
+        eventManager.registerListener(this, MoveEntityEvent.class, new HookEntityListener());
         if (FGConfigManager.getInstance().getModules().get(FGConfigManager.Module.MOVEMENT)) {
             PlayerMoveListener pml = new PlayerMoveListener(true);
             eventManager.registerListener(this, MoveEntityEvent.class, pml);
