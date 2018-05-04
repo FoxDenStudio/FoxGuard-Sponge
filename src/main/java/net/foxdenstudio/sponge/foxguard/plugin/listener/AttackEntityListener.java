@@ -64,6 +64,8 @@ public class AttackEntityListener implements EventListener<AttackEntityEvent> {
 
     @Override
     public void handle(AttackEntityEvent event) throws Exception {
+        if (event.isCancelled()) return;
+
         event.getContext().get(EventContextKeys.OWNER).ifPresent(user -> {
             FlagBitSet flags = BASE_FLAG_SET.clone();
             World world = event.getTargetEntity().getWorld();
