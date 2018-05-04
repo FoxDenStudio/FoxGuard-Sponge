@@ -60,6 +60,7 @@ public class Flags {
     public static final Flag KILL = REGISTRY.registerFlag("kill");
     //public static final Flag IGNITE = REGISTRY.registerFlag("ignite");
     public static final Flag SPAWN = REGISTRY.registerFlag("spawn");
+    public static final Flag HOOK = REGISTRY.registerFlag("hook");
 
     public static final Flag ENTITY = REGISTRY.registerFlag("entity");
     public static final Flag HANGING = REGISTRY.registerFlag("hanging");
