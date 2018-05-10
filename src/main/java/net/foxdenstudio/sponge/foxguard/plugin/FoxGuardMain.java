@@ -47,7 +47,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.factory.ControllersStateFieldFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.state.factory.HandlersStateFieldFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.state.factory.RegionsStateFieldFactory;
-import net.minecrell.mcstats.SpongeStatsLite;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.Sponge;
@@ -120,8 +119,8 @@ public final class FoxGuardMain {
     @Inject
     private PluginContainer container;
 
-    @Inject
-    private SpongeStatsLite stats;
+//    @Inject
+//    private SpongeStatsLite stats;
 
     private UserStorageService userStorage;
     private EconomyService economyService = null;
@@ -156,8 +155,8 @@ public final class FoxGuardMain {
         logger.info("Initializing FoxGuard manager instance");
         FGManager.init();
 
-        logger.info("Starting MCStats metrics extension");
-        stats.start();
+//        logger.info("Starting MCStats metrics extension");
+//        stats.start();
     }
 
     @Listener
