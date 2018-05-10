@@ -40,14 +40,20 @@ import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.state.ControllersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
+import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.util.List;
+import java.util.Optional;
 
 public final class FGUtil {
 
@@ -118,4 +124,16 @@ public final class FGUtil {
         Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), handler));
     }
 
+    public static Optional<Location<World>> getLocation(Transaction<BlockSnapshot> transaction) {
+        if (transaction == null) return Optional.empty();
+        Optional<Location<World>> ret = transaction.getOriginal().getLocation();
+        if (ret.isPresent()) return ret;
+        ret = transaction.getFinal().getLocation();
+        if (!ret.isPresent()) {
+            Logger logger = FoxGuardMain.instance().getLogger();
+            logger.warn("Encountered a block transaction with no location:");
+            logger.warn(transaction.toString());
+        }
+        return ret;
+    }
 }

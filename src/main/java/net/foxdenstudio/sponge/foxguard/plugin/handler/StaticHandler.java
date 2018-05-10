@@ -34,7 +34,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.TristateEntry;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
@@ -75,7 +75,7 @@ public class StaticHandler extends HandlerBase {
     };
 
     private final List<TristateEntry> entries;
-    private final Map<FlagBitSet, Tristate> permCache;
+    private final Map<FlagSet, Tristate> permCache;
 
     public StaticHandler(String name, int priority) {
         this(name, priority, true);
@@ -85,8 +85,8 @@ public class StaticHandler extends HandlerBase {
         super(name, priority, isEnabled);
         this.entries = new ArrayList<>();
         this.permCache = new CacheMap<>((k, m) -> {
-            if (k instanceof FlagBitSet) {
-                FlagBitSet flags = (FlagBitSet) k;
+            if (k instanceof FlagSet) {
+                FlagSet flags = (FlagSet) k;
                 Tristate state = Tristate.UNDEFINED;
                 for (TristateEntry entry : StaticHandler.this.entries) {
                     if (flags.toFlagSet().containsAll(entry.set)) {
@@ -121,7 +121,7 @@ public class StaticHandler extends HandlerBase {
     }
 
     @Override
-    public EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra) {
+    public EventResult handle(@Nullable User user, FlagSet flags, ExtraContext extra) {
         return EventResult.of(this.permCache.get(flags));
     }
 
@@ -603,6 +603,7 @@ public class StaticHandler extends HandlerBase {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .map(TristateEntry::deserialize)
+                .distinct()
                 .forEach(this.entries::add);
         this.permCache.clear();
     }

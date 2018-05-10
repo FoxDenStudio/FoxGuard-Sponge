@@ -28,10 +28,12 @@ package net.foxdenstudio.sponge.foxguard.plugin.listener;
 import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
+import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.explosive.Explosive;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
@@ -52,7 +54,7 @@ import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 
 public class ExplosionListener implements EventListener<ExplosionEvent> {
 
-    private static final FlagBitSet FLAG_SET = new FlagBitSet(ROOT, DEBUFF, EXPLOSION);
+    private static final boolean[] FLAG_SET = FlagSet.arrayFromFlags(ROOT, DEBUFF, EXPLOSION);
 
 
     @Override
@@ -81,7 +83,7 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
             } else user = null;
         }
 
-        FlagBitSet flags = FLAG_SET.clone();
+        boolean[] flags = FLAG_SET.clone();
 
         Set<IHandler> handlerSet = new HashSet<>();
         if (event instanceof ExplosionEvent.Post) {
@@ -90,8 +92,10 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
             flags.set(CHANGE);
 
             ExplosionEvent.Post postEvent = (ExplosionEvent.Post) event;
+            List<Transaction<BlockSnapshot>> transactions = postEvent.getTransactions();
+            if(transactions.size() == 0) return;
             FGManager.getInstance().getRegionsAtMultiLocI(
-                    postEvent.getTransactions().stream()
+                    transactions.stream()
                             .map(trans -> trans.getOriginal().getLocation().get())
                             .collect(Collectors.toList())
             ).forEach(region -> region.getHandlers().stream()
@@ -101,7 +105,9 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
             flags.set(DETONATE);
 
             ExplosionEvent.Detonate detonateEvent = ((ExplosionEvent.Detonate) event);
-            FGManager.getInstance().getRegionsAtMultiLocI(detonateEvent.getAffectedLocations())
+            List<Location<World>> locations = detonateEvent.getAffectedLocations();
+            if(locations.size() == 0) return;
+            FGManager.getInstance().getRegionsAtMultiLocI(locations)
                     .forEach(region -> region.getHandlers().stream()
                             .filter(IFGObject::isEnabled)
                             .forEach(handlerSet::add));

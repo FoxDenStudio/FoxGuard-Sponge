@@ -63,12 +63,15 @@ public class Flags {
 
     public static final Flag ENTITY = REGISTRY.registerFlag("entity");
     public static final Flag HANGING = REGISTRY.registerFlag("hanging");
+    public static final Flag BOAT = REGISTRY.registerFlag("boat");
+    public static final Flag MINECART = REGISTRY.registerFlag("minecart");
     public static final Flag LIVING = REGISTRY.registerFlag("living");
     public static final Flag MOB = REGISTRY.registerFlag("mob");
     public static final Flag PASSIVE = REGISTRY.registerFlag("passive");
     public static final Flag HOSTILE = REGISTRY.registerFlag("hostile");
     public static final Flag HUMAN = REGISTRY.registerFlag("human");
     public static final Flag PLAYER = REGISTRY.registerFlag("player");
+    public static final Flag ARMORSTAND = REGISTRY.registerFlag("armorstand");
 
     public static final Flag MOVE = REGISTRY.registerFlag("move");
     public static final Flag TELEPORT = REGISTRY.registerFlag("teleport");

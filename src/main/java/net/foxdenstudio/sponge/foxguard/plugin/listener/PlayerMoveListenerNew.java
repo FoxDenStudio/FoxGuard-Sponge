@@ -29,7 +29,7 @@ import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.sponge.foxcore.common.util.WeakCacheMap;
 import net.foxdenstudio.sponge.foxcore.plugin.command.CommandHUD;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
@@ -57,7 +57,7 @@ import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
  */
 public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
 
-    private static final FlagBitSet BASE_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, MOVE);
+    private static final FlagSet BASE_FLAG_SET = new FlagSet(ROOT, DEBUFF, MOVE);
 
     private static PlayerMoveListenerNew instance;
 
@@ -91,7 +91,7 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
         if (event.isCancelled()) return;
         boolean wasRiding = lastRiding.get(entity);
 
-        FlagBitSet enter = BASE_FLAG_SET.clone();
+        FlagSet enter = BASE_FLAG_SET.clone();
 
         if (isRiding && !wasRiding) {
 

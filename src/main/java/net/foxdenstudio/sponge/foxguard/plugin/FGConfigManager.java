@@ -40,21 +40,22 @@ public final class FGConfigManager {
 
     private static FGConfigManager instance;
 
-    private boolean cleanupFiles;
-    private boolean saveWorldRegionsInWorldFolders;
-    private boolean saveInWorldFolder;
-    private boolean useConfigFolder;
-    private int nameLengthLimit;
+    private boolean cleanupFiles = true;
+    private boolean saveInWorldFolder = true;
+    private boolean saveWorldRegionsInWorldFolders = true;
+    private boolean useConfigFolder = false;
+    private int nameLengthLimit = 24;
 
     private Map<Module, Boolean> modules = new EnumMap<>(Module.class);
 
-    public FGConfigManager() {
-        if (instance == null) instance = this;
-        load();
+    private FGConfigManager() {
     }
 
     public static FGConfigManager getInstance() {
-        if (instance == null) new FGConfigManager();
+        if (instance == null) {
+            instance = new FGConfigManager();
+            instance.load();
+        }
         return instance;
     }
 
@@ -146,12 +147,12 @@ public final class FGConfigManager {
         return cleanupFiles;
     }
 
-    public boolean saveWorldRegionsInWorldFolders() {
-        return saveWorldRegionsInWorldFolders;
-    }
-
     public boolean saveInWorldFolder() {
         return saveInWorldFolder;
+    }
+
+    public boolean saveWorldRegionsInWorldFolders() {
+        return saveWorldRegionsInWorldFolders;
     }
 
     public boolean useConfigFolder() {

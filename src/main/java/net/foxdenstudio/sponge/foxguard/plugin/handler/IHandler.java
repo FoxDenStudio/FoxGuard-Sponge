@@ -25,7 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
 
 public interface IHandler extends IFGObject, Comparable<IHandler> {
 
-    EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra);
+    EventResult handle(@Nullable User user, FlagSet flags, ExtraContext extra);
 
     int getPriority();
 

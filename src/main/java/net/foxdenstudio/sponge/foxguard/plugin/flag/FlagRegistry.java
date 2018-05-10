@@ -69,14 +69,13 @@ public class FlagRegistry {
     public Flag registerFlag(String name) {
         if (locked) throw new IllegalStateException("Server is starting! It is now too late to register flags!");
         name = name.toLowerCase();
-        if (!name.matches("[a-z$_]+"))
-            throw new IllegalArgumentException("FlagOld name contains illegal characters. Only alphabetic characters allowed, including \'$\' and \'_\'");
+        if (!name.matches("[a-z$_][a-z$_\\-]*"))
+            throw new IllegalArgumentException("Flag name contains illegal characters. Only alphabetic characters allowed, including \'$\' and \'_\'");
         for (int i = 0; i < 2 && flagMap.containsKey(name); i++) {
             name += "_";
         }
         if (flagMap.containsKey(name)) return null;
-        Flag flag = new Flag(name, nextAvailableIndex);
-        nextAvailableIndex++;
+        Flag flag = new Flag(name, nextAvailableIndex++);
         flagList.add(flag);
         flagMap.put(name, flag);
         return flag;

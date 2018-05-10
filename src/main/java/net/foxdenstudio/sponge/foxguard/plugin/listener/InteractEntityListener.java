@@ -27,7 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
@@ -56,7 +56,7 @@ import static org.spongepowered.api.util.Tristate.UNDEFINED;
 
 public class InteractEntityListener implements EventListener<InteractEntityEvent> {
 
-    private static final FlagBitSet BASE_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, INTERACT, ENTITY);
+    private static final FlagSet BASE_FLAG_SET = new FlagSet(ROOT, DEBUFF, INTERACT, ENTITY);
 
     @Override
     public void handle(InteractEntityEvent event) throws Exception {
@@ -70,7 +70,7 @@ public class InteractEntityListener implements EventListener<InteractEntityEvent
             user = null;
         }
 
-        FlagBitSet flags = BASE_FLAG_SET.clone();
+        FlagSet flags = BASE_FLAG_SET.clone();
         World world = event.getTargetEntity().getWorld();
         Vector3d pos = event.getTargetEntity().getLocation().getPosition();
         if (event instanceof InteractEntityEvent.Primary) {

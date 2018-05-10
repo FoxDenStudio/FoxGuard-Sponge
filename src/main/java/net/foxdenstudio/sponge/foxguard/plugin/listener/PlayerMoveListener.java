@@ -31,7 +31,7 @@ import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
 import net.foxdenstudio.sponge.foxcore.plugin.command.CommandHUD;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
@@ -65,8 +65,8 @@ import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
  */
 public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
 
-    private static final FlagBitSet ENTER_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, MOVE, ENTER);
-    private static final FlagBitSet EXIT_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, MOVE, EXIT);
+    private static final FlagSet ENTER_FLAG_SET = new FlagSet(ROOT, DEBUFF, MOVE, ENTER);
+    private static final FlagSet EXIT_FLAG_SET = new FlagSet(ROOT, DEBUFF, MOVE, EXIT);
     private static final LastWrapper EMPTY_LAST_WRAPPER = new LastWrapper(null, null);
 
     private static PlayerMoveListener instance;

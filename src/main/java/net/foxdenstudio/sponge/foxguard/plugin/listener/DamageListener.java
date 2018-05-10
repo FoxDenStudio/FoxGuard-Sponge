@@ -28,17 +28,17 @@ package net.foxdenstudio.sponge.foxguard.plugin.listener;
 import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.hanging.Hanging;
-import org.spongepowered.api.entity.living.Agent;
-import org.spongepowered.api.entity.living.Hostile;
-import org.spongepowered.api.entity.living.Human;
-import org.spongepowered.api.entity.living.Living;
+import org.spongepowered.api.entity.living.*;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.vehicle.Boat;
+import org.spongepowered.api.entity.vehicle.minecart.Minecart;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.entity.damage.DamageModifier;
@@ -63,10 +63,13 @@ import static org.spongepowered.api.util.Tristate.*;
  */
 public class DamageListener implements EventListener<DamageEntityEvent> {
 
-    private static final FlagBitSet BASE_FLAG_SET_SOURCE = new FlagBitSet(ROOT, DEBUFF, DAMAGE, ENTITY);
-    private static final FlagBitSet INVINCIBLE_FLAG_SET = new FlagBitSet(ROOT, BUFF, INVINCIBLE);
-    private static final FlagBitSet UNDYING_FLAG_SET = new FlagBitSet(ROOT, BUFF, INVINCIBLE, UNDYING);
+    private static final boolean[] BASE_FLAGS_SOURCE = FlagSet.arrayFromFlags(ROOT, DEBUFF, DAMAGE, ENTITY);
+    private static final boolean[] INVINCIBLE_FLAGS = FlagSet.arrayFromFlags(ROOT, BUFF, INVINCIBLE);
+    private static final FlagSet INVINCIBLE_FLAG_SET = new FlagSet(INVINCIBLE_FLAGS);
+    private static final boolean[] UNDYING_FLAGS = FlagSet.arrayFromFlags(ROOT, BUFF, INVINCIBLE, UNDYING);
+    private static final FlagSet UNDYING_FLAG_SET = new FlagSet(UNDYING_FLAGS);
 
+    @SuppressWarnings("Duplicates")
     @Override
     public void handle(DamageEntityEvent event) throws Exception {
         if (event.isCancelled()) return;
@@ -76,26 +79,6 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
         World world = event.getTargetEntity().getWorld();
         Vector3d pos = event.getTargetEntity().getLocation().getPosition();
         Entity entity = event.getTargetEntity();
-        FlagBitSet flags = BASE_FLAG_SET_SOURCE.clone();
-
-        if (entity instanceof Living) {
-            flags.set(LIVING);
-            if (entity instanceof Agent) {
-                flags.set(MOB);
-                if (entity instanceof Hostile) {
-                    flags.set(HOSTILE);
-                } else if (entity instanceof Human) {
-                    flags.set(HUMAN);
-                } else {
-                    flags.set(PASSIVE);
-                }
-            } else if (entity instanceof Player) {
-                flags.set(PLAYER);
-            }
-        } else if (entity instanceof Hanging) {
-            flags.set(HANGING);
-        }
-
 
         List<IHandler> handlerList = new ArrayList<>();
         FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
@@ -124,14 +107,42 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
                 flagState = FALSE;
             }
         }
+        boolean[] flags = null;
+        FlagSet flagSet;
         if (!invincible) {
+            flags = BASE_FLAGS_SOURCE.clone();
+
+            if (entity instanceof Living) {
+                flags[LIVING.id] = true;
+                if (entity instanceof Agent) {
+                    flags[MOB.id] = true;
+                    if (entity instanceof Hostile) {
+                        flags[HOSTILE.id] = true;
+                    } else if (entity instanceof Human) {
+                        flags[HUMAN.id] = true;
+                    } else {
+                        flags[PASSIVE.id] = true;
+                    }
+                } else if (entity instanceof Player) {
+                    flags[PLAYER.id] = true;
+                } else if (entity instanceof ArmorStand) {
+                    flags[ARMORSTAND.id] = true;
+                }
+            } else if (entity instanceof Hanging) {
+                flags[HANGING.id] = true;
+            } else if (entity instanceof Boat) {
+                flags[BOAT.id] = true;
+            } else if (entity instanceof Minecart) {
+                flags[MINECART.id] = true;
+            }
+            FlagSet flagSet = new FlagSet(flags);
             currPriority = handlerList.get(0).getPriority();
             flagState = UNDEFINED;
             for (IHandler handler : handlerList) {
                 if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                     break;
                 }
-                flagState = flagState.and(handler.handle(player, flags, ExtraContext.of(event)).getState());
+                flagState = flagState.and(handler.handle(player, flagSet, ExtraContext.of(event)).getState());
                 currPriority = handler.getPriority();
             }
 //            if(flagState == UNDEFINED) flagState = TRUE;
@@ -143,7 +154,6 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
             event.setCancelled(true);
         } else {
             if (event.willCauseDeath()) {
-                flags.set(KILL);
                 flagState = UNDEFINED;
                 invincible = false;
                 if (entity instanceof Player) {
@@ -162,13 +172,17 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
                     }
                 }
                 if (!invincible) {
+                    flags = flags.clone();
+                    flags[KILL.id] = true;
+                    flagSet = new FlagSet(flags);
+
                     currPriority = handlerList.get(0).getPriority();
                     flagState = UNDEFINED;
                     for (IHandler handler : handlerList) {
                         if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                             break;
                         }
-                        flagState = flagState.and(handler.handle(player, flags, ExtraContext.of(event)).getState());
+                        flagState = flagState.and(handler.handle(player, flagSet, ExtraContext.of(event)).getState());
                         currPriority = handler.getPriority();
                     }
 //                    if(flagState == UNDEFINED) flagState = TRUE;

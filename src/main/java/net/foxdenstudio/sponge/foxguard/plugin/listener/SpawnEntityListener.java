@@ -27,7 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
@@ -47,15 +47,13 @@ import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 
 public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
 
-    private static final FlagBitSet BASE_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, SPAWN, ENTITY);
+    private static final FlagSet BASE_FLAG_SET = new FlagSet(ROOT, DEBUFF, SPAWN, ENTITY);
 
     @Override
     public void handle(SpawnEntityEvent event) throws Exception {
@@ -90,7 +88,7 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
             }
 
         }*/
-        FlagBitSet flags = BASE_FLAG_SET.clone();
+        FlagSet flags = BASE_FLAG_SET.clone();
         if (oneEntity instanceof Living) {
             flags.set(LIVING);
             if (oneEntity instanceof Agent) {
@@ -107,7 +105,7 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
             flags.set(HANGING);
         }
 
-        List<IHandler> handlerList = new ArrayList<>();
+        Set<IHandler> handlerSet = new HashSet<>();
 
         for (Entity entity : event.getEntities()) {
             Location<World> loc = entity.getLocation();
@@ -117,9 +115,14 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
                     .filter(region -> region.contains(pos, world))
                     .forEach(region -> region.getHandlers().stream()
                             .filter(IFGObject::isEnabled)
-                            .filter(handler -> !handlerList.contains(handler))
-                            .forEach(handlerList::add));
+                            .forEach(handlerSet::add));
         }
+
+
+
+        //TODO maybe throw a warning
+        if(handlerSet.size() == 0) return;
+        ArrayList<IHandler> handlerList = new ArrayList<>(handlerSet);
         Collections.sort(handlerList);
         int currPriority = handlerList.get(0).getPriority();
         Tristate flagState = Tristate.UNDEFINED;

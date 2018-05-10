@@ -66,7 +66,6 @@ public final class FGManager {
     private final RegionCache regionCache;
 
     private FGManager() {
-        instance = this;
         worldRegions = new CacheMap<>((key, map) -> {
             if (key instanceof World) {
                 Set<IWorldRegion> set = new HashSet<>();

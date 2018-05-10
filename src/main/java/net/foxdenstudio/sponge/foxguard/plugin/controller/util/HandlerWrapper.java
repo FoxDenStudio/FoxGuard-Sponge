@@ -25,7 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.controller.util;
 
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
@@ -58,7 +58,7 @@ public class HandlerWrapper {
         this(Type.CONSTANT, state, null);
     }
 
-    public EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra) {
+    public EventResult handle(@Nullable User user, FlagSet flags, ExtraContext extra) {
         if (type == Type.WRAPPER) {
             return handler.handle(user, flags, extra);
         } else {

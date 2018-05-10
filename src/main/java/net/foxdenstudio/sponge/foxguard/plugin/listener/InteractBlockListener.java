@@ -27,7 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
@@ -52,7 +52,7 @@ import static org.spongepowered.api.util.Tristate.UNDEFINED;
 
 public class InteractBlockListener implements EventListener<InteractBlockEvent> {
 
-    private static final FlagBitSet BASE_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, INTERACT, BLOCK);
+    private static final FlagSet BASE_FLAG_SET = new FlagSet(ROOT, DEBUFF, INTERACT, BLOCK);
 
     @Override
     public void handle(InteractBlockEvent event) throws Exception {
@@ -66,7 +66,7 @@ public class InteractBlockListener implements EventListener<InteractBlockEvent> 
             user = null;
         }
 
-        FlagBitSet flags = BASE_FLAG_SET.clone();
+        FlagSet flags = BASE_FLAG_SET.clone();
         BlockSnapshot block = event.getTargetBlock();
         if (block.getState().getType().equals(BlockTypes.AIR)) return;
         World world = block.getLocation().get().getExtent();
