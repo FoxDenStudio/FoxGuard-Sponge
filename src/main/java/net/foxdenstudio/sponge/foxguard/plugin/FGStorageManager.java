@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin;
 
 import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
+import net.foxdenstudio.sponge.foxguard.plugin.config.FGConfigManager;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;

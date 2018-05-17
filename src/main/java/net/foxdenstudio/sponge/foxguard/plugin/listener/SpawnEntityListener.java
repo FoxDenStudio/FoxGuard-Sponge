@@ -27,6 +27,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
@@ -53,7 +54,7 @@ import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 
 public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
 
-    private static final FlagSet BASE_FLAG_SET = new FlagSet(ROOT, DEBUFF, SPAWN, ENTITY);
+    private static final boolean[] BASE_FLAG_SET = FlagSet.arrayFromFlags(ROOT, DEBUFF, SPAWN, ENTITY);
 
     @Override
     public void handle(SpawnEntityEvent event) throws Exception {
@@ -88,22 +89,25 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
             }
 
         }*/
-        FlagSet flags = BASE_FLAG_SET.clone();
+        boolean[] flags = BASE_FLAG_SET.clone();
+
         if (oneEntity instanceof Living) {
-            flags.set(LIVING);
+            flags[LIVING.id] = true;
             if (oneEntity instanceof Agent) {
-                flags.set(MOB);
+                flags[MOB.id] = true;
                 if (oneEntity instanceof Hostile) {
-                    flags.set(HOSTILE);
+                    flags[HOSTILE.id] = true;
                 } else if (oneEntity instanceof Human) {
-                    flags.set(HUMAN);
+                    flags[HUMAN.id] = true;
                 } else {
-                    flags.set(PASSIVE);
+                    flags[PASSIVE.id] = true;
                 }
             }
         } else if (oneEntity instanceof Hanging) {
-            flags.set(HANGING);
+            flags[HANGING.id] = true;
         }
+
+        FlagSet flagSet = new FlagSet(flags);
 
         Set<IHandler> handlerSet = new HashSet<>();
 
@@ -130,7 +134,7 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
             if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
                 break;
             }
-            flagState = flagState.and(handler.handle(user, flags, ExtraContext.of(event)).getState());
+            flagState = flagState.and(handler.handle(user, flagSet, ExtraContext.of(event)).getState());
             currPriority = handler.getPriority();
         }
         if (flagState == Tristate.FALSE) {

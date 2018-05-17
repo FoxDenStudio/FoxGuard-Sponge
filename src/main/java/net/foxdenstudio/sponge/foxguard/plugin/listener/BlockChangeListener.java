@@ -67,14 +67,6 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
                     || tr.getOriginal().getState().getType().equals(BlockTypes.GRASS)
                     && tr.getFinal().getState().getType().equals(BlockTypes.DIRT)) return;
         }
-        User user;
-        if (event.getCause().containsType(Player.class)) {
-            user = event.getCause().first(Player.class).get();
-        } else if (event.getCause().containsType(User.class)) {
-            user = event.getCause().first(User.class).get();
-        } else {
-            user = null;
-        }
         //DebugHelper.printBlockEvent(event);
         /*FlagOld typeFlag;
         if (event instanceof ChangeBlockEvent.Modify) typeFlag = FlagOld.BLOCK_MODIFY;
@@ -83,15 +75,6 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
         else if (event instanceof ChangeBlockEvent.Decay) typeFlag = FlagOld.BLOCK_DECAY;
         else if (event instanceof ChangeBlockEvent.Grow) typeFlag = FlagOld.BLOCK_GROW;
         else return;*/
-
-        boolean[] flags = BASE_FLAG_SET.clone();
-
-        if (event instanceof ChangeBlockEvent.Modify) flags[MODIFY.id] = true;
-        else if (event instanceof ChangeBlockEvent.Break) flags[BREAK.id] = true;
-        else if (event instanceof ChangeBlockEvent.Place) flags[PLACE.id] = true;
-        else if (event instanceof ChangeBlockEvent.Decay) flags[DECAY.id] = true;
-        else if (event instanceof ChangeBlockEvent.Grow) flags[GROW.id] = true;
-        else if (event instanceof ChangeBlockEvent.Post) flags[POST.id] = true;
 
         //FoxGuardMain.instance().getLogger().info(player.getName());
 
@@ -121,10 +104,30 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
                     .forEach(handlerSet::add));
         }
         if(handlerSet.size() == 0) return;
+
+        User user;
+        if (event.getCause().containsType(Player.class)) {
+            user = event.getCause().first(Player.class).get();
+        } else if (event.getCause().containsType(User.class)) {
+            user = event.getCause().first(User.class).get();
+        } else {
+            user = null;
+        }
+
+        boolean[] flags = BASE_FLAG_SET.clone();
+
+        if (event instanceof ChangeBlockEvent.Modify) flags[MODIFY.id] = true;
+        else if (event instanceof ChangeBlockEvent.Break) flags[BREAK.id] = true;
+        else if (event instanceof ChangeBlockEvent.Place) flags[PLACE.id] = true;
+        else if (event instanceof ChangeBlockEvent.Decay) flags[DECAY.id] = true;
+        else if (event instanceof ChangeBlockEvent.Grow) flags[GROW.id] = true;
+        else if (event instanceof ChangeBlockEvent.Post) flags[POST.id] = true;
+
+        FlagSet flagSet = new FlagSet(flags);
+
         List<IHandler> handlerList = new ArrayList<>(handlerSet);
         Collections.sort(handlerList);
         int currPriority = handlerList.get(0).getPriority();
-        FlagSet flagSet = new FlagSet(flags);
         Tristate flagState = UNDEFINED;
         for (IHandler handler : handlerList) {
             if (handler.getPriority() < currPriority && flagState != UNDEFINED) {

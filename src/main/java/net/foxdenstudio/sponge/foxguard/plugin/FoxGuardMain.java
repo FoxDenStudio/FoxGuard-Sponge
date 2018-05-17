@@ -32,6 +32,8 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandDispatcher;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.plugin.command.*;
+import net.foxdenstudio.sponge.foxguard.plugin.config.FGConfigManager;
+import net.foxdenstudio.sponge.foxguard.plugin.config.ListenerModule;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.LogicController;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.*;
@@ -350,23 +352,20 @@ public final class FoxGuardMain {
      * A private method that registers the Listener class and the corresponding event class.
      */
     private void registerEventListeners() {
-        registerListeners(this, FlagRegistry.getInstance());
-        registerListener(this, ChangeBlockEvent.class, Order.LATE, new BlockChangeListener());
-        registerListener(this, InteractBlockEvent.class, Order.LATE, new InteractBlockListener());
-        registerListener(this, InteractEntityEvent.class, Order.LATE, new InteractEntityListener());
-        registerListener(this, SpawnEntityEvent.class, Order.LATE, new SpawnEntityListener());
-        if (FGConfigManager.getInstance().getModules().get(FGConfigManager.Module.MOVEMENT)) {
-            PlayerMoveListener pml = new PlayerMoveListener(true);
-            registerListener(this, MoveEntityEvent.class, pml);
-            registerListeners(this, pml.new Listeners());
-        }
-        registerListener(this, ExplosionEvent.class, Order.LATE, new ExplosionListener());
-        registerListener(this, DamageEntityEvent.class, Order.LATE, new DamageListener());
+        FGConfigManager configManager = FGConfigManager.getInstance();
+        registerListeners(FlagRegistry.getInstance());
+        registerListener(ChangeBlockEvent.class, Order.LATE, new BlockChangeListener());
+        registerListener(InteractBlockEvent.class, Order.LATE, new InteractBlockListener());
+        registerListener(InteractEntityEvent.class, Order.LATE, new InteractEntityListener());
+        registerListener(SpawnEntityEvent.class, Order.LATE, new SpawnEntityListener());
+        configManager.setupModule(ListenerModule.MOVEMENT);
+        registerListener(ExplosionEvent.class, Order.LATE, new ExplosionListener());
+        registerListener(DamageEntityEvent.class, Order.LATE, new DamageListener());
     }
 
-    public void registerListeners(Object plugin, Object obj) {
+    public void registerListeners(Object obj) {
         try {
-            eventManager.registerListeners(plugin, obj);
+            eventManager.registerListeners(this, obj);
         } catch (Exception e) {
             logger.error("Failed to register listener: " + obj.toString());
             logger.error("Of class: " + obj.getClass());
@@ -374,9 +373,9 @@ public final class FoxGuardMain {
         }
     }
 
-    public <T extends Event> void registerListener(Object plugin, Class<T> eventClass, EventListener<? super T> listener) {
+    public <T extends Event> void registerListener(Class<T> eventClass, EventListener<? super T> listener) {
         try {
-            eventManager.registerListener(plugin, eventClass, listener);
+            eventManager.registerListener(this, eventClass, listener);
         } catch (Exception e) {
             logger.error("Failed to register listener: " + listener.toString());
             logger.error("With the event class: " + eventClass.getName());
@@ -384,9 +383,9 @@ public final class FoxGuardMain {
         }
     }
 
-    public <T extends Event> void registerListener(Object plugin, Class<T> eventClass, Order order, EventListener<? super T> listener) {
+    public <T extends Event> void registerListener(Class<T> eventClass, Order order, EventListener<? super T> listener) {
         try {
-            eventManager.registerListener(plugin, eventClass, order, listener);
+            eventManager.registerListener(this, eventClass, order, listener);
         } catch (Exception e) {
             logger.error("Failed to register listener: " + listener.toString());
             logger.error("With the event class: " + eventClass.getName());

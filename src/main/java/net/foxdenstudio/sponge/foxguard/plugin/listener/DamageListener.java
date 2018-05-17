@@ -31,6 +31,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.FGListenerUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.Entity;
@@ -51,6 +52,7 @@ import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -73,8 +75,6 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
     @Override
     public void handle(DamageEntityEvent event) throws Exception {
         if (event.isCancelled()) return;
-        Player player;
-        player = getPlayerCause(event.getCause());
 
         World world = event.getTargetEntity().getWorld();
         Vector3d pos = event.getTargetEntity().getLocation().getPosition();
@@ -109,33 +109,15 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
         }
         boolean[] flags = null;
         FlagSet flagSet;
+        Player player = null;
         if (!invincible) {
+            player = getPlayerCause(event.getCause());
+
             flags = BASE_FLAGS_SOURCE.clone();
 
-            if (entity instanceof Living) {
-                flags[LIVING.id] = true;
-                if (entity instanceof Agent) {
-                    flags[MOB.id] = true;
-                    if (entity instanceof Hostile) {
-                        flags[HOSTILE.id] = true;
-                    } else if (entity instanceof Human) {
-                        flags[HUMAN.id] = true;
-                    } else {
-                        flags[PASSIVE.id] = true;
-                    }
-                } else if (entity instanceof Player) {
-                    flags[PLAYER.id] = true;
-                } else if (entity instanceof ArmorStand) {
-                    flags[ARMORSTAND.id] = true;
-                }
-            } else if (entity instanceof Hanging) {
-                flags[HANGING.id] = true;
-            } else if (entity instanceof Boat) {
-                flags[BOAT.id] = true;
-            } else if (entity instanceof Minecart) {
-                flags[MINECART.id] = true;
-            }
-            FlagSet flagSet = new FlagSet(flags);
+            FGListenerUtil.applyEntityFlags(entity, flags);
+
+            flagSet = new FlagSet(flags);
             currPriority = handlerList.get(0).getPriority();
             flagState = UNDEFINED;
             for (IHandler handler : handlerList) {
@@ -148,7 +130,7 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
 //            if(flagState == UNDEFINED) flagState = TRUE;
         }
         if (flagState == FALSE) {
-            if (player != null && player.isOnline() && !invincible) {
+            if (player != null && player.isOnline()) {
                 player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
             }
             event.setCancelled(true);
@@ -201,6 +183,7 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
         }
     }
 
+    @Nullable
     private Player getPlayerCause(Cause cause) {
         List<EntityDamageSource> sources = cause.allOf(EntityDamageSource.class);
         for (EntityDamageSource source : sources) {

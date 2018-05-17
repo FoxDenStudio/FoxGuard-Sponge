@@ -79,13 +79,15 @@ public final class FGManager {
         globalHandler = new GlobalHandler();
         regions.add(globalRegion);
         handlers.add(globalHandler);
-        globalRegion.addHandler(globalHandler);
 
         this.regionCache = new RegionCache(regions, worldRegions);
     }
 
     public static synchronized void init() {
-        if (instance == null) instance = new FGManager();
+        if (instance == null) {
+            instance = new FGManager();
+            instance.globalRegion.addHandler(instance.globalHandler);
+        }
     }
 
     public static FGManager getInstance() {
@@ -216,7 +218,7 @@ public final class FGManager {
     }
 
     public Set<IRegion> getAllRegions(World world, Vector3i chunk) {
-        return getAllRegions(world, chunk, false);
+        return this.getAllRegions(world, chunk, false);
     }
 
     public Set<IRegion> getAllRegions(World world, Vector3i chunk, boolean includeDisabled) {
@@ -224,25 +226,25 @@ public final class FGManager {
     }
 
     public Set<IRegion> getRegionsAtPos(World world, Vector3i position) {
-        return FGManager.getInstance().getRegionsInChunkAtPos(world, position).stream()
+        return this.getRegionsInChunkAtPos(world, position).stream()
                 .filter(region -> region.contains(position, world))
                 .collect(Collectors.toSet());
     }
 
     public Set<IRegion> getRegionsAtPos(World world, Vector3i position, boolean includeDisabled) {
-        return FGManager.getInstance().getRegionsInChunkAtPos(world, position, includeDisabled).stream()
+        return this.getRegionsInChunkAtPos(world, position, includeDisabled).stream()
                 .filter(region -> region.contains(position, world))
                 .collect(Collectors.toSet());
     }
 
     public Set<IRegion> getRegionsAtPos(World world, Vector3d position) {
-        return FGManager.getInstance().getRegionsInChunkAtPos(world, position).stream()
+        return this.getRegionsInChunkAtPos(world, position).stream()
                 .filter(region -> region.contains(position, world))
                 .collect(Collectors.toSet());
     }
 
     public Set<IRegion> getRegionsAtPos(World world, Vector3d position, boolean includeDisabled) {
-        return FGManager.getInstance().getRegionsInChunkAtPos(world, position, includeDisabled).stream()
+        return this.getRegionsInChunkAtPos(world, position, includeDisabled).stream()
                 .filter(region -> region.contains(position, world))
                 .collect(Collectors.toSet());
     }
