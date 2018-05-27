@@ -94,7 +94,7 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
         if (oneEntity instanceof Living) {
             flags[LIVING.id] = true;
             if (oneEntity instanceof Agent) {
-                flags[MOB.id] = true;
+                flags[AGENT.id] = true;
                 if (oneEntity instanceof Hostile) {
                     flags[HOSTILE.id] = true;
                 } else if (oneEntity instanceof Human) {

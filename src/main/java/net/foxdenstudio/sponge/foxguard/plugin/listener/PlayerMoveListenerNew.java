@@ -90,16 +90,37 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
     }
 
     @Override
-    public void handle(MoveEntityEvent event) throws Exception {
+    public void handle(@Nonnull MoveEntityEvent event) {
         Entity entity = event.getTargetEntity();
         boolean isRiding = entity.getVehicle().isPresent();
         boolean wasRiding = lastRiding.getOrDefault(entity, isRiding);
         lastRiding.put(entity, isRiding);
+
+        Set<Player> passengerStack = getPassengerStack(event.getTargetEntity());
+//        if (!passengerStack.isEmpty()) {
+//            System.out.println("Entity: " + entity);
+//            System.out.println("Passengers: " + passengerStack);
+//            System.out.println(event.isCancelled());
+//            System.out.println(isRiding);
+//            System.out.println(wasRiding);
+//        }
+
+//        if(entity instanceof Player){
+//            Player player = ((Player) entity);
+//            Optional<Entity> vehicleOpt = player.getVehicle();
+//            if(vehicleOpt.isPresent()){
+//                Entity vehicle = vehicleOpt.get();
+//                if(vehicle instanceof Horse){
+//                    event.setCancelled(true);
+//                    return;
+//                }
+//            }
+//        }
+
         if (event.isCancelled()) return;
 
         if (isRiding && wasRiding) return;
 
-        Set<Player> passengerStack = getPassengerStack(event.getTargetEntity());
 
         if (!passengerStack.isEmpty()) {
 
@@ -108,27 +129,32 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
             Transform<World> from = event.getFromTransform();
             Transform<World> to = event.getToTransform();
 
-            Set<IRegion> fromRegions, toRegions = new HashSet<>(), finalRegions = new HashSet<>();
-            Set<IHandler> fromHandlers, toHandlers = new HashSet<>(), finalHandlers;
+            Set<IRegion> initialRegions, finalRegions = new HashSet<>();
+            Set<IHandler> finalHandlers;
 
-            fromRegions = manager.getRegionsAtPos(from.getExtent(), from.getPosition());
-            fromHandlers = fromRegions.stream()
-                    .flatMap(region -> region.getHandlers().stream())
-                    .collect(Collectors.toSet());
+            initialRegions = manager.getRegionsAtPos(from.getExtent(), from.getPosition());
 
-            manager.getRegionsInChunkAtPos(to.getExtent(), to.getPosition()).stream()
-                    .filter(region -> region.contains(to.getPosition(), to.getExtent()))
-                    .forEach(region -> {
-                        finalRegions.add(region);
-                        if (!fromRegions.remove(region)) toRegions.add(region);
-                    });
+            boolean noToRegions = true;
+            int matchedRegionsCount = 0;
+            for (IRegion region : manager.getRegionsInChunkAtPos(to.getExtent(), to.getPosition())) {
+                if (region.contains(to.getPosition(), to.getExtent())) {
+                    finalRegions.add(region);
+                    if (noToRegions) {
+                        if (initialRegions.contains(region)) {
+                            ++matchedRegionsCount;
+                        } else {
+                            noToRegions = false;
+                        }
+                    }
+                }
+            }
+
+            // Check change in regions
+            if (noToRegions && initialRegions.size() == matchedRegionsCount) return;
 
             finalHandlers = finalRegions.stream()
                     .flatMap(region -> region.getHandlers().stream())
                     .collect(Collectors.toSet());
-            finalHandlers.forEach(handler -> {
-                if (!fromHandlers.remove(handler)) toHandlers.add(handler);
-            });
 
             for (Player player : passengerStack) {
                 final boolean hud = player.getScoreboard() == scoreboardMap.get(player) && CommandHUD.instance().getIsHUDEnabled().get(player);
@@ -140,16 +166,28 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
             }
 
             if (full) {
+                Set<IHandler> fromHandlers, toHandlers = new HashSet<>();
+
+                fromHandlers = initialRegions.stream()
+                        .flatMap(region -> region.getHandlers().stream())
+                        .collect(Collectors.toSet());
+                finalHandlers.forEach(handler -> {
+                    if (!fromHandlers.remove(handler)) toHandlers.add(handler);
+                });
+
+                // check change in handlers
                 if (fromHandlers.isEmpty() && toHandlers.isEmpty()) return;
 
                 List<HandlerWrapper> handlersList = new ArrayList<>();
 
                 for (IHandler handler : fromHandlers) {
-                    handlersList.add(new HandlerWrapper(handler, Type.FROM));
+                    if (handler.isEnabled())
+                        handlersList.add(new HandlerWrapper(handler, Type.FROM));
                 }
 
                 for (IHandler handler : toHandlers) {
-                    handlersList.add(new HandlerWrapper(handler, Type.TO));
+                    if (handler.isEnabled())
+                        handlersList.add(new HandlerWrapper(handler, Type.TO));
                 }
 
                 Collections.sort(handlersList);

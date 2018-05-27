@@ -7,6 +7,8 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.vehicle.Boat;
 import org.spongepowered.api.entity.vehicle.minecart.Minecart;
 
+import java.util.Collection;
+
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 
 public class FGListenerUtil {
@@ -15,7 +17,7 @@ public class FGListenerUtil {
         if (entity instanceof Living) {
             flags[LIVING.id] = true;
             if (entity instanceof Agent) {
-                flags[MOB.id] = true;
+                flags[AGENT.id] = true;
                 if (entity instanceof Hostile) {
                     flags[HOSTILE.id] = true;
                 } else if (entity instanceof Human) {

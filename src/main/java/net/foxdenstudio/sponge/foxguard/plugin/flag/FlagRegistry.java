@@ -39,7 +39,7 @@ import java.util.Optional;
  */
 public class FlagRegistry {
 
-    private static FlagRegistry instance;
+    private static FlagRegistry instance = new FlagRegistry();
 
     private final List<Flag> flagList = new ArrayList<>();
     private final HashMap<String, Flag> flagMap = new HashMap<>();
@@ -50,19 +50,6 @@ public class FlagRegistry {
     }
 
     public static FlagRegistry getInstance() {
-        if (instance == null) {
-            instance = new FlagRegistry();
-            // Force initialize Flags class.
-            // This guarantees that FoxGuard flags are always the first to be registered.
-            Flags.ROOT.getClass();
-        }
-        return instance;
-    }
-
-    static FlagRegistry getInstanceInternal() {
-        if (instance == null) {
-            instance = new FlagRegistry();
-        }
         return instance;
     }
 

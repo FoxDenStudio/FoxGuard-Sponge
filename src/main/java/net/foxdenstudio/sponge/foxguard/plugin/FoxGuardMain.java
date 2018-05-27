@@ -36,6 +36,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.config.FGConfigManager;
 import net.foxdenstudio.sponge.foxguard.plugin.config.ListenerModule;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.LogicController;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.Flags;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.*;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.*;
 import net.foxdenstudio.sponge.foxguard.plugin.misc.FGContextCalculator;
@@ -178,6 +179,13 @@ public final class FoxGuardMain {
             managerOk = false;
         }
 
+        try {
+            logger.info("Initializing FoxGuard flags");
+            //noinspection ResultOfMethodCallIgnored
+            Flags.ROOT.getClass();
+        } catch (Exception e) {
+            initializationError("Error initializing FoxGuard flags", e);
+        }
 //        logger.info("Starting MCStats metrics extension");
 //        stats.start();
     }

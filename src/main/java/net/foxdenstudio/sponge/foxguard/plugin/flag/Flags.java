@@ -30,7 +30,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.flag;
  */
 public class Flags {
 
-    private static final FlagRegistry REGISTRY = FlagRegistry.getInstanceInternal();
+    private static final FlagRegistry REGISTRY = FlagRegistry.getInstance();
 
     public static final Flag ROOT = REGISTRY.registerFlag("root");
     public static final Flag BUFF = REGISTRY.registerFlag("buff");
@@ -61,17 +61,47 @@ public class Flags {
     //public static final Flag IGNITE = REGISTRY.registerFlag("ignite");
     public static final Flag SPAWN = REGISTRY.registerFlag("spawn");
 
+    //------------------------------------------------------------------------------------------------------------------
+
     public static final Flag ENTITY = REGISTRY.registerFlag("entity");
+
+    public static final Flag ITEM = REGISTRY.registerFlag("item");
+    public static final Flag XP_ORB = REGISTRY.registerFlag("xp-orb");
+    public static final Flag FALLING_BLOCK = REGISTRY.registerFlag("falling-block");
     public static final Flag HANGING = REGISTRY.registerFlag("hanging");
     public static final Flag BOAT = REGISTRY.registerFlag("boat");
     public static final Flag MINECART = REGISTRY.registerFlag("minecart");
-    public static final Flag LIVING = REGISTRY.registerFlag("living");
-    public static final Flag MOB = REGISTRY.registerFlag("mob");
-    public static final Flag PASSIVE = REGISTRY.registerFlag("passive");
+    public static final Flag PROJECTILE = REGISTRY.registerFlag("projectile");
+    public static final Flag DAMAGING_PROJ = REGISTRY.registerFlag("damaging-proj");
+    public static final Flag AOE_CLOUD = REGISTRY.registerFlag("aoe-cloud");
+
     public static final Flag HOSTILE = REGISTRY.registerFlag("hostile");
-    public static final Flag HUMAN = REGISTRY.registerFlag("human");
+    public static final Flag EXPLOSIVE = REGISTRY.registerFlag("explosive");
+    public static final Flag FUSED_EXPL = REGISTRY.registerFlag("fused-expl");
+    public static final Flag PROJ_LAUNCHER = REGISTRY.registerFlag("proj-launcher");
+
+    public static final Flag LIVING = REGISTRY.registerFlag("living");
+    public static final Flag COMPLEX = REGISTRY.registerFlag("complex");
     public static final Flag PLAYER = REGISTRY.registerFlag("player");
     public static final Flag ARMORSTAND = REGISTRY.registerFlag("armorstand");
+    public static final Flag AGENT = REGISTRY.registerFlag("agent");
+    public static final Flag RANGER = REGISTRY.registerFlag("ranger");
+    public static final Flag AMBIENT = REGISTRY.registerFlag("ambient");
+    public static final Flag AERIAL = REGISTRY.registerFlag("aerial");
+    public static final Flag CREATURE = REGISTRY.registerFlag("creature");
+    public static final Flag AGEABLE = REGISTRY.registerFlag("ageable");
+    public static final Flag GOLEM = REGISTRY.registerFlag("golem");
+    public static final Flag AQUATIC = REGISTRY.registerFlag("aquatic");
+    public static final Flag MONSTER = REGISTRY.registerFlag("monster");
+    public static final Flag BOSS = REGISTRY.registerFlag("boss");
+    public static final Flag HUMAN = REGISTRY.registerFlag("human");
+
+    public static final Flag PASSIVE = REGISTRY.registerFlag("passive");
+
+    public static final Flag OTHER = REGISTRY.registerFlag("other");
+
+    //------------------------------------------------------------------------------------------------------------------
+
 
     public static final Flag MOVE = REGISTRY.registerFlag("move");
     public static final Flag TELEPORT = REGISTRY.registerFlag("teleport");
