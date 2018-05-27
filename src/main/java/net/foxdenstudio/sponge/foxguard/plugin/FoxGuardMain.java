@@ -61,9 +61,9 @@ import org.spongepowered.api.event.*;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.EventContext;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.entity.InteractEntityEvent;
-import org.spongepowered.api.event.entity.MoveEntityEvent;
 import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.event.game.state.*;
 import org.spongepowered.api.event.world.ExplosionEvent;
@@ -97,7 +97,7 @@ import java.util.Set;
         url = "https://github.com/FoxDenStudio/FoxGuard")
 public final class FoxGuardMain {
 
-    public final Cause pluginCause = Cause.builder().named("plugin", this).build();
+    public final Cause pluginCause = Cause.builder().append(this).build(EventContext.empty());
 
     /**
      * FoxGuardMain instance object.
