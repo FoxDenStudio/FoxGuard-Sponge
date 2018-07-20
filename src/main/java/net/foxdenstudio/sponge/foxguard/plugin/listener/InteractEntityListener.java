@@ -27,16 +27,13 @@ package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.FGListenerUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.Entity;
-import org.spongepowered.api.entity.hanging.Hanging;
-import org.spongepowered.api.entity.living.Agent;
-import org.spongepowered.api.entity.living.Hostile;
-import org.spongepowered.api.entity.living.Human;
-import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
@@ -46,9 +43,7 @@ import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 import static org.spongepowered.api.util.Tristate.FALSE;
@@ -56,11 +51,27 @@ import static org.spongepowered.api.util.Tristate.UNDEFINED;
 
 public class InteractEntityListener implements EventListener<InteractEntityEvent> {
 
-    private static final FlagBitSet BASE_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, INTERACT, ENTITY);
+    private static final boolean[] BASE_FLAG_SET = FlagSet.arrayFromFlags(ROOT, DEBUFF, INTERACT, ENTITY);
 
     @Override
     public void handle(InteractEntityEvent event) throws Exception {
         if (event.isCancelled()) return;
+
+        World world = event.getTargetEntity().getWorld();
+        Vector3d pos = event.getTargetEntity().getLocation().getPosition();
+
+        Set<IHandler> handlerSet = new HashSet<>();
+        FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
+                .filter(region -> region.contains(pos, world))
+                .forEach(region -> region.getHandlers().stream()
+                        .filter(IFGObject::isEnabled)
+                        .forEach(handlerSet::add));
+
+        if (handlerSet.isEmpty()) {
+            FoxGuardMain.instance().getLogger().warn("Handler set is empty for interact block listener!");
+            return;
+        }
+
         User user;
         if (event.getCause().containsType(Player.class)) {
             user = event.getCause().first(Player.class).get();
@@ -70,46 +81,21 @@ public class InteractEntityListener implements EventListener<InteractEntityEvent
             user = null;
         }
 
-        FlagBitSet flags = BASE_FLAG_SET.clone();
-        World world = event.getTargetEntity().getWorld();
-        Vector3d pos = event.getTargetEntity().getLocation().getPosition();
+        boolean[] flags = BASE_FLAG_SET.clone();
         if (event instanceof InteractEntityEvent.Primary) {
-            flags.set(PRIMARY);
-            if (event instanceof InteractEntityEvent.Primary.MainHand) flags.set(MAIN);
-            else if (event instanceof InteractEntityEvent.Primary.OffHand) flags.set(OFF);
+            flags[PRIMARY.id] = true;
+            if (event instanceof InteractEntityEvent.Primary.MainHand) flags[MAIN.id] = true;
+            else if (event instanceof InteractEntityEvent.Primary.OffHand) flags[OFF.id] = true;
         } else if (event instanceof InteractEntityEvent.Secondary) {
-            flags.set(SECONDARY);
-            if (event instanceof InteractEntityEvent.Secondary.MainHand) flags.set(MAIN);
-            else if (event instanceof InteractEntityEvent.Secondary.OffHand) flags.set(OFF);
+            flags[SECONDARY.id] = true;
+            if (event instanceof InteractEntityEvent.Secondary.MainHand) flags[MAIN.id] = true;
+            else if (event instanceof InteractEntityEvent.Secondary.OffHand) flags[OFF.id] = true;
         }
         Entity entity = event.getTargetEntity();
-        if (entity instanceof Living) {
-            flags.set(LIVING);
-            if (entity instanceof Agent) {
-                flags.set(MOB);
-                if (entity instanceof Hostile) {
-                    flags.set(HOSTILE);
-                } else if (entity instanceof Human) {
-                    flags.set(HUMAN);
-                } else {
-                    flags.set(PASSIVE);
-                }
-            } else if (entity instanceof Player) {
-                flags.set(PLAYER);
-            }
+        FGListenerUtil.applyEntityFlags(entity, flags);
+        FlagSet flagSet = new FlagSet(flags);
 
-        } else if (entity instanceof Hanging) {
-            flags.set(HANGING);
-        }
-
-        List<IHandler> handlerList = new ArrayList<>();
-        FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
-                .filter(region -> region.contains(pos, world))
-                .forEach(region -> region.getHandlers().stream()
-                        .filter(IFGObject::isEnabled)
-                        .filter(handler -> !handlerList.contains(handler))
-                        .forEach(handlerList::add));
-
+        List<IHandler> handlerList = new ArrayList<>(handlerSet);
         Collections.sort(handlerList);
         int currPriority = handlerList.get(0).getPriority();
         Tristate flagState = UNDEFINED;
@@ -118,7 +104,7 @@ public class InteractEntityListener implements EventListener<InteractEntityEvent
                 break;
             }
             //flagState = flagState.and(handler.handle(user, typeFlag, Optional.of(event)).getState());
-            flagState = flagState.and(handler.handle(user, flags, ExtraContext.of(event)).getState());
+            flagState = flagState.and(handler.handle(user, flagSet, ExtraContext.of(event)).getState());
             currPriority = handler.getPriority();
         }
 //        if(flagState == UNDEFINED) flagState = TRUE;
@@ -130,10 +116,5 @@ public class InteractEntityListener implements EventListener<InteractEntityEvent
             //makes sure that handlers are unable to cancel the event directly.
             event.setCancelled(false);
         }
-    }
-
-    {
-        ArrayList<String> strings = new ArrayList<String>();
-
     }
 }

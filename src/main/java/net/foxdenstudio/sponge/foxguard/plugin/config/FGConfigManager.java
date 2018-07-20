@@ -23,8 +23,9 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin;
+package net.foxdenstudio.sponge.foxguard.plugin.config;
 
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
@@ -40,21 +41,22 @@ public final class FGConfigManager {
 
     private static FGConfigManager instance;
 
-    private boolean cleanupFiles;
-    private boolean saveWorldRegionsInWorldFolders;
-    private boolean saveInWorldFolder;
-    private boolean useConfigFolder;
-    private int nameLengthLimit;
+    private boolean cleanupFiles = true;
+    private boolean saveInWorldFolder = true;
+    private boolean saveWorldRegionsInWorldFolders = true;
+    private boolean useConfigFolder = false;
+    private int nameLengthLimit = 24;
 
-    private Map<Module, Boolean> modules = new EnumMap<>(Module.class);
+    private Map<ListenerModule, String> modules = new EnumMap<>(ListenerModule.class);
 
-    public FGConfigManager() {
-        if (instance == null) instance = this;
-        load();
+    private FGConfigManager() {
     }
 
     public static FGConfigManager getInstance() {
-        if (instance == null) new FGConfigManager();
+        if (instance == null) {
+            instance = new FGConfigManager();
+            instance.load();
+        }
         return instance;
     }
 
@@ -99,8 +101,10 @@ public final class FGConfigManager {
                 "Extremely long names can cause a variety of unfixable issues. You have been warned.")
                 .setValue(nameLengthLimit);
 
-        for (Module m : Module.values()) {
-            root.getNode("module", m.name).setValue(this.modules.get(m));
+        for (ListenerModule m : ListenerModule.values()) {
+            CommentedConfigurationNode node = root.getNode("module", m.getName()).setValue(this.modules.get(m));
+            String comment = m.getComment();
+            if(comment != null) node.setComment(comment);
         }
 
 
@@ -134,8 +138,8 @@ public final class FGConfigManager {
         saveWorldRegionsInWorldFolders = root.getNode("storage", "saveWorldRegionsInWorldFolders").getBoolean(true);
         useConfigFolder = root.getNode("storage", "useConfigFolder").getBoolean(false);
         nameLengthLimit = root.getNode("general", "nameLengthLimit").getInt(24);
-        for (Module m : Module.values()) {
-            this.modules.put(m, root.getNode("module", m.name).getBoolean(true));
+        for (ListenerModule m : ListenerModule.values()) {
+            this.modules.put(m, root.getNode("module", m.getName()).getString(m.getDefaultValue()));
         }
 
         //--------------------------------------------------------------------------------------------------------------
@@ -146,12 +150,12 @@ public final class FGConfigManager {
         return cleanupFiles;
     }
 
-    public boolean saveWorldRegionsInWorldFolders() {
-        return saveWorldRegionsInWorldFolders;
-    }
-
     public boolean saveInWorldFolder() {
         return saveInWorldFolder;
+    }
+
+    public boolean saveWorldRegionsInWorldFolders() {
+        return saveWorldRegionsInWorldFolders;
     }
 
     public boolean useConfigFolder() {
@@ -162,18 +166,13 @@ public final class FGConfigManager {
         return nameLengthLimit;
     }
 
-    public Map<Module, Boolean> getModules() {
+    public Map<ListenerModule, String> getModules() {
         return this.modules;
     }
 
-    public enum Module {
-        MOVEMENT("movement");
-
-        String name;
-
-        Module(String name) {
-            this.name = name;
-        }
+    public void setupModule(ListenerModule module){
+        module.setup(this.modules.get(module));
     }
+
 
 }

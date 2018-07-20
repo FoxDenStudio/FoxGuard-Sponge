@@ -27,7 +27,8 @@ package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
@@ -47,15 +48,13 @@ import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 
 public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
 
-    private static final FlagBitSet BASE_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, SPAWN, ENTITY);
+    private static final boolean[] BASE_FLAG_SET = FlagSet.arrayFromFlags(ROOT, DEBUFF, SPAWN, ENTITY);
 
     @Override
     public void handle(SpawnEntityEvent event) throws Exception {
@@ -90,24 +89,27 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
             }
 
         }*/
-        FlagBitSet flags = BASE_FLAG_SET.clone();
+        boolean[] flags = BASE_FLAG_SET.clone();
+
         if (oneEntity instanceof Living) {
-            flags.set(LIVING);
+            flags[LIVING.id] = true;
             if (oneEntity instanceof Agent) {
-                flags.set(MOB);
+                flags[AGENT.id] = true;
                 if (oneEntity instanceof Hostile) {
-                    flags.set(HOSTILE);
+                    flags[HOSTILE.id] = true;
                 } else if (oneEntity instanceof Human) {
-                    flags.set(HUMAN);
+                    flags[HUMAN.id] = true;
                 } else {
-                    flags.set(PASSIVE);
+                    flags[PASSIVE.id] = true;
                 }
             }
         } else if (oneEntity instanceof Hanging) {
-            flags.set(HANGING);
+            flags[HANGING.id] = true;
         }
 
-        List<IHandler> handlerList = new ArrayList<>();
+        FlagSet flagSet = new FlagSet(flags);
+
+        Set<IHandler> handlerSet = new HashSet<>();
 
         for (Entity entity : event.getEntities()) {
             Location<World> loc = entity.getLocation();
@@ -117,9 +119,14 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
                     .filter(region -> region.contains(pos, world))
                     .forEach(region -> region.getHandlers().stream()
                             .filter(IFGObject::isEnabled)
-                            .filter(handler -> !handlerList.contains(handler))
-                            .forEach(handlerList::add));
+                            .forEach(handlerSet::add));
         }
+
+
+
+        //TODO maybe throw a warning
+        if(handlerSet.size() == 0) return;
+        ArrayList<IHandler> handlerList = new ArrayList<>(handlerSet);
         Collections.sort(handlerList);
         int currPriority = handlerList.get(0).getPriority();
         Tristate flagState = Tristate.UNDEFINED;
@@ -127,7 +134,7 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
             if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
                 break;
             }
-            flagState = flagState.and(handler.handle(user, flags, ExtraContext.of(event)).getState());
+            flagState = flagState.and(handler.handle(user, flagSet, ExtraContext.of(event)).getState());
             currPriority = handler.getPriority();
         }
         if (flagState == Tristate.FALSE) {

@@ -28,7 +28,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.handler;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
@@ -74,7 +74,7 @@ public class WelcomeHandler extends HandlerBase {
     }
 
     @Override
-    public EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra) {
+    public EventResult handle(@Nullable User user, FlagSet flags, ExtraContext extra) {
         return EventResult.pass();
     }
 

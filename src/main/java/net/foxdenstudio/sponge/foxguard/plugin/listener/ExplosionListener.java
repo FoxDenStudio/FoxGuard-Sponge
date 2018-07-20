@@ -28,10 +28,12 @@ package net.foxdenstudio.sponge.foxguard.plugin.listener;
 import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
+import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.explosive.Explosive;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
@@ -52,12 +54,61 @@ import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 
 public class ExplosionListener implements EventListener<ExplosionEvent> {
 
-    private static final FlagBitSet FLAG_SET = new FlagBitSet(ROOT, DEBUFF, EXPLOSION);
+    private static final boolean[] FLAG_SET = FlagSet.arrayFromFlags(ROOT, DEBUFF, EXPLOSION);
 
 
     @Override
     public void handle(ExplosionEvent event) throws Exception {
         if (!(event instanceof Cancellable) || ((Cancellable) event).isCancelled()) return;
+
+
+        boolean[] flags = FLAG_SET.clone();
+
+        Set<IHandler> handlerSet = new HashSet<>();
+        if (event instanceof ExplosionEvent.Post) {
+            ExplosionEvent.Post postEvent = (ExplosionEvent.Post) event;
+            List<Transaction<BlockSnapshot>> transactions = postEvent.getTransactions();
+            if(transactions.size() == 0) return;
+
+            FGManager.getInstance().getRegionsAtMultiLocI(
+                    transactions.stream()
+                            .map(trans -> trans.getOriginal().getLocation().get())
+                            .collect(Collectors.toList())
+            ).forEach(region -> region.getHandlers().stream()
+                    .filter(IFGObject::isEnabled)
+                    .forEach(handlerSet::add));
+
+            flags[POST.id] = true;
+            flags[BLOCK.id] = true;
+            flags[CHANGE.id] = true;
+        } else if (event instanceof ExplosionEvent.Detonate) {
+            ExplosionEvent.Detonate detonateEvent = ((ExplosionEvent.Detonate) event);
+            List<Location<World>> locations = detonateEvent.getAffectedLocations();
+            if(locations.size() == 0) return;
+
+            FGManager.getInstance().getRegionsAtMultiLocI(locations)
+                    .forEach(region -> region.getHandlers().stream()
+                            .filter(IFGObject::isEnabled)
+                            .forEach(handlerSet::add));
+
+            flags[DETONATE.id] = true;
+        } else if (event instanceof ExplosionEvent.Pre) {
+            Location<World> loc = event.getExplosion().getLocation();
+            Vector3d pos = loc.getPosition();
+            World world = loc.getExtent();
+            FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
+                    .filter(region -> region.contains(pos, world))
+                    .forEach(region -> region.getHandlers().stream()
+                            .filter(IFGObject::isEnabled)
+                            .forEach(handlerSet::add));
+
+            flags[PRE.id] = true;
+        }
+        if(handlerSet.size() == 0){
+            FoxGuardMain.instance().getLogger().warn("Handlers were empty for explosion listener!");
+            return;
+        }
+
         User user;
         if (event.getCause().containsType(Player.class)) {
             user = event.getCause().first(Player.class).get();
@@ -68,12 +119,7 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
             if (explosiveOptional.isPresent()) {
                 Explosive explosive = explosiveOptional.get();
                 UUID uuid;
-                Optional<UUID> notifierOptional = explosive.getNotifier();
-                if (notifierOptional.isPresent()) {
-                    uuid = notifierOptional.get();
-                } else {
-                    uuid = explosive.getCreator().orElse(null);
-                }
+                uuid = explosive.getNotifier().orElseGet(() -> explosive.getCreator().orElse(null));
                 if (uuid != null) {
                     UserStorageService storageService = FoxGuardMain.instance().getUserStorage();
                     user = storageService.get(uuid).orElse(null);
@@ -81,51 +127,17 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
             } else user = null;
         }
 
-        FlagBitSet flags = FLAG_SET.clone();
-
-        Set<IHandler> handlerSet = new HashSet<>();
-        if (event instanceof ExplosionEvent.Post) {
-            flags.set(POST);
-            flags.set(BLOCK);
-            flags.set(CHANGE);
-
-            ExplosionEvent.Post postEvent = (ExplosionEvent.Post) event;
-            FGManager.getInstance().getRegionsAtMultiLocI(
-                    postEvent.getTransactions().stream()
-                            .map(trans -> trans.getOriginal().getLocation().get())
-                            .collect(Collectors.toList())
-            ).forEach(region -> region.getHandlers().stream()
-                    .filter(IFGObject::isEnabled)
-                    .forEach(handlerSet::add));
-        } else if (event instanceof ExplosionEvent.Detonate) {
-            flags.set(DETONATE);
-
-            ExplosionEvent.Detonate detonateEvent = ((ExplosionEvent.Detonate) event);
-            FGManager.getInstance().getRegionsAtMultiLocI(detonateEvent.getAffectedLocations())
-                    .forEach(region -> region.getHandlers().stream()
-                            .filter(IFGObject::isEnabled)
-                            .forEach(handlerSet::add));
-        } else if (event instanceof ExplosionEvent.Pre) {
-            flags.set(PRE);
-            Location<World> loc = event.getExplosion().getLocation();
-            Vector3d pos = loc.getPosition();
-            World world = loc.getExtent();
-            FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
-                    .filter(region -> region.contains(pos, world))
-                    .forEach(region -> region.getHandlers().stream()
-                            .filter(IFGObject::isEnabled)
-                            .forEach(handlerSet::add));
-        }
         List<IHandler> handlerList = new ArrayList<>(handlerSet);
 
         Collections.sort(handlerList);
         int currPriority = handlerList.get(0).getPriority();
         Tristate flagState = Tristate.UNDEFINED;
+        FlagSet flagSet = new FlagSet(flags);
         for (IHandler handler : handlerList) {
             if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
                 break;
             }
-            flagState = flagState.and(handler.handle(user, flags, ExtraContext.of(event)).getState());
+            flagState = flagState.and(handler.handle(user, flagSet, ExtraContext.of(event)).getState());
             currPriority = handler.getPriority();
         }
         if (flagState == Tristate.FALSE) {

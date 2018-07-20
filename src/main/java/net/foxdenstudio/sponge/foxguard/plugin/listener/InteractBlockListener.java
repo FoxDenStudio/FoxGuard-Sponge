@@ -27,7 +27,8 @@ package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
@@ -40,11 +41,10 @@ import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
+import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 import static org.spongepowered.api.util.Tristate.FALSE;
@@ -52,11 +52,31 @@ import static org.spongepowered.api.util.Tristate.UNDEFINED;
 
 public class InteractBlockListener implements EventListener<InteractBlockEvent> {
 
-    private static final FlagBitSet BASE_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, INTERACT, BLOCK);
+    private static final boolean[] BASE_FLAG_SET = FlagSet.arrayFromFlags(ROOT, DEBUFF, INTERACT, BLOCK);
 
     @Override
     public void handle(InteractBlockEvent event) throws Exception {
         if (event.isCancelled()) return;
+
+        BlockSnapshot block = event.getTargetBlock();
+        if (block.getState().getType().equals(BlockTypes.AIR)) return;
+        Optional<Location<World>> location = block.getLocation();
+        if (!location.isPresent()) return;
+        World world = location.get().getExtent();
+        Vector3i pos = block.getPosition();
+
+        Set<IHandler> handlerSet = new HashSet<>();
+        FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
+                .filter(region -> region.contains(pos, world))
+                .forEach(region -> region.getHandlers().stream()
+                        .filter(IFGObject::isEnabled)
+                        .forEach(handlerSet::add));
+
+        if (handlerSet.isEmpty()) {
+            FoxGuardMain.instance().getLogger().warn("Handler set is empty for interact block listener!");
+            return;
+        }
+
         User user;
         if (event.getCause().containsType(Player.class)) {
             user = event.getCause().first(Player.class).get();
@@ -66,30 +86,20 @@ public class InteractBlockListener implements EventListener<InteractBlockEvent> 
             user = null;
         }
 
-        FlagBitSet flags = BASE_FLAG_SET.clone();
-        BlockSnapshot block = event.getTargetBlock();
-        if (block.getState().getType().equals(BlockTypes.AIR)) return;
-        World world = block.getLocation().get().getExtent();
-        Vector3i pos = block.getPosition();
+        boolean[] flags = BASE_FLAG_SET.clone();
+
         if (event instanceof InteractBlockEvent.Primary) {
-            flags.set(PRIMARY);
-            if (event instanceof InteractBlockEvent.Primary.MainHand) flags.set(MAIN);
-            else if (event instanceof InteractBlockEvent.Primary.OffHand) flags.set(OFF);
+            flags[PRIMARY.id] = true;
+            if (event instanceof InteractBlockEvent.Primary.MainHand) flags[MAIN.id] = true;
+            else if (event instanceof InteractBlockEvent.Primary.OffHand) flags[OFF.id] = true;
         } else if (event instanceof InteractBlockEvent.Secondary) {
-            flags.set(SECONDARY);
-            if (event instanceof InteractBlockEvent.Secondary.MainHand) flags.set(MAIN);
-            else if (event instanceof InteractBlockEvent.Secondary.OffHand) flags.set(OFF);
+            flags[SECONDARY.id] = true;
+            if (event instanceof InteractBlockEvent.Secondary.MainHand) flags[MAIN.id] = true;
+            else if (event instanceof InteractBlockEvent.Secondary.OffHand) flags[OFF.id] = true;
         }
+        FlagSet flagSet = new FlagSet(flags);
 
-
-        List<IHandler> handlerList = new ArrayList<>();
-        FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
-                .filter(region -> region.contains(pos, world))
-                .forEach(region -> region.getHandlers().stream()
-                        .filter(IFGObject::isEnabled)
-                        .filter(handler -> !handlerList.contains(handler))
-                        .forEach(handlerList::add));
-
+        List<IHandler> handlerList = new ArrayList<>(handlerSet);
         Collections.sort(handlerList);
         int currPriority = handlerList.get(0).getPriority();
         Tristate flagState = UNDEFINED;
@@ -98,7 +108,7 @@ public class InteractBlockListener implements EventListener<InteractBlockEvent> 
                 break;
             }
             //flagState = flagState.and(handler.handle(user, typeFlag, Optional.of(event)).getState());
-            flagState = flagState.and(handler.handle(user, flags, ExtraContext.of(event)).getState());
+            flagState = flagState.and(handler.handle(user, flagSet, ExtraContext.of(event)).getState());
             currPriority = handler.getPriority();
         }
 //        if (flagState == UNDEFINED) flagState = TRUE;

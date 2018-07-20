@@ -39,7 +39,7 @@ import java.util.Optional;
  */
 public class FlagRegistry {
 
-    private static FlagRegistry instance;
+    private static FlagRegistry instance = new FlagRegistry();
 
     private final List<Flag> flagList = new ArrayList<>();
     private final HashMap<String, Flag> flagMap = new HashMap<>();
@@ -50,33 +50,19 @@ public class FlagRegistry {
     }
 
     public static FlagRegistry getInstance() {
-        if (instance == null) {
-            instance = new FlagRegistry();
-            // Force initialize Flags class.
-            // This guarantees that FoxGuard flags are always the first to be registered.
-            Flags.ROOT.getClass();
-        }
-        return instance;
-    }
-
-    static FlagRegistry getInstanceInternal() {
-        if (instance == null) {
-            instance = new FlagRegistry();
-        }
         return instance;
     }
 
     public Flag registerFlag(String name) {
         if (locked) throw new IllegalStateException("Server is starting! It is now too late to register flags!");
         name = name.toLowerCase();
-        if (!name.matches("[a-z$_]+"))
-            throw new IllegalArgumentException("FlagOld name contains illegal characters. Only alphabetic characters allowed, including \'$\' and \'_\'");
+        if (!name.matches("[a-z$_][a-z$_\\-]*"))
+            throw new IllegalArgumentException("Flag name contains illegal characters. Only alphabetic characters allowed, including \'$\' and \'_\'");
         for (int i = 0; i < 2 && flagMap.containsKey(name); i++) {
             name += "_";
         }
         if (flagMap.containsKey(name)) return null;
-        Flag flag = new Flag(name, nextAvailableIndex);
-        nextAvailableIndex++;
+        Flag flag = new Flag(name, nextAvailableIndex++);
         flagList.add(flag);
         flagMap.put(name, flag);
         return flag;
