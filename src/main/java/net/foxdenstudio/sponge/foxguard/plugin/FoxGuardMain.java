@@ -50,6 +50,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.factory.ControllersStateFieldFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.state.factory.HandlersStateFieldFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.state.factory.RegionsStateFieldFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.util.DebugManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.api.Game;
@@ -241,9 +242,14 @@ public final class FoxGuardMain {
 
         fgDispatcher.register(new CommandPriority(), "priority", "prio", "level", "rank");
 
-        fgDispatcher.register(new CommandTest(), "test");
         fgDispatcher.register(new CommandLink2(true), "link2", "connect2", "attach2");
         fgDispatcher.register(new CommandLink2(false), "unlink2", "disconnect2", "detach2");
+
+        // DEBUG USE
+        //fgDispatcher.register(new CommandTest(), "test");
+        //fgDispatcher.register(DebugManager.INSTANCE, "debug");
+
+
         registerCoreCommands(fgDispatcher);
 
         game.getCommandManager().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");

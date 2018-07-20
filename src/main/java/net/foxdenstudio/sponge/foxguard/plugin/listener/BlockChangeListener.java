@@ -31,6 +31,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.util.DebugManager;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.block.BlockSnapshot;
@@ -67,6 +68,9 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
                     || tr.getOriginal().getState().getType().equals(BlockTypes.GRASS)
                     && tr.getFinal().getState().getType().equals(BlockTypes.DIRT)) return;
         }
+
+        DebugManager.INSTANCE.printEvent(event);
+
         //DebugHelper.printBlockEvent(event);
         /*FlagOld typeFlag;
         if (event instanceof ChangeBlockEvent.Modify) typeFlag = FlagOld.BLOCK_MODIFY;
@@ -105,6 +109,7 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
         }
         if(handlerSet.size() == 0) return;
 
+
         User user;
         if (event.getCause().containsType(Player.class)) {
             user = event.getCause().first(Player.class).get();
@@ -113,6 +118,8 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
         } else {
             user = null;
         }
+
+
 
         boolean[] flags = BASE_FLAG_SET.clone();
 

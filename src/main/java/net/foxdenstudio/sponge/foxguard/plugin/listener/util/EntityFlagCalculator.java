@@ -51,7 +51,6 @@ public class EntityFlagCalculator {
         mini.apply(flags);
     }
 
-    @SuppressWarnings("Duplicates")
     private MiniFlagSet getMiniFlag(Map<Class<? extends Entity>, Entity> types) {
         MiniFlagSet mini = new MiniFlagSet();
         Set<Flag> totalFlags = new HashSet<>();
@@ -210,7 +209,7 @@ public class EntityFlagCalculator {
         }
     }
 
-    public static void main(String[] args) {
+    /*public static void main(String[] args) {
         EntityFlagCalculator calculator = EntityFlagCalculator.getInstance();
         FlagRegistry registry = FlagRegistry.getInstance();
         Entity entity = (Entity) Proxy.newProxyInstance(EntityFlagCalculator.class.getClassLoader(),
@@ -220,5 +219,5 @@ public class EntityFlagCalculator {
         for (Flag flag : flags) {
             System.out.println(flag.name);
         }
-    }
+    }*/
 }

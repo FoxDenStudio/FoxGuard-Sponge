@@ -61,11 +61,11 @@ import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
  * Created by Fox on 1/4/2016.
  * Project: SpongeForge
  */
-public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
+public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
 
     private static final boolean[] BASE_FLAG_SET = FlagSet.arrayFromFlags(ROOT, DEBUFF, MOVE);
 
-    private static PlayerMoveListenerNew instance;
+    private static PlayerMoveListener instance;
 
     public final boolean full;
 
@@ -84,7 +84,7 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
     });
     private final Map<Player, HUDConfig> hudConfigMap = new WeakCacheMap<>((k, m) -> new HUDConfig());
 
-    public PlayerMoveListenerNew(boolean full) {
+    public PlayerMoveListener(boolean full) {
         this.full = full;
         if (instance == null) instance = this;
     }
@@ -360,7 +360,7 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
         player.setScoreboard(this.scoreboardMap.get(player));
     }
 
-    public static PlayerMoveListenerNew getInstance() {
+    public static PlayerMoveListener getInstance() {
         return instance;
     }
 

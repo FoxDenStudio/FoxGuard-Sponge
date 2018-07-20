@@ -26,10 +26,12 @@
 package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.vector.Vector3d;
+import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EntityFlagCalculator;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.FGListenerUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
@@ -51,6 +53,7 @@ import static org.spongepowered.api.util.Tristate.UNDEFINED;
 
 public class InteractEntityListener implements EventListener<InteractEntityEvent> {
 
+    private static final EntityFlagCalculator ENTITY_FLAG_CALCULATOR = EntityFlagCalculator.getInstance();
     private static final boolean[] BASE_FLAG_SET = FlagSet.arrayFromFlags(ROOT, DEBUFF, INTERACT, ENTITY);
 
     @Override
@@ -91,8 +94,7 @@ public class InteractEntityListener implements EventListener<InteractEntityEvent
             if (event instanceof InteractEntityEvent.Secondary.MainHand) flags[MAIN.id] = true;
             else if (event instanceof InteractEntityEvent.Secondary.OffHand) flags[OFF.id] = true;
         }
-        Entity entity = event.getTargetEntity();
-        FGListenerUtil.applyEntityFlags(entity, flags);
+        ENTITY_FLAG_CALCULATOR.applyEntityFlags(ImmutableList.of(event.getTargetEntity()), flags);
         FlagSet flagSet = new FlagSet(flags);
 
         List<IHandler> handlerList = new ArrayList<>(handlerSet);
