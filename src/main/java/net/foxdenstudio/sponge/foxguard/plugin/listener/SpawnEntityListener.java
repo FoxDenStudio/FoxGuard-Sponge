@@ -30,6 +30,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EntityFlagCalculator;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.Entity;
@@ -54,25 +55,20 @@ import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 
 public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
 
+    private static final EntityFlagCalculator ENTITY_FLAG_CALCULATOR = EntityFlagCalculator.getInstance();
     private static final boolean[] BASE_FLAG_SET = FlagSet.arrayFromFlags(ROOT, DEBUFF, SPAWN, ENTITY);
 
     @Override
     public void handle(SpawnEntityEvent event) throws Exception {
         if (event.isCancelled()) return;
-        if (event.getEntities().isEmpty()) return;
-        for (Entity entity : event.getEntities()) {
+        List<Entity> entities = event.getEntities();
+        if (entities.isEmpty()) return;
+
+        for (Entity entity : entities) {
             if (entity instanceof Player) return;
         }
-        User user;
-        if (event.getCause().containsType(Player.class)) {
-            user = event.getCause().first(Player.class).get();
-        } else if (event.getCause().containsType(User.class)) {
-            user = event.getCause().first(User.class).get();
-        } else {
-            user = null;
-        }
 
-        Entity oneEntity = event.getEntities().get(0);
+        //Entity oneEntity = event.getEntities().get(0);
         /*if (oneEntity instanceof Arrow) {
             Optional<UUID> creator = oneEntity.getCreator(), notifier = oneEntity.getNotifier();
 
@@ -89,29 +85,10 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
             }
 
         }*/
-        boolean[] flags = BASE_FLAG_SET.clone();
-
-        if (oneEntity instanceof Living) {
-            flags[LIVING.id] = true;
-            if (oneEntity instanceof Agent) {
-                flags[AGENT.id] = true;
-                if (oneEntity instanceof Hostile) {
-                    flags[HOSTILE.id] = true;
-                } else if (oneEntity instanceof Human) {
-                    flags[HUMAN.id] = true;
-                } else {
-                    flags[PASSIVE.id] = true;
-                }
-            }
-        } else if (oneEntity instanceof Hanging) {
-            flags[HANGING.id] = true;
-        }
-
-        FlagSet flagSet = new FlagSet(flags);
 
         Set<IHandler> handlerSet = new HashSet<>();
 
-        for (Entity entity : event.getEntities()) {
+        for (Entity entity : entities) {
             Location<World> loc = entity.getLocation();
             Vector3d pos = loc.getPosition();
             World world = loc.getExtent();
@@ -122,10 +99,24 @@ public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
                             .forEach(handlerSet::add));
         }
 
-
-
         //TODO maybe throw a warning
         if(handlerSet.size() == 0) return;
+
+        User user;
+        if (event.getCause().containsType(Player.class)) {
+            user = event.getCause().first(Player.class).get();
+        } else if (event.getCause().containsType(User.class)) {
+            user = event.getCause().first(User.class).get();
+        } else {
+            user = null;
+        }
+
+        boolean[] flags = BASE_FLAG_SET.clone();
+
+        ENTITY_FLAG_CALCULATOR.applyEntityFlags(entities, flags);
+
+        FlagSet flagSet = new FlagSet(flags);
+
         ArrayList<IHandler> handlerList = new ArrayList<>(handlerSet);
         Collections.sort(handlerList);
         int currPriority = handlerList.get(0).getPriority();
