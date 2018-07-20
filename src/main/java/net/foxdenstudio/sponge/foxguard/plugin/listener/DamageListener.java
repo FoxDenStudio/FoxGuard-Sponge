@@ -26,20 +26,17 @@
 package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.vector.Vector3d;
+import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.listener.util.FGListenerUtil;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EntityFlagCalculator;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.Entity;
-import org.spongepowered.api.entity.hanging.Hanging;
-import org.spongepowered.api.entity.living.*;
+import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.entity.vehicle.Boat;
-import org.spongepowered.api.entity.vehicle.minecart.Minecart;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.entity.damage.DamageModifier;
@@ -65,6 +62,7 @@ import static org.spongepowered.api.util.Tristate.*;
  */
 public class DamageListener implements EventListener<DamageEntityEvent> {
 
+    private static final EntityFlagCalculator ENTITY_FLAG_CALCULATOR = EntityFlagCalculator.getInstance();
     private static final boolean[] BASE_FLAGS_SOURCE = FlagSet.arrayFromFlags(ROOT, DEBUFF, DAMAGE, ENTITY);
     private static final boolean[] INVINCIBLE_FLAGS = FlagSet.arrayFromFlags(ROOT, BUFF, INVINCIBLE);
     private static final FlagSet INVINCIBLE_FLAG_SET = new FlagSet(INVINCIBLE_FLAGS);
@@ -115,7 +113,9 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
 
             flags = BASE_FLAGS_SOURCE.clone();
 
-            FGListenerUtil.applyEntityFlags(entity, flags);
+            //FGListenerUtil.applyEntityFlags(entity, flags);
+            ENTITY_FLAG_CALCULATOR.applyEntityFlags(ImmutableList.of(entity), flags);
+
 
             flagSet = new FlagSet(flags);
             currPriority = handlerList.get(0).getPriority();
