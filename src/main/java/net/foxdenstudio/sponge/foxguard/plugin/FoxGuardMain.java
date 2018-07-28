@@ -62,9 +62,9 @@ import org.spongepowered.api.event.*;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.EventContext;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.entity.InteractEntityEvent;
-import org.spongepowered.api.event.entity.MoveEntityEvent;
 import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.event.game.state.*;
 import org.spongepowered.api.event.world.ExplosionEvent;
@@ -97,11 +97,12 @@ import java.util.Set;
         url = "https://github.com/FoxDenStudio/FoxGuard")
 public final class FoxGuardMain {
 
+    public final Cause pluginCause = Cause.builder().append(this).build(EventContext.empty());
+
     /**
      * FoxGuardMain instance object.
      */
     private static FoxGuardMain instanceField;
-    public final Cause pluginCause = Cause.builder().named("plugin", this).build();
 
     private Logger logger = LoggerFactory.getLogger("fox.guard");
 
@@ -244,9 +245,14 @@ public final class FoxGuardMain {
 
         fgDispatcher.register(new CommandPriority(), "priority", "prio", "level", "rank");
 
-        fgDispatcher.register(new CommandTest(), "test");
         fgDispatcher.register(new CommandLink2(true), "link2", "connect2", "attach2");
         fgDispatcher.register(new CommandLink2(false), "unlink2", "disconnect2", "detach2");
+
+        // DEBUG USE
+        //fgDispatcher.register(new CommandTest(), "test");
+        //fgDispatcher.register(DebugManager.INSTANCE, "debug");
+
+
         registerCoreCommands(fgDispatcher);
 
         game.getCommandManager().register(this, fgDispatcher, "foxguard", "foxg", "fguard", "fg");

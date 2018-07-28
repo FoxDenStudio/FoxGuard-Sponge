@@ -61,11 +61,11 @@ import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
  * Created by Fox on 1/4/2016.
  * Project: SpongeForge
  */
-public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
+public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
 
     private static final boolean[] BASE_FLAG_SET = FlagSet.arrayFromFlags(ROOT, DEBUFF, MOVE);
 
-    private static PlayerMoveListenerNew instance;
+    private static PlayerMoveListener instance;
 
     public final boolean full;
 
@@ -84,25 +84,9 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
     });
     private final Map<Player, HUDConfig> hudConfigMap = new WeakCacheMap<>((k, m) -> new HUDConfig());
 
-    public PlayerMoveListenerNew(boolean full) {
+    public PlayerMoveListener(boolean full) {
         this.full = full;
         if (instance == null) instance = this;
-    }
-
-    public static PlayerMoveListenerNew getInstance() {
-        return instance;
-    }
-
-    private static Set<Player> getPassengerStack(Entity e) {
-        Set<Player> set = new HashSet<>();
-        if (e instanceof Player) set.add((Player) e);
-        List<Entity> po = e.getPassengers();
-        if (!po.isEmpty()) {
-            for (Entity ent : po) {
-                set.addAll(getPassengerStack(ent));
-            }
-        }
-        return set;
     }
 
     @Override
@@ -150,18 +134,6 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
 
             initialRegions = manager.getRegionsAtPos(from.getExtent(), from.getPosition());
 
-<<<<<<< HEAD
-                fromRegions = manager.getRegionsAtPos(world, from);
-                fromHandlers = fromRegions.stream().flatMap(region -> region.getLinks().stream()).collect(Collectors.toSet());
-
-                manager.getRegionsInChunkAtPos(world, to).stream()
-                        .filter(region -> region.contains(to, world))
-                        .forEach(region -> {
-                            finalRegions.add(region);
-                            if (!fromRegions.remove(region)) toRegions.add(region);
-                        });
-                finalHandlers = finalRegions.stream().flatMap(region -> region.getLinks().stream()).collect(Collectors.toSet());
-=======
             boolean noToRegions = true;
             int matchedRegionsCount = 0;
             for (IRegion region : manager.getRegionsInChunkAtPos(to.getExtent(), to.getPosition())) {
@@ -181,7 +153,7 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
             if (noToRegions && initialRegions.size() == matchedRegionsCount) return;
 
             finalHandlers = finalRegions.stream()
-                    .flatMap(region -> region.getHandlers().stream())
+                    .flatMap(region -> region.getLinks().stream())
                     .collect(Collectors.toSet());
 
             for (Player player : passengerStack) {
@@ -197,9 +169,8 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
                 Set<IHandler> fromHandlers, toHandlers = new HashSet<>();
 
                 fromHandlers = initialRegions.stream()
-                        .flatMap(region -> region.getHandlers().stream())
+                        .flatMap(region -> region.getLinks().stream())
                         .collect(Collectors.toSet());
->>>>>>> api6
                 finalHandlers.forEach(handler -> {
                     if (!fromHandlers.remove(handler)) toHandlers.add(handler);
                 });
@@ -297,7 +268,7 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
 
         @Override
         public int compareTo(HandlerWrapper w) {
-            int val = handler.compareTo(w.handler);
+            int val = IHandler.PRIORITY.compare(handler, w.handler);
             return val != 0 ? val : type.compareTo(w.type);
         }
 
@@ -313,25 +284,15 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
         Scoreboard scoreboard = this.scoreboardMap.get(player);
         Objective objective = scoreboard.getObjective("foxguardhere").get();
         if (config.regions) {
-<<<<<<< HEAD
-            regions.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
-=======
             List<IRegion> regionList = new ArrayList<>(regions);
             Collections.sort(regionList, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
->>>>>>> api6
             if (config.handlers) {
                 List<IHandler> handlerList = new ArrayList<>(handlers);
                 if (config.priority) {
-<<<<<<< HEAD
-                    handlers.sort(IHandler.PRIORITY);
-                } else {
-                    handlers.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
-=======
                     // TODO redo sorting post owners
                     Collections.sort(handlerList, (o1, o2) -> o2.getPriority() - o1.getPriority());
                 } else {
                     Collections.sort(handlerList, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
->>>>>>> api6
                 }
                 objective.setDisplayName(Text.of(TextColors.GOLD, "  Regions and Handlers Here  "));
                 final int total = regionList.size() + handlerList.size();
@@ -345,7 +306,7 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
                     IRegion region = regionList.get(i);
                     // TODO redo naming post owners. Actually this whole thing will need some tweaking.
                     Score score = objective.getOrCreateScore(Text.of(FGUtil.getColorForObject(region),
-                            "  " + FGUtil.getObjectDisplayName(region, false, FGManager.SERVER_OWNER, null)));
+                            "  " + FGUtil.getObjectDisplayName(region, false, null, player)));
                     score.setScore(slot--);
                 }
                 Score handlersScore = objective.getOrCreateScore(Text.of(TextColors.GREEN, "Handlers " + (config.priority ? "by Priority " : ""),
@@ -363,7 +324,7 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
                 objective.setDisplayName(Text.of(TextColors.GOLD, "  Regions Here (" + player.getWorld().getName() + ")  "));
                 for (IRegion region : regionList) {
                     Score score = objective.getOrCreateScore(Text.of(FGUtil.getColorForObject(region),
-                            "  " + FGUtil.getObjectDisplayName(region, false, FGManager.SERVER_OWNER, null)));
+                            "  " + FGUtil.getObjectDisplayName(region, false, null, player)));
                     score.setScore(slot--);
                     if (slot <= 0) break;
                 }
@@ -380,13 +341,8 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
                 List<IHandler> handlerList = new ArrayList<>(handlers);
                 int slot = handlerList.size();
                 objective.setDisplayName(Text.of(TextColors.GOLD, "  Handlers Here  "));
-<<<<<<< HEAD
-                handlers.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
-                for (IHandler handler : handlers) {
-=======
                 Collections.sort(handlerList, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
                 for (IHandler handler : handlerList) {
->>>>>>> api6
                     Score score = objective.getOrCreateScore(Text.of(FGUtil.getColorForObject(handler),
                             "  " + handler.getShortTypeName() + " : " + handler.getName()));
                     score.setScore(slot--);
@@ -404,30 +360,20 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
         player.setScoreboard(this.scoreboardMap.get(player));
     }
 
-    private enum Direction {
-        FROM, TO
+    public static PlayerMoveListener getInstance() {
+        return instance;
     }
 
-<<<<<<< HEAD
-    public static class HUDConfig {
-        public boolean regions;
-        public boolean handlers;
-        public boolean priority;
-
-        public HUDConfig() {
-            this(true, true, false);
-=======
     private static Set<Player> getPassengerStack(Entity e) {
         Set<Player> set = new HashSet<>();
         if (e instanceof Player) set.add((Player) e);
         List<Entity> po = e.getPassengers();
         for (Entity ent : po) {
             set.addAll(getPassengerStack(ent));
->>>>>>> api6
         }
+        return set;
+    }
 
-<<<<<<< HEAD
-=======
     public static class HUDConfig {
         public boolean regions;
         public boolean handlers;
@@ -437,36 +383,10 @@ public class PlayerMoveListenerNew implements EventListener<MoveEntityEvent> {
             this(true, true, false);
         }
 
->>>>>>> api6
         public HUDConfig(boolean regions, boolean handlers, boolean priority) {
             this.regions = regions;
             this.handlers = handlers;
             this.priority = priority;
         }
     }
-<<<<<<< HEAD
-
-    private class HandlerWrapper implements Comparable<HandlerWrapper> {
-        public IHandler handler;
-        public Direction direction;
-
-        public HandlerWrapper(IHandler handler, Direction direction) {
-            this.handler = handler;
-            this.direction = direction;
-        }
-
-        @Override
-        public int compareTo(HandlerWrapper w) {
-//            int val = handler.compareTo(w.handler);
-            int val = IHandler.PRIORITY.compare(handler, w.handler);
-            return val != 0 ? val : direction.compareTo(w.direction);
-        }
-
-        @Override
-        public String toString() {
-            return this.direction + ":" + this.handler;
-        }
-    }
-=======
->>>>>>> api6
 }

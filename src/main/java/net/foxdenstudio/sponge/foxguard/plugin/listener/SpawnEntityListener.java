@@ -27,17 +27,14 @@ package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EntityFlagCalculator;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.Entity;
-import org.spongepowered.api.entity.hanging.Hanging;
-import org.spongepowered.api.entity.living.Agent;
-import org.spongepowered.api.entity.living.Hostile;
-import org.spongepowered.api.entity.living.Human;
-import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
@@ -48,31 +45,29 @@ import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 
-public class    SpawnEntityListener implements EventListener<SpawnEntityEvent> {
+public class SpawnEntityListener implements EventListener<SpawnEntityEvent> {
 
+    private static final EntityFlagCalculator ENTITY_FLAG_CALCULATOR = EntityFlagCalculator.getInstance();
     private static final boolean[] BASE_FLAG_SET = FlagSet.arrayFromFlags(ROOT, DEBUFF, SPAWN, ENTITY);
 
     @Override
     public void handle(SpawnEntityEvent event) throws Exception {
         if (event.isCancelled()) return;
-        if (event.getEntities().isEmpty()) return;
-        for (Entity entity : event.getEntities()) {
+        List<Entity> entities = event.getEntities();
+        if (entities.isEmpty()) return;
+
+        for (Entity entity : entities) {
             if (entity instanceof Player) return;
         }
-        User user;
-        if (event.getCause().containsType(Player.class)) {
-            user = event.getCause().first(Player.class).get();
-        } else if (event.getCause().containsType(User.class)) {
-            user = event.getCause().first(User.class).get();
-        } else {
-            user = null;
-        }
 
-        Entity oneEntity = event.getEntities().get(0);
+        //Entity oneEntity = event.getEntities().get(0);
         /*if (oneEntity instanceof Arrow) {
             Optional<UUID> creator = oneEntity.getCreator(), notifier = oneEntity.getNotifier();
 
@@ -89,82 +84,61 @@ public class    SpawnEntityListener implements EventListener<SpawnEntityEvent> {
             }
 
         }*/
-        boolean[] flags = BASE_FLAG_SET.clone();
-
-        if (oneEntity instanceof Living) {
-            flags[LIVING.id] = true;
-            if (oneEntity instanceof Agent) {
-                flags[AGENT.id] = true;
-                if (oneEntity instanceof Hostile) {
-                    flags[HOSTILE.id] = true;
-                } else if (oneEntity instanceof Human) {
-                    flags[HUMAN.id] = true;
-                } else {
-                    flags[PASSIVE.id] = true;
-                }
-            }
-        } else if (oneEntity instanceof Hanging) {
-            flags[HANGING.id] = true;
-        }
-
-<<<<<<< HEAD
-        Set<IHandler> handlerSet = new HashSet<>();
-=======
-        FlagSet flagSet = new FlagSet(flags);
 
         Set<IHandler> handlerSet = new HashSet<>();
 
->>>>>>> api6
-        for (Entity entity : event.getEntities()) {
+        for (Entity entity : entities) {
             Location<World> loc = entity.getLocation();
             Vector3d pos = loc.getPosition();
             World world = loc.getExtent();
             FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                     .filter(region -> region.contains(pos, world))
-<<<<<<< HEAD
                     .forEach(region -> region.getLinks().stream()
                             .filter(IGuardObject::isEnabled)
                             .forEach(handlerSet::add));
         }
-=======
-                    .forEach(region -> region.getHandlers().stream()
-                            .filter(IFGObject::isEnabled)
-                            .forEach(handlerSet::add));
-        }
 
 
-
-        //TODO maybe throw a warning
-        if(handlerSet.size() == 0) return;
-        ArrayList<IHandler> handlerList = new ArrayList<>(handlerSet);
-        Collections.sort(handlerList);
-        int currPriority = handlerList.get(0).getPriority();
->>>>>>> api6
-        Tristate flagState = Tristate.UNDEFINED;
         if (handlerSet.isEmpty()) {
-            FoxGuardMain.instance().getLogger().error("Handlers list is empty for event: " + event);
+            FoxGuardMain.instance().getLogger().warn("Handler set is empty for spawn entity listener!");
             return;
         }
+
+        User user;
+        if (event.getCause().containsType(Player.class)) {
+            user = event.getCause().first(Player.class).get();
+        } else if (event.getCause().containsType(User.class)) {
+            user = event.getCause().first(User.class).get();
+        } else {
+            user = null;
+        }
+
+        boolean[] flags = BASE_FLAG_SET.clone();
+
+        ENTITY_FLAG_CALCULATOR.applyEntityFlags(entities, flags);
+
+        FlagSet flagSet = new FlagSet(flags);
+
         List<IHandler> handlerList = new ArrayList<>(handlerSet);
         handlerList.sort(IHandler.PRIORITY);
         int currPriority = handlerList.get(0).getPriority();
+        Tristate flagState = Tristate.UNDEFINED;
+
+
         for (IHandler handler : handlerList) {
             if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
                 break;
             }
-<<<<<<< HEAD
-            EventResult result = handler.handle(user, flags, ExtraContext.of(event));
+
+            EventResult result = handler.handle(user, flagSet, ExtraContext.of(event));
             if (result != null) {
                 flagState = flagState.and(result.getState());
             } else {
                 FoxGuardMain.instance().getLogger().error("Handler \"" + handler.getName() + "\" returned null!");
             }
-=======
-            flagState = flagState.and(handler.handle(user, flagSet, ExtraContext.of(event)).getState());
->>>>>>> api6
+
             currPriority = handler.getPriority();
         }
-
 
         if (flagState == Tristate.FALSE) {
             if (user instanceof Player)

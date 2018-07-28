@@ -28,12 +28,9 @@ package net.foxdenstudio.sponge.foxguard.plugin.listener;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
-<<<<<<< HEAD
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
-=======
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
->>>>>>> api6
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.block.BlockSnapshot;
@@ -72,8 +69,8 @@ public class InteractBlockListener implements EventListener<InteractBlockEvent> 
         Set<IHandler> handlerSet = new HashSet<>();
         FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                 .filter(region -> region.contains(pos, world))
-                .forEach(region -> region.getHandlers().stream()
-                        .filter(IFGObject::isEnabled)
+                .forEach(region -> region.getLinks().stream()
+                        .filter(IGuardObject::isEnabled)
                         .forEach(handlerSet::add));
 
         if (handlerSet.isEmpty()) {
@@ -103,39 +100,22 @@ public class InteractBlockListener implements EventListener<InteractBlockEvent> 
         }
         FlagSet flagSet = new FlagSet(flags);
 
-<<<<<<< HEAD
-
-        Set<IHandler> handlerSet = new HashSet<>();
-        FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
-                .filter(region -> region.contains(pos, world))
-                .forEach(region -> region.getLinks().stream()
-                        .filter(IGuardObject::isEnabled)
-                        .filter(handler -> !handlerSet.contains(handler))
-                        .forEach(handlerSet::add));
-
-        if (handlerSet.isEmpty()) {
-            FoxGuardMain.instance().getLogger().error("Handlers list is empty for event: " + event);
-            return;
-        }
-
         List<IHandler> handlerList = new ArrayList<>(handlerSet);
         handlerList.sort(IHandler.PRIORITY);
-=======
-        List<IHandler> handlerList = new ArrayList<>(handlerSet);
-        Collections.sort(handlerList);
->>>>>>> api6
+
         int currPriority = handlerList.get(0).getPriority();
         Tristate flagState = UNDEFINED;
         for (IHandler handler : handlerList) {
             if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                 break;
             }
-<<<<<<< HEAD
-            flagState = flagState.and(handler.handle(user, flags, ExtraContext.of(event)).getState());
-=======
-            //flagState = flagState.and(handler.handle(user, typeFlag, Optional.of(event)).getState());
-            flagState = flagState.and(handler.handle(user, flagSet, ExtraContext.of(event)).getState());
->>>>>>> api6
+
+            EventResult result = handler.handle(user, flagSet, ExtraContext.of(event));
+            if (result != null) {
+                flagState = flagState.and(result.getState());
+            } else {
+                FoxGuardMain.instance().getLogger().error("Handler \"" + handler.getName() + "\" of type \"" + handler.getUniqueTypeString() + "\" returned null!");
+            }
             currPriority = handler.getPriority();
         }
         if (flagState == FALSE) {
