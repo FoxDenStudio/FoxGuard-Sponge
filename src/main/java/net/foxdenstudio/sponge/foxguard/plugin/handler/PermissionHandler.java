@@ -32,7 +32,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.PermissionEntry;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
@@ -67,8 +67,9 @@ import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 public class PermissionHandler extends HandlerBase {
 
     private final List<PermissionEntry> entries;
-    private final Map<FlagBitSet, List<String>> permCache;
+
     private String defaultPermission;
+    private final Map<FlagSet, List<String>> permCache;
 
     public PermissionHandler(HandlerData data) {
         this(data,
@@ -80,8 +81,8 @@ public class PermissionHandler extends HandlerBase {
         this.entries = entries;
         this.defaultPermission = defaultPermission;
         this.permCache = new CacheMap<>((k, m) -> {
-            if (k instanceof FlagBitSet) {
-                FlagBitSet flags = (FlagBitSet) k;
+            if (k instanceof FlagSet) {
+                FlagSet flags = (FlagSet) k;
                 List<String> perms = new ArrayList<>();
                 final String prefix = "foxguard.handler." + this.name;
                 for (PermissionEntry entry : entries) {
@@ -112,7 +113,7 @@ public class PermissionHandler extends HandlerBase {
     }
 
     @Override
-    public EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra) {
+    public EventResult handle(@Nullable User user, FlagSet flags, ExtraContext extra) {
         if (user == null) return EventResult.pass();
         for (String permission : this.permCache.get(flags)) {
             if (user.hasPermission(permission + ".allow")) return EventResult.allow();

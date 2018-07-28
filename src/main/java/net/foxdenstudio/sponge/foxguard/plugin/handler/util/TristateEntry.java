@@ -37,6 +37,7 @@ import org.spongepowered.api.util.Tristate;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -158,5 +159,17 @@ public class TristateEntry extends Entry {
 
             return new TristateEntry(set, tristate);
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!super.equals(o)) return false;
+        TristateEntry that = (TristateEntry) o;
+        return tristate == that.tristate;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), tristate);
     }
 }

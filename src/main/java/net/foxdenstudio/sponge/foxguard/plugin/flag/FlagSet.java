@@ -27,62 +27,63 @@ package net.foxdenstudio.sponge.foxguard.plugin.flag;
 
 import com.google.common.collect.ImmutableSet;
 
-import java.util.BitSet;
+import java.util.Arrays;
 import java.util.Set;
 
 /**
  * Created by Fox on 5/25/2016.
  */
-public class FlagBitSet extends BitSet {
+public class FlagSet {
 
-    public FlagBitSet() {
-        super(FlagRegistry.getInstance().getNumFlags());
+    private static final FlagRegistry FLAG_REGISTRY = FlagRegistry.getInstance();
+
+    private final boolean[] flags;
+    private int hash;
+
+    public FlagSet(boolean[] flags) {
+        this.flags = flags;
+        this.hash = Arrays.hashCode(flags);
     }
 
-    public FlagBitSet(Flag... flags) {
-        this();
+    public static boolean[] arrayFromFlags(Flag... flags) {
+        boolean[] array = new boolean[FLAG_REGISTRY.getNumFlags()];
         for (Flag flag : flags) {
-            this.set(flag.id);
+            array[flag.id] = true;
         }
-    }
-
-    public FlagBitSet(Set<Flag> flags) {
-        this();
-        for (Flag flag : flags) {
-            this.set(flag.id);
-        }
+        return array;
     }
 
     public boolean get(Flag flag) {
-        return this.get(flag.id);
+        return this.flags[flag.id];
     }
 
-    public void set(Flag flag) {
-        this.set(flag.id);
-    }
-
-    public void set(Flag flag, boolean value) {
-        this.set(flag.id, value);
+    public boolean get(int flag) {
+        return this.flags[flag];
     }
 
     public Set<Flag> toFlagSet() {
         ImmutableSet.Builder<Flag> builder = ImmutableSet.builder();
-        FlagRegistry registry = FlagRegistry.getInstance();
-        int index = -1;
-        while ((index = this.nextSetBit(index + 1)) >= 0) {
-            builder.add(registry.getFlag(index));
+        for (int i = 0; i < flags.length; i++) {
+            if (this.flags[i]) builder.add(FLAG_REGISTRY.getFlag(i));
         }
         return builder.build();
     }
 
-    boolean contains(BitSet set) {
-        FlagBitSet temp = (FlagBitSet) clone();
-        temp.or(set);
-        return this.equals(temp);
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass() || this.hash != o.hashCode()) return false;
+        FlagSet flagSet = (FlagSet) o;
+        return Arrays.equals(flags, flagSet.flags);
     }
 
     @Override
-    public FlagBitSet clone() {
-        return (FlagBitSet) super.clone();
+    public int hashCode() {
+        return hash;
+    }
+
+    @Override
+    protected FlagSet clone() {
+        return new FlagSet(this.flags.clone());
     }
 }

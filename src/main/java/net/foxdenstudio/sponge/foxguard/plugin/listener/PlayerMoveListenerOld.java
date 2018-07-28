@@ -31,7 +31,7 @@ import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
 import net.foxdenstudio.sponge.foxcore.plugin.command.CommandHUD;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.event.FGUpdateEvent;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
@@ -55,6 +55,7 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
@@ -63,13 +64,16 @@ import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
  * Created by Fox on 1/4/2016.
  * Project: SpongeForge
  */
-public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
+public class PlayerMoveListenerOld implements EventListener<MoveEntityEvent> {
 
-    private static final FlagBitSet ENTER_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, MOVE, ENTER);
-    private static final FlagBitSet EXIT_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, MOVE, EXIT);
+    private static final boolean[] ENTER_FLAGS = FlagSet.arrayFromFlags(ROOT, DEBUFF, MOVE, ENTER);
+    private static final FlagSet ENTER_FLAG_SET = new FlagSet(ENTER_FLAGS);
+    private static final boolean[] EXIT_FLAGS = FlagSet.arrayFromFlags(ROOT, DEBUFF, MOVE, EXIT);
+    private static final FlagSet EXIT_FLAG_SET = new FlagSet(EXIT_FLAGS);
+
     private static final LastWrapper EMPTY_LAST_WRAPPER = new LastWrapper(null, null);
 
-    private static PlayerMoveListener instance;
+    private static PlayerMoveListenerOld instance;
 
     public final boolean full;
 
@@ -86,12 +90,12 @@ public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
     });
     private final Map<Player, HUDConfig> hudConfigMap = new CacheMap<>((k, m) -> new HUDConfig());
 
-    public PlayerMoveListener(boolean full) {
+    public PlayerMoveListenerOld(boolean full) {
         this.full = full;
         if (instance == null) instance = this;
     }
 
-    public static PlayerMoveListener getInstance() {
+    public static PlayerMoveListenerOld getInstance() {
         return instance;
     }
 
@@ -108,7 +112,7 @@ public class PlayerMoveListener implements EventListener<MoveEntityEvent> {
     }
 
     @Override
-    public void handle(MoveEntityEvent event) throws Exception {
+    public void handle(@Nonnull MoveEntityEvent event) throws Exception {
 
         if (event.isCancelled() || event.getTargetEntity().getVehicle().isPresent()) return;
 

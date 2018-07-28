@@ -28,16 +28,13 @@ package net.foxdenstudio.sponge.foxguard.plugin.listener;
 import com.flowpowered.math.vector.Vector3d;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.FGListenerUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.Entity;
-import org.spongepowered.api.entity.hanging.Hanging;
-import org.spongepowered.api.entity.living.Agent;
-import org.spongepowered.api.entity.living.Hostile;
-import org.spongepowered.api.entity.living.Human;
 import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.EventListener;
@@ -52,7 +49,11 @@ import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
-import java.util.*;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 import static org.spongepowered.api.util.Tristate.*;
@@ -62,39 +63,20 @@ import static org.spongepowered.api.util.Tristate.*;
  */
 public class DamageListener implements EventListener<DamageEntityEvent> {
 
-    private static final FlagBitSet BASE_FLAG_SET_SOURCE = new FlagBitSet(ROOT, DEBUFF, DAMAGE, ENTITY);
-    private static final FlagBitSet INVINCIBLE_FLAG_SET = new FlagBitSet(ROOT, BUFF, INVINCIBLE);
-    private static final FlagBitSet UNDYING_FLAG_SET = new FlagBitSet(ROOT, BUFF, INVINCIBLE, UNDYING);
+    private static final boolean[] BASE_FLAGS_SOURCE = FlagSet.arrayFromFlags(ROOT, DEBUFF, DAMAGE, ENTITY);
+    private static final boolean[] INVINCIBLE_FLAGS = FlagSet.arrayFromFlags(ROOT, BUFF, INVINCIBLE);
+    private static final FlagSet INVINCIBLE_FLAG_SET = new FlagSet(INVINCIBLE_FLAGS);
+    private static final boolean[] UNDYING_FLAGS = FlagSet.arrayFromFlags(ROOT, BUFF, INVINCIBLE, UNDYING);
+    private static final FlagSet UNDYING_FLAG_SET = new FlagSet(UNDYING_FLAGS);
 
+    @SuppressWarnings("Duplicates")
     @Override
     public void handle(DamageEntityEvent event) throws Exception {
         if (event.isCancelled()) return;
-        Player player;
-        player = getPlayerCause(event.getCause());
 
         World world = event.getTargetEntity().getWorld();
         Vector3d pos = event.getTargetEntity().getLocation().getPosition();
         Entity entity = event.getTargetEntity();
-        FlagBitSet flags = BASE_FLAG_SET_SOURCE.clone();
-
-        if (entity instanceof Living) {
-            flags.set(LIVING);
-            if (entity instanceof Agent) {
-                flags.set(MOB);
-                if (entity instanceof Hostile) {
-                    flags.set(HOSTILE);
-                } else if (entity instanceof Human) {
-                    flags.set(HUMAN);
-                } else {
-                    flags.set(PASSIVE);
-                }
-            } else if (entity instanceof Player) {
-                flags.set(PLAYER);
-            }
-        } else if (entity instanceof Hanging) {
-            flags.set(HANGING);
-        }
-
 
         Set<IHandler> handlerSet = new HashSet<>();
         FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
@@ -119,7 +101,7 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
                 if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                     break;
                 }
-                EventResult result = handler.handle(player, INVINCIBLE_FLAG_SET, ExtraContext.of(event));
+                EventResult result = handler.handle((Player) entity, INVINCIBLE_FLAG_SET, ExtraContext.of(event));
                 if (result != null) {
                     flagState = flagState.and(result.getState());
                 } else {
@@ -133,14 +115,24 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
                 flagState = FALSE;
             }
         }
+        boolean[] flags = null;
+        FlagSet flagSet;
+        Player player = null;
         if (!invincible) {
+            player = getPlayerCause(event.getCause());
+
+            flags = BASE_FLAGS_SOURCE.clone();
+
+            FGListenerUtil.applyEntityFlags(entity, flags);
+
+            flagSet = new FlagSet(flags);
             currPriority = handlerList.get(0).getPriority();
             flagState = UNDEFINED;
             for (IHandler handler : handlerList) {
                 if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                     break;
                 }
-                EventResult result = handler.handle(player, flags, ExtraContext.of(event));
+                EventResult result = handler.handle(player, flagSet, ExtraContext.of(event));
                 if (result != null) {
                     flagState = flagState.and(result.getState());
                 } else {
@@ -151,13 +143,12 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
 //            if(flagState == UNDEFINED) flagState = TRUE;
         }
         if (flagState == FALSE) {
-            if (player != null && player.isOnline() && !invincible) {
+            if (player != null && player.isOnline()) {
                 player.sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));
             }
             event.setCancelled(true);
         } else {
             if (event.willCauseDeath()) {
-                flags.set(KILL);
                 flagState = UNDEFINED;
                 invincible = false;
                 if (entity instanceof Player) {
@@ -181,13 +172,17 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
                     }
                 }
                 if (!invincible) {
+                    flags = flags.clone();
+                    flags[KILL.id] = true;
+                    flagSet = new FlagSet(flags);
+
                     currPriority = handlerList.get(0).getPriority();
                     flagState = UNDEFINED;
                     for (IHandler handler : handlerList) {
                         if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                             break;
                         }
-                        EventResult result = handler.handle(player, flags, ExtraContext.of(event));
+                        EventResult result = handler.handle(player, flagSet, ExtraContext.of(event));
                         if (result != null) {
                             flagState = flagState.and(result.getState());
                         } else {
@@ -211,6 +206,7 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
         }
     }
 
+    @Nullable
     private Player getPlayerCause(Cause cause) {
         List<EntityDamageSource> sources = cause.allOf(EntityDamageSource.class);
         for (EntityDamageSource source : sources) {

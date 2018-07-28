@@ -32,8 +32,11 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandDispatcher;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.plugin.command.*;
+import net.foxdenstudio.sponge.foxguard.plugin.config.FGConfigManager;
+import net.foxdenstudio.sponge.foxguard.plugin.config.ListenerModule;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.LogicController;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.Flags;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.*;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.*;
 import net.foxdenstudio.sponge.foxguard.plugin.misc.FGContextCalculator;
@@ -49,14 +52,13 @@ import net.foxdenstudio.sponge.foxguard.plugin.state.factory.HandlersStateFieldF
 import net.foxdenstudio.sponge.foxguard.plugin.state.factory.RegionsStateFieldFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.storage.FGStorageManagerNew;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandMapping;
 import org.spongepowered.api.config.ConfigDir;
-import org.spongepowered.api.event.EventManager;
-import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.Order;
+import org.spongepowered.api.event.*;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.cause.Cause;
@@ -78,6 +80,7 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.World;
 
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -90,7 +93,7 @@ import java.util.Set;
                 @Dependency(id = "foxcore")
         },
         description = "A world protection plugin built for SpongeAPI. Requires FoxCore.",
-        authors = {"gravityfox"},
+        authors = {"gravityfox", "d4rkfly3r", "vectrix", "Waterpicker"},
         url = "https://github.com/FoxDenStudio/FoxGuard")
 public final class FoxGuardMain {
 
@@ -100,8 +103,7 @@ public final class FoxGuardMain {
     private static FoxGuardMain instanceField;
     public final Cause pluginCause = Cause.builder().named("plugin", this).build();
 
-    @Inject
-    private Logger logger;
+    private Logger logger = LoggerFactory.getLogger("fox.guard");
 
     @Inject
     private Game game;
@@ -123,6 +125,10 @@ public final class FoxGuardMain {
     private EconomyService economyService = null;
 
     private boolean loaded = false;
+
+    private boolean statusOK = true;
+    private boolean configOK = true;
+    private boolean managerOk = true;
 
     private FCCommandDispatcher fgDispatcher;
 
@@ -148,32 +154,73 @@ public final class FoxGuardMain {
     public void preInit(GamePreInitializationEvent event) {
         logger.info("Beginning FoxGuard initialization");
         logger.info("Version: " + container.getVersion().orElse("Unknown"));
-        logger.info("Loading configs");
-        new FGConfigManager();
-        logger.info("Saving configs");
-        FGConfigManager.getInstance().save();
 
-        logger.info("Initializing FoxGuard manager instance");
-        FGManager.init();
+        try {
+            logger.info("Loading configs");
+            FGConfigManager.getInstance();
+        } catch (Exception e) {
+            logger.error("Error while loading configs! Using defaults.", e);
+            configOK = false;
+        }
+        if (configOK) {
+            try {
+                logger.info("Saving configs");
+                FGConfigManager.getInstance().save();
+            } catch (Exception e) {
+                logger.error("Error while saving configs", e);
+                configOK = false;
+            }
+        } else {
+            logger.warn("Skipping config re-save due to failed config loading");
+        }
 
+        try {
+            logger.info("Initializing FoxGuard manager instance");
+            FGManager.init();
+        } catch (Exception e) {
+            initializationError("Error initializing FoxGuard manager instance", e);
+            managerOk = false;
+        }
+
+        try {
+            logger.info("Initializing FoxGuard flags");
+            //noinspection ResultOfMethodCallIgnored
+            Flags.ROOT.getClass();
+        } catch (Exception e) {
+            initializationError("Error initializing FoxGuard flags", e);
+        }
 //        logger.info("Starting MCStats metrics extension");
 //        stats.start();
     }
 
     @Listener
     public void init(GameInitializationEvent event) {
-        logger.info("Registering regions state field");
-        FCStateManager.instance().registerStateFactory(new RegionsStateFieldFactory(), RegionsStateField.ID, RegionsStateField.ID, Aliases.REGIONS_ALIASES);
-        logger.info("Registering handlers state field");
-        FCStateManager.instance().registerStateFactory(new HandlersStateFieldFactory(), HandlersStateField.ID, HandlersStateField.ID, Aliases.HANDLERS_ALIASES);
-        logger.info("Registering controllers state field");
-        FCStateManager.instance().registerStateFactory(new ControllersStateFieldFactory(), ControllersStateField.ID, ControllersStateField.ID, Aliases.CONTROLLERS_ALIASES);
-        logger.info("Registering FoxGuard object factories");
-        registerFactories();
-        logger.info("Getting User Storage");
-        userStorage = game.getServiceManager().provide(UserStorageService.class).get();
-        logger.info("Registering event listeners");
-        registerListeners();
+        if (managerOk) {
+            logger.info("Registering regions state field");
+            FCStateManager.instance().registerStateFactory(new RegionsStateFieldFactory(), RegionsStateField.ID, RegionsStateField.ID, Aliases.REGIONS_ALIASES);
+            logger.info("Registering handlers state field");
+            FCStateManager.instance().registerStateFactory(new HandlersStateFieldFactory(), HandlersStateField.ID, HandlersStateField.ID, Aliases.HANDLERS_ALIASES);
+            logger.info("Registering controllers state field");
+            FCStateManager.instance().registerStateFactory(new ControllersStateFieldFactory(), ControllersStateField.ID, ControllersStateField.ID, Aliases.CONTROLLERS_ALIASES);
+            logger.info("Registering FoxGuard object factories");
+            registerFactories();
+        } else {
+            logger.warn("Skipping registration of state fields and object factories due to manager initialization failure");
+        }
+
+        try {
+            logger.info("Getting User Storage");
+            userStorage = game.getServiceManager().provide(UserStorageService.class).get();
+        } catch (Exception e) {
+            initializationError("Error retrieving User Storage Service from Sponge", e);
+        }
+
+        try {
+            logger.info("Registering event listeners");
+            registerEventListeners();
+        } catch (Exception e) {
+            logger.error("Error registering event Listeners", e);
+        }
     }
 
     @Listener
@@ -210,7 +257,6 @@ public final class FoxGuardMain {
         Optional<EconomyService> economyServiceOptional = Sponge.getGame().getServiceManager().provide(EconomyService.class);
         if (economyServiceOptional.isPresent()) {
             economyService = economyServiceOptional.get();
-
         }
     }
 
@@ -224,46 +270,56 @@ public final class FoxGuardMain {
 
     @Listener
     public void serverStopping(GameStoppingServerEvent event) {
-        //FGStorageManager.getInstance().saveRegions();
-        //FGStorageManager.getInstance().saveHandlers();
-        FGStorageManagerNew storage = FGStorageManagerNew.getInstance();
-        storage.saveRegionIndex();
-        storage.saveHandlerIndex();
+        if (managerOk) {
+            FGStorageManagerNew storage = FGStorageManagerNew.getInstance();
+            storage.saveRegionIndex();
+            storage.saveHandlerIndex();
 
-        FGManager manager = FGManager.getInstance();
-        logger.info("Saving regions");
-        storage.saveObjects(manager.getRegions());
-        logger.info("Saving handlers");
-        storage.saveObjects(manager.getHandlers());
+            FGManager manager = FGManager.getInstance();
+            logger.info("Saving regions");
+            storage.saveObjects(manager.getRegions());
+            logger.info("Saving handlers");
+            storage.saveObjects(manager.getHandlers());
 
-        logger.info("Saving configs");
-        FGConfigManager.getInstance().save();
-        FGManager.getInstance().unloadServer();
+            logger.info("Saving configs");
+            FGConfigManager.getInstance().save();
+            FGManager.getInstance().unloadServer();
+        } else {
+            logger.warn("Skipping server-stop saving due to manager initialization failure");
+        }
     }
 
     @Listener
     public void worldUnload(UnloadWorldEvent event) {
-        World world = event.getTargetWorld();
-        logger.info("Unloading world \"" + world.getName() + "\"");
-        FGStorageManagerNew storage = FGStorageManagerNew.getInstance();
-        storage.saveWorldRegionIndex(event.getTargetWorld());
+        if (managerOk) {
+            World world = event.getTargetWorld();
+            logger.info("Unloading world \"" + world.getName() + "\"");
+            FGStorageManagerNew storage = FGStorageManagerNew.getInstance();
+            storage.saveWorldRegionIndex(event.getTargetWorld());
 
-        FGManager manager = FGManager.getInstance();
-        logger.info("Saving worldregions for world: " + world.getName());
-        storage.saveObjects(manager.getWorldRegions(world));
-        manager.unloadWorld(event.getTargetWorld());
+            FGManager manager = FGManager.getInstance();
+            logger.info("Saving worldregions for world: " + world.getName());
+            storage.saveObjects(manager.getWorldRegions(world));
+            manager.unloadWorld(event.getTargetWorld());
+        } else {
+            logger.warn("Skipping world-unload saving due to manager initialization failure");
+        }
     }
 
     @Listener
     public void worldLoad(LoadWorldEvent event) {
-        World world = event.getTargetWorld();
-        FGStorageManagerNew storage = FGStorageManagerNew.getInstance();
-        storage.loadServer();
+        if (managerOk) {
+            World world = event.getTargetWorld();
+            FGStorageManagerNew storage = FGStorageManagerNew.getInstance();
+            storage.loadServer();
 
-        logger.info("Initializing global worldregion for world: \"" + world.getName() + "\"");
-        FGManager.getInstance().initWorld(world);
+            logger.info("Initializing global worldregion for world: \"" + world.getName() + "\"");
+            FGManager.getInstance().initWorld(world);
 
-        storage.loadWorld(world);
+            storage.loadWorld(world);
+        } else {
+            logger.warn("Skipping world object loading due to manager initialization failure.");
+        }
     }
 
     private void registerCoreCommands(FCCommandDispatcher dispatcher) {
@@ -273,7 +329,8 @@ public final class FoxGuardMain {
         builder.append(Text.of("Author: gravityfox\n"));
 
         for (CommandMapping mapping : FoxCoreMain.instance().getFCDispatcher().getCommands()) {
-            if (mapping.getCallable() instanceof net.foxdenstudio.sponge.foxcore.plugin.command.CommandTest) continue;
+            if (mapping.getCallable() instanceof net.foxdenstudio.sponge.foxcore.plugin.command.CommandTest)
+                continue;
             Set<String> secondary = new HashSet<>(mapping.getAllAliases());
             secondary.remove(mapping.getPrimaryAlias());
             CommandCallable callable = mapping.getCallable();
@@ -302,19 +359,81 @@ public final class FoxGuardMain {
     /**
      * A private method that registers the Listener class and the corresponding event class.
      */
-    private void registerListeners() {
-        eventManager.registerListeners(this, FlagRegistry.getInstance());
-        eventManager.registerListener(this, ChangeBlockEvent.class, Order.LATE, new BlockChangeListener());
-        eventManager.registerListener(this, InteractBlockEvent.class, Order.LATE, new InteractBlockListener());
-        eventManager.registerListener(this, InteractEntityEvent.class, Order.LATE, new InteractEntityListener());
-        eventManager.registerListener(this, SpawnEntityEvent.class, Order.LATE, new SpawnEntityListener());
-        if (FGConfigManager.getInstance().getModules().get(FGConfigManager.Module.MOVEMENT)) {
-            PlayerMoveListener pml = new PlayerMoveListener(true);
-            eventManager.registerListener(this, MoveEntityEvent.class, pml);
-            eventManager.registerListeners(this, pml.new Listeners());
+    private void registerEventListeners() {
+        FGConfigManager configManager = FGConfigManager.getInstance();
+        registerListeners(FlagRegistry.getInstance());
+        registerListener(ChangeBlockEvent.class, Order.LATE, new BlockChangeListener());
+        registerListener(InteractBlockEvent.class, Order.LATE, new InteractBlockListener());
+        registerListener(InteractEntityEvent.class, Order.LATE, new InteractEntityListener());
+        registerListener(SpawnEntityEvent.class, Order.LATE, new SpawnEntityListener());
+        configManager.setupModule(ListenerModule.MOVEMENT);
+        registerListener(ExplosionEvent.class, Order.LATE, new ExplosionListener());
+        registerListener(DamageEntityEvent.class, Order.LATE, new DamageListener());
+    }
+
+    public void registerListeners(Object obj) {
+        try {
+            eventManager.registerListeners(this, obj);
+        } catch (Exception e) {
+            logger.error("Failed to register listener: " + obj.toString());
+            logger.error("Of class: " + obj.getClass());
+            logger.error("This Listener will not respond to events", e);
         }
-        eventManager.registerListener(this, ExplosionEvent.class, Order.LATE, new ExplosionListener());
-        eventManager.registerListener(this, DamageEntityEvent.class, Order.LATE, new DamageListener());
+    }
+
+    public <T extends Event> void registerListener(Class<T> eventClass, EventListener<? super T> listener) {
+        try {
+            eventManager.registerListener(this, eventClass, listener);
+        } catch (Exception e) {
+            logger.error("Failed to register listener: " + listener.toString());
+            logger.error("With the event class: " + eventClass.getName());
+            logger.error("This Listener will not respond to events", e);
+        }
+    }
+
+    public <T extends Event> void registerListener(Class<T> eventClass, Order order, EventListener<? super T> listener) {
+        try {
+            eventManager.registerListener(this, eventClass, order, listener);
+        } catch (Exception e) {
+            logger.error("Failed to register listener: " + listener.toString());
+            logger.error("With the event class: " + eventClass.getName());
+            logger.error("This Listener will not respond to events", e);
+        }
+    }
+
+    private void initializationError(@Nullable String message, @Nullable Throwable throwable) {
+        this.statusOK = false;
+        logger.error("-------------------------------------------------------------------------------------------");
+        logger.error("------------------------------ FOXGUARD INITIALIZATION ERROR ------------------------------");
+        logger.error("-------------------------------------------------------------------------------------------");
+        logger.error("");
+        if (throwable == null && (message == null || message.isEmpty())) {
+            logger.error("FoxGuard has encountered an unknown error while trying to initialize!");
+        } else {
+            logger.error("FoxGuard has encountered an error while trying to initialize!");
+            logger.error("");
+
+            if (message != null && !message.isEmpty()) {
+                logger.error("Message: " + message);
+                logger.error("");
+
+            }
+            if (throwable != null) {
+                logger.error("Stacktrace:", throwable);
+                logger.error("");
+
+            }
+        }
+        logger.error("-------------------------------------------------------------------------------------------");
+        logger.error("");
+        logger.error("FOXGUARD WILL NOT BE ABLE TO INITIALIZE COMPLETELY FROM THIS POINT ONWARD!");
+        logger.error("ANY ERRORS OR EXCEPTIONS BY FOXGUARD AFTER THIS POINT ARE PROBABLY BECAUSE OF THIS ERROR!");
+        logger.error("WHEN REPORTING BUGS, PLEASE REPORT THESE ERRORS FIRST, AS THEY ARE THE MOST IMPORTANT!");
+        logger.error("");
+        logger.error("-------------------------------------------------------------------------------------------");
+        logger.error("-------------------------------------------------------------------------------------------");
+        logger.error("-------------------------------------------------------------------------------------------");
+
     }
 
     /**
@@ -345,9 +464,11 @@ public final class FoxGuardMain {
     }
 
     /**
-     * Will return true or false depending on if the plugin has loaded properly or not.
+     * Whether or not server (not world specific) data has been loaded yet.
+     * Is true if the {@code GameStartingServerEvent} has fired, and the server data has been loaded.
+     * Is primarily used to indicate to post-start world loading code to do handler linking.
      *
-     * @return Depending on the loaded variable
+     * @return Whether server data has been loaded
      */
     public boolean isLoaded() {
         return loaded;

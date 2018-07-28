@@ -41,7 +41,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Operation;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.TristateEntry;
@@ -105,15 +105,18 @@ public class BasicHandler extends HandlerBase {
     private final Group defaultGroup;
     private final List<TristateEntry> defaultPermissions;
 
-    private final Map<Group, Map<FlagBitSet, Tristate>> groupPermCache;
-    private final Map<FlagBitSet, Tristate> defaultPermCache;
-    private final Map<Set<Group>, Map<FlagBitSet, Tristate>> groupSetPermCache;
+    private final Map<Group, Map<FlagSet, Tristate>> groupPermCache;
+    private final Map<FlagSet, Tristate> defaultPermCache;
+    private final Map<Set<Group>, Map<FlagSet, Tristate>> groupSetPermCache;
     private final Map<UUID, Set<Group>> userGroupCache;
-    private final Map<UUID, Map<FlagBitSet, Tristate>> userPermCache;
-    private final Map<FlagBitSet, Tristate> passivePermCache;
+
+    private final Map<UUID, Map<FlagSet, Tristate>> userPermCache;
+
     private PassiveSetting passiveSetting = PassiveSetting.PASSTHROUGH;
     private Group passiveGroup;
-    private Map<FlagBitSet, Tristate> passiveGroupCacheRef;
+    private Map<FlagSet, Tristate> passiveGroupCacheRef;
+    private final Map<FlagSet, Tristate> passivePermCache;
+
 
     public BasicHandler(String name) {
         this(new HandlerData()
@@ -145,9 +148,10 @@ public class BasicHandler extends HandlerBase {
         this.groupPermCache = new CacheMap<>((k1, m1) -> {
             if (k1 instanceof Group) {
                 List<TristateEntry> entries = BasicHandler.this.groupPermissions.get(k1);
-                Map<FlagBitSet, Tristate> map = new CacheMap<>((k2, m2) -> {
-                    if (k2 instanceof FlagBitSet) {
-                        FlagBitSet flags = (FlagBitSet) k2;
+
+                Map<FlagSet, Tristate> map = new CacheMap<>((k2, m2) -> {
+                    if (k2 instanceof FlagSet) {
+                        FlagSet flags = (FlagSet) k2;
                         Tristate state = UNDEFINED;
                         for (TristateEntry entry : entries) {
                             if (flags.toFlagSet().containsAll(entry.set)) {
@@ -164,8 +168,8 @@ public class BasicHandler extends HandlerBase {
             } else return null;
         });
         this.defaultPermCache = new CacheMap<>((k, m) -> {
-            if (k instanceof FlagBitSet) {
-                FlagBitSet flags = (FlagBitSet) k;
+            if (k instanceof FlagSet) {
+                FlagSet flags = (FlagSet) k;
                 Tristate state = Tristate.UNDEFINED;
                 for (TristateEntry entry : BasicHandler.this.defaultPermissions) {
                     if (flags.toFlagSet().containsAll(entry.set)) {
@@ -185,10 +189,10 @@ public class BasicHandler extends HandlerBase {
                 Set<Group> set = (Set<Group>) k1;
                 List<Group> list = new ArrayList<>(set);
                 list.sort(Comparator.comparingInt(this.groups::indexOf));
-                Map<FlagBitSet, Tristate> map = new CacheMap<>((k2, m2) -> {
-                    if (k2 instanceof FlagBitSet) {
-                        Tristate state = null;
-                        FlagBitSet flags = (FlagBitSet) k2;
+                Map<FlagSet, Tristate> map = new CacheMap<>((k2, m2) -> {
+                    if (k2 instanceof FlagSet) {
+                        Tristate state = UNDEFINED;
+                        FlagSet flags = (FlagSet) k2;
                         for (Group group : list) {
                             state = this.groupPermCache.get(group).get(flags);
                             if (state != null) break;
@@ -214,7 +218,7 @@ public class BasicHandler extends HandlerBase {
             if (k instanceof UUID) {
                 UUID user = ((UUID) k);
                 Set<Group> userGroups = this.userGroupCache.get(user);
-                Map<FlagBitSet, Tristate> permCache;
+                Map<FlagSet, Tristate> permCache;
                 if (userGroups.size() == 0)
                     permCache = this.defaultPermCache;
                 else {
@@ -225,8 +229,8 @@ public class BasicHandler extends HandlerBase {
             } else return null;
         });
         this.passivePermCache = new CacheMap<>((k, m) -> {
-            if (k instanceof FlagBitSet) {
-                FlagBitSet flags = (FlagBitSet) k;
+            if (k instanceof FlagSet) {
+                FlagSet flags = (FlagSet) k;
                 Tristate state = Tristate.UNDEFINED;
                 switch (passiveSetting) {
                     case ALLOW:
@@ -1042,7 +1046,7 @@ public class BasicHandler extends HandlerBase {
     }
 
     @Override
-    public EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra) {
+    public EventResult handle(@Nullable User user, FlagSet flags, ExtraContext extra) {
         if (user == null) return EventResult.of(this.passivePermCache.get(flags));
         else return EventResult.of(this.userPermCache.get(user.getUniqueId()).get(flags));
     }
@@ -1293,7 +1297,7 @@ public class BasicHandler extends HandlerBase {
             group.users.forEach(this.userGroupCache::remove);
             group.users.forEach(this.userPermCache::remove);
             Set<Set<Group>> groupSuperSet = new HashSet<>();
-            for (Map.Entry<Set<Group>, Map<FlagBitSet, Tristate>> entry : this.groupSetPermCache.entrySet()) {
+            for (Map.Entry<Set<Group>, Map<FlagSet, Tristate>> entry : this.groupSetPermCache.entrySet()) {
                 Set<Group> key = entry.getKey();
                 if (key.contains(group)) groupSuperSet.add(key);
             }
@@ -1323,7 +1327,7 @@ public class BasicHandler extends HandlerBase {
             this.groups.add(index, group);
             group.users.forEach(this.userPermCache::remove);
             Set<Set<Group>> groupSuperSet = new HashSet<>();
-            for (Map.Entry<Set<Group>, Map<FlagBitSet, Tristate>> entry : this.groupSetPermCache.entrySet()) {
+            for (Map.Entry<Set<Group>, Map<FlagSet, Tristate>> entry : this.groupSetPermCache.entrySet()) {
                 Set<Group> key = entry.getKey();
                 if (key.contains(group)) groupSuperSet.add(key);
             }
@@ -1515,7 +1519,7 @@ public class BasicHandler extends HandlerBase {
             this.groupPermCache.get(group).clear();
             group.users.forEach(this.userPermCache::remove);
             Set<Set<Group>> groupSuperSet = new HashSet<>();
-            for (Map.Entry<Set<Group>, Map<FlagBitSet, Tristate>> cacheEntry : this.groupSetPermCache.entrySet()) {
+            for (Map.Entry<Set<Group>, Map<FlagSet, Tristate>> cacheEntry : this.groupSetPermCache.entrySet()) {
                 Set<Group> key = cacheEntry.getKey();
                 if (key.contains(group)) groupSuperSet.add(key);
             }

@@ -34,9 +34,9 @@ import com.google.gson.stream.JsonWriter;
 import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
 import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.util.IWorldBound;
-import net.foxdenstudio.sponge.foxguard.plugin.FGConfigManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
+import net.foxdenstudio.sponge.foxguard.plugin.config.FGConfigManager;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.HandlerData;
@@ -632,7 +632,7 @@ public class FGStorageManagerNew {
             return fgDirectory;
         }
         Path path = Sponge.getGame().getSavesDirectory();
-        if (FGConfigManager.getInstance().saveInWorldFolder()) {
+        if (FGConfigManager.getInstance().saveInWorldDirectory()) {
             path = path.resolve(Sponge.getServer().getDefaultWorldName());
         } else if (FGConfigManager.getInstance().useConfigFolder()) {
             path = FoxGuardMain.instance().getConfigDirectory();
@@ -651,7 +651,7 @@ public class FGStorageManagerNew {
         }
         FGConfigManager manager = FGConfigManager.getInstance();
         Path path;
-        if (manager.saveWorldRegionsInWorldFolders()) {
+        if (manager.saveWorldRegionsInWorldDirectories()) {
             path = world.getDirectory();
             path = path.resolve("foxguard");
         } else {

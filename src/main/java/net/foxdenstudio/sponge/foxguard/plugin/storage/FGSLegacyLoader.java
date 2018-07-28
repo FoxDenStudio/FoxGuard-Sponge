@@ -1,8 +1,8 @@
 package net.foxdenstudio.sponge.foxguard.plugin.storage;
 
-import net.foxdenstudio.sponge.foxguard.plugin.FGConfigManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
+import net.foxdenstudio.sponge.foxguard.plugin.config.FGConfigManager;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.Serializer;

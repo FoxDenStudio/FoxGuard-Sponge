@@ -25,7 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
@@ -39,7 +39,7 @@ public interface IHandler extends IGuardObject {
     Comparator<IHandler> PRIORITY = Comparator.comparingInt(IHandler::getPriority);
     String EXTENSION = "h";
 
-    EventResult handle(@Nullable User user, FlagBitSet flags, ExtraContext extra);
+    EventResult handle(@Nullable User user, FlagSet flags, ExtraContext extra);
 
     int getPriority();
 

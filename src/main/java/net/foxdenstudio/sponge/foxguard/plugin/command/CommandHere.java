@@ -35,7 +35,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.listener.PlayerMoveListener;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.PlayerMoveListenerNew;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
@@ -86,7 +86,7 @@ public class CommandHere extends FCCommandBase {
         }
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(MAPPER).parse();
         boolean hud = false;
-        PlayerMoveListener.HUDConfig hudConfig = new PlayerMoveListener.HUDConfig(false, false, false);
+        PlayerMoveListenerNew.HUDConfig hudConfig = new PlayerMoveListenerNew.HUDConfig(false, false, false);
 
         String worldName = parse.flags.get("world");
         World world = null;
@@ -200,7 +200,7 @@ public class CommandHere extends FCCommandBase {
         if (hud) {
             Player player = (Player) source;
             if (CommandHUD.instance().getIsHUDEnabled().get(player)) {
-                PlayerMoveListener instance = PlayerMoveListener.getInstance();
+                PlayerMoveListenerNew instance = PlayerMoveListenerNew.getInstance();
                 instance.getHudConfigMap().put(player, hudConfig);
                 instance.renderHUD(player, regionList, handlerList, hudConfig);
                 instance.showScoreboard(player);

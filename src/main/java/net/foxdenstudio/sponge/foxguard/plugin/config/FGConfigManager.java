@@ -23,9 +23,9 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin;
+package net.foxdenstudio.sponge.foxguard.plugin.config;
 
-import com.google.common.collect.ImmutableMap;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
@@ -57,8 +57,8 @@ public final class FGConfigManager {
     private int prettyPrintIndent;
 
     // storage/location
-    private boolean saveWorldRegionsInWorldDirectories;
     private boolean saveInWorldDirectory;
+    private boolean saveWorldRegionsInWorldDirectories;
     private boolean ownerFirst;
     private boolean useConfigDirectory;
     private boolean useCustomDirectory;
@@ -70,15 +70,16 @@ public final class FGConfigManager {
     private boolean gcCleanerHack;
 
     // modules
-    private Map<Module, Boolean> modules = new EnumMap<>(Module.class);
+    private Map<ListenerModule, String> modules = new EnumMap<>(ListenerModule.class);
 
-    public FGConfigManager() {
-        if (instance == null) instance = this;
-        load();
+    private FGConfigManager() {
     }
 
     public static FGConfigManager getInstance() {
-        if (instance == null) new FGConfigManager();
+        if (instance == null) {
+            instance = new FGConfigManager();
+            instance.load();
+        }
         return instance;
     }
 
@@ -199,9 +200,10 @@ public final class FGConfigManager {
                         "This only makes a difference if memory mapping is enabled, and can potentially decrease performance.");
 
         // modules
-        for (Module m : Module.values()) {
-            CommentedConfigurationNode node = root.getNode("modules", m.name).setValue(this.modules.get(m));
-            if (m.comment != null && !m.comment.isEmpty()) node.setComment(m.comment);
+        for (ListenerModule m : ListenerModule.values()) {
+            CommentedConfigurationNode node = root.getNode("module", m.getName()).setValue(this.modules.get(m));
+            String comment = m.getComment();
+            if (comment != null) node.setComment(comment);
         }
 
 
@@ -265,8 +267,8 @@ public final class FGConfigManager {
         gcCleanerHack = root.getNode("storage", "database", "gcCleanerHack").getBoolean(false);
 
         // modules
-        for (Module m : Module.values()) {
-            this.modules.put(m, root.getNode("modules", m.name).getBoolean(true));
+        for (ListenerModule m : ListenerModule.values()) {
+            this.modules.put(m, root.getNode("module", m.getName()).getString(m.getDefaultValue()));
         }
 
         //--------------------------------------------------------------------------------------------------------------
@@ -304,16 +306,16 @@ public final class FGConfigManager {
     }
 
     // storage/location
-    public boolean saveWorldRegionsInWorldFolders() {
+    public boolean saveInWorldDirectory() {
+        return saveInWorldDirectory;
+    }
+
+    public boolean saveWorldRegionsInWorldDirectories() {
         return saveWorldRegionsInWorldDirectories;
     }
 
     public boolean ownerFirst() {
         return ownerFirst;
-    }
-
-    public boolean saveInWorldFolder() {
-        return saveInWorldDirectory;
     }
 
     public boolean useConfigFolder() {
@@ -341,25 +343,13 @@ public final class FGConfigManager {
         return gcCleanerHack;
     }
 
-    public Map<Module, Boolean> getModules() {
-        return ImmutableMap.copyOf(this.modules);
+    public Map<ListenerModule, String> getModules() {
+        return this.modules;
     }
 
-    public enum Module {
-        MOVEMENT("movement");
-
-        String name;
-        String comment;
-
-        Module(String name) {
-            this.name = name;
-            this.comment = null;
-        }
-
-        Module(String name, String comment) {
-            this(name);
-            this.comment = comment;
-        }
+    public void setupModule(ListenerModule module) {
+        module.setup(this.modules.get(module));
     }
+
 
 }

@@ -47,19 +47,22 @@ import net.foxdenstudio.sponge.foxguard.plugin.state.ControllersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.storage.FGStorageManagerNew;
+import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.Locatable;
+import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import javax.annotation.Nonnull;
@@ -180,6 +183,7 @@ public final class FGUtil {
         FGStorageManagerNew.getInstance().defaultModifiedMap.put(object, true);
         Sponge.getGame().getEventManager().post(FGEventFactory.createFGUpdateObjectEvent(FoxGuardMain.getCause(), object));
     }
+
     @Nonnull
     public static IHandler getHandlerFromCommand(OwnerResult qualifier) throws CommandException {
         String name = qualifier.getName();
@@ -325,7 +329,7 @@ public final class FGUtil {
                         .filter(str -> str != null && !str.isEmpty())
                         .filter(new StartsWithPredicate(parts[0]))
                         .map(str -> ":" + str)
-                        .collect(GuavaCollectors.toImmutableList());
+                        .collect(ImmutableList.toImmutableList());
                 if (list.size() == 1) {
                     list = ImmutableList.of(list.get(0).substring(1) + ":");
                 }
@@ -342,7 +346,7 @@ public final class FGUtil {
                         .filter(str -> str != null && !str.isEmpty())
                         .filter(new StartsWithPredicate(parts[1]))
                         .map(str -> parts[0] + ":" + str)
-                        .collect(GuavaCollectors.toImmutableList());
+                        .collect(ImmutableList.toImmutableList());
                 int size = list.size();
                 if (size == 0) {
                     if (prefixed) {
@@ -455,6 +459,7 @@ public final class FGUtil {
             return null;
         }
     }
+
     public static class OwnerTabResult {
         private boolean complete;
         private List<String> suggestions;
@@ -542,5 +547,18 @@ public final class FGUtil {
                     ", ownerName='" + ownerName + '\'' +
                     '}';
         }
+    }
+
+    public static Optional<Location<World>> getLocation(Transaction<BlockSnapshot> transaction) {
+        if (transaction == null) return Optional.empty();
+        Optional<Location<World>> ret = transaction.getOriginal().getLocation();
+        if (ret.isPresent()) return ret;
+        ret = transaction.getFinal().getLocation();
+        if (!ret.isPresent()) {
+            Logger logger = FoxGuardMain.instance().getLogger();
+            logger.warn("Encountered a block transaction with no location:");
+            logger.warn(transaction.toString());
+        }
+        return ret;
     }
 }

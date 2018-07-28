@@ -29,11 +29,12 @@ import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxcore.plugin.command.CommandDebug;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagBitSet;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.data.Transaction;
@@ -57,7 +58,7 @@ import static org.spongepowered.api.util.Tristate.UNDEFINED;
 
 public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
 
-    private static final FlagBitSet BASE_FLAG_SET = new FlagBitSet(ROOT, DEBUFF, BLOCK, CHANGE);
+    private static final boolean[] BASE_FLAG_SET =  FlagSet.arrayFromFlags(ROOT, DEBUFF, BLOCK, CHANGE);
 
     @Override
     public void handle(ChangeBlockEvent event) throws Exception {
@@ -68,14 +69,6 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
                     || tr.getOriginal().getState().getType().equals(BlockTypes.GRASS)
                     && tr.getFinal().getState().getType().equals(BlockTypes.DIRT)) return;
         }
-        User user;
-        if (event.getCause().containsType(Player.class)) {
-            user = event.getCause().first(Player.class).get();
-        } else if (event.getCause().containsType(User.class)) {
-            user = event.getCause().first(User.class).get();
-        } else {
-            user = null;
-        }
         //DebugHelper.printBlockEvent(event);
         /*FlagOld typeFlag;
         if (event instanceof ChangeBlockEvent.Modify) typeFlag = FlagOld.BLOCK_MODIFY;
@@ -85,21 +78,14 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
         else if (event instanceof ChangeBlockEvent.Grow) typeFlag = FlagOld.BLOCK_GROW;
         else return;*/
 
-        FlagBitSet flags = BASE_FLAG_SET.clone();
-
-        if (event instanceof ChangeBlockEvent.Modify) flags.set(MODIFY);
-        else if (event instanceof ChangeBlockEvent.Break) flags.set(BREAK);
-        else if (event instanceof ChangeBlockEvent.Place) flags.set(PLACE);
-        else if (event instanceof ChangeBlockEvent.Post) flags.set(POST);
-        else if (event instanceof ChangeBlockEvent.Decay) flags.set(DECAY);
-        else if (event instanceof ChangeBlockEvent.Grow) flags.set(GROW);
-
         //FoxGuardMain.instance().getLogger().info(player.getName());
 
         List<Transaction<BlockSnapshot>> transactions = event.getTransactions();
         Set<IHandler> handlerSet = new HashSet<>();
         if (transactions.size() == 1) {
-            Location<World> loc = transactions.get(0).getOriginal().getLocation().get();
+            Optional<Location<World>> locOpt = FGUtil.getLocation(transactions.get(0));
+            if(!locOpt.isPresent()) return;
+            Location<World> loc = locOpt.get();
             Vector3i pos = loc.getBlockPosition();
             World world = loc.getExtent();
 
@@ -111,19 +97,38 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
         } else {
             FGManager.getInstance().getRegionsAtMultiLocI(
                     transactions.stream()
-                            .map(trans -> trans.getOriginal().getLocation().get())
+                            .map(FGUtil::getLocation)
+                            .filter(Optional::isPresent)
+                            .map(Optional::get)
                             .collect(Collectors.toList())
             ).forEach(region -> region.getLinks().stream()
                     .filter(IGuardObject::isEnabled)
                     .forEach(handlerSet::add));
         }
-        Tristate flagState = UNDEFINED;
+        if(handlerSet.isEmpty()) return;
 
-        if (handlerSet.isEmpty()) {
-            FoxGuardMain.instance().getLogger().error("Handlers list is empty for event: " + event);
-            return;
+        User user;
+        if (event.getCause().containsType(Player.class)) {
+            user = event.getCause().first(Player.class).get();
+        } else if (event.getCause().containsType(User.class)) {
+            user = event.getCause().first(User.class).get();
+        } else {
+            user = null;
         }
 
+        boolean[] flags = BASE_FLAG_SET.clone();
+
+        if (event instanceof ChangeBlockEvent.Modify) flags[MODIFY.id] = true;
+        else if (event instanceof ChangeBlockEvent.Break) flags[BREAK.id] = true;
+        else if (event instanceof ChangeBlockEvent.Place) flags[PLACE.id] = true;
+        else if (event instanceof ChangeBlockEvent.Decay) flags[DECAY.id] = true;
+        else if (event instanceof ChangeBlockEvent.Grow) flags[GROW.id] = true;
+        else if (event instanceof ChangeBlockEvent.Post) flags[POST.id] = true;
+
+        FlagSet flagSet = new FlagSet(flags);
+
+
+        Tristate flagState = UNDEFINED;
         List<IHandler> handlerList = new ArrayList<>(handlerSet);
         handlerList.sort(IHandler.PRIORITY);
         int currPriority = handlerList.get(0).getPriority();
@@ -131,7 +136,7 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
             if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                 break;
             }
-            EventResult result = handler.handle(user, flags, ExtraContext.of(event));
+            EventResult result = handler.handle(user, flagSet, ExtraContext.of(event));
             if (result != null) {
                 flagState = flagState.and(result.getState());
             } else {

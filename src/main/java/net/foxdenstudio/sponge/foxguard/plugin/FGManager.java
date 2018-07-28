@@ -64,7 +64,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class FGManager {
 
-    public static final UUID SERVER_UUID_DEPRECATED = new UUID(0,0);
+    public static final UUID SERVER_UUID_DEPRECATED = new UUID(0, 0);
     public static final ServerOwner SERVER_OWNER = ServerOwner.SERVER;
     public static final String[] ILLEGAL_NAMES = {"all", "state", "full", "everything", "users", "owners"};
 
@@ -78,7 +78,6 @@ public final class FGManager {
     private final RegionCache regionCache;
 
     private FGManager() {
-        instance = this;
         worldRegions = new CacheMap<>((key, map) -> {
             if (key instanceof World) {
                 Multimap<IOwner, IWorldRegion> uuidMap = HashMultimap.create();
@@ -92,7 +91,6 @@ public final class FGManager {
         globalHandler = new GlobalHandler();
         regions.put(SERVER_OWNER, globalRegion);
         handlers.put(SERVER_OWNER, globalHandler);
-        globalRegion.addLink(globalHandler);
 
         this.regionCache = new RegionCache(regions, worldRegions);
     }
@@ -101,10 +99,12 @@ public final class FGManager {
         return instance;
     }
 
-    public static void init() {
+    public static synchronized void init() {
         if (instance == null) instance = new FGManager();
         if (instance.regions.isEmpty()) instance.regions.put(SERVER_OWNER, instance.globalRegion);
         if (instance.handlers.isEmpty()) instance.handlers.put(SERVER_OWNER, instance.globalHandler);
+        if (!instance.globalRegion.getLinks().contains(instance.globalHandler))
+            instance.globalRegion.addLink(instance.globalHandler);
     }
 
     public static boolean isNameValid(String name) {
@@ -116,13 +116,13 @@ public final class FGManager {
 
     public boolean contains(IGuardObject object) {
         if (object instanceof IRegion) {
-            if(object instanceof IWorldRegion){
+            if (object instanceof IWorldRegion) {
                 World world = ((IWorldRegion) object).getWorld();
-                if(world != null){
+                if (world != null) {
                     return this.worldRegions.get(world).containsValue(object);
                 } else {
-                    for(Multimap<IOwner, IWorldRegion> map : this.worldRegions.values()){
-                        if(map.containsValue(object)) return true;
+                    for (Multimap<IOwner, IWorldRegion> map : this.worldRegions.values()) {
+                        if (map.containsValue(object)) return true;
                     }
                     return false;
                 }
@@ -365,6 +365,16 @@ public final class FGManager {
     }
 
     @Nonnull
+    public Set<IRegion> getAllRegions(World world, Vector3i chunk) {
+        return this.getAllRegions(world, chunk, false);
+    }
+
+    @Nonnull
+    public Set<IRegion> getAllRegions(World world, Vector3i chunk, boolean includeDisabled) {
+        return this.regionCache.getData(world, chunk).getRegions(includeDisabled);
+    }
+
+    @Nonnull
     public Set<IHandler> getHandlers(@Nonnull IOwner owner) {
         checkNotNull(owner);
         return ImmutableSet.copyOf(this.handlers.get(owner));
@@ -405,6 +415,18 @@ public final class FGManager {
             }
         }
         return Optional.empty();
+    }
+
+    public Set<IRegion> getRegionsAtPos(World world, Vector3i position) {
+        return this.getRegionsInChunkAtPos(world, position).stream()
+                .filter(region -> region.contains(position, world))
+                .collect(Collectors.toSet());
+    }
+
+    public Set<IRegion> getRegionsAtPos(World world, Vector3i position, boolean includeDisabled) {
+        return this.getRegionsInChunkAtPos(world, position, includeDisabled).stream()
+                .filter(region -> region.contains(position, world))
+                .collect(Collectors.toSet());
     }
 
     @Nonnull
@@ -520,29 +542,15 @@ public final class FGManager {
     }
 
     @Nonnull
-    public Set<IRegion> getRegionsAtPos(World world, Vector3i position) {
-        return FGManager.getInstance().getRegionsInChunkAtPos(world, position).stream()
-                .filter(region -> region.contains(position, world))
-                .collect(Collectors.toSet());
-    }
-
-    @Nonnull
-    public Set<IRegion> getRegionsAtPos(World world, Vector3i position, boolean includeDisabled) {
-        return FGManager.getInstance().getRegionsInChunkAtPos(world, position, includeDisabled).stream()
-                .filter(region -> region.contains(position, world))
-                .collect(Collectors.toSet());
-    }
-
-    @Nonnull
     public Set<IRegion> getRegionsAtPos(World world, Vector3d position) {
-        return FGManager.getInstance().getRegionsInChunkAtPos(world, position).stream()
+        return this.getRegionsInChunkAtPos(world, position).stream()
                 .filter(region -> region.contains(position, world))
                 .collect(Collectors.toSet());
     }
 
     @Nonnull
     public Set<IRegion> getRegionsAtPos(World world, Vector3d position, boolean includeDisabled) {
-        return FGManager.getInstance().getRegionsInChunkAtPos(world, position, includeDisabled).stream()
+        return this.getRegionsInChunkAtPos(world, position, includeDisabled).stream()
                 .filter(region -> region.contains(position, world))
                 .collect(Collectors.toSet());
     }
@@ -776,7 +784,8 @@ public final class FGManager {
         return removed;
     }
 
-    public boolean move(IGuardObject object, @Nullable String newName, @Nullable IOwner newOwner, @Nullable World newWorld) {
+    public boolean move(IGuardObject object, @Nullable String newName, @Nullable IOwner newOwner, @Nullable World
+            newWorld) {
         boolean changed = false, nameChanged = false, ownerChanged = false, worldChanged = false;
         String tryName = object.getName();
         if (newName != null && !newName.isEmpty() && isNameValid(newName)) {
