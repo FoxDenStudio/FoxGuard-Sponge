@@ -14,6 +14,7 @@ public abstract class SingleKeyComparableOwner<T extends Comparable<T>> extends 
         if (o instanceof BaseOwner) {
             BaseOwner baseOwner = ((BaseOwner) o);
             int compare = super.compareTo(baseOwner);
+            if (compare != 0) return compare;
             if (o instanceof SingleKeyComparableOwner) {
                 SingleKeyComparableOwner<? extends Comparable> comparableOwner = ((SingleKeyComparableOwner<? extends Comparable>) o);
                 if (this.key.getClass() == comparableOwner.key.getClass()) {

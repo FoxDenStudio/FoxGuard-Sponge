@@ -29,6 +29,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -82,5 +83,20 @@ public class FGSObjectMeta extends FGSObjectPath {
         if (object != null) sb.append(", object=").append(object);
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        FGSObjectMeta that = (FGSObjectMeta) o;
+        return Objects.equals(category, that.category) &&
+                Objects.equals(type, that.type);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), category, type);
     }
 }

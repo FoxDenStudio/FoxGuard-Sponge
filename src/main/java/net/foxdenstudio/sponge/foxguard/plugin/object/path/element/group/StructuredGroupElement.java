@@ -1,6 +1,7 @@
-package net.foxdenstudio.sponge.foxguard.plugin.object.path.element;
+package net.foxdenstudio.sponge.foxguard.plugin.object.path.element.group;
 
 import com.google.common.collect.ImmutableMap;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.IPathElement;
 
 import java.util.HashMap;
 import java.util.Map;

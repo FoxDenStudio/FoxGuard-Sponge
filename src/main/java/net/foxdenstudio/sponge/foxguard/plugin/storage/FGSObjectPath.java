@@ -29,6 +29,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -71,5 +72,19 @@ public class FGSObjectPath {
 
     public void setOwner(IOwner owner) {
         this.owner = owner;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FGSObjectPath that = (FGSObjectPath) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(owner, that.owner);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, owner);
     }
 }

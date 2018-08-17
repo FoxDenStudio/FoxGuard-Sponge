@@ -36,7 +36,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
-import net.foxdenstudio.sponge.foxguard.plugin.object.owner.OwnerManager;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.UUIDOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
@@ -55,7 +54,6 @@ import org.spongepowered.api.world.World;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;

@@ -40,8 +40,8 @@ import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Operation;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.TristateEntry;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
@@ -60,7 +60,6 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.User;
-import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColor;
@@ -921,7 +920,6 @@ public class GroupHandler extends HandlerBase {
     @Override
     public void save(Path directory) {
         FGStorageManagerNew storageManager = FGStorageManagerNew.getInstance();
-        UserStorageService userStorageService = FoxGuardMain.instance().getUserStorage();
         Logger logger = FoxGuardMain.instance().getLogger();
         /*try (DB flagMapDB = FGStorageManagerOld.openFoxDB(directory.resolve("groups.foxdb"))) {
             List<String> groupNames = flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen();
@@ -1303,6 +1301,7 @@ public class GroupHandler extends HandlerBase {
             if (gsonData != null) {
                 groupNames.addAll(gsonData.groups.keySet());
             } else {
+                // Legacy Code
                 Path dbFile = directory.resolve("groups.foxdb");
                 if (Files.exists(dbFile) && !Files.isDirectory(dbFile))
                     try (DB flagMapDB = FGSLegacyLoader.openFoxDB(directory.resolve("groups.foxdb"))) {
@@ -1330,15 +1329,29 @@ public class GroupHandler extends HandlerBase {
 
             Map<Group, List<TristateEntry>> groupPermissions = new HashMap<>();
             List<TristateEntry> defaultPermissions;
-            try (DB flagMapDB = FGSLegacyLoader.openFoxDB(directory.resolve("flags.foxdb"))) {
+
+            if (gsonData != null) {
                 for (Group group : groups) {
-                    List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
-                    groupPermissions.put(group, stringEntries.stream()
-                            .map(TristateEntry::deserialize)
-                            .collect(Collectors.toList()));
+                    groupPermissions.put(group, gsonData.groups.get(group.name));
                 }
-                List<String> stringEntries = flagMapDB.indexTreeList("default", Serializer.STRING).createOrOpen();
-                defaultPermissions = stringEntries.stream().map(TristateEntry::deserialize).collect(Collectors.toList());
+                defaultPermissions = gsonData.defaultGroup;
+            } else {
+                // Legacy Code
+                Path dbFile = directory.resolve("flags.foxdb");
+                if (Files.exists(dbFile) && !Files.isDirectory(dbFile)) {
+                    try (DB flagMapDB = FGSLegacyLoader.openFoxDB(dbFile)) {
+                        for (Group group : groups) {
+                            List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
+                            groupPermissions.put(group, stringEntries.stream()
+                                    .map(TristateEntry::deserialize)
+                                    .collect(Collectors.toList()));
+                        }
+                        List<String> stringEntries = flagMapDB.indexTreeList("default", Serializer.STRING).createOrOpen();
+                        defaultPermissions = stringEntries.stream().map(TristateEntry::deserialize).collect(Collectors.toList());
+                    }
+                } else {
+                    defaultPermissions = new ArrayList<>();
+                }
             }
 
             return new GroupHandler(data,

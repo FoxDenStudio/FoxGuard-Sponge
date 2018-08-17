@@ -1,7 +1,9 @@
 package net.foxdenstudio.sponge.foxguard.plugin.object;
 
+import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 
+import javax.annotation.Nonnull;
 import java.util.Comparator;
 import java.util.UUID;
 
@@ -31,15 +33,13 @@ public interface IFGObject {
 
     void setOwner(IOwner owner);
 
-    /**
-     * Gets the path suffix when storing references in paths.
-     * This allows objects of completely disparate types to be stored under the same name.
-     * Any types that share any hierarchy or can otherwise be used in place of another should have the same suffix.
-     * @return the path suffix.
-     */
-    String getPathExtension();
+    default String getFullName(){
+        IOwner owner = getOwner();
+        if(owner == null) owner = FGManager.SERVER_OWNER;
+        return owner.getCommandPath() + ":" + getFilter() + ":" + getName();
+    }
 
-    String getFullName();
+    String getFilter();
 
     boolean stillExists();
 }

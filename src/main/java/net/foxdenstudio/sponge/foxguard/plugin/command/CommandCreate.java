@@ -32,15 +32,15 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxcore.plugin.state.PositionStateField;
-import net.foxdenstudio.sponge.foxguard.plugin.config.FGConfigManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
+import net.foxdenstudio.sponge.foxguard.plugin.config.FGConfigManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
-import net.foxdenstudio.sponge.foxguard.plugin.object.owner.provider.IOwnerProvider;
-import net.foxdenstudio.sponge.foxguard.plugin.object.owner.OwnerManager;
-import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.UUIDOwner;
+import net.foxdenstudio.sponge.foxguard.plugin.object.ownerold.OwnerManager;
+import net.foxdenstudio.sponge.foxguard.plugin.object.ownerold.provider.IOwnerProvider;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import org.spongepowered.api.Sponge;
@@ -50,21 +50,18 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
-import org.spongepowered.api.util.Identifiable;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.Locatable;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
@@ -85,9 +82,9 @@ public class CommandCreate extends FCCommandBase {
             map.put("priority", value);
         } /*else if (isIn(STATE_ALIASES, key) && !map.containsKey("state")) {
             map.put("state", value);
-        }*/ else if (isIn(OWNER_ALIASES, key) && !map.containsKey("owner")) {
+        }*/ /*else if (isIn(OWNER_ALIASES, key) && !map.containsKey("owner")) {
             map.put("owner", value);
-        }
+        }*/
         return true;
     };
 
@@ -129,7 +126,7 @@ public class CommandCreate extends FCCommandBase {
         if (lengthLimit > 0 && name.length() > lengthLimit)
             throw new CommandException(Text.of("Name is too long! Max " + lengthLimit + " characters."));
 
-        UUID owner = FGManager.SERVER_UUID_DEPRECATED;
+        /*UUID owner = FGManager.SERVER_UUID_DEPRECATED;
         if (parse.flags.containsKey("owner")) {
             String ownerString = parse.flags.get("owner");
             if (ownerString.isEmpty()) {
@@ -151,7 +148,9 @@ public class CommandCreate extends FCCommandBase {
                     throw new CommandException(Text.of("\"" + ownerString + "\" is not a valid owner!"));
                 }
             }
-        }
+        }*/
+
+        IOwner owner = FGManager.SERVER_OWNER;
 
         World world = null;
         if (fgCat == FGCat.WORLDREGION) {
@@ -221,9 +220,13 @@ public class CommandCreate extends FCCommandBase {
                 .append(":   Name: ")
                 .append(object.getName());
 
-        if (owner != null && !owner.equals(FGManager.SERVER_OWNER)) {
+        /*if (owner != null && !owner.equals(FGManager.SERVER_OWNER)) {
             logMessage.append("   Owner: ").append(OwnerManager.getInstance().getKeyword(owner, null))
                     .append(" (").append(owner).append(")");
+        }*/
+
+        if (owner != null && !owner.equals(FGManager.SERVER_OWNER)) {
+            logMessage.append("   Owner: ").append(owner.toString());
         }
 
         if (object instanceof IWorldRegion) {
@@ -354,7 +357,7 @@ public class CommandCreate extends FCCommandBase {
                         .collect(GuavaCollectors.toImmutableList());
             } else if (isIn(OWNER_ALIASES, parse.current.key)) {
                 String[] parts = parse.current.token.split(":", 2);
-                System.out.println(parts.length );
+                System.out.println(parts.length);
                 if (parts.length == 1) {
                     ImmutableList<String> collect = OwnerManager.getInstance().getProviders().stream()
                             .map(IOwnerProvider::getPrimaryAlias)
@@ -430,8 +433,8 @@ public class CommandCreate extends FCCommandBase {
     private enum FGCat {
         REGION(REGIONS_ALIASES, FGFactoryManager.getInstance()::getRegionTypeAliases) {
             @Override
-            public boolean isNameAvailable(String name, UUID owner, @Nullable World world) {
-                return FGManager.getInstance().isRegionNameAvailable(name, new UUIDOwner(UUIDOwner.USER_GROUP, owner));
+            public boolean isNameAvailable(String name, IOwner owner, @Nullable World world) {
+                return FGManager.getInstance().isRegionNameAvailable(name, owner);
             }
 
             @Override
@@ -440,17 +443,17 @@ public class CommandCreate extends FCCommandBase {
             }
 
             @Override
-            public boolean add(IGuardObject object, UUID owner, @Nullable World world) {
+            public boolean add(IGuardObject object, IOwner owner, @Nullable World world) {
                 return object instanceof IRegion
-                        && FGManager.getInstance().addRegion(((IRegion) object), new UUIDOwner(UUIDOwner.USER_GROUP, owner), world);
+                        && FGManager.getInstance().addRegion(((IRegion) object), owner, world);
             }
         },
         WORLDREGION(WORLDREGIONS_ALIASES, FGFactoryManager.getInstance()::getWorldRegionTypeAliases) {
             @Override
-            public boolean isNameAvailable(String name, UUID owner, @Nullable World world) {
+            public boolean isNameAvailable(String name, IOwner owner, @Nullable World world) {
                 if (world == null)
-                    return FGManager.getInstance().isWorldRegionNameAvailable(name, new UUIDOwner(UUIDOwner.USER_GROUP, owner)) == Tristate.TRUE;
-                else return FGManager.getInstance().isWorldRegionNameAvailable(name, new UUIDOwner(UUIDOwner.USER_GROUP, owner), world);
+                    return FGManager.getInstance().isWorldRegionNameAvailable(name, owner) == Tristate.TRUE;
+                else return FGManager.getInstance().isWorldRegionNameAvailable(name, owner, world);
             }
 
             @Override
@@ -459,16 +462,16 @@ public class CommandCreate extends FCCommandBase {
             }
 
             @Override
-            public boolean add(IGuardObject object, UUID owner, @Nullable World world) {
+            public boolean add(IGuardObject object, IOwner owner, @Nullable World world) {
                 return world != null
                         && object instanceof IWorldRegion
-                        && FGManager.getInstance().addWorldRegion(((IWorldRegion) object), new UUIDOwner(UUIDOwner.USER_GROUP, owner), world);
+                        && FGManager.getInstance().addWorldRegion(((IWorldRegion) object), owner, world);
             }
         },
         HANDLER(HANDLERS_ALIASES, FGFactoryManager.getInstance()::getHandlerTypeAliases) {
             @Override
-            public boolean isNameAvailable(String name, UUID owner, @Nullable World world) {
-                return FGManager.getInstance().isHandlerNameAvailable(name, new UUIDOwner(UUIDOwner.USER_GROUP, owner));
+            public boolean isNameAvailable(String name, IOwner owner, @Nullable World world) {
+                return FGManager.getInstance().isHandlerNameAvailable(name, owner);
             }
 
             @Override
@@ -477,14 +480,14 @@ public class CommandCreate extends FCCommandBase {
             }
 
             @Override
-            public boolean add(IGuardObject object, UUID owner, @Nullable World world) {
+            public boolean add(IGuardObject object, IOwner owner, @Nullable World world) {
                 return object instanceof IHandler
-                        && FGManager.getInstance().addHandler(((IHandler) object), new UUIDOwner(UUIDOwner.USER_GROUP, owner));
+                        && FGManager.getInstance().addHandler(((IHandler) object), owner);
             }
         },
         CONTROLLER(CONTROLLERS_ALIASES, FGFactoryManager.getInstance()::getControllerTypeAliases) {
             @Override
-            public boolean isNameAvailable(String name, UUID owner, @Nullable World world) {
+            public boolean isNameAvailable(String name, IOwner owner, @Nullable World world) {
                 return HANDLER.isNameAvailable(name, owner, world);
             }
 
@@ -494,7 +497,7 @@ public class CommandCreate extends FCCommandBase {
             }
 
             @Override
-            public boolean add(IGuardObject object, UUID owner, @Nullable World world) {
+            public boolean add(IGuardObject object, IOwner owner, @Nullable World world) {
                 return HANDLER.add(object, owner, world);
             }
         };
@@ -516,10 +519,10 @@ public class CommandCreate extends FCCommandBase {
             return null;
         }
 
-        public abstract boolean isNameAvailable(String name, UUID owner, @Nullable World world);
+        public abstract boolean isNameAvailable(String name, IOwner owner, @Nullable World world);
 
         public abstract IGuardObject create(String name, String type, String arguments, CommandSource source) throws CommandException;
 
-        public abstract boolean add(IGuardObject object, UUID owner, @Nullable World world);
+        public abstract boolean add(IGuardObject object, IOwner owner, @Nullable World world);
     }
 }

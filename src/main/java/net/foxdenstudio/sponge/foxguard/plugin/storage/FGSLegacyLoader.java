@@ -1,12 +1,12 @@
 package net.foxdenstudio.sponge.foxguard.plugin.storage;
 
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.config.FGConfigManager;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,10 +20,12 @@ import java.util.Optional;
  */
 public class FGSLegacyLoader {
 
+    public static String LOGGER_NAME = FGStorageManagerNew.LOGGER_NAME + ".legacy";
+
     private static final int VERSION = 1;
 
     private static FGSLegacyLoader instance = new FGSLegacyLoader();
-    private final Logger logger = FoxGuardMain.instance().getLogger();
+    private final Logger logger = LoggerFactory.getLogger(LOGGER_NAME);
 
     public static FGSLegacyLoader getInstance() {
         return instance;

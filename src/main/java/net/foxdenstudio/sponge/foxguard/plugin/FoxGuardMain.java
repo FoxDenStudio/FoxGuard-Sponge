@@ -51,6 +51,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.state.factory.ControllersStateFie
 import net.foxdenstudio.sponge.foxguard.plugin.state.factory.HandlersStateFieldFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.state.factory.RegionsStateFieldFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.storage.FGStorageManagerNew;
+import net.foxdenstudio.sponge.foxguard.plugin.util.DebugManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.api.Game;
@@ -97,6 +98,7 @@ import java.util.Set;
         url = "https://github.com/FoxDenStudio/FoxGuard")
 public final class FoxGuardMain {
 
+    public static final String LOGGER_NAME = FoxCoreMain.FOX_BASE_LOGGER_NAME + ".guard";
     public final Cause pluginCause = Cause.builder().append(this).build(EventContext.empty());
 
     /**
@@ -104,7 +106,7 @@ public final class FoxGuardMain {
      */
     private static FoxGuardMain instanceField;
 
-    private Logger logger = LoggerFactory.getLogger("fox.guard");
+    private Logger logger = LoggerFactory.getLogger(LOGGER_NAME);
 
     @Inject
     private Game game;
@@ -249,8 +251,8 @@ public final class FoxGuardMain {
         fgDispatcher.register(new CommandLink2(false), "unlink2", "disconnect2", "detach2");
 
         // DEBUG USE
-        //fgDispatcher.register(new CommandTest(), "test");
-        //fgDispatcher.register(DebugManager.INSTANCE, "debug");
+        fgDispatcher.register(new CommandTest(), "test");
+        fgDispatcher.register(DebugManager.INSTANCE, "debug");
 
 
         registerCoreCommands(fgDispatcher);

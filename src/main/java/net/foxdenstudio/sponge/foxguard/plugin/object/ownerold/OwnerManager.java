@@ -23,16 +23,14 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.object.owner;
+package net.foxdenstudio.sponge.foxguard.plugin.object.ownerold;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
-import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
-import net.foxdenstudio.sponge.foxguard.plugin.object.owner.provider.*;
+import net.foxdenstudio.sponge.foxguard.plugin.object.ownerold.provider.*;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
 
-import java.security.SecureRandom;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;

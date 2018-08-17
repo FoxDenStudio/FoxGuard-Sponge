@@ -28,6 +28,7 @@ package net.foxdenstudio.sponge.foxguard.plugin.storage;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
@@ -46,12 +47,12 @@ import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.FGFactoryManager;
-import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.BaseOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.User;
@@ -88,13 +89,15 @@ public class FGStorageManagerNew {
     public static final String METADATA_FILE_NAME = "metadata.foxcf";
     public static final String OWNERS_DIR_NAME = "owners";
     public static final Charset CHARSET = StandardCharsets.UTF_8;
+    public static final String LOGGER_NAME = FoxGuardMain.LOGGER_NAME + ".storage";
+
     private static final Type INDEX_LIST_TYPE = new TypeToken<IndexConfig>() {
     }.getType();
     private static FGStorageManagerNew instance;
     public final HashMap<IGuardObject, Boolean> defaultModifiedMap;
     private final FGConfigManager config;
     private final UserStorageService userStorageService;
-    private final Logger logger = FoxGuardMain.instance().getLogger();
+    private final Logger logger = LoggerFactory.getLogger(LOGGER_NAME);
     private final FGManager manager = FGManager.getInstance();
     private final Map<World, Path> worldDirectories;
     private Gson gson;
@@ -161,7 +164,7 @@ public class FGStorageManagerNew {
             boolean autoSave = object.autoSave();
             if (autoSave || saveLinks) {
                 FGSObjectIndex index = new FGSObjectIndex(object);
-                if (index.owner.equals(SERVER_OWNER)) index.owner = null;
+                //if (index.owner.equals(SERVER_OWNER)) index.owner = null;
                 if (!autoSave) {
                     index.type = null;
                     index.enabled = null;
@@ -207,7 +210,7 @@ public class FGStorageManagerNew {
 
             boolean shouldSave = object.shouldSave();
             if (force || shouldSave) {
-                Path directory = getObjectDirectory(object);
+                Path directory = getObjectDirectory(object, true);
                 String category = FGUtil.getCategory(object);
                 logger.info((shouldSave ? "S" : "Force s") + "aving " + category + " " + logName + " in directory: " + directory);
                 try {
@@ -245,7 +248,7 @@ public class FGStorageManagerNew {
 
     public void addObject(IGuardObject object) {
         if (reentry) return;
-        Path directory = getObjectDirectory(object);
+        Path directory = getObjectDirectory(object, false);
         if (Files.exists(directory)) {
             if (Files.isDirectory(directory)) {
                 deleteDirectory(directory, true);
@@ -258,15 +261,14 @@ public class FGStorageManagerNew {
                     return;
                 }
             }
-            saveObject(object);
-            updateIndexFor(object);
-
         }
+        saveObject(object);
+        updateIndexFor(object);
     }
 
     public void removeObject(IGuardObject object) {
         if (reentry) return;
-        Path directory = getObjectDirectory(object);
+        Path directory = getObjectDirectory(object, false);
         if (config.cleanOnDelete()) {
             if (Files.exists(directory)) {
                 if (Files.isDirectory(directory)) {
@@ -315,7 +317,7 @@ public class FGStorageManagerNew {
                 for (FGSObjectIndex index : regionConfig.data) {
                     FGCat fgCat = FGCat.from(index.category);
                     if (fgCat == FGCat.REGION) {
-                        Path directory = getObjectDirectory(index, null);
+                        Path directory = getObjectDirectory(index, null, false);
                         Optional<IGuardObject> fgObjectOptional = loadObject(directory, index, null);
                         if (fgObjectOptional.isPresent()) {
                             IGuardObject fgObject = fgObjectOptional.get();
@@ -358,7 +360,7 @@ public class FGStorageManagerNew {
             for (FGSObjectIndex index : handlerConfig.data) {
                 FGCat fgCat = FGCat.from(index.category);
                 if (fgCat == FGCat.HANDLER || fgCat == FGCat.CONTROLLER) {
-                    Path directory = getObjectDirectory(index, null);
+                    Path directory = getObjectDirectory(index, null, false);
                     Optional<IGuardObject> fgObjectOptional = loadObject(directory, index, null);
                     if (fgObjectOptional.isPresent()) {
                         IGuardObject fgObject = fgObjectOptional.get();
@@ -445,7 +447,7 @@ public class FGStorageManagerNew {
             for (FGSObjectIndex index : worldRegionConfig.data) {
                 FGCat fgCat = FGCat.from(index.category);
                 if (fgCat == FGCat.WORLDREGION) {
-                    Path directory = getObjectDirectory(index, world);
+                    Path directory = getObjectDirectory(index, world, false);
                     Optional<IGuardObject> fgObjectOptional = loadObject(directory, index, world);
                     if (fgObjectOptional.isPresent()) {
                         IGuardObject fgObject = fgObjectOptional.get();
@@ -490,6 +492,8 @@ public class FGStorageManagerNew {
                 index = gson.fromJson(jsonReader, INDEX_LIST_TYPE);
             } catch (IOException e) {
                 logger.error("Failed to open index for reading: " + indexFile, e);
+            } catch (JsonParseException e) {
+                logger.error("Failed to parse index JSON: " + indexFile, e);
             }
         } else {
             logger.warn("Index file does not exist: " + indexFile);
@@ -507,6 +511,8 @@ public class FGStorageManagerNew {
                 metadata = gson.fromJson(jsonReader, FGSObjectMeta.class);
             } catch (IOException e) {
                 logger.error("Failed to open metadata for reading: " + metadataFile, e);
+            } catch (JsonParseException e) {
+                logger.error("Failed to parse metadata JSON: " + metadataFile, e);
             }
         }
 
@@ -573,7 +579,7 @@ public class FGStorageManagerNew {
             data.setEnabled(index.enabled);
 
         StringBuilder infoMessage = new StringBuilder();
-        infoMessage.append("Foxguard object info loaded!  Category: \"").append(category).append("\",  ");
+        infoMessage.append("FoxGuard object info loaded!  Category: \"").append(category).append("\",  ");
         infoMessage.append("Type: \"").append(type).append("\",  ");
         infoMessage.append("Name: \"").append(name).append("\",  ");
         if (isOwned) infoMessage.append("Owner: \"").append(ownerName).append("\",  ");
@@ -597,7 +603,7 @@ public class FGStorageManagerNew {
 
     public GsonBuilder getGsonBuilder() {
         GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapterFactory(BaseOwner.Adapter.Factory.INSTANCE);
+        builder.registerTypeAdapterFactory(IOwner.Factory.INSTANCE);
         if (prettyPrint) builder.setPrettyPrinting();
 
         return builder;
@@ -990,7 +996,7 @@ public class FGStorageManagerNew {
         }
     }
 
-    private Path getObjectDirectory(IGuardObject object) {
+    private Path getObjectDirectory(IGuardObject object, boolean construct) {
         World world = null;
         boolean flag = false;
         if (object instanceof IWorldBound) {
@@ -1001,19 +1007,21 @@ public class FGStorageManagerNew {
                 object.getOwner(),
                 object.getName(),
                 flag,
-                world);
+                world,
+                construct);
     }
 
-    private Path getObjectDirectory(FGSObjectMeta meta, @Nullable World world) {
+    private Path getObjectDirectory(FGSObjectMeta meta, @Nullable World world, boolean construct) {
         FGCat fgCat = FGCat.from(meta.category);
         return getObjectDirectory(fgCat,
                 meta.owner,
                 meta.name,
                 fgCat == FGCat.WORLDREGION,
-                world);
+                world,
+                construct);
     }
 
-    private Path getObjectDirectory(FGCat fgCat, IOwner owner, String name, boolean inWorld, @Nullable World world) {
+    private Path getObjectDirectory(FGCat fgCat, IOwner owner, String name, boolean inWorld, @Nullable World world, boolean construct) {
         if (fgCat == null) fgCat = FGCat.OBJECT;
         Path dir;
         if (inWorld) {
@@ -1033,8 +1041,8 @@ public class FGStorageManagerNew {
         if (ownerFirst) dir = dir.resolve(fgCat.pathName);
 
         dir = dir.resolve(name.toLowerCase());
-
-        constructDirectories(dir);
+        if (construct)
+            constructDirectories(dir);
         return dir;
     }
 
@@ -1192,7 +1200,7 @@ public class FGStorageManagerNew {
         public abstract IGuardObject loadInstance(Path directory, String type, FGObjectData data);
     }
 
-    public static class IndexConfig extends FoxConfig<List<FGSObjectIndex>>{
+    public static class IndexConfig extends FoxConfig<List<FGSObjectIndex>> {
         public IndexConfig() {
         }
 

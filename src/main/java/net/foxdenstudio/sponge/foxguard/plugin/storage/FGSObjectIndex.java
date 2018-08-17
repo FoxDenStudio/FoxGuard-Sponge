@@ -31,6 +31,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -89,5 +90,21 @@ public class FGSObjectIndex extends FGSObjectMeta {
 
     public void setLinks(List<FGSObjectPath> links) {
         this.links = links;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        FGSObjectIndex that = (FGSObjectIndex) o;
+        return Objects.equals(enabled, that.enabled) &&
+                Objects.equals(priority, that.priority) &&
+                Objects.equals(links, that.links);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), enabled, priority, links);
     }
 }

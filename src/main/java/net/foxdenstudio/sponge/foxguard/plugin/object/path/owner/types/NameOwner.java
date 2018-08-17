@@ -25,6 +25,11 @@ public class NameOwner extends SingleKeyComparableOwner<String> {
     }
 
     @Override
+    protected String getPartialCommandPath() {
+        return key;
+    }
+
+    @Override
     public String toString() {
         return "NameOwner{" + this.group + ", " + this.key + '}';
     }
@@ -47,7 +52,7 @@ public class NameOwner extends SingleKeyComparableOwner<String> {
         }
     }
 
-    public static class LiteralPathProvider extends SingleKeyOwner.LiteralPathProvider<String, NameOwner> {
+    public static class LiteralPathOwnerProvider extends SingleKeyOwner.LiteralPathOwnerProvider<String, NameOwner> {
 
         @Override
         protected String process(String element) {

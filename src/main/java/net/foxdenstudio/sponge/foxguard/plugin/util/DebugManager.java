@@ -48,7 +48,10 @@ public class DebugManager extends FCCommandBase {
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         String[] parts = arguments.split(" +");
-        if (parts.length == 0) return CommandResult.empty();
+        if (parts.length == 0) {
+            source.sendMessage(getUsage(source));
+            return CommandResult.empty();
+        }
 
         switch (parts[0]) {
             case "on":
@@ -123,5 +126,10 @@ public class DebugManager extends FCCommandBase {
             event.getContext().asMap().forEach((k, v) -> sb.append(k).append("::").append(v).append("\n"));
             FoxGuardMain.instance().getLogger().info(sb.toString());
         }
+    }
+
+    @Override
+    public Text getUsage(CommandSource source) {
+        return Text.of("debug <on | off | arm [count]>");
     }
 }

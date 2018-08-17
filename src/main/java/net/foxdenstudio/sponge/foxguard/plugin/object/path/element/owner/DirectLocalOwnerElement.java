@@ -1,9 +1,10 @@
-package net.foxdenstudio.sponge.foxguard.plugin.object.path.element;
+package net.foxdenstudio.sponge.foxguard.plugin.object.path.element.owner;
 
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.IPathElement;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.UUIDOwner;
 import org.spongepowered.api.command.CommandSource;
@@ -25,7 +26,7 @@ public class DirectLocalOwnerElement implements IOwnerPathElement {
 
     public DirectLocalOwnerElement(@Nullable UUID uuid) {
         this.uuid = uuid;
-        owner = uuid == null ? FGManager.SERVER_OWNER :new UUIDOwner(UUIDOwner.USER_GROUP, this.uuid);
+        owner = uuid == null ? FGManager.SERVER_OWNER : new UUIDOwner(UUIDOwner.USER_GROUP, uuid);
     }
 
     @Override
@@ -57,7 +58,11 @@ public class DirectLocalOwnerElement implements IOwnerPathElement {
 
     @Override
     public boolean isValid() {
-        return false;
+        return true;
+    }
+
+    public UUID getUuid() {
+        return uuid;
     }
 
     @Override

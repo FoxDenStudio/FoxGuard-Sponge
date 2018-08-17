@@ -37,8 +37,6 @@ import java.util.Set;
  */
 public interface IRegion extends IGuardObject, ILinkable, IBounded {
 
-    String SUFFIX = "r";
-
     @Override
     Set<IHandler> getLinks();
 
@@ -48,7 +46,7 @@ public interface IRegion extends IGuardObject, ILinkable, IBounded {
     }
 
     @Override
-    default String getPathExtension() {
-        return SUFFIX;
+    default String getFilter(){
+        return "r";
     }
 }

@@ -1,6 +1,6 @@
 package net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types;
 
-import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.provider.LiteralPathProviderBase;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.provider.LiteralPathOwnerProviderBase;
 
 import javax.annotation.Nonnull;
 import java.util.Objects;
@@ -35,11 +35,10 @@ public abstract class SingleKeyOwner<T> extends BaseOwner {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(super.hashCode(), this.key);
     }
 
-    public static abstract class LiteralPathProvider<T, O extends BaseOwner> extends LiteralPathProviderBase<O> {
+    public static abstract class LiteralPathOwnerProvider<T, O extends BaseOwner> extends LiteralPathOwnerProviderBase<O> {
 
         T key = null;
         boolean valid = false;

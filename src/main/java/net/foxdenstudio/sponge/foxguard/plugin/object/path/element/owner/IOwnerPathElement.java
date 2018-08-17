@@ -1,5 +1,6 @@
-package net.foxdenstudio.sponge.foxguard.plugin.object.path.element;
+package net.foxdenstudio.sponge.foxguard.plugin.object.path.element.owner;
 
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.IPathElement;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 
 import java.util.Optional;

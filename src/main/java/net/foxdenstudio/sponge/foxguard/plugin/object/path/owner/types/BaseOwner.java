@@ -47,7 +47,14 @@ public abstract class BaseOwner implements IOwner {
         return Paths.get(FGStorageManagerNew.OWNERS_DIR_NAME, group, type).resolve(getPartialDirectory());
     }
 
+    @Override
+    public String getCommandPath() {
+        return "::" + this.group + "/" + this.type + "/" + getPartialCommandPath();
+    }
+
     protected abstract Path getPartialDirectory();
+
+    protected abstract String getPartialCommandPath();
 
     @Override
     public boolean equals(Object o) {
@@ -149,6 +156,8 @@ public abstract class BaseOwner implements IOwner {
             }
             in.endObject();
 
+            if (owner != null) return owner;
+
             if (group == null || group.isEmpty() || type == null || type.isEmpty()) return null;
 
             if (tree != null) {
@@ -160,21 +169,6 @@ public abstract class BaseOwner implements IOwner {
             return owner;
         }
 
-        public static class Factory implements TypeAdapterFactory {
-
-            public static final Factory INSTANCE = new Factory();
-
-            private Factory(){}
-
-            @SuppressWarnings("unchecked")
-            @Override
-            public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
-                if (!BaseOwner.class.isAssignableFrom(type.getRawType())) return null;
-                TypeAdapter<JsonElement> jsonElementTypeAdapter = gson.getAdapter(JsonElement.class);
-                Adapter adapter = new Adapter(jsonElementTypeAdapter, gson);
-                return (TypeAdapter<T>) adapter;
-            }
-        }
     }
 
 }

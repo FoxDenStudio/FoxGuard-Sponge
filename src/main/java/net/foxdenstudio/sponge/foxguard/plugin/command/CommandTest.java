@@ -142,9 +142,11 @@ public class CommandTest extends FCCommandBase {
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
 
-        Optional<? extends IOwner> ownerOpt = FoxPath.getOwner(arguments, source);
+//        Optional<? extends IOwner> ownerOpt = FoxPath.getOwner(arguments, source);
+//
+//        source.sendMessage(Text.of(ownerOpt));
 
-        source.sendMessage(Text.of(ownerOpt));
+
 
         return CommandResult.empty();
     }

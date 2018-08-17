@@ -37,7 +37,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
-import net.foxdenstudio.sponge.foxguard.plugin.object.owner.OwnerManager;
+import net.foxdenstudio.sponge.foxguard.plugin.object.ownerold.OwnerManager;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.UUIDOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
@@ -61,14 +61,13 @@ import org.spongepowered.api.world.World;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
-public class CommandDetail extends FCCommandBase {
+public class    CommandDetail extends FCCommandBase {
 
     private static final FlagMapper MAPPER = map -> key -> value -> {
         map.put(key, value);

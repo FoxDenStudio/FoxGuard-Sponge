@@ -1,8 +1,9 @@
-package net.foxdenstudio.sponge.foxguard.plugin.object.path.element;
+package net.foxdenstudio.sponge.foxguard.plugin.object.path.element.group;
 
-import com.google.common.collect.ImmutableMap;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.PathManager;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.IPathElement;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.IPathOnlyElement;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
@@ -11,44 +12,21 @@ import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.Identifiable;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
-public class RootGroupElement extends StructuredGroupElement {
+public class ServerGroupElement extends ExtendedGroupElement {
 
-    public RootGroupElement() {
-        this(ImmutableMap.of());
-    }
-
-    public RootGroupElement(Map<String, IPathElement> fixedChildren) {
-        super(fixedChildren);
+    @Override
+    public Optional<? extends IPathElement> getExtension(String name) {
+        return PathManager.getInstance().getServerGroupExtension(name);
     }
 
     @Override
-    public boolean isPersistent() {
-        return true;
+    public Map<String, ? extends IPathElement> getExtensions() {
+        return PathManager.getInstance().getServerGroupExtensions();
     }
 
-    public static RootGroupElement createServer(@Nullable PathManager manager) {
-        if(manager == null) manager = PathManager.getInstance();
-        Map<String, IPathElement> fixed = new HashMap<>();
-
-        fixed.put("s", manager.getServerLocalGroup());
-
-        fixed.put("p", new PlayerAccessNameElement());
-
-        fixed.put("o", new PlayerAccessOfflineElement());
-
-        fixed.put("u", new PlayerAccessUUIDElement());
-
-        return new RootGroupElement(fixed);
-    }
-
-    public static RootGroupElement createLocal() {
-        return new RootGroupElement();
-    }
-
-    private static class PlayerAccessNameElement implements IPathOnlyElement, IPathElement {
+    public static class PlayerAccessNameElement implements IPathOnlyElement {
 
         @Override
         public Optional<? extends IPathElement> resolve(String name) {
@@ -66,7 +44,7 @@ public class RootGroupElement extends StructuredGroupElement {
         }
     }
 
-    private static class PlayerAccessOfflineElement implements IPathOnlyElement, IPathElement {
+    public static class PlayerAccessOfflineElement implements IPathOnlyElement {
 
         @Override
         public Optional<? extends IPathElement> resolve(String name) {
@@ -88,7 +66,7 @@ public class RootGroupElement extends StructuredGroupElement {
         }
     }
 
-    private static class PlayerAccessUUIDElement implements IPathOnlyElement, IPathElement {
+    public static class PlayerAccessUUIDElement implements IPathOnlyElement {
 
         public static final String UUID_REGEX = "[\\da-f]{8}-[\\da-f]{4}-[\\da-f]{4}-[\\da-f]{4}-[\\da-f]{12}";
 

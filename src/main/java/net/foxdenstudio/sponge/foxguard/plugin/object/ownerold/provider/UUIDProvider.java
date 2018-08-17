@@ -23,7 +23,7 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.object.owner.provider;
+package net.foxdenstudio.sponge.foxguard.plugin.object.ownerold.provider;
 
 import com.google.common.collect.ImmutableList;
 

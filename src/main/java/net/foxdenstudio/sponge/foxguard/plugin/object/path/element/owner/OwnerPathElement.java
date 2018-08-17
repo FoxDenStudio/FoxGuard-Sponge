@@ -1,4 +1,4 @@
-package net.foxdenstudio.sponge.foxguard.plugin.object.path.element;
+package net.foxdenstudio.sponge.foxguard.plugin.object.path.element.owner;
 
 import com.google.common.collect.ImmutableMap;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
@@ -6,6 +6,7 @@ import net.foxdenstudio.sponge.foxguard.plugin.object.path.PathManager;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.provider.PathOwnerProvider;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.BaseOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
+import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.world.World;
 
 import javax.annotation.Nonnull;
@@ -123,25 +124,29 @@ public abstract class OwnerPathElement<P extends PathOwnerProvider<? extends IOw
         }
     }
 
-    public static class Dynamic extends OwnerPathElement<PathOwnerProvider<? extends IOwner>> {
+    public static class Dynamic extends OwnerPathElement<PathOwnerProvider.Dynamic<? extends IOwner>> {
 
         public final String type;
+        public final CommandSource source;
 
-        public Dynamic(String prefix) {
+        public Dynamic(String prefix, CommandSource source) {
             super(prefix);
             this.type = null;
+            this.source = source;
         }
 
         private Dynamic(Dynamic parent, String next) {
             super(parent, next);
+            this.source = parent.source;
             int size = this.currentPath.size();
 
             this.type = size > 0 ? this.currentPath.get(0) : null;
 
             if (size > 0) {
-                PathOwnerProvider.Factory<? extends IOwner> providerFactory = MANAGER.getDynamicPathOwnerProvider(this.type);
+                PathOwnerProvider.Dynamic.Factory<? extends IOwner> providerFactory = MANAGER.getDynamicPathOwnerProvider(this.type);
                 if (providerFactory != null) {
                     this.provider = providerFactory.get();
+                    this.provider.setSource(source);
                     for (int i = 1; i < size; i++) {
                         String element = this.currentPath.get(i);
                         this.provider.apply(element);

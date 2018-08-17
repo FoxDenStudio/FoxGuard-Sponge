@@ -22,13 +22,18 @@ public class UUIDOwner extends SingleKeyComparableOwner<UUID> {
         super(TYPE, group, uuid);
     }
 
-    public UUIDOwner(User user){
+    public UUIDOwner(User user) {
         this(USER_GROUP, user.getUniqueId());
     }
 
     @Override
     public Path getPartialDirectory() {
         return Paths.get(key.toString());
+    }
+
+    @Override
+    protected String getPartialCommandPath() {
+        return key.toString();
     }
 
     @Override
@@ -54,7 +59,7 @@ public class UUIDOwner extends SingleKeyComparableOwner<UUID> {
         }
     }
 
-    public static class LiteralPathProvider extends SingleKeyOwner.LiteralPathProvider<UUID, UUIDOwner> {
+    public static class LiteralPathOwnerProvider extends SingleKeyOwner.LiteralPathOwnerProvider<UUID, UUIDOwner> {
 
         @Override
         protected UUID process(String element) {

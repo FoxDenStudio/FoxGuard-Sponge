@@ -156,17 +156,6 @@ public interface IGuardObject extends IModifiable, IFGObject {
         return FGStorageManagerNew.getInstance().defaultModifiedMap.get(this);
     }
 
-    @Override
-    default String getFullName(){
-        // TODO Rewrite full name impl to use paths with full owners or static IDs
-        IOwner owner = this.getOwner();
-        String fullName = this.getName();
-        if (owner != null && !owner.equals(FGManager.SERVER_OWNER)) {
-            fullName = owner + ":" + fullName;
-        }
-        return fullName;
-    }
-
     default boolean stillExists(){
         return FGManager.getInstance().contains(this);
     }

@@ -1,10 +1,10 @@
 package net.foxdenstudio.sponge.foxguard.plugin.object.path;
 
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
-import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.DirectLocalOwnerElement;
-import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.IOwnerPathElement;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.IPathElement;
-import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.OwnerPathElement;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.owner.DirectLocalOwnerElement;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.owner.IOwnerPathElement;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.owner.OwnerPathElement;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.world.World;
@@ -29,9 +29,9 @@ public final class FoxPath {
     public static final String LOCAL_GROUP_PREFIX = "/";
     public static final String WORKING_PATH_PREFIX = "./";
 
-    public static final Root DEFAULT_ROOT = Root.SERVER_OWNER;
-
     private static final PathManager PATH_MANAGER = PathManager.getInstance();
+
+    public static final Root DEFAULT_ROOT = Root.SERVER_OWNER;
 
     private int depth = 0;
     private Root root;
@@ -82,7 +82,7 @@ public final class FoxPath {
     }
 
 
-    public static Optional<IFGObject> getObject(@Nonnull String input, @Nullable CommandSource source, @Nullable String extension, @Nullable World world) {
+    public static Optional<IFGObject> getObjects(@Nonnull String input, @Nullable CommandSource source) {
         if (input.isEmpty()) return Optional.empty();
         Root rootPath = Root.from(input);
 
@@ -203,7 +203,7 @@ public final class FoxPath {
         SERVER_OWNER(new DirectLocalOwnerElement.Suppier(true), SERVER_OWNER_PREFIX), // ->  ://
         LOCAL_OWNER(new DirectLocalOwnerElement.Suppier(false), LOCAL_OWNER_PREFIX, LOCAL_OWNER_PREFIX_ALT), // ->  :/  :~/
         LITERAL_OWNER(source -> new OwnerPathElement.Literal(LITERAL_PREFIX), LITERAL_PREFIX), // ->  ::
-        DYNAMIC_OWNER(source -> new OwnerPathElement.Dynamic(DYNAMIC_PREFIX), DYNAMIC_PREFIX, LOCAL_ALT_CHAR + DYNAMIC_PREFIX), // ->  :  ~:
+        DYNAMIC_OWNER(source -> new OwnerPathElement.Dynamic(DYNAMIC_PREFIX, source), DYNAMIC_PREFIX, LOCAL_ALT_CHAR + DYNAMIC_PREFIX), // ->  :  ~:
         SERVER_GROUP(source -> PATH_MANAGER.getServerGroup(), SERVER_GROUP_PREFIX), // ->  //
         LOCAL_GROUP(PATH_MANAGER::getLocalGroup, LOCAL_GROUP_PREFIX, LOCAL_ALT_CHAR + LOCAL_GROUP_PREFIX), // ->  /  ~/
         //WORKING_PATH(),

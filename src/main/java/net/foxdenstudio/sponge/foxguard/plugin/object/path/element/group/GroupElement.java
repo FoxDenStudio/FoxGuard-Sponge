@@ -1,7 +1,9 @@
-package net.foxdenstudio.sponge.foxguard.plugin.object.path.element;
+package net.foxdenstudio.sponge.foxguard.plugin.object.path.element.group;
 
 import com.google.common.collect.ImmutableMap;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.IModifiablePathElement;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.element.IPathElement;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.world.World;
 

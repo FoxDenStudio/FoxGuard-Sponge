@@ -36,8 +36,8 @@ import net.foxdenstudio.sponge.foxguard.plugin.event.factory.FGEventFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
-import net.foxdenstudio.sponge.foxguard.plugin.object.owner.OwnerManager;
-import net.foxdenstudio.sponge.foxguard.plugin.object.owner.provider.IOwnerProvider;
+import net.foxdenstudio.sponge.foxguard.plugin.object.ownerold.OwnerManager;
+import net.foxdenstudio.sponge.foxguard.plugin.object.ownerold.provider.IOwnerProvider;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.UUIDOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.region.GlobalRegion;
@@ -281,7 +281,10 @@ public final class FGUtil {
 
 
     public static OwnerResult processUserInput(String input) throws CommandException {
-        if (input.startsWith(":")) input = input.substring(1);
+
+        return new OwnerResult(input, FGManager.SERVER_OWNER, FGManager.SERVER_OWNER.toString());
+
+        /*if (input.startsWith(":")) input = input.substring(1);
         String[] parts = input.split(":", 3);
 
         String name = null;
@@ -312,7 +315,7 @@ public final class FGUtil {
             String errorName = (provider != null ? provider + ":" : "") + ownerQualifier;
             throw new CommandException(Text.of("\"" + errorName + "\" is not a valid owner!"));
         }
-        return new OwnerResult(name, new UUIDOwner(UUIDOwner.USER_GROUP, ownerOpt.get()), ownerQualifier);
+        return new OwnerResult(name, new UUIDOwner(UUIDOwner.USER_GROUP, ownerOpt.get()), ownerQualifier);*/
     }
 
     public static OwnerTabResult getOwnerSuggestions(String input) {

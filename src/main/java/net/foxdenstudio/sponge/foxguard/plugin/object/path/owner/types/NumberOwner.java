@@ -24,6 +24,11 @@ public class NumberOwner extends SingleKeyComparableOwner<Integer> {
     }
 
     @Override
+    protected String getPartialCommandPath() {
+        return key.toString();
+    }
+
+    @Override
     public String toString() {
         return "NumberOwner{" + this.group + ", " + this.key + '}';
     }
@@ -47,7 +52,7 @@ public class NumberOwner extends SingleKeyComparableOwner<Integer> {
     }
 
 
-    public static class LiteralPathProvider extends SingleKeyOwner.LiteralPathProvider<Integer, NumberOwner> {
+    public static class LiteralPathOwnerProvider extends SingleKeyOwner.LiteralPathOwnerProvider<Integer, NumberOwner> {
 
         @Override
         protected Integer process(String element) {

@@ -9,5 +9,6 @@ public class FoxConfig<T> extends FoxConfigStub{
     public FoxConfig(T data, Integer version) {
         super(version);
         this.data = data;
+        this.hash = data.hashCode();
     }
 }

@@ -37,7 +37,6 @@ import java.util.Comparator;
 public interface IHandler extends IGuardObject {
 
     Comparator<IHandler> PRIORITY = Comparator.comparingInt(IHandler::getPriority);
-    String EXTENSION = "h";
 
     EventResult handle(@Nullable User user, FlagSet flags, ExtraContext extra);
 
@@ -46,7 +45,7 @@ public interface IHandler extends IGuardObject {
     void setPriority(int priority);
 
     @Override
-    default String getPathExtension() {
-        return EXTENSION;
+    default String getFilter(){
+        return "h";
     }
 }

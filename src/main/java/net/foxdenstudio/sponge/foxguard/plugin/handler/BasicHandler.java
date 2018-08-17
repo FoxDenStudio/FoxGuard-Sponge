@@ -1723,6 +1723,7 @@ public class BasicHandler extends HandlerBase {
             if (gsonData != null) {
                 groupNames.addAll(gsonData.groups.keySet());
             } else {
+                // Legacy code
                 Path dbFile = directory.resolve("groups.foxdb");
                 if (Files.exists(dbFile) && !Files.isDirectory(dbFile))
                     try (DB flagMapDB = FGSLegacyLoader.openFoxDB(dbFile)) {
@@ -1759,6 +1760,7 @@ public class BasicHandler extends HandlerBase {
                 }
                 defaultPermissions = gsonData.defaultGroup;
             } else {
+                // Legacy Code
                 Path dbFile = directory.resolve("flags.foxdb");
                 if (Files.exists(dbFile) && !Files.isDirectory(dbFile)) {
                     try (DB flagMapDB = FGSLegacyLoader.openFoxDB(dbFile)) {

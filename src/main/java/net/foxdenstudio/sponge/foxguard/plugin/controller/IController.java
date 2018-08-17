@@ -29,7 +29,6 @@ import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.List;
 
 public interface IController extends IHandler, ILinkable {
@@ -57,5 +56,10 @@ public interface IController extends IHandler, ILinkable {
     @Override
     default boolean saveLinks(){
         return false;
+    }
+
+    @Override
+    default String getFilter() {
+        return "c";
     }
 }
