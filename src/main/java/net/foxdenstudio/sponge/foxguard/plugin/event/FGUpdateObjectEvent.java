@@ -25,10 +25,10 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.event;
 
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 
 public interface FGUpdateObjectEvent extends FGUpdateEvent {
 
-    IFGObject getTarget();
+    IGuardObject getTarget();
 
 }

@@ -53,6 +53,7 @@ public class ExtraContext {
         return false;
     }
 
+    @SuppressWarnings("unchecked")
     public <T> Optional<T> first(Class<T> clazz) {
         for (Object o : objects) {
             if (clazz.isInstance(o)) {

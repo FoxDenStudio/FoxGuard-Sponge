@@ -66,9 +66,9 @@ public class CommandLink2 extends FCCommandBase {
         int[] successes = {0};
         set.forEach(entry -> {
             if (link) {
-                if (entry.linkable.addHandler(entry.handler)) successes[0]++;
+                if (entry.linkable.addLink(entry.handler)) successes[0]++;
             } else {
-                if (entry.linkable.removeHandler(entry.handler)) successes[0]++;
+                if (entry.linkable.removeLink(entry.handler)) successes[0]++;
             }
         });
         if (successes[0] > 0) {

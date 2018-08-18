@@ -30,7 +30,8 @@ import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.Transaction;
@@ -61,21 +62,20 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
     public void handle(ExplosionEvent event) throws Exception {
         if (!(event instanceof Cancellable) || ((Cancellable) event).isCancelled()) return;
 
-
         boolean[] flags = FLAG_SET.clone();
 
         Set<IHandler> handlerSet = new HashSet<>();
         if (event instanceof ExplosionEvent.Post) {
             ExplosionEvent.Post postEvent = (ExplosionEvent.Post) event;
             List<Transaction<BlockSnapshot>> transactions = postEvent.getTransactions();
-            if(transactions.size() == 0) return;
+            if (transactions.size() == 0) return;
 
             FGManager.getInstance().getRegionsAtMultiLocI(
                     transactions.stream()
                             .map(trans -> trans.getOriginal().getLocation().get())
                             .collect(Collectors.toList())
-            ).forEach(region -> region.getHandlers().stream()
-                    .filter(IFGObject::isEnabled)
+            ).forEach(region -> region.getLinks().stream()
+                    .filter(IGuardObject::isEnabled)
                     .forEach(handlerSet::add));
 
             flags[POST.id] = true;
@@ -84,11 +84,11 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
         } else if (event instanceof ExplosionEvent.Detonate) {
             ExplosionEvent.Detonate detonateEvent = ((ExplosionEvent.Detonate) event);
             List<Location<World>> locations = detonateEvent.getAffectedLocations();
-            if(locations.size() == 0) return;
+            if (locations.isEmpty()) return;
 
             FGManager.getInstance().getRegionsAtMultiLocI(locations)
-                    .forEach(region -> region.getHandlers().stream()
-                            .filter(IFGObject::isEnabled)
+                    .forEach(region -> region.getLinks().stream()
+                            .filter(IGuardObject::isEnabled)
                             .forEach(handlerSet::add));
 
             flags[DETONATE.id] = true;
@@ -98,13 +98,13 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
             World world = loc.getExtent();
             FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                     .filter(region -> region.contains(pos, world))
-                    .forEach(region -> region.getHandlers().stream()
-                            .filter(IFGObject::isEnabled)
+                    .forEach(region -> region.getLinks().stream()
+                            .filter(IGuardObject::isEnabled)
                             .forEach(handlerSet::add));
 
             flags[PRE.id] = true;
         }
-        if(handlerSet.size() == 0){
+        if (handlerSet.isEmpty()) {
             FoxGuardMain.instance().getLogger().warn("Handlers were empty for explosion listener!");
             return;
         }
@@ -115,6 +115,7 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
         } else if (event.getCause().containsType(User.class)) {
             user = event.getCause().first(User.class).get();
         } else {
+            // Duct tape:
             Optional<Explosive> explosiveOptional = event.getExplosion().getSourceExplosive();
             if (explosiveOptional.isPresent()) {
                 Explosive explosive = explosiveOptional.get();
@@ -128,18 +129,29 @@ public class ExplosionListener implements EventListener<ExplosionEvent> {
         }
 
         List<IHandler> handlerList = new ArrayList<>(handlerSet);
+        handlerList.sort(IHandler.PRIORITY);
 
-        Collections.sort(handlerList);
         int currPriority = handlerList.get(0).getPriority();
+
         Tristate flagState = Tristate.UNDEFINED;
         FlagSet flagSet = new FlagSet(flags);
+
         for (IHandler handler : handlerList) {
             if (handler.getPriority() < currPriority && flagState != Tristate.UNDEFINED) {
                 break;
             }
-            flagState = flagState.and(handler.handle(user, flagSet, ExtraContext.of(event)).getState());
+
+            EventResult result = handler.handle(user, flagSet, ExtraContext.of(event));
+            if (result != null) {
+                flagState = flagState.and(result.getState());
+            } else {
+                FoxGuardMain.instance().getLogger().error("Handler \"" + handler.getName() + "\" of type \"" + handler.getUniqueTypeString() + "\" returned null!");
+            }
+
             currPriority = handler.getPriority();
         }
+
+
         if (flagState == Tristate.FALSE) {
             if (user instanceof Player)
                 ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));

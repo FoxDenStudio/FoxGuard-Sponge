@@ -26,20 +26,18 @@
 package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.vector.Vector3d;
+import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.listener.util.FGListenerUtil;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EntityFlagCalculator;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.entity.Entity;
-import org.spongepowered.api.entity.hanging.Hanging;
-import org.spongepowered.api.entity.living.*;
+import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.entity.vehicle.Boat;
-import org.spongepowered.api.entity.vehicle.minecart.Minecart;
 import org.spongepowered.api.event.EventListener;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.entity.damage.DamageModifier;
@@ -54,8 +52,9 @@ import org.spongepowered.api.world.World;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 import static org.spongepowered.api.util.Tristate.*;
@@ -65,6 +64,7 @@ import static org.spongepowered.api.util.Tristate.*;
  */
 public class DamageListener implements EventListener<DamageEntityEvent> {
 
+    private static final EntityFlagCalculator ENTITY_FLAG_CALCULATOR = EntityFlagCalculator.getInstance();
     private static final boolean[] BASE_FLAGS_SOURCE = FlagSet.arrayFromFlags(ROOT, DEBUFF, DAMAGE, ENTITY);
     private static final boolean[] INVINCIBLE_FLAGS = FlagSet.arrayFromFlags(ROOT, BUFF, INVINCIBLE);
     private static final FlagSet INVINCIBLE_FLAG_SET = new FlagSet(INVINCIBLE_FLAGS);
@@ -80,28 +80,38 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
         Vector3d pos = event.getTargetEntity().getLocation().getPosition();
         Entity entity = event.getTargetEntity();
 
-        List<IHandler> handlerList = new ArrayList<>();
+        Set<IHandler> handlerSet = new HashSet<>();
         FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                 .filter(region -> region.contains(pos, world))
-                .forEach(region -> region.getHandlers().stream()
-                        .filter(IFGObject::isEnabled)
-                        .filter(handler -> !handlerList.contains(handler))
-                        .forEach(handlerList::add));
-
-        Collections.sort(handlerList);
-        int currPriority;
+                .forEach(region -> region.getLinks().stream()
+                        .filter(IGuardObject::isEnabled)
+                        .forEach(handlerSet::add));
         Tristate flagState = UNDEFINED;
         boolean invincible = false;
+
+        if (handlerSet.isEmpty()) {
+            FoxGuardMain.instance().getLogger().error("Handlers list is empty for event: " + event);
+        }
+
+        List<IHandler> handlerList = new ArrayList<>(handlerSet);
+        handlerList.sort(IHandler.PRIORITY);
+
+        int currPriority;
         if (entity instanceof Player) {
             currPriority = handlerList.get(0).getPriority();
             for (IHandler handler : handlerList) {
                 if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                     break;
                 }
-                flagState = flagState.and(handler.handle((Player) entity, INVINCIBLE_FLAG_SET, ExtraContext.of(event)).getState());
+                EventResult result = handler.handle((Player) entity, INVINCIBLE_FLAG_SET, ExtraContext.of(event));
+                if (result != null) {
+                    flagState = flagState.and(result.getState());
+                } else {
+                    FoxGuardMain.instance().getLogger().error("Handler \"" + handler.getName() + "\" of type \"" + handler.getUniqueTypeString() + "\" returned null!");
+                }
                 currPriority = handler.getPriority();
             }
-//            if(flagState == UNDEFINED) flagState = FALSE;
+
             if (flagState == TRUE) {
                 invincible = true;
                 flagState = FALSE;
@@ -115,7 +125,9 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
 
             flags = BASE_FLAGS_SOURCE.clone();
 
-            FGListenerUtil.applyEntityFlags(entity, flags);
+            //FGListenerUtil.applyEntityFlags(entity, flags);
+            ENTITY_FLAG_CALCULATOR.applyEntityFlags(ImmutableList.of(entity), flags);
+
 
             flagSet = new FlagSet(flags);
             currPriority = handlerList.get(0).getPriority();
@@ -124,7 +136,12 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
                 if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                     break;
                 }
-                flagState = flagState.and(handler.handle(player, flagSet, ExtraContext.of(event)).getState());
+                EventResult result = handler.handle(player, flagSet, ExtraContext.of(event));
+                if (result != null) {
+                    flagState = flagState.and(result.getState());
+                } else {
+                    FoxGuardMain.instance().getLogger().error("Handler \"" + handler.getName() + "\" of type \"" + handler.getUniqueTypeString() + "\" returned null!");
+                }
                 currPriority = handler.getPriority();
             }
 //            if(flagState == UNDEFINED) flagState = TRUE;
@@ -144,7 +161,12 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
                         if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                             break;
                         }
-                        flagState = flagState.and(handler.handle((Player) entity, UNDYING_FLAG_SET, ExtraContext.of(event)).getState());
+                        EventResult result = handler.handle(player, UNDYING_FLAG_SET, ExtraContext.of(event));
+                        if (result != null) {
+                            flagState = flagState.and(result.getState());
+                        } else {
+                            FoxGuardMain.instance().getLogger().error("Handler \"" + handler.getName() + "\" of type \"" + handler.getUniqueTypeString() + "\" returned null!");
+                        }
                         currPriority = handler.getPriority();
                     }
 //                    if(flagState == UNDEFINED) flagState = FALSE;
@@ -164,7 +186,12 @@ public class DamageListener implements EventListener<DamageEntityEvent> {
                         if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                             break;
                         }
-                        flagState = flagState.and(handler.handle(player, flagSet, ExtraContext.of(event)).getState());
+                        EventResult result = handler.handle(player, flagSet, ExtraContext.of(event));
+                        if (result != null) {
+                            flagState = flagState.and(result.getState());
+                        } else {
+                            FoxGuardMain.instance().getLogger().error("Handler \"" + handler.getName() + "\" of type \"" + handler.getUniqueTypeString() + "\" returned null!");
+                        }
                         currPriority = handler.getPriority();
                     }
 //                    if(flagState == UNDEFINED) flagState = TRUE;

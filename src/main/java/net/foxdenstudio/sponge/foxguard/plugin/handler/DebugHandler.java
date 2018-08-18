@@ -59,6 +59,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
@@ -71,12 +72,12 @@ public class DebugHandler extends HandlerBase {
     public boolean console;
     private TextColor color = TextColors.WHITE;
 
-    public DebugHandler(String name, int priority) {
-        this(name, true, priority, new HashSet<>(), false, TextColors.WHITE);
+    public DebugHandler(HandlerData data) {
+        this(data, new HashSet<>(), false, TextColors.WHITE);
     }
 
-    public DebugHandler(String name, boolean isEnabled, int priority, Set<UUID> members, boolean console, TextColor color) {
-        super(name, priority, isEnabled);
+    public DebugHandler(HandlerData data, Set<UUID> members, boolean console, TextColor color) {
+        super(data);
         this.members = members;
         this.console = console;
         this.color = color;
@@ -303,18 +304,18 @@ public class DebugHandler extends HandlerBase {
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0) {
-                return ImmutableList.of("members", "console", "color").stream()
+                return Stream.of("members", "console", "color")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             } else if (parse.current.index == 1) {
                 if (parse.args[0].equalsIgnoreCase("members")) {
-                    return ImmutableList.of("add", "remove", "set").stream()
+                    return Stream.of("add", "remove", "set")
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (parse.args[0].equalsIgnoreCase("console")) {
-                    return ImmutableList.of("true", "false", "color").stream()
+                    return Stream.of("true", "false")
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
@@ -390,15 +391,15 @@ public class DebugHandler extends HandlerBase {
         private static final String[] ALIASES = {"debug", "debugger", "info"};
 
         @Override
-        public IHandler create(String name, int priority, String arguments, CommandSource source) throws CommandException {
-            DebugHandler handler = new DebugHandler(name, priority);
+        public IHandler create(String name, String arguments, CommandSource source) throws CommandException {
+            DebugHandler handler = new DebugHandler(new HandlerData().setName(name));
             if (source instanceof Player) handler.members.add(((Player) source).getUniqueId());
             else if (source instanceof ConsoleSource) handler.console = true;
             return handler;
         }
 
         @Override
-        public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
+        public IHandler create(Path directory, HandlerData data) {
             UserStorageService userStorageService = FoxGuardMain.instance().getUserStorage();
             Path configFile = directory.resolve("config.cfg");
             ConfigurationLoader<CommentedConfigurationNode> loader =
@@ -416,7 +417,7 @@ public class DebugHandler extends HandlerBase {
                     .collect(Collectors.toSet());
             boolean console = root.getNode("console").getBoolean(false);
             TextColor color = Sponge.getRegistry().getType(TextColor.class, root.getNode("color").getString("white")).orElse(TextColors.WHITE);
-            return new DebugHandler(name, isEnabled, priority, members, console, color);
+            return new DebugHandler(data, members, console, color);
         }
 
         @Override

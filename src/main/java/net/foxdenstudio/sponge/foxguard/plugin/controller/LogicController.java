@@ -30,6 +30,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.HandlerData;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IControllerFactory;
@@ -58,6 +59,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 import static org.spongepowered.api.text.format.TextColors.*;
@@ -76,12 +78,12 @@ public class LogicController extends ControllerBase {
     private Tristate mode = UNDEFINED;
     private boolean shortCircuit = false;
 
-    public LogicController(String name, int priority) {
-        super(name, true, priority);
+    public LogicController(String name) {
+        super(new HandlerData().setName(name));
     }
 
-    public LogicController(String name, boolean isEnabled, int priority, Operator operator, Tristate mode, boolean shortCircuit) {
-        super(name, isEnabled, priority);
+    public LogicController(HandlerData data, Operator operator, Tristate mode, boolean shortCircuit) {
+        super(data);
         this.operator = operator;
         this.mode = mode;
         this.shortCircuit = shortCircuit;
@@ -89,7 +91,7 @@ public class LogicController extends ControllerBase {
 
     @Override
     public EventResult handle(@Nullable User user, FlagSet flags, ExtraContext extra) {
-        return EventResult.of(operator.operate(this.handlers, mode, shortCircuit, user, flags, extra));
+        return EventResult.of(operator.operate(this.links, mode, shortCircuit, user, flags, extra));
     }
 
     @Override
@@ -116,7 +118,7 @@ public class LogicController extends ControllerBase {
     public Text details(CommandSource source, String arguments) {
         Text.Builder builder = Text.builder();
         builder.append(Text.of(
-                TextActions.suggestCommand("/foxguard md h " + this.name + " operator "),
+                TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " operator "),
                 TextActions.showText(Text.of(Text.of("Click to change operator"))),
                 TextColors.GOLD, "Operator: ",
                 operator.color, operator.toString()
@@ -124,13 +126,13 @@ public class LogicController extends ControllerBase {
         builder.append(Text.builder()
                 .append(Text.of(TextColors.GOLD, "\nMode: "))
                 .append(FGUtil.readableTristateText(mode))
-                .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " mode "))
+                .onClick(TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " mode "))
                 .onHover(TextActions.showText(Text.of(Text.of("Click to change mode"))))
                 .build());
         builder.append(Text.builder()
                 .append(Text.of(TextColors.GOLD, "\nShort Circuit: "))
                 .append(Text.of(FCPUtil.readableBooleanText(shortCircuit)))
-                .onClick(TextActions.runCommand("/foxguard md h " + this.name + " shortCircuit " + !shortCircuit))
+                .onClick(TextActions.runCommand("/foxguard md h " + this.getFullName() + " shortCircuit " + !shortCircuit))
                 .onHover(TextActions.showText(Text.of(Text.of("Click to toggle short circuit"))))
                 .build());
         return builder.build();
@@ -200,7 +202,7 @@ public class LogicController extends ControllerBase {
                 .parse();
         if (parse.current.type == AdvCmdParser.CurrentElement.ElementType.ARGUMENT) {
             if (parse.current.index == 0) {
-                return ImmutableList.of("operator", "mode", "short").stream()
+                return Stream.of("operator", "mode", "short")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
@@ -213,12 +215,12 @@ public class LogicController extends ControllerBase {
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(MODE_ALIASES, parse.args[0])) {
-                    return ImmutableList.of("allow", "deny", "pass").stream()
+                    return Stream.of("allow", "deny", "pass")
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (isIn(SHORT_ALIASES, parse.args[0])) {
-                    return ImmutableList.of("true", "false").stream()
+                    return Stream.of("true", "false")
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
@@ -380,6 +382,7 @@ public class LogicController extends ControllerBase {
             }
             return null;
         }
+
     }
 
     public static final class Factory implements IControllerFactory {
@@ -387,8 +390,8 @@ public class LogicController extends ControllerBase {
         public static final String[] LOGIC_ALIASES = {"logic", "logical"};
 
         @Override
-        public IController create(String name, int priority, String arguments, CommandSource source) throws CommandException {
-            return new LogicController(name, priority);
+        public IController create(String name, String arguments, CommandSource source) throws CommandException {
+            return new LogicController(name);
         }
 
         @Override
@@ -397,7 +400,7 @@ public class LogicController extends ControllerBase {
         }
 
         @Override
-        public IController create(Path directory, String name, int priority, boolean isEnabled) {
+        public IController create(Path directory, HandlerData data) {
             Path configFile = directory.resolve("settings.cfg");
             CommentedConfigurationNode root;
             ConfigurationLoader<CommentedConfigurationNode> loader =
@@ -419,7 +422,7 @@ public class LogicController extends ControllerBase {
             else if (isIn(FALSE_ALIASES, modeName)) mode = FALSE;
             else mode = UNDEFINED;
             boolean shortCircuit = root.getNode("shortCircuit").getBoolean(false);
-            return new LogicController(name, isEnabled, priority, operator, mode, shortCircuit);
+            return new LogicController(data, operator, mode, shortCircuit);
         }
 
         @Override

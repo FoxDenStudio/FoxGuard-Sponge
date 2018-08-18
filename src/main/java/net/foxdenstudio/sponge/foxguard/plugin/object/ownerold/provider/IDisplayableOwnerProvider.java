@@ -23,45 +23,35 @@
  * THE SOFTWARE.
  */
 
-package net.foxdenstudio.sponge.foxguard.plugin.object;
+package net.foxdenstudio.sponge.foxguard.plugin.object.ownerold.provider;
 
-public abstract class FGObjectBase implements IFGObject {
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.text.Text;
 
-    protected String name;
-    protected boolean isEnabled = true;
+import java.util.Optional;
+import java.util.UUID;
 
-    public FGObjectBase(String name, boolean isEnabled) {
-        this.name = name;
-        this.isEnabled = isEnabled;
+import javax.annotation.Nullable;
+
+/**
+ * Created by Fox on 8/28/2017.
+ * Project: SpongeForge
+ */
+public interface IDisplayableOwnerProvider extends IOwnerProvider {
+
+    default Optional<String> getDisplayName(UUID owner, @Nullable CommandSource viewer) {
+        if (viewer instanceof Player)
+            return getKeyword(owner);
+        else return getKeyword(owner).map(str->str + "(" + owner.toString() + ")");
     }
 
-    @Override
-    public String getName() {
-        return name;
+    default Optional<Text> getDisplayText(UUID owner, @Nullable CommandSource viewer) {
+        return getDisplayName(owner, viewer).map(Text::of);
     }
 
-    @Override
-    public void setName(String name) {
-        this.name = name;
+    default Optional<Text> getHoverText(UUID owner, @Nullable CommandSource viewer) {
+        return Optional.of(Text.of(owner.toString()));
     }
 
-    @Override
-    public boolean isEnabled() {
-        return isEnabled;
-    }
-
-    @Override
-    public void setIsEnabled(boolean state) {
-        this.isEnabled = state;
-    }
-
-    public abstract void markDirty();
-
-    @Override
-    public String toString() {
-        return this.getClass().getSimpleName() + "{" +
-                "name='" + name + '\'' +
-                ", isEnabled=" + isEnabled +
-                '}';
-    }
 }

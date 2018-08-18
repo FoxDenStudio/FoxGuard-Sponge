@@ -27,23 +27,23 @@ package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 
 import com.google.common.collect.ImmutableList;
+import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
-import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
-import net.foxdenstudio.sponge.foxguard.plugin.region.world.GlobalWorldRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.UUIDOwner;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.command.args.ArgumentParseException;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
@@ -52,9 +52,11 @@ import org.spongepowered.api.world.Locatable;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
+
+import javax.annotation.Nullable;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
@@ -68,7 +70,7 @@ public class CommandDelete extends FCCommandBase {
         return true;
     };
 
-    @Override
+
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
@@ -84,51 +86,60 @@ public class CommandDelete extends FCCommandBase {
                     .append(getUsage(source))
                     .build());
             return CommandResult.empty();
-        } else if (isIn(REGIONS_ALIASES, parse.args[0])) {
+        } else {
+            String category = parse.args[0];
+            FGCat fgCat = FGCat.from(category);
+            if (fgCat == null) throw new CommandException(Text.of("\"" + category + "\" is not a valid category!"));
+
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
-            IRegion region = FGManager.getInstance().getRegion(parse.args[1]);
-            boolean isWorldRegion = false;
-            if (region == null) {
-                String worldName = parse.flags.get("world");
-                World world = null;
-                if (source instanceof Locatable) world = ((Locatable) source).getWorld();
-                if (!worldName.isEmpty()) {
-                    Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
-                    if (optWorld.isPresent()) {
-                        world = optWorld.get();
-                    } else {
-                        if (world == null)
-                            throw new CommandException(Text.of("No world exists with name \"" + worldName + "\"!"));
-                    }
-                }
-                if (world == null) throw new CommandException(Text.of("Must specify a world!"));
-                region = FGManager.getInstance().getWorldRegion(world, parse.args[1]);
-                isWorldRegion = true;
+
+            FGUtil.OwnerResult ownerResult = FGUtil.processUserInput(parse.args[1]);
+
+            IGuardObject object;
+            FGManager fgManager = FGManager.getInstance();
+            switch (fgCat) {
+                case REGION:
+                    object = FGUtil.getRegionFromCommand(source, ownerResult, parse.flags.containsKey("world"), parse.flags.get("world"));
+                    if (object instanceof IWorldRegion) fgCat = FGCat.WORLDREGION;
+                    break;
+                case HANDLER:
+                    object = FGUtil.getHandlerFromCommand(ownerResult);
+                    if (object instanceof IController) fgCat = FGCat.CONTROLLER;
+                    break;
+                default:
+                    throw new CommandException(Text.of("Something went horribly wrong."));
             }
-            if (region == null)
-                throw new CommandException(Text.of("No region exists with the name \"" + parse.args[1] + "\"!"));
-            if (region instanceof GlobalWorldRegion) {
-                throw new CommandException(Text.of("You may not delete the global region!"));
+
+            if (object instanceof IGlobal) {
+                throw new CommandException(Text.of("You may not delete the global " + fgCat.lName + "!"));
             }
-            boolean success = FGManager.getInstance().removeRegion(region);
-            if (!success) throw new CommandException(Text.of("There was an error trying to delete the region!"));
-            source.sendMessage(Text.of(TextColors.GREEN, "Region deleted successfully!"));
-            FoxGuardMain.instance().getLogger().info(
-                    source.getName() + " deleted " + (isWorldRegion ? "world" : "") + "region"
-            );
+
+            boolean success = fgManager.removeObject(object);
+            if (!success)
+                throw new CommandException(Text.of("There was an error trying to delete the " + fgCat.lName + "!"));
+            source.sendMessage(Text.of(TextColors.GREEN, fgCat.uName + " deleted successfully!"));
+
+            StringBuilder logMessage = new StringBuilder();
+            logMessage.append(source.getName())
+                    .append(" deleted the ")
+                    .append(fgCat.lName)
+                    .append(":   Name: ")
+                    .append(object.getName());
+
+            IOwner owner = ownerResult.getOwner();
+            if (owner != null && !owner.equals(FGManager.SERVER_OWNER)) {
+                logMessage.append("   Owner: ").append(owner.toString())
+                        .append(" (").append(owner).append(")");
+            }
+
+            if (object instanceof IWorldRegion) {
+                logMessage.append("   World: ").append(((IWorldRegion) object).getWorld().getName());
+            }
+
+            FoxGuardMain.instance().getLogger().info(logMessage.toString());
+
             return CommandResult.success();
-        } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
-            if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a name!"));
-            IHandler handler = FGManager.getInstance().gethandler(parse.args[1]);
-            if (handler == null)
-                throw new ArgumentParseException(Text.of("No handler exists with that name!"), parse.args[1], 1);
-            if (handler instanceof GlobalHandler)
-                throw new CommandException(Text.of("You may not delete the global handler!"));
-            boolean success = FGManager.getInstance().removeHandler(handler);
-            if (!success) throw new CommandException(Text.of("There was an error trying to delete the handler!"));
-            source.sendMessage(Text.of(TextColors.GREEN, "Handler deleted successfully!"));
-            return CommandResult.success();
-        } else throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);
+        }
     }
 
     @Override
@@ -142,13 +153,22 @@ public class CommandDelete extends FCCommandBase {
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0)
-                return ImmutableList.of("region", "handler").stream()
+                return Stream.of("region", "handler")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             else if (parse.current.index == 1) {
+                System.out.println(parse.current.token);
+                FGUtil.OwnerTabResult result = FGUtil.getOwnerSuggestions(parse.current.token);
+                if (result.isComplete()) {
+                    return result.getSuggestions().stream()
+                            .map(str -> parse.current.prefix + str)
+                            .collect(GuavaCollectors.toImmutableList());
+                }
+
                 if (isIn(REGIONS_ALIASES, parse.args[0])) {
                     String worldName = parse.flags.get("world");
+                    boolean key = parse.flags.containsKey("world");
                     World world = null;
                     if (source instanceof Locatable) world = ((Locatable) source).getWorld();
                     if (!worldName.isEmpty()) {
@@ -157,29 +177,32 @@ public class CommandDelete extends FCCommandBase {
                             world = optWorld.get();
                         }
                     }
-                    if (world == null) return FGManager.getInstance().getRegions().stream()
-                            .filter(region -> !(region instanceof IGlobal))
-                            .map(IFGObject::getName)
-                            .filter(new StartsWithPredicate(parse.current.token))
-                            .map(args -> parse.current.prefix + args)
-                            .collect(GuavaCollectors.toImmutableList());
-                    else return FGManager.getInstance().getAllRegions(world).stream()
-                            .filter(region -> !(region instanceof IGlobal))
-                            .map(IFGObject::getName)
-                            .filter(new StartsWithPredicate(parse.current.token))
-                            .map(args -> parse.current.prefix + args)
-                            .collect(GuavaCollectors.toImmutableList());
+                    if (key && world != null) {
+                        return FGManager.getInstance().getAllRegions(world, new UUIDOwner(UUIDOwner.USER_GROUP, result.getOwner())).stream()
+                                .filter(region -> !(region instanceof IGlobal))
+                                .map(IGuardObject::getName)
+                                .filter(new StartsWithPredicate(result.getToken()))
+                                .map(args -> parse.current.prefix + result.getPrefix() + args)
+                                .collect(GuavaCollectors.toImmutableList());
+                    } else {
+                        return FGManager.getInstance().getAllRegionsWithUniqueNames(new UUIDOwner(UUIDOwner.USER_GROUP, result.getOwner()), world).stream()
+                                .filter(region -> !(region instanceof IGlobal))
+                                .map(IGuardObject::getName)
+                                .filter(new StartsWithPredicate(result.getToken()))
+                                .map(args -> parse.current.prefix + result.getPrefix() + args)
+                                .collect(GuavaCollectors.toImmutableList());
+                    }
                 } else if (isIn(HANDLERS_ALIASES, parse.args[0])) {
-                    return FGManager.getInstance().getHandlers().stream()
+                    return FGManager.getInstance().getHandlers(new UUIDOwner(UUIDOwner.USER_GROUP, result.getOwner())).stream()
                             .filter(handler -> !(handler instanceof IGlobal))
-                            .map(IFGObject::getName)
-                            .filter(new StartsWithPredicate(parse.current.token))
-                            .map(args -> parse.current.prefix + args)
+                            .map(IGuardObject::getName)
+                            .filter(new StartsWithPredicate(result.getToken()))
+                            .map(args -> parse.current.prefix + result.getPrefix() + args)
                             .collect(GuavaCollectors.toImmutableList());
                 }
             }
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY))
-            return ImmutableList.of("world").stream()
+            return Stream.of("world")
                     .filter(new StartsWithPredicate(parse.current.token))
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());
@@ -213,5 +236,27 @@ public class CommandDelete extends FCCommandBase {
     @Override
     public Text getUsage(CommandSource source) {
         return Text.of("delete <region [--w:<world>] | handler> <name>");
+    }
+
+    private enum FGCat {
+        REGION(REGIONS_ALIASES),
+        WORLDREGION(null),
+        HANDLER(HANDLERS_ALIASES),
+        CONTROLLER(null);
+
+        public final String[] catAliases;
+        public final String lName = name().toLowerCase();
+        public final String uName = FCCUtil.toCapitalCase(name());
+
+        FGCat(String[] catAliases) {
+            this.catAliases = catAliases;
+        }
+
+        public static FGCat from(String category) {
+            for (FGCat cat : values()) {
+                if (isIn(cat.catAliases, category)) return cat;
+            }
+            return null;
+        }
     }
 }

@@ -61,6 +61,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
@@ -77,12 +78,15 @@ public class StaticHandler extends HandlerBase {
     private final List<TristateEntry> entries;
     private final Map<FlagSet, Tristate> permCache;
 
-    public StaticHandler(String name, int priority) {
-        this(name, priority, true);
+    public StaticHandler(String name) {
+        this(new HandlerData()
+                .setName(name)
+                .setEnabled(true)
+                .setPriority(0));
     }
 
-    public StaticHandler(String name, int priority, boolean isEnabled) {
-        super(name, priority, isEnabled);
+    public StaticHandler(HandlerData data) {
+        super(data);
         this.entries = new ArrayList<>();
         this.permCache = new CacheMap<>((k, m) -> {
             if (k instanceof FlagSet) {
@@ -187,7 +191,7 @@ public class StaticHandler extends HandlerBase {
             case "remove": {
                 if (parse.args.length < 2)
                     return ProcessResult.of(false, Text.of("Must specify flags or an index to remove!"));
-                if(this.entries.isEmpty()) return ProcessResult.of(false, "There are no entries to remove!");
+                if (this.entries.isEmpty()) return ProcessResult.of(false, "There are no entries to remove!");
                 try {
                     int index = Integer.parseInt(parse.args[1]);
                     if (index < 0) index = 0;
@@ -377,7 +381,7 @@ public class StaticHandler extends HandlerBase {
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0) {
-                return ImmutableList.of("add", "set", "remove", "move").stream()
+                return Stream.of("add", "set", "remove", "move")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
@@ -385,7 +389,7 @@ public class StaticHandler extends HandlerBase {
                 switch (parse.args[0].toLowerCase()) {
                     case "add": {
                         if (parse.current.token.startsWith("=")) {
-                            return ImmutableList.of("=allow", "=deny", "=pass").stream()
+                            return Stream.of("=allow", "=deny", "=pass")
                                     .filter(new StartsWithPredicate(parse.current.token))
                                     .map(args -> parse.current.prefix + args)
                                     .collect(GuavaCollectors.toImmutableList());
@@ -402,7 +406,7 @@ public class StaticHandler extends HandlerBase {
                     case "set": {
                         if (parse.current.index == 1) {
                             if (parse.current.token.startsWith("=")) {
-                                return ImmutableList.of("=allow", "=deny", "=pass", "=clear").stream()
+                                return Stream.of("=allow", "=deny", "=pass", "=clear")
                                         .filter(new StartsWithPredicate(parse.current.token))
                                         .map(args -> parse.current.prefix + args)
                                         .collect(GuavaCollectors.toImmutableList());
@@ -415,14 +419,14 @@ public class StaticHandler extends HandlerBase {
                             }
                         } else if (parse.current.index == 2) try {
                             Integer.parseInt(parse.args[1]);
-                            return ImmutableList.of("allow", "deny", "pass", "clear").stream()
+                            return Stream.of("allow", "deny", "pass", "clear")
                                     .filter(new StartsWithPredicate(parse.current.token))
                                     .map(args -> parse.current.prefix + args)
                                     .collect(GuavaCollectors.toImmutableList());
                         } catch (NumberFormatException ignored) {
                         }
                         if (parse.current.token.startsWith("=")) {
-                            return ImmutableList.of("=allow", "=deny", "=pass", "=clear").stream()
+                            return Stream.of("=allow", "=deny", "=pass", "=clear")
                                     .filter(new StartsWithPredicate(parse.current.token))
                                     .map(args -> parse.current.prefix + args)
                                     .collect(GuavaCollectors.toImmutableList());
@@ -457,7 +461,7 @@ public class StaticHandler extends HandlerBase {
     public Text details(CommandSource source, String arguments) {
         Text.Builder builder = Text.builder();
         builder.append(Text.of(TextColors.AQUA,
-                TextActions.suggestCommand("/foxguard md h " + this.name + " add "),
+                TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " add "),
                 TextActions.showText(Text.of("Click to add a flag entry")),
                 "Flags:"));
         int index = 0;
@@ -468,7 +472,7 @@ public class StaticHandler extends HandlerBase {
             entryBuilder.append(Text.of("  " + index + ": " + stringBuilder.toString(), TextColors.AQUA, ": "))
                     .append(FGUtil.readableTristateText(entry.tristate))
                     .onHover(TextActions.showText(Text.of("Click to change this flag entry")))
-                    .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " set " + (index++) + " "));
+                    .onClick(TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " set " + (index++) + " "));
             builder.append(Text.NEW_LINE).append(entryBuilder.build());
         }
         return builder.build();
@@ -613,13 +617,13 @@ public class StaticHandler extends HandlerBase {
         public static final String[] ALIASES = {"static", "stub", "blind"};
 
         @Override
-        public IHandler create(String name, int priority, String arguments, CommandSource source) throws CommandException {
-            return new StaticHandler(name, priority);
+        public IHandler create(String name, String arguments, CommandSource source) throws CommandException {
+            return new StaticHandler(name);
         }
 
         @Override
-        public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
-            StaticHandler handler = new StaticHandler(name, priority, isEnabled);
+        public IHandler create(Path directory, HandlerData data) {
+            StaticHandler handler = new StaticHandler(data);
             handler.load(directory);
             return handler;
         }

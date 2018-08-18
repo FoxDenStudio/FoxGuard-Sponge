@@ -25,54 +25,54 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.region;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectBase;
+import net.foxdenstudio.sponge.foxguard.plugin.object.GuardObjectBase;
+import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectData;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.util.RegionCache;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-public abstract class RegionBase extends FGObjectBase implements IRegion {
+public abstract class RegionBase extends GuardObjectBase implements IRegion {
 
     private final Set<IHandler> handlers;
 
-    protected RegionBase(String name, boolean isEnabled) {
-        super(name, isEnabled);
+    protected RegionBase(FGObjectData data) {
+        super(data);
         this.handlers = new HashSet<>();
     }
 
     @Override
-    public void setIsEnabled(boolean state) {
-        super.setIsEnabled(state);
+    public void setEnabled(boolean state) {
+        super.setEnabled(state);
         FGManager.getInstance().markDirty(this, RegionCache.DirtyType.MODIFIED);
     }
 
     @Override
-    public List<IHandler> getHandlers() {
-        return ImmutableList.copyOf(this.handlers);
+    public Set<IHandler> getLinks() {
+        return ImmutableSet.copyOf(this.handlers);
     }
 
     @Override
-    public boolean addHandler(IHandler handler) {
+    public boolean addLink(IHandler handler) {
         return FGManager.getInstance().isRegistered(handler) && this.handlers.add(handler);
     }
 
     @Override
-    public boolean removeHandler(IHandler handler) {
+    public boolean removeLink(IHandler handler) {
         return this.handlers.remove(handler);
     }
 
     @Override
-    public void clearHandlers() {
+    public void clearLinks() {
         this.handlers.clear();
     }
 
     public void markDirty() {
-        FGUtil.markRegionDirty(this);
+        FGUtil.markDirty(this);
     }
 
 }

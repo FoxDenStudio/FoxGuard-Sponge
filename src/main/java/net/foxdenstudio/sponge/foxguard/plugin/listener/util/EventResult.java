@@ -25,6 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.listener.util;
 
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import org.spongepowered.api.util.Tristate;
 
 public final class EventResult {
@@ -37,7 +38,10 @@ public final class EventResult {
     private final boolean displayDefaultMessage;
 
     private EventResult(Tristate success, boolean displayDefaultMessage) {
-        this.state = success;
+        if (success == null) {
+            FoxGuardMain.instance().getLogger().warn("Tried to instantiate event result with null tristate! Substituting default value UNDEFINED");
+            this.state = Tristate.UNDEFINED;
+        } else this.state = success;
         this.displayDefaultMessage = displayDefaultMessage;
     }
 

@@ -25,6 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.region.world;
 
+import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectData;
 import net.foxdenstudio.sponge.foxguard.plugin.region.RegionBase;
 import org.spongepowered.api.world.World;
 
@@ -32,8 +33,8 @@ public abstract class WorldRegionBase extends RegionBase implements IWorldRegion
 
     protected World world;
 
-    protected WorldRegionBase(String name, boolean isEnabled) {
-        super(name, isEnabled);
+    protected WorldRegionBase(FGObjectData data) {
+        super(data);
     }
 
     @Override
@@ -43,16 +44,14 @@ public abstract class WorldRegionBase extends RegionBase implements IWorldRegion
 
     @Override
     public void setWorld(World world) {
-        if (this.world == null) {
-            this.world = world;
-        }
+        this.world = world;
     }
 
     @Override
     public String toString() {
         return this.getClass().getSimpleName() + "{" +
                 "name='" + name + '\'' +
-                ", isEnabled=" + isEnabled +
+                ", enabled=" + enabled +
                 ", world=" + world.getName() +
                 '}';
     }

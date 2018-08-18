@@ -26,16 +26,27 @@
 package net.foxdenstudio.sponge.foxguard.plugin.region;
 
 import net.foxdenstudio.sponge.foxcore.plugin.util.IBounded;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
+
+import java.util.Set;
 
 /**
  * Created by Fox on 3/29/2016.
  */
-public interface IRegion extends IFGObject, ILinkable, IBounded {
+public interface IRegion extends IGuardObject, ILinkable, IBounded {
 
+    @Override
+    Set<IHandler> getLinks();
+
+    @Override
     default boolean saveLinks() {
         return true;
     }
 
+    @Override
+    default String getFilter(){
+        return "r";
+    }
 }

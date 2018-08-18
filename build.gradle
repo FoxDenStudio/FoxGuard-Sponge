@@ -8,11 +8,17 @@ buildscript {
             name = "forge"
             url = "http://files.minecraftforge.net/maven"
         }
+        maven {
+            name = "sponge"
+            url = "https://repo.spongepowered.org/maven"
+        }
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
-        classpath 'gradle.plugin.org.spongepowered:spongegradle:0.7'
-        classpath 'gradle.plugin.org.spongepowered:event-impl-gen:5.0.2'
+        classpath 'org.spongepowered:spongegradle:0.8.2-SNAPSHOT'
+        classpath 'org.spongepowered:event-impl-gen:5.1.0-SNAPSHOT'
+        //classpath 'gradle.plugin.org.spongepowered:event-impl-gen:5.0.2'
+        //classpath 'gradle.plugin.org.spongepowered:event-impl-gen:5.1.0-SNAPSHOT'
         classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
     }
 }
@@ -22,9 +28,10 @@ apply from: fcsp.file("gradle/versions.gradle")
 
 apply plugin: 'org.spongepowered.plugin'
 apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'idea'
 
 group 'net.foxdenstudio.sponge'
-version 'api6-SNAPSHOT'
+version 'api7-SNAPSHOT'
 
 apply from: fcsp.file("gradle/fox.gradle")
 apply from: fcsp.file("gradle/publish.gradle")

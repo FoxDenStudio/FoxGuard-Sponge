@@ -35,7 +35,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.listener.PlayerMoveListenerNew;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.PlayerMoveListener;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
@@ -56,6 +56,7 @@ import org.spongepowered.api.world.World;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
@@ -85,7 +86,7 @@ public class CommandHere extends FCCommandBase {
         }
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(MAPPER).parse();
         boolean hud = false;
-        PlayerMoveListenerNew.HUDConfig hudConfig = new PlayerMoveListenerNew.HUDConfig(false, false, false);
+        PlayerMoveListener.HUDConfig hudConfig = new PlayerMoveListener.HUDConfig(false, false, false);
 
         String worldName = parse.flags.get("world");
         World world = null;
@@ -145,31 +146,17 @@ public class CommandHere extends FCCommandBase {
         output.append(Text.of(TextColors.AQUA, "----- Position: (" + String.format("%.1f, %.1f, %.1f", x, y, z) + ") -----\n"));
         if (!parse.flags.containsKey("handler") || parse.flags.containsKey("region")) {
             output.append(Text.of(TextColors.GREEN, "------- Regions Located Here -------\n"));
-            Collections.sort(regionList, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
+            regionList.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
             ListIterator<IRegion> regionListIterator = regionList.listIterator();
             while (regionListIterator.hasNext()) {
                 IRegion region = regionListIterator.next();
                 if (source instanceof Player) {
-                    List<IRegion> selectedRegions = FGUtil.getSelectedRegions(source);
-                    if (selectedRegions.contains(region)) {
-                        output.append(Text.of(TextColors.GRAY, "[+]"));
-                        output.append(Text.of(TextColors.RED,
-                                TextActions.runCommand("/foxguard s r remove " + FGUtil.genWorldFlag(region) + region.getName()),
-                                TextActions.showText(Text.of("Remove from state buffer")),
-                                "[-]"));
-                    } else {
-                        output.append(Text.of(TextColors.GREEN,
-                                TextActions.runCommand("/foxguard s r add " + FGUtil.genWorldFlag(region) + region.getName()),
-                                TextActions.showText(Text.of("Add to state buffer")),
-                                "[+]"));
-                        output.append(Text.of(TextColors.GRAY, "[-]"));
-                    }
-                    output.append(Text.of(" "));
+                    FGUtil.genStatePrefix(output, region, source);
                 }
                 output.append(Text.of(FGUtil.getColorForObject(region),
-                        TextActions.runCommand("/foxguard detail region " + FGUtil.genWorldFlag(region) + region.getName()),
+                        TextActions.runCommand("/foxguard detail r " + FGUtil.genWorldFlag(region) + region.getFullName()),
                         TextActions.showText(Text.of("View details")),
-                        FGUtil.getRegionName(region, false)));
+                        FGUtil.getObjectDisplayName(region, false, null, source)));
                 if (regionListIterator.hasNext()) output.append(Text.NEW_LINE);
             }
             flag = true;
@@ -178,59 +165,33 @@ public class CommandHere extends FCCommandBase {
         if (!parse.flags.containsKey("region") || parse.flags.containsKey("handler")) {
             if (flag) output.append(Text.NEW_LINE);
 
-            regionList.forEach(region -> region.getHandlers().stream()
+            regionList.forEach(region -> region.getLinks().stream()
                     .filter(handler -> !handlerList.contains(handler))
                     .forEach(handlerList::add));
+            boolean hasControllers = false;
+            for(IHandler handler: handlerList){
+                if(handler instanceof IController){
+                    hasControllers = true;
+                    break;
+                }
+            }
             output.append(Text.of(TextColors.GREEN, "------- Handlers Located Here -------\n"));
             if (parse.flags.containsKey("priority")) {
-                Collections.sort(handlerList, (o1, o2) -> o2.getPriority() - o1.getPriority());
+                handlerList.sort(IHandler.PRIORITY);
                 hudConfig.priority = true;
             } else {
-                Collections.sort(handlerList, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
+                handlerList.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
             }
             ListIterator<IHandler> handlerListIterator = handlerList.listIterator();
             while (handlerListIterator.hasNext()) {
                 IHandler handler = handlerListIterator.next();
                 if (source instanceof Player) {
-                    List<IHandler> selectedHandlers = FGUtil.getSelectedHandlers(source);
-                    List<IController> selectedControllers = FGUtil.getSelectedControllers(source);
-                    if (selectedHandlers.contains(handler)) {
-                        output.append(Text.of(TextColors.GRAY, "[h+]"));
-                        output.append(Text.of(TextColors.RED,
-                                TextActions.runCommand("/foxguard s h remove " + handler.getName()),
-                                TextActions.showText(Text.of("Remove from handler state buffer")),
-                                "[h-]"));
-                    } else {
-                        output.append(Text.of(TextColors.GREEN,
-                                TextActions.runCommand("/foxguard s h add " + handler.getName()),
-                                TextActions.showText(Text.of("Add to handler state buffer")),
-                                "[h+]"));
-                        output.append(Text.of(TextColors.GRAY, "[h-]"));
-                    }
-                    if (handler instanceof IController) {
-                        IController controller = ((IController) handler);
-                        if (selectedControllers.contains(controller)) {
-                            output.append(Text.of(TextColors.GRAY, "[c+]"));
-                            output.append(Text.of(TextColors.RED,
-                                    TextActions.runCommand("/foxguard s c remove " + controller.getName()),
-                                    TextActions.showText(Text.of("Remove from controller state buffer")),
-                                    "[c-]"));
-                        } else {
-                            output.append(Text.of(TextColors.GREEN,
-                                    TextActions.runCommand("/foxguard s c add " + controller.getName()),
-                                    TextActions.showText(Text.of("Add to controller state buffer")),
-                                    "[c+]"));
-                            output.append(Text.of(TextColors.GRAY, "[c-]"));
-                        }
-                    } else {
-                        output.append(Text.of(TextColors.DARK_GRAY, "[c+][c-]"));
-                    }
-                    output.append(Text.of(" "));
+                    FGUtil.genStatePrefix(output, handler, source, hasControllers);
                 }
                 output.append(Text.of(FGUtil.getColorForObject(handler),
-                        TextActions.runCommand("/foxguard detail handler " + handler.getName()),
+                        TextActions.runCommand("/foxguard detail handler " + handler.getFullName()),
                         TextActions.showText(Text.of("View details")),
-                        handler.getShortTypeName() + " : " + handler.getName()));
+                        FGUtil.getObjectDisplayName(handler, false, null, source)));
                 if (handlerListIterator.hasNext()) output.append(Text.NEW_LINE);
             }
             hudConfig.handlers = true;
@@ -239,7 +200,7 @@ public class CommandHere extends FCCommandBase {
         if (hud) {
             Player player = (Player) source;
             if (CommandHUD.instance().getIsHUDEnabled().get(player)) {
-                PlayerMoveListenerNew instance = PlayerMoveListenerNew.getInstance();
+                PlayerMoveListener instance = PlayerMoveListener.getInstance();
                 instance.getHudConfigMap().put(player, hudConfig);
                 instance.renderHUD(player, regionList, handlerList, hudConfig);
                 instance.showScoreboard(player);
@@ -248,6 +209,7 @@ public class CommandHere extends FCCommandBase {
         return CommandResult.empty();
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
         if (!testPermission(source)) return ImmutableList.of();
@@ -260,12 +222,12 @@ public class CommandHere extends FCCommandBase {
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT) && parse.current.index < 3 && parse.current.token.isEmpty()) {
             return ImmutableList.of(parse.current.prefix + "~");
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.SHORTFLAG)) {
-            return ImmutableList.of("r", "h", "p").stream()
+            return Stream.of("r", "h", "p")
                     .filter(flag -> !parse.flags.containsKey(flag))
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY))
-            return ImmutableList.of("world", "regions", "handlers", "priority").stream()
+            return Stream.of("world", "regions", "handlers", "priority")
                     .filter(new StartsWithPredicate(parse.current.token))
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());

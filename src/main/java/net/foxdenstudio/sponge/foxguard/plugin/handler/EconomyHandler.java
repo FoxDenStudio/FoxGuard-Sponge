@@ -47,8 +47,8 @@ import java.util.List;
 public class EconomyHandler extends HandlerBase {
 
 
-    public EconomyHandler(String name, boolean isEnabled, int priority) {
-        super(name, priority, isEnabled);
+    public EconomyHandler(HandlerData data) {
+        super(data);
     }
 
     @Override
@@ -99,12 +99,12 @@ public class EconomyHandler extends HandlerBase {
     public static class Factory implements IHandlerFactory {
 
         @Override
-        public IHandler create(String name, int priority, String arguments, CommandSource source) throws CommandException {
+        public IHandler create(String name, String arguments, CommandSource source) throws CommandException {
             return null;
         }
 
         @Override
-        public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
+        public IHandler create(Path directory, HandlerData data) {
             return null;
         }
 

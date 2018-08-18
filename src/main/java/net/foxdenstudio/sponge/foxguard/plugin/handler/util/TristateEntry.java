@@ -25,10 +25,17 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.handler.util;
 
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
+import com.google.gson.stream.JsonWriter;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
+import org.slf4j.Logger;
 import org.spongepowered.api.util.Tristate;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -39,20 +46,23 @@ import java.util.Set;
  */
 public class TristateEntry extends Entry {
 
+    public static final TypeAdapter<TristateEntry> ADAPTER = new TristateEntryAdapter().nullSafe();
     public Tristate tristate;
 
     public TristateEntry(Set<Flag> set, Tristate tristate) {
         super(set);
-        this.tristate = tristate;
+        if (tristate == null) {
+            FoxGuardMain.instance().getLogger().warn("Tried to instantiate tristate entry with null tristate! Substituting default value UNDEFINED");
+            this.tristate = Tristate.UNDEFINED;
+        } else this.tristate = tristate;
     }
 
     public TristateEntry(Tristate tristate, Flag... flags) {
         super(flags);
-        this.tristate = tristate;
-    }
-
-    public String serializeValue(){
-        return tristate.name();
+        if (tristate == null) {
+            FoxGuardMain.instance().getLogger().warn("Tried to instantiate tristate entry with null tristate! Substituting default value UNDEFINED");
+            this.tristate = Tristate.UNDEFINED;
+        } else this.tristate = tristate;
     }
 
     public static TristateEntry deserialize(String string) {
@@ -62,11 +72,93 @@ public class TristateEntry extends Entry {
         Set<Flag> flagSet = new HashSet<>();
         for (String flagName : flags) {
             Optional<Flag> flagOptional = registry.getFlag(flagName);
-            if (flagOptional.isPresent()) {
-                flagSet.add(flagOptional.get());
-            }
+            flagOptional.ifPresent(flagSet::add);
         }
-        return new TristateEntry(flagSet, Tristate.valueOf(parts[1]));
+        Tristate tristate;
+        try {
+            tristate = Tristate.valueOf(parts[1]);
+        } catch (IllegalArgumentException e) {
+            FoxGuardMain.instance().getLogger().error("Error deserializing tristate value \"" + parts[1] + "\"!", e);
+            FoxGuardMain.instance().getLogger().warn("Substituting default value UNDEFINED");
+            tristate = Tristate.UNDEFINED;
+        }
+        return new TristateEntry(flagSet, tristate);
+    }
+
+    public String serializeValue() {
+        return tristate.name();
+    }
+
+    public static class TristateEntryAdapter extends TypeAdapter<TristateEntry> {
+
+        private TristateEntryAdapter() {
+        }
+
+        @Override
+        public void write(JsonWriter out, TristateEntry value) throws IOException {
+            out.beginObject();
+            out.name("set");
+            out.beginArray();
+            for (Flag flag : value.set) {
+                out.value(flag.getName());
+            }
+            out.endArray();
+            out.name("value");
+            out.value(value.serializeValue());
+            out.endObject();
+        }
+
+        @Override
+        public TristateEntry read(JsonReader in) throws IOException {
+            FlagRegistry registry = FlagRegistry.getInstance();
+            Logger logger = FoxGuardMain.instance().getLogger();
+
+            in.beginObject();
+            Set<Flag> set = new HashSet<>();
+            Tristate tristate = null;
+            while (in.peek() != JsonToken.END_OBJECT) {
+                String name = in.nextName();
+                switch (name) {
+                    case "set": {
+                        if (in.peek() == JsonToken.NULL) {
+                            in.nextNull();
+                            break;
+                        }
+                        in.beginArray();
+                        while (in.peek() != JsonToken.END_ARRAY) {
+                            if(in.peek() == JsonToken.NULL) {
+                                in.nextNull();
+                                continue;
+                            }
+                            Optional<Flag> flagOptional = registry.getFlag(in.nextString());
+                            flagOptional.ifPresent(set::add);
+                        }
+                        in.endArray();
+                    }
+                    break;
+                    case "value": {
+                        if (in.peek() == JsonToken.NULL) {
+                            in.nextNull();
+                            break;
+                        }
+                        tristate = Tristate.valueOf(in.nextString());
+                    }
+                    break;
+                }
+            }
+            in.endObject();
+            if (set.isEmpty()) {
+                // TODO add custom exception for stacktrace
+                logger.error("Tried to deserialize a TristateEntry with an empty flag set!", new RuntimeException("Error deserializing TristateEntry"));
+                return null;
+            }
+            if (tristate == null) {
+                logger.warn("Deserialized a TristateEntry with a null tristate! Replacing with UNDEFINED.");
+                tristate = Tristate.UNDEFINED;
+            }
+
+            return new TristateEntry(set, tristate);
+        }
     }
 
     @Override

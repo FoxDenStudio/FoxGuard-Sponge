@@ -26,19 +26,35 @@
 package net.foxdenstudio.sponge.foxguard.plugin.command;
 
 
+import com.flowpowered.math.vector.Vector2i;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
+import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
+import net.foxdenstudio.sponge.foxcore.plugin.util.BoundingBox2;
+import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectData;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.FoxPath;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.IOwner;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.region.world.RectangularRegion;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.Locatable;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
+
+import javax.annotation.Nullable;
+
+import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.WORLD_ALIASES;
+import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isIn;
 
 public class CommandTest extends FCCommandBase {
 
@@ -115,20 +131,90 @@ public class CommandTest extends FCCommandBase {
         return Text.of("test [mystery args]...");
     }
 
+    private static final FlagMapper MAPPER = map -> key -> value -> {
+        map.put(key, value);
+        if (isIn(WORLD_ALIASES, key) && !map.containsKey("world")) {
+            map.put("world", value);
+        }
+        return true;
+    };
+
     @Override
+    public CommandResult process(CommandSource source, String arguments) throws CommandException {
+
+//        Optional<? extends IOwner> ownerOpt = FoxPath.getOwner(arguments, source);
+//
+//        source.sendMessage(Text.of(ownerOpt));
+
+
+
+        return CommandResult.empty();
+    }
+
+    /*@Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {
             source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this " +
                     "command!"));
             return CommandResult.empty();
         }
-        return CommandResult.empty();
-    }
+
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
+                .arguments(arguments)
+                .flagMapper(MAPPER)
+                .parse();
+
+        String worldName = parse.flags.get("world");
+        World world = null;
+
+        if (source instanceof Locatable) world = ((Locatable) source).getWorld();
+        if (!worldName.isEmpty()) {
+            Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
+            if (optWorld.isPresent()) {
+                world = optWorld.get();
+            } else {
+                if (world == null)
+                    throw new CommandException(Text.of("No world exists with name \"" + worldName + "\"!"));
+            }
+        }
+        if (world == null) throw new CommandException(Text.of("Must specify a world!"));
+
+        if (parse.args.length == 0) return CommandResult.empty();
+        int amount;
+        try {
+            amount = Integer.parseInt(parse.args[0]);
+        } catch (NumberFormatException e) {
+            return CommandResult.empty();
+        }
+        int counter = 1;
+        String name;
+        if (parse.args.length > 1) {
+            name = parse.args[1];
+        } else name = "region";
+
+        FGManager manager = FGManager.getInstance();
+
+        for (int i = 1; i <= amount; ) {
+            String numberName = name + counter;
+            if (manager.isWorldRegionNameAvailable(numberName, world)) {
+                FGObjectData data = new FGObjectData();
+                data.setName(numberName);
+                IWorldRegion region = new RectangularRegion(data, new BoundingBox2(new Vector2i(-i, -i), new Vector2i(i, i)));
+                manager.addWorldRegion(region, world);
+                i++;
+            }
+            counter++;
+        }
+
+        source.sendMessage(Text.of(TextColors.GREEN, "Successfully created " + amount + " regions!"));
+        return CommandResult.success();
+    }*/
 
 
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
-        return ImmutableList.of();
+        Thread.dumpStack();
+        return ImmutableList.of("b", "c", "a", "d");
     }
 
     /*@Override

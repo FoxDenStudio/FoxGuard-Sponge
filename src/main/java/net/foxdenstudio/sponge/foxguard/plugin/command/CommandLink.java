@@ -33,8 +33,9 @@ import net.foxdenstudio.sponge.foxcore.plugin.state.FCStateManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.UUIDOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.state.HandlersStateField;
 import net.foxdenstudio.sponge.foxguard.plugin.state.RegionsStateField;
@@ -43,7 +44,6 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.GuavaCollectors;
@@ -55,6 +55,7 @@ import org.spongepowered.api.world.World;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.WORLD_ALIASES;
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.isIn;
@@ -94,30 +95,14 @@ public class CommandLink extends FCCommandBase {
             FCStateManager.instance().getStateMap().get(source).flush(RegionsStateField.ID, HandlersStateField.ID);
             return CommandResult.builder().successCount(successes[0]).build();
         } else {
-            IRegion region = FGManager.getInstance().getRegion(parse.args[0]);
-            World world = null;
-            if (region == null) {
-                String worldName = parse.flags.get("world");
-                if (source instanceof Locatable) world = ((Locatable) source).getWorld();
-                if (!worldName.isEmpty()) {
-                    Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
-                    if (optWorld.isPresent()) {
-                        world = optWorld.get();
-                    } else {
-                        if (world == null)
-                            throw new CommandException(Text.of("No world exists with name \"" + worldName + "\"!"));
-                    }
-                }
-                if (world == null) throw new CommandException(Text.of("Must specify a world!"));
-                region = FGManager.getInstance().getWorldRegion(world, parse.args[0]);
-            }
-            if (region == null)
-                throw new CommandException(Text.of("No region with name \"" + parse.args[0] + "\" in world \"" + world.getName() + "\"!"));
+            FGUtil.OwnerResult regionOwnerResult = FGUtil.processUserInput(parse.args[0]);
+            IRegion region = FGUtil.getRegionFromCommand(source, regionOwnerResult, parse.flags.containsKey("world"), parse.flags.get("world"));
+
             if (parse.args.length < 2) throw new CommandException(Text.of("Must specify a handler!"));
-            IHandler handler = FGManager.getInstance().gethandler(parse.args[1]);
-            if (handler == null)
-                throw new CommandException(Text.of("No handler with name \"" + parse.args[1] + "\"!"));
-            if (region.getHandlers().contains(handler))
+            FGUtil.OwnerResult handlerOwnerResult = FGUtil.processUserInput(parse.args[1]);
+            IHandler handler = FGUtil.getHandlerFromCommand(handlerOwnerResult);
+
+            if (region.getLinks().contains(handler))
                 throw new CommandException(Text.of("Already linked!"));
             boolean success = FGManager.getInstance().link(region, handler);
             if (success) {
@@ -142,7 +127,15 @@ public class CommandLink extends FCCommandBase {
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0) {
+                FGUtil.OwnerTabResult result = FGUtil.getOwnerSuggestions(parse.current.token);
+                if (result.isComplete()) {
+                    return result.getSuggestions().stream()
+                            .map(str -> parse.current.prefix + str)
+                            .collect(GuavaCollectors.toImmutableList());
+                }
+
                 String worldName = parse.flags.get("world");
+                boolean key = parse.flags.containsKey("world");
                 World world = null;
                 if (source instanceof Locatable) world = ((Locatable) source).getWorld();
                 if (!worldName.isEmpty()) {
@@ -151,52 +144,52 @@ public class CommandLink extends FCCommandBase {
                         world = optWorld.get();
                     }
                 }
-                if (world == null) return FGManager.getInstance().getRegions().stream()
-                        .map(IFGObject::getName)
-                        .filter(new StartsWithPredicate(parse.current.token))
-                        .map(args -> parse.current.prefix + args)
-                        .collect(GuavaCollectors.toImmutableList());
-                else return FGManager.getInstance().getAllRegions(world).stream()
-                        .map(IFGObject::getName)
-                        .filter(new StartsWithPredicate(parse.current.token))
-                        .map(args -> parse.current.prefix + args)
-                        .collect(GuavaCollectors.toImmutableList());
-            } else if (parse.current.index == 1) {
-                IRegion region = FGManager.getInstance().getRegion(parse.args[0]);
-                if (region == null) {
-                    String worldName = parse.flags.get("world");
-                    World world = null;
-                    if (source instanceof Locatable) world = ((Locatable) source).getWorld();
-                    if (!worldName.isEmpty()) {
-                        Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
-                        if (optWorld.isPresent()) {
-                            world = optWorld.get();
-                        }
-                    }
-                    if (world != null) {
-                        region = FGManager.getInstance().getWorldRegion(world, parse.args[0]);
-                    }
-                }
-
-                if (region != null) {
-                    IRegion finalRegion = region;
-                    return FGManager.getInstance().getHandlers().stream()
-                            .filter(handler -> !finalRegion.getHandlers().contains(handler) && !(handler instanceof IGlobal))
-                            .map(IFGObject::getName)
-                            .filter(new StartsWithPredicate(parse.current.token))
-                            .map(args -> parse.current.prefix + args)
+                if (key && world != null) {
+                    return FGManager.getInstance().getAllRegions(world, new UUIDOwner(UUIDOwner.USER_GROUP, result.getOwner())).stream()
+                            .map(IGuardObject::getName)
+                            .filter(new StartsWithPredicate(result.getToken()))
+                            .map(args -> parse.current.prefix + result.getPrefix() + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                } else {
+                    return FGManager.getInstance().getAllRegionsWithUniqueNames(new UUIDOwner(UUIDOwner.USER_GROUP, result.getOwner()), world).stream()
+                            .map(IGuardObject::getName)
+                            .filter(new StartsWithPredicate(result.getToken()))
+                            .map(args -> parse.current.prefix + result.getPrefix() + args)
                             .collect(GuavaCollectors.toImmutableList());
                 }
-                return FGManager.getInstance().getHandlers().stream()
+            } else if (parse.current.index == 1) {
+                FGUtil.OwnerTabResult tabResult = FGUtil.getOwnerSuggestions(parse.current.token);
+                if (tabResult.isComplete()) {
+                    return tabResult.getSuggestions().stream()
+                            .map(str -> parse.current.prefix + str)
+                            .collect(GuavaCollectors.toImmutableList());
+                }
+
+                IRegion region = null;
+                try {
+                    FGUtil.OwnerResult regionOwnerResult = FGUtil.processUserInput(parse.args[0]);
+                    region = FGUtil.getRegionFromCommand(source, regionOwnerResult, parse.flags.containsKey("world"), parse.flags.get("world"));
+                } catch (CommandException ignored) {
+                }
+                if (region != null) {
+                    IRegion finalRegion = region;
+                    return FGManager.getInstance().getHandlers(new UUIDOwner(UUIDOwner.USER_GROUP, tabResult.getOwner())).stream()
+                            .filter(handler -> !finalRegion.getLinks().contains(handler) && !(handler instanceof IGlobal))
+                            .map(IGuardObject::getName)
+                            .filter(new StartsWithPredicate(tabResult.getToken()))
+                            .map(args -> parse.current.prefix + tabResult.getPrefix() + args)
+                            .collect(GuavaCollectors.toImmutableList());
+                }
+                return FGManager.getInstance().getHandlers(new UUIDOwner(UUIDOwner.USER_GROUP, tabResult.getOwner())).stream()
                         .filter(handler -> !(handler instanceof IGlobal))
-                        .map(IFGObject::getName)
-                        .filter(new StartsWithPredicate(parse.current.token))
-                        .map(args -> parse.current.prefix + args)
+                        .map(IGuardObject::getName)
+                        .filter(new StartsWithPredicate(tabResult.getToken()))
+                        .map(args -> parse.current.prefix + tabResult.getPrefix() + args)
                         .collect(GuavaCollectors.toImmutableList());
 
             }
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY))
-            return ImmutableList.of("world").stream()
+            return Stream.of("world")
                     .filter(new StartsWithPredicate(parse.current.token))
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());

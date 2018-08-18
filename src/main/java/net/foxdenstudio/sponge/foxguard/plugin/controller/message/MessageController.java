@@ -31,6 +31,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.ControllerBase;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.util.HandlerWrapper;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.HandlerData;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
@@ -54,8 +55,8 @@ public class MessageController extends ControllerBase {
     private Map<String, ISendableMessage> messages;
 
 
-    public MessageController(String name, boolean isEnabled, int priority) {
-        super(name, isEnabled, priority);
+    public MessageController(HandlerData data) {
+        super(data);
         slot = HandlerWrapper.PASSTHROUGH;
         messages = new HashMap<>();
     }
@@ -92,7 +93,7 @@ public class MessageController extends ControllerBase {
     }
 
     @Override
-    public void loadLinks(Path directory) {
+    public void loadLinks(Path directory, List<IHandler> savedList) {
 
     }
 
@@ -103,28 +104,28 @@ public class MessageController extends ControllerBase {
 
 
     @Override
-    public boolean addHandler(IHandler handler) {
-        if (this.handlers.size() < 1) {
+    public boolean addLink(IHandler handler) {
+        if (this.links.size() < 1) {
             slot = new HandlerWrapper(handler);
-            return super.addHandler(handler);
+            return super.addLink(handler);
         } else return false;
     }
 
     @Override
-    public boolean removeHandler(IHandler handler) {
+    public boolean removeLink(IHandler handler) {
         if (slot != null && slot.handler == handler) slot = HandlerWrapper.PASSTHROUGH;
-        return super.removeHandler(handler);
+        return super.removeLink(handler);
     }
 
     @Override
-    public void clearHandlers() {
+    public void clearLinks() {
         slot = HandlerWrapper.PASSTHROUGH;
-        super.clearHandlers();
+        super.clearLinks();
     }
 
     public IHandler getHandler() {
-        if (this.handlers.size() == 0) return null;
-        else return this.handlers.get(0);
+        if (this.links.size() == 0) return null;
+        else return this.links.get(0);
     }
 
     @Override
@@ -176,12 +177,12 @@ public class MessageController extends ControllerBase {
         private static final String[] messageAliases = {"message", "mess", "msg"};
 
         @Override
-        public IHandler create(String name, int priority, String arguments, CommandSource source) {
+        public IHandler create(String name, String arguments, CommandSource source) {
             return null;
         }
 
         @Override
-        public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
+        public IHandler create(Path directory, HandlerData data) {
             return null;
         }
 

@@ -25,7 +25,7 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.command.link;
 
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 
 import java.util.Set;
 
@@ -34,7 +34,7 @@ import java.util.Set;
  */
 public interface IExpression {
 
-    Set<IFGObject> getValue();
+    Set<IGuardObject> getValue();
 
     Set<LinkEntry> getLinks();
 

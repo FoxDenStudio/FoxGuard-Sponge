@@ -1,7 +1,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.config;
 
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
-import net.foxdenstudio.sponge.foxguard.plugin.listener.PlayerMoveListenerNew;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.PlayerMoveListener;
 import org.spongepowered.api.event.entity.MoveEntityEvent;
 
 import javax.annotation.Nonnull;
@@ -25,7 +25,7 @@ public enum ListenerModule {
                 setting = getDefaultValue();
                 full = true;
             }
-            PlayerMoveListenerNew pml = new PlayerMoveListenerNew(true);
+            PlayerMoveListener pml = new PlayerMoveListener(true);
             plugin.registerListener(MoveEntityEvent.class, pml);
             //plugin.registerListeners(pml.new Listeners());
             return setting;

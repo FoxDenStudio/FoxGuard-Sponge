@@ -34,6 +34,7 @@ import ninja.leaping.configurate.loader.ConfigurationLoader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -41,12 +42,34 @@ public final class FGConfigManager {
 
     private static FGConfigManager instance;
 
-    private boolean cleanupFiles = true;
-    private boolean saveInWorldFolder = true;
-    private boolean saveWorldRegionsInWorldFolders = true;
-    private boolean useConfigFolder = false;
-    private int nameLengthLimit = 24;
+    // general
+    private int nameLengthLimit;
 
+    // storage
+    private boolean gcAndFinalize;
+
+    // storage/cleanup
+    private boolean cleanOnDelete;
+    private boolean cleanOnError;
+
+    // storage/json
+    private boolean prettyPrint;
+    private int prettyPrintIndent;
+
+    // storage/location
+    private boolean saveInWorldDirectory;
+    private boolean saveWorldRegionsInWorldDirectories;
+    private boolean ownerFirst;
+    private boolean useConfigDirectory;
+    private boolean useCustomDirectory;
+    private Path customDirectory;
+
+    // storage/database
+    private boolean lockDatabaseFiles;
+    private boolean useMMappedFiles;
+    private boolean gcCleanerHack;
+
+    // modules
     private Map<ListenerModule, String> modules = new EnumMap<>(ListenerModule.class);
 
     private FGConfigManager() {
@@ -77,34 +100,110 @@ public final class FGConfigManager {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        root.getNode("storage", "cleanupFiles").setComment("Sets whether to aggressively delete files that are no longer used. Default: true\n" +
-                "This is meant to keep the file store clean and free of clutter. It also improves load times.\n" +
-                "The caveat is that objects that fail to load are deleted without warning. This normally isn't an issue, even in server crashes.\n" +
-                "However, modifying databases and moving the files around can trigger the cleanup.\n" +
-                "If force loading is off or the plugin simply fails to load the database, it would just be discarded.\n" +
-                "Setting this option to false will prevent databases from being deleted.\n" +
-                "However, they will still be overwritten if a new database is made with the same name.")
-                .setValue(cleanupFiles);
+        // general
+        root.getNode("general", "nameLengthLimit")
+                .setValue(nameLengthLimit)
+                .setComment("The length limit for object names. Use 0 or lower for no limit.\n" +
+                        "Extremely long names can cause a variety of un-fixable issues. You have been warned.");
 
-        root.getNode("storage", "saveInWorldFolder").setComment("Whether or not FoxGuard should save object information in the world folder.\n" +
-                "This includes super-regions, handlers, and controllers, but does not include world-regions.")
-                .setValue(saveInWorldFolder);
+        // storage
+        root.getNode("storage", "gcAndFinalize")
+                .setValue(gcAndFinalize)
+                .setComment("Whether to run try running gc and finalization when deleting things.\n" +
+                        "This may drastically slow down the deletion of objects.\n" +
+                        "Use only if you are having trouble deleting things from in game.\n" +
+                        "This really only makes a difference on Windows, so you can leave this alone on Unix based operating systems.");
 
-        root.getNode("storage", "saveWorldRegionsInWorldFolders").setComment("Whether or not FoxGuard should save world-region information in the world folder.\n" +
-                "In this case, the files are kept with their corresponding world/dimension.\n" +
-                "This makes it easier to copy and paste world data without causing de-synchronization between the world data and FoxGuard data.")
-                .setValue(saveWorldRegionsInWorldFolders);
-        root.getNode("storage", "useConfigFolder").setComment("Whether or not to place the foxguard folder inside the config folder.\n" +
-                "Only applies if files are not kept inside the world folder.")
-                .setValue(useConfigFolder);
-        root.getNode("general", "nameLengthLimit").setComment("The length limit for object names. Use 0 or lower for no limit.\n" +
-                "Extremely long names can cause a variety of unfixable issues. You have been warned.")
-                .setValue(nameLengthLimit);
+        // storage/cleanup
+        root.getNode("storage", "cleanup", "cleanOnDelete")
+                .setValue(cleanOnDelete)
+                .setComment("Sets whether to delete object files when objects are deleted. Default: true\n" +
+                        "This is meant to keep the file store clean and free of clutter.\n" +
+                        "If set to false, files will be left intact when deleting objects.\n" +
+                        "However if a new object is made with the same name, the files will be deleted to make space.");
 
+        root.getNode("storage", "cleanup", "cleanOnError")
+                .setValue(cleanOnError)
+                .setComment("Sets whether to delete object files if they fail to load. Default: false\n" +
+                        "This is also meant to keep the file store clean and free of clutter.\n" +
+                        "However it is usually left off because it may be undesirable to delete files if they are still recoverable.");
+
+        // storage/json
+        root.getNode("storage", "json", "prettyPrint")
+                .setValue(prettyPrint)
+                .setComment("Enables formatted json in .foxcf files when set to true. Otherwise leaves json minified when set to false." +
+                        "Default: false");
+
+        root.getNode("storage", "json", "prettyPrintIndent")
+                .setValue(prettyPrintIndent)
+                .setComment("Sets the indent for pretty printing when applicable." +
+                        "Default: 4");
+
+        // storage/location
+        root.getNode("storage", "location")
+                .setComment("These options control where FoxGuard objects are stored.\n" +
+                        "BE WARNED that changing these settings will not automatically move files to a new location.\n" +
+                        "YOU MUST do that move yourself. It is advised that you do the move at the same time you change these settings.");
+
+        root.getNode("storage", "location", "saveInWorldDirectory")
+                .setValue(saveInWorldDirectory)
+                .setComment("Whether or not FoxGuard should save object information in the world directory. Default: true\n" +
+                        "This includes super-regions, handlers, and controllers, but does not include world-regions.\n" +
+                        "If set to false, files will be placed in a directory in the server root directory.");
+
+        root.getNode("storage", "location", "saveWorldRegionsInWorldDirectories")
+                .setValue(saveWorldRegionsInWorldDirectories)
+                .setComment("Whether or not FoxGuard should save world-region information in the world directory. Default: true\n" +
+                        "In this case, the files are kept with their corresponding world/dimension.\n" +
+                        "This makes it easier to copy and paste world data without causing de-synchronization between the world data and FoxGuard data.");
+
+        root.getNode("storage", "location", "ownerFirst")
+                .setValue(ownerFirst)
+                .setComment("Whether to sort by owners first and then category. Default: true\n" +
+                        "When set to true, object will be stored like \"foxguard/owners/uuid/handlers/myhandler\".\n" +
+                        "When set to false, objects will instead be stored like \"foxguard/handlers/owners/uuid/myhandler\".\n" +
+                        "This does not affect objects without an owner, which are still stored like \"foxguard/handlers/myhandler\".");
+
+        root.getNode("storage", "location", "useConfigDirectory")
+                .setValue(useConfigDirectory)
+                .setComment("Whether or not to place the foxguard directory inside the config directory. Default: false\n" +
+                        "Only applies if files are not kept inside the world directory.");
+
+        root.getNode("storage", "location", "useCustomDirectory")
+                .setValue(useCustomDirectory)
+                .setComment("Whether or not to set the foxguard directory to a custom path. Default false:\n" +
+                        "Only applies if files are not kept inside the world folder.\n" +
+                        "This setting overrides the other location settings.\n" +
+                        "The working directory is the saves directory, which is the root directory on a Minecraft server.");
+
+        root.getNode("storage", "location", "customDirectory")
+                .setValue(customDirectory.normalize().toString())
+                .setComment("The custom foxguard directory path.");
+
+        // storage/database
+        root.getNode("storage", "database", "lockDatabaseFiles")
+                .setValue(lockDatabaseFiles)
+                .setComment("Whether to put a lock on database files while accessing them.\n" +
+                        "Locking is known to cause Java to hang on Unix based operating systems running on a NFS (Networked File System) that does not properly support locking.\n" +
+                        "This is often the case if you are using a server host, so be very cautious.\n" +
+                        "If your server hangs and crashes from the Minecraft watchdog, try setting this to false.");
+        root.getNode("storage", "database", "useMMappedFiles")
+                .setValue(useMMappedFiles)
+                .setComment("Whether to enable memory mapping for database files.\n" +
+                        "This has the potential to greatly speed up saving and loading from database files." +
+                        "This is known to cause some issues on Windows.\n" +
+                        "This may be correctable with gcCleanerHack.");
+        root.getNode("storage", "database", "gcCleanerHack")
+                .setValue(gcCleanerHack)
+                .setComment("Whether to enable MapDB's gcCleanerHack functionality.\n" +
+                        "This is meant for fixing issues with databases being un-deletable on Windows when memory mapping is enabled.\n" +
+                        "This only makes a difference if memory mapping is enabled, and can potentially decrease performance.");
+
+        // modules
         for (ListenerModule m : ListenerModule.values()) {
             CommentedConfigurationNode node = root.getNode("module", m.getName()).setValue(this.modules.get(m));
             String comment = m.getComment();
-            if(comment != null) node.setComment(comment);
+            if (comment != null) node.setComment(comment);
         }
 
 
@@ -133,44 +232,122 @@ public final class FGConfigManager {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        cleanupFiles = root.getNode("storage", "cleanupFiles").getBoolean(true);
-        saveInWorldFolder = root.getNode("storage", "saveInWorldFolder").getBoolean(true);
-        saveWorldRegionsInWorldFolders = root.getNode("storage", "saveWorldRegionsInWorldFolders").getBoolean(true);
-        useConfigFolder = root.getNode("storage", "useConfigFolder").getBoolean(false);
+        // general
         nameLengthLimit = root.getNode("general", "nameLengthLimit").getInt(24);
+
+        // storage
+        gcAndFinalize = root.getNode("storage", "gcAndFinalize").getBoolean(false);
+
+        // storage/cleaup
+        cleanOnDelete = root.getNode("storage", "cleanup", "cleanOnDelete").getBoolean(true);
+        cleanOnError = root.getNode("storage", "cleanup", "cleanOnError").getBoolean(false);
+
+        // storage/json
+        prettyPrint = root.getNode("storage", "json", "prettyPrint").getBoolean(false);
+        prettyPrintIndent = root.getNode("storage", "json", "prettyPrintIndent").getInt(4);
+
+        // storage/location
+        saveInWorldDirectory = root.getNode("storage", "location", "saveInWorldDirectory").getBoolean(true);
+        saveWorldRegionsInWorldDirectories = root.getNode("storage", "location", "saveWorldRegionsInWorldDirectories").getBoolean(true);
+        ownerFirst = root.getNode("storage", "location", "ownerFirst").getBoolean(true);
+        useConfigDirectory = root.getNode("storage", "location", "useConfigDirectory").getBoolean(false);
+        useCustomDirectory = root.getNode("storage", "location", "useCustomDirectory").getBoolean(false);
+        customDirectory = root.getNode("storage", "location", "customDirectory").getValue(o -> {
+            Path path = null;
+            if (o instanceof Path) path = (Path) o;
+            else if (o instanceof String) path = Paths.get((String) o);
+            if (path == null) return null;
+            if (Files.notExists(path) || Files.isDirectory(path)) return path.normalize();
+            else return null;
+        }, Paths.get("foxguard"));
+
+        // storage/database
+        lockDatabaseFiles = root.getNode("storage", "database", "lockDatabaseFiles").getBoolean(false);
+        useMMappedFiles = root.getNode("storage", "database", "useMMappedFiles").getBoolean(false);
+        gcCleanerHack = root.getNode("storage", "database", "gcCleanerHack").getBoolean(false);
+
+        // modules
         for (ListenerModule m : ListenerModule.values()) {
             this.modules.put(m, root.getNode("module", m.getName()).getString(m.getDefaultValue()));
         }
 
         //--------------------------------------------------------------------------------------------------------------
+
+        //Path path = Sponge.getGame().getSavesDirectory();
+    }
+
+    // general
+    public int getNameLengthLimit() {
+        return nameLengthLimit;
+    }
+
+    // storage
+    public boolean gcAndFinalize() {
+        return gcAndFinalize;
+    }
+
+    // storage/cleanup
+    public boolean cleanOnDelete() {
+        return cleanOnDelete;
+    }
+
+    public boolean cleanOnError() {
+        return cleanOnError;
     }
 
 
-    public boolean cleanupFiles() {
-        return cleanupFiles;
+    // storage/json
+    public boolean prettyPrint() {
+        return prettyPrint;
     }
 
-    public boolean saveInWorldFolder() {
-        return saveInWorldFolder;
+    public int prettyPrintIndent() {
+        return prettyPrintIndent;
     }
 
-    public boolean saveWorldRegionsInWorldFolders() {
-        return saveWorldRegionsInWorldFolders;
+    // storage/location
+    public boolean saveInWorldDirectory() {
+        return saveInWorldDirectory;
+    }
+
+    public boolean saveWorldRegionsInWorldDirectories() {
+        return saveWorldRegionsInWorldDirectories;
+    }
+
+    public boolean ownerFirst() {
+        return ownerFirst;
     }
 
     public boolean useConfigFolder() {
-        return useConfigFolder;
+        return useConfigDirectory;
     }
 
-    public int getNameLengthLimit() {
-        return nameLengthLimit;
+    public boolean useCustomDirectory() {
+        return useCustomDirectory;
+    }
+
+    public Path customDirectory() {
+        return customDirectory;
+    }
+
+    // storage/database
+    public boolean lockDatabaseFiles() {
+        return lockDatabaseFiles;
+    }
+
+    public boolean useMMappedFiles() {
+        return useMMappedFiles;
+    }
+
+    public boolean gcCleanerHack() {
+        return gcCleanerHack;
     }
 
     public Map<ListenerModule, String> getModules() {
         return this.modules;
     }
 
-    public void setupModule(ListenerModule module){
+    public void setupModule(ListenerModule module) {
         module.setup(this.modules.get(module));
     }
 

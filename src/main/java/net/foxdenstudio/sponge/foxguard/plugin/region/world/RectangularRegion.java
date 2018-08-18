@@ -33,6 +33,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.BoundingBox2;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
+import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectData;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IWorldRegionFactory;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IIterableRegion;
 import ninja.leaping.configurate.ConfigurationOptions;
@@ -42,7 +43,6 @@ import ninja.leaping.configurate.loader.ConfigurationLoader;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Locatable;
@@ -62,14 +62,14 @@ public class RectangularRegion extends WorldRegionBase implements IIterableRegio
     private BoundingBox2 boundingBox;
 
 
-    public RectangularRegion(String name, boolean isEnabled, BoundingBox2 boundingBox) {
-        super(name, isEnabled);
+    public RectangularRegion(FGObjectData data, BoundingBox2 boundingBox) {
+        super(data);
         this.boundingBox = boundingBox;
     }
 
-    public RectangularRegion(String name, List<? extends Vector3i> positions, String[] args, CommandSource source)
+    public RectangularRegion(FGObjectData data, List<? extends Vector3i> positions, String[] args, CommandSource source)
             throws CommandException {
-        super(name, true);
+        super(data);
         List<Vector3i> allPositions = new ArrayList<>(positions);
         Vector3i sourcePos = source instanceof Locatable ? ((Locatable) source).getLocation().getBlockPosition() : Vector3i.ZERO;
         for (int i = 0; i < args.length - 1; i += 2) {
@@ -193,31 +193,6 @@ public class RectangularRegion extends WorldRegionBase implements IIterableRegio
         return new RegionIterator();
     }
 
-    private class RegionIterator implements Iterator<Location<World>> {
-
-        Iterator<Vector2i> bbIterator = boundingBox.iterator();
-        Vector2i vec2 = bbIterator.next();
-        int y = 0;
-
-        @Override
-        public boolean hasNext() {
-            return vec2 != null;
-        }
-
-        @Override
-        public Location<World> next() {
-            if (hasNext()) {
-                Location<World> loc = new Location<>(world, vec2.getX(), y, vec2.getY());
-                y++;
-                if (y > 255) {
-                    y = 0;
-                    vec2 = bbIterator.next();
-                }
-                return loc;
-            } else return null;
-        }
-    }
-
     public static class Factory implements IWorldRegionFactory {
 
         private static final String[] rectAliases = {"square", "rectangular", "rectangle", "rect"};
@@ -227,11 +202,11 @@ public class RectangularRegion extends WorldRegionBase implements IIterableRegio
             AdvCmdParser.ParseResult parse = AdvCmdParser.builder()
                     .arguments(arguments)
                     .parse();
-            return new RectangularRegion(name, FCPUtil.getPositions(source), parse.args, source);
+            return new RectangularRegion(new FGObjectData().setName(name), FCPUtil.getPositions(source), parse.args, source);
         }
 
         @Override
-        public IWorldRegion create(Path directory, String name, boolean isEnabled) {
+        public IWorldRegion create(Path directory, FGObjectData data) {
             Path boundsFile = directory.resolve("bounds.cfg");
             CommentedConfigurationNode root;
             ConfigurationLoader<CommentedConfigurationNode> loader =
@@ -249,7 +224,7 @@ public class RectangularRegion extends WorldRegionBase implements IIterableRegio
             int z1 = root.getNode("lowerZ").getInt(0);
             int x2 = root.getNode("upperX").getInt(0);
             int z2 = root.getNode("upperZ").getInt(0);
-            return new RectangularRegion(name, isEnabled, new BoundingBox2(new Vector2i(x1, z1), new Vector2i(x2, z2)));
+            return new RectangularRegion(data, new BoundingBox2(new Vector2i(x1, z1), new Vector2i(x2, z2)));
         }
 
         @Override
@@ -275,6 +250,31 @@ public class RectangularRegion extends WorldRegionBase implements IIterableRegio
                     .autoCloseQuotes(true)
                     .parse();
             return ImmutableList.of(parse.current.prefix + "~");
+        }
+    }
+
+    private class RegionIterator implements Iterator<Location<World>> {
+
+        Iterator<Vector2i> bbIterator = boundingBox.iterator();
+        Vector2i vec2 = bbIterator.next();
+        int y = 0;
+
+        @Override
+        public boolean hasNext() {
+            return vec2 != null;
+        }
+
+        @Override
+        public Location<World> next() {
+            if (hasNext()) {
+                Location<World> loc = new Location<>(world, vec2.getX(), y, vec2.getY());
+                y++;
+                if (y > 255) {
+                    y = 0;
+                    vec2 = bbIterator.next();
+                }
+                return loc;
+            } else return null;
         }
     }
 

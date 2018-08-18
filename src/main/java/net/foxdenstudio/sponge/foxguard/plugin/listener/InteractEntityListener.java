@@ -26,14 +26,15 @@
 package net.foxdenstudio.sponge.foxguard.plugin.listener;
 
 import com.flowpowered.math.vector.Vector3d;
+import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.listener.util.FGListenerUtil;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EntityFlagCalculator;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
-import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.EventListener;
@@ -43,7 +44,10 @@ import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static net.foxdenstudio.sponge.foxguard.plugin.flag.Flags.*;
 import static org.spongepowered.api.util.Tristate.FALSE;
@@ -51,6 +55,7 @@ import static org.spongepowered.api.util.Tristate.UNDEFINED;
 
 public class InteractEntityListener implements EventListener<InteractEntityEvent> {
 
+    private static final EntityFlagCalculator ENTITY_FLAG_CALCULATOR = EntityFlagCalculator.getInstance();
     private static final boolean[] BASE_FLAG_SET = FlagSet.arrayFromFlags(ROOT, DEBUFF, INTERACT, ENTITY);
 
     @Override
@@ -63,8 +68,8 @@ public class InteractEntityListener implements EventListener<InteractEntityEvent
         Set<IHandler> handlerSet = new HashSet<>();
         FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                 .filter(region -> region.contains(pos, world))
-                .forEach(region -> region.getHandlers().stream()
-                        .filter(IFGObject::isEnabled)
+                .forEach(region -> region.getLinks().stream()
+                        .filter(IGuardObject::isEnabled)
                         .forEach(handlerSet::add));
 
         if (handlerSet.isEmpty()) {
@@ -91,23 +96,29 @@ public class InteractEntityListener implements EventListener<InteractEntityEvent
             if (event instanceof InteractEntityEvent.Secondary.MainHand) flags[MAIN.id] = true;
             else if (event instanceof InteractEntityEvent.Secondary.OffHand) flags[OFF.id] = true;
         }
-        Entity entity = event.getTargetEntity();
-        FGListenerUtil.applyEntityFlags(entity, flags);
+
+        ENTITY_FLAG_CALCULATOR.applyEntityFlags(ImmutableList.of(event.getTargetEntity()), flags);
+
         FlagSet flagSet = new FlagSet(flags);
 
         List<IHandler> handlerList = new ArrayList<>(handlerSet);
-        Collections.sort(handlerList);
+        handlerList.sort(IHandler.PRIORITY);
+
         int currPriority = handlerList.get(0).getPriority();
         Tristate flagState = UNDEFINED;
-        for (IHandler handler : handlerList) {
+        for (IHandler handler : handlerSet) {
             if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                 break;
             }
-            //flagState = flagState.and(handler.handle(user, typeFlag, Optional.of(event)).getState());
-            flagState = flagState.and(handler.handle(user, flagSet, ExtraContext.of(event)).getState());
+
+            EventResult result = handler.handle(user, flagSet, ExtraContext.of(event));
+            if (result != null) {
+                flagState = flagState.and(result.getState());
+            } else {
+                FoxGuardMain.instance().getLogger().error("Handler \"" + handler.getName() + "\" of type \"" + handler.getUniqueTypeString() + "\" returned null!");
+            }
             currPriority = handler.getPriority();
         }
-//        if(flagState == UNDEFINED) flagState = TRUE;
         if (flagState == FALSE) {
             if (user instanceof Player)
                 ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));

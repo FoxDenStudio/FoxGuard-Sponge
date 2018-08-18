@@ -31,8 +31,9 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.GlobalHandler;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
+import net.foxdenstudio.sponge.foxguard.plugin.object.path.owner.types.UUIDOwner;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -72,17 +73,18 @@ public class CommandPriority extends FCCommandBase {
             int successes = 0;
             int failures = 0;
             List<IHandler> handlers = new ArrayList<>();
-            FGUtil.getSelectedHandlers(source).forEach(handlers::add);
+            handlers.addAll(FGUtil.getSelectedHandlers(source));
             PriorityMachine machine = null;
             for (String arg : parse.args) {
                 try {
                     PriorityMachine temp = new PriorityMachine(arg);
                     if (machine == null) machine = temp;
                 } catch (NumberFormatException ignored) {
-                    IHandler handler = FGManager.getInstance().gethandler(arg);
-                    if (handler != null && !handlers.contains(handler)) {
+                    try {
+                        FGUtil.OwnerResult ownerResult = FGUtil.processUserInput(arg);
+                        IHandler handler = FGUtil.getHandlerFromCommand(ownerResult);
                         handlers.add(handler);
-                    } else {
+                    } catch (CommandException ignored2) {
                         failures++;
                     }
                 }
@@ -113,13 +115,20 @@ public class CommandPriority extends FCCommandBase {
                 .autoCloseQuotes(true)
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
+            FGUtil.OwnerTabResult result = FGUtil.getOwnerSuggestions(parse.current.token);
+            if (result.isComplete()) {
+                return result.getSuggestions().stream()
+                        .map(str -> parse.current.prefix + str)
+                        .collect(GuavaCollectors.toImmutableList());
+            }
+
             List<IHandler> selected = ImmutableList.copyOf(FGUtil.getSelectedHandlers(source));
-            return FGManager.getInstance().getHandlers().stream()
+            return FGManager.getInstance().getHandlers(new UUIDOwner(UUIDOwner.USER_GROUP, result.getOwner())).stream()
                     .filter(handler -> !selected.contains(handler) && !(handler instanceof IGlobal))
-                    .map(IFGObject::getName)
+                    .map(IGuardObject::getName)
                     .filter(new StartsWithPredicate(parse.current.token))
                     .filter(alias -> !isIn(parse.args, alias))
-                    .map(args -> parse.current.prefix + args)
+                    .map(args -> parse.current.prefix + result.getPrefix() + args)
                     .collect(GuavaCollectors.toImmutableList());
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))
             return ImmutableList.of(parse.current.prefix + " ");

@@ -32,7 +32,7 @@ import net.foxdenstudio.sponge.foxcore.plugin.state.ListStateFieldBase;
 import net.foxdenstudio.sponge.foxcore.plugin.state.SourceState;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
@@ -51,6 +51,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ControllersStateField extends ListStateFieldBase<IController> {
 
@@ -68,7 +69,7 @@ public class ControllersStateField extends ListStateFieldBase<IController> {
             IController controller = it.next();
             if (source instanceof Player) {
                 builder.append(Text.of(TextColors.RED,
-                        TextActions.runCommand("/foxguard s c remove " + controller.getName()),
+                        TextActions.runCommand("/foxguard s c remove " + controller.getFullName()),
                         TextActions.showText(Text.of("Remove from Handler State Buffer")),
                         "  [-] "));
             }
@@ -113,21 +114,21 @@ public class ControllersStateField extends ListStateFieldBase<IController> {
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0) {
-                return ImmutableList.of("add", "remove").stream()
+                return Stream.of("add", "remove")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .collect(GuavaCollectors.toImmutableList());
             } else if (parse.current.index == 1) {
                 if (parse.args[0].equals("add")) {
                     return FGManager.getInstance().getControllers().stream()
                             .filter(handler -> !this.list.contains(handler))
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .sorted(String.CASE_INSENSITIVE_ORDER)
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
                 } else if (parse.args[0].equals("remove")) {
                     return this.list.stream()
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
@@ -166,9 +167,10 @@ public class ControllersStateField extends ListStateFieldBase<IController> {
         AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).parse();
 
         if (parse.args.length < 1) throw new CommandException(Text.of("Must specify a name!"));
-        IController controller = FGManager.getInstance().getController(parse.args[0]);
-        if (controller == null)
+        Optional<IController> controllerOpt = FGManager.getInstance().getController(parse.args[0]);
+        if (!controllerOpt.isPresent())
             throw new ArgumentParseException(Text.of("No controllers with this name!"), parse.args[0], 1);
+        IController controller = controllerOpt.get();
         if (this.list.contains(controller))
             throw new ArgumentParseException(Text.of("Controller is already in your state buffer!"), parse.args[0], 1);
         this.list.add(controller);
@@ -185,7 +187,7 @@ public class ControllersStateField extends ListStateFieldBase<IController> {
                 int index = Integer.parseInt(parse.args[0]);
                 controller = this.list.get(index - 1);
             } catch (NumberFormatException e) {
-                controller = FGManager.getInstance().getController(parse.args[0]);
+                controller = FGManager.getInstance().getController(parse.args[0]).orElse(null);
             } catch (IndexOutOfBoundsException e) {
                 throw new ArgumentParseException(Text.of("Index out of bounds! (1 - " + this.list.size()), parse.args[0], 1);
             }
@@ -203,7 +205,7 @@ public class ControllersStateField extends ListStateFieldBase<IController> {
                     int index = Integer.parseInt(arg);
                     controller = this.list.get(index - 1);
                 } catch (NumberFormatException e) {
-                    controller = FGManager.getInstance().getController(arg);
+                    controller = FGManager.getInstance().getController(arg).orElse(null);
                 } catch (IndexOutOfBoundsException e) {
                     failures++;
                     continue;
@@ -238,7 +240,7 @@ public class ControllersStateField extends ListStateFieldBase<IController> {
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0)
                 return this.list.stream()
-                        .map(IFGObject::getName)
+                        .map(IGuardObject::getName)
                         .filter(new StartsWithPredicate(parse.current.token))
                         .collect(GuavaCollectors.toImmutableList());
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.COMPLETE))

@@ -28,11 +28,8 @@ package net.foxdenstudio.sponge.foxguard.plugin.controller;
 import com.google.common.collect.ImmutableList;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.HandlerBase;
+import net.foxdenstudio.sponge.foxguard.plugin.handler.HandlerData;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.Serializer;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -40,54 +37,58 @@ import java.util.List;
 
 public abstract class ControllerBase extends HandlerBase implements IController {
 
-    protected final List<IHandler> handlers;
+    protected final List<IHandler> links;
 
-    public ControllerBase(String name, boolean isEnabled, int priority) {
-        super(name, priority, isEnabled);
-        this.handlers = new ArrayList<>();
+    public ControllerBase(HandlerData data) {
+        super(data);
+        this.links = new ArrayList<>();
     }
 
     @Override
-    public List<IHandler> getHandlers() {
-        return ImmutableList.copyOf(this.handlers);
+    public List<IHandler> getLinks() {
+        return ImmutableList.copyOf(this.links);
     }
 
     @Override
-    public boolean addHandler(IHandler handler) {
+    public boolean addLink(IHandler handler) {
         if (!FGManager.getInstance().isRegistered(handler)) return false;
         int maxLinks = this.maxLinks();
-        return !(maxLinks >= 0 && this.handlers.size() >= maxLinks) && this.handlers.add(handler);
+        return !(maxLinks >= 0 && this.links.size() >= maxLinks) && this.links.add(handler);
     }
 
     @Override
-    public boolean removeHandler(IHandler handler) {
-        return this.handlers.remove(handler);
+    public boolean removeLink(IHandler handler) {
+        return this.links.remove(handler);
     }
 
     @Override
-    public void clearHandlers() {
-        this.handlers.clear();
+    public void clearLinks() {
+        this.links.clear();
     }
 
+    /**
+     * Called when links are to be loaded. The new FoxGuard storage manager stores and loads links for you, but
+     *
+     * @param directory
+     * @param savedList
+     */
     @Override
-    public void loadLinks(Path directory) {
-        try (DB linksDB = DBMaker.fileDB(directory.resolve("links.foxdb").normalize().toString()).make()) {
-            List<String> linksList = linksDB.indexTreeList("links", Serializer.STRING).createOrOpen();
-            handlers.clear();
-            linksList.stream()
-                    .filter(name -> !this.name.equalsIgnoreCase(name))
-                    .map(name -> FGManager.getInstance().gethandler(name))
-                    .filter(handler -> handler != null)
-                    .forEach(handlers::add);
-
-        }
+    public void loadLinks(Path directory, List<IHandler> savedList) {
+        links.clear();
+        links.addAll(savedList);
     }
 
+    /**
+     * Stub method for controllers to put custom link saving code. This way, subclasses have something to call to save only links.
+     * I'm not sure why this is useful, if it's useful at all. I might end up removing it, or redoing controller save code entirely,
+     * cause array based serialization makes much less sense for controllers than regions.
+     * <p>
+     * so actually, while i'm at it:
+     * TODO do something like map or arbitrary tree based serialization instea for controllers in a way that foxguard storage understands.
+     *
+     * @param directory the save directory of the controller
+     */
     protected void saveLinks(Path directory) {
-        try (DB linksDB = DBMaker.fileDB(directory.resolve("links.foxdb").normalize().toString()).make()) {
-            List<String> linksList = linksDB.indexTreeList("links", Serializer.STRING).createOrOpen();
-            linksList.clear();
-            handlers.stream().map(IFGObject::getName).forEach(linksList::add);
-        }
+
     }
 }

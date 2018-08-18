@@ -26,6 +26,7 @@
 package net.foxdenstudio.sponge.foxguard.plugin.misc;
 
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGlobal;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.region.world.IWorldRegion;
 import org.spongepowered.api.Sponge;
@@ -54,6 +55,8 @@ public class FGContextCalculator implements ContextCalculator<Subject> {
             StringBuilder builder = new StringBuilder();
             for (Iterator<IRegion> iterator = regions.iterator(); iterator.hasNext(); ) {
                 IRegion region = iterator.next();
+                if (region instanceof IGlobal || !region.getOwner().equals(FGManager.SERVER_OWNER)) continue;
+
                 if (region instanceof IWorldRegion) {
                     builder.append(((IWorldRegion) region).getWorld().getName()).append(":");
                 }
@@ -76,15 +79,16 @@ public class FGContextCalculator implements ContextCalculator<Subject> {
                     String[] parts = regionName.split(":");
                     Optional<World> worldOptional = Sponge.getServer().getWorld(parts[0]);
                     if (worldOptional.isPresent()) {
-                        IWorldRegion region = fgManager.getWorldRegion(worldOptional.get(), parts[1]);
-                        if (region != null) {
-                            if (!region.contains(player.getLocation().getPosition())) return false;
+                        Optional<IWorldRegion> regionOpt = fgManager.getWorldRegion(worldOptional.get(), parts[1]);
+                        if (regionOpt.isPresent()) {
+                            if (!regionOpt.get().contains(player.getLocation().getPosition())) return false;
                         } else return false;
                     } else return false;
                 } else {
-                    IRegion region = fgManager.getRegion(regionName);
-                    if (region != null) {
-                        if (!region.contains(player.getLocation().getPosition(), player.getWorld())) return false;
+                    Optional<IRegion> regionOpt = fgManager.getRegion(regionName);
+                    if (regionOpt.isPresent()) {
+                        if (!regionOpt.get().contains(player.getLocation().getPosition(), player.getWorld()))
+                            return false;
                     } else return false;
                 }
             }

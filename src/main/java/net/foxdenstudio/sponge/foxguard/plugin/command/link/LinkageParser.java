@@ -32,14 +32,13 @@ import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.object.ILinkable;
 import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.world.Locatable;
@@ -49,6 +48,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by Fox on 4/19/2016.
@@ -59,6 +59,12 @@ public final class LinkageParser {
     private static final Pattern PATTERN = Pattern.compile(REGEX);
 
     private World currentWorld;
+
+    private LinkageParser(CommandSource source) {
+        if (source instanceof Locatable) {
+            currentWorld = ((Locatable) source).getWorld();
+        }
+    }
 
     public static Set<LinkEntry> parseLinkageExpression(String expression, CommandSource source) throws CommandException {
         return new LinkageParser(source).parse(expression, source);
@@ -92,19 +98,19 @@ public final class LinkageParser {
             } else if (expressionString.endsWith(" ")) {
                 if (stage == Stage.START) {
                     return FGManager.getInstance().getAllRegions(world).stream()
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .sorted()
                             .collect(Collectors.toList());
                 } else {
                     return FGManager.getInstance().getHandlers().stream()
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .sorted()
                             .collect(Collectors.toList());
                 }
             } else if (expressionString.endsWith(token)) {
                 if (token.startsWith("^")) {
                     return FGManager.getInstance().getControllers().stream()
-                            .map(IFGObject::getName)
+                            .map(IGuardObject::getName)
                             .filter(new StartsWithPredicate(token.substring(1)))
                             .sorted()
                             .map(str -> endPart + str.substring(token.length() - 1))
@@ -116,21 +122,21 @@ public final class LinkageParser {
                             .map(str -> endPart + str.substring(token.length() - 1))
                             .collect(Collectors.toList());
                 } else if (token.startsWith("$")) {
-                    return ImmutableList.of("regions", "handlers", "controllers").stream()
+                    return Stream.of("regions", "handlers", "controllers")
                             .filter(new StartsWithPredicate(token.substring(1)))
                             .map(str -> endPart + str.substring(token.length() - 1))
                             .collect(Collectors.toList());
                 } else {
                     if (stage == Stage.START) {
                         return FGManager.getInstance().getAllRegions(world).stream()
-                                .map(IFGObject::getName)
+                                .map(IGuardObject::getName)
                                 .filter(new StartsWithPredicate(token))
                                 .sorted()
                                 .map(str -> endPart + str.substring(token.length()))
                                 .collect(Collectors.toList());
                     } else {
                         return FGManager.getInstance().getHandlers().stream()
-                                .map(IFGObject::getName)
+                                .map(IGuardObject::getName)
                                 .filter(new StartsWithPredicate(token))
                                 .sorted()
                                 .map(str -> endPart + str.substring(token.length()))
@@ -140,30 +146,11 @@ public final class LinkageParser {
             }
         } else {
             return FGManager.getInstance().getAllRegions(world).stream()
-                    .map(IFGObject::getName)
+                    .map(IGuardObject::getName)
                     .sorted()
                     .collect(Collectors.toList());
         }
         return ImmutableList.of();
-    }
-
-    private LinkageParser(CommandSource source) {
-        if (source instanceof Locatable) {
-            currentWorld = ((Locatable) source).getWorld();
-        }
-    }
-
-    private Set<LinkEntry> parse(String expressionString, CommandSource source) throws CommandException {
-        String[] parts = expressionString.split(";");
-        Set<LinkEntry> set = new LinkedHashSet<>();
-        for (String part : parts) {
-            if (!checkParentheses(part)) {
-                throw new CommandException(Text.of("You must close all parentheses!"));
-            }
-            IExpression expression = new Expression(part, source, Stage.START);
-            set.addAll(expression.getLinks());
-        }
-        return ImmutableSet.copyOf(set);
     }
 
     private static boolean checkParentheses(String expression) {
@@ -180,6 +167,23 @@ public final class LinkageParser {
             rightCount++;
         }
         return leftCount == rightCount;
+    }
+
+    private Set<LinkEntry> parse(String expressionString, CommandSource source) throws CommandException {
+        String[] parts = expressionString.split(";");
+        Set<LinkEntry> set = new LinkedHashSet<>();
+        for (String part : parts) {
+            if (!checkParentheses(part)) {
+                throw new CommandException(Text.of("You must close all parentheses!"));
+            }
+            IExpression expression = new Expression(part, source, Stage.START);
+            set.addAll(expression.getLinks());
+        }
+        return ImmutableSet.copyOf(set);
+    }
+
+    private enum Stage {
+        START, REST
     }
 
     public class Expression implements IExpression {
@@ -206,7 +210,7 @@ public final class LinkageParser {
 
         private Set<IExpression> parseSegment(String segmentString, CommandSource source) {
             Set<IExpression> set = new LinkedHashSet<>();
-            Set<IFGObject> stubObjects = new LinkedHashSet<>();
+            Set<IGuardObject> stubObjects = new LinkedHashSet<>();
             Matcher matcher = PATTERN.matcher(segmentString);
             while (matcher.find()) {
                 if (matcher.group().equals("(")) {
@@ -222,7 +226,7 @@ public final class LinkageParser {
                     if (!token.startsWith("-")) {
                         if (token.startsWith("%")) {
                             Optional<World> worldOptional = Sponge.getServer().getWorld(token.substring(1));
-                            if (worldOptional.isPresent()) currentWorld = worldOptional.get();
+                            worldOptional.ifPresent(world -> currentWorld = world);
                         } else if (token.startsWith("$")) {
                             String name = token.substring(1);
                             if (Aliases.isIn(Aliases.REGIONS_ALIASES, name)) {
@@ -233,14 +237,26 @@ public final class LinkageParser {
                                 set.add(new ExpressionStub(ImmutableSet.copyOf(FGUtil.getSelectedControllers(source))));
                             }
                         } else if (token.startsWith("^")) {
-                            IController controller = FGManager.getInstance().getController(token.substring(1));
-                            if (controller != null) stubObjects.add(controller);
+                            try {
+                                FGUtil.OwnerResult ownerResult = FGUtil.processUserInput(token.substring(1));
+                                Optional<IController> controllerOpt = FGManager.getInstance().getController(ownerResult.getName(), ownerResult.getOwner());
+                                controllerOpt.ifPresent(stubObjects::add);
+                            } catch (CommandException ignored) {
+                            }
                         } else if (stage == Stage.START) {
-                            IRegion region = FGManager.getInstance().getRegionFromWorld(currentWorld, token);
-                            if (region != null) stubObjects.add(region);
+                            try {
+                                FGUtil.OwnerResult ownerResult = FGUtil.processUserInput(token);
+                                Optional<IRegion> regionOpt = FGManager.getInstance().getRegionFromWorld(currentWorld, ownerResult.getName(), ownerResult.getOwner());
+                                regionOpt.ifPresent(stubObjects::add);
+                            } catch (CommandException ignored) {
+                            }
                         } else {
-                            IHandler handler = FGManager.getInstance().gethandler(token);
-                            if (handler != null) stubObjects.add(handler);
+                            try {
+                                FGUtil.OwnerResult ownerResult = FGUtil.processUserInput(token);
+                                Optional<IHandler> handlerOpt = FGManager.getInstance().getHandler(ownerResult.getName(), ownerResult.getOwner());
+                                handlerOpt.ifPresent(stubObjects::add);
+                            } catch (CommandException ignored) {
+                            }
                         }
                     }
                 }
@@ -250,9 +266,9 @@ public final class LinkageParser {
         }
 
         @Override
-        public Set<IFGObject> getValue() {
+        public Set<IGuardObject> getValue() {
             if (contents.size() > 0) {
-                Set<IFGObject> set = new LinkedHashSet<>();
+                Set<IGuardObject> set = new LinkedHashSet<>();
                 for (IExpression expression : contents.get(0)) {
                     set.addAll(expression.getValue());
                 }
@@ -304,13 +320,13 @@ public final class LinkageParser {
 
     public class ExpressionStub implements IExpression {
 
-        Set<IFGObject> set;
+        Set<IGuardObject> set;
 
-        public ExpressionStub(Set<IFGObject> set) {
+        public ExpressionStub(Set<IGuardObject> set) {
             this.set = set;
         }
 
-        public Set<IFGObject> getValue() {
+        public Set<IGuardObject> getValue() {
             return set;
         }
 
@@ -319,9 +335,5 @@ public final class LinkageParser {
             return ImmutableSet.of();
         }
 
-    }
-
-    private enum Stage {
-        START, REST
     }
 }

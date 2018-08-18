@@ -35,4 +35,9 @@ public interface IWorldRegion extends IRegion, IWorldBounded {
     World getWorld();
 
     void setWorld(World world);
+
+    @Override
+    default String getFilter() {
+        return "wr/" + getWorld().getName();
+    }
 }

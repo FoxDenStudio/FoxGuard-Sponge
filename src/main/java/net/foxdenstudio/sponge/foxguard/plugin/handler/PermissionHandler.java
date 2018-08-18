@@ -57,6 +57,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
@@ -66,16 +67,17 @@ import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 public class PermissionHandler extends HandlerBase {
 
     private final List<PermissionEntry> entries;
+
     private String defaultPermission;
     private final Map<FlagSet, List<String>> permCache;
 
-    public PermissionHandler(String name, int priority, boolean isEnabled) {
-        this(name, priority, isEnabled,
+    public PermissionHandler(HandlerData data) {
+        this(data,
                 new ArrayList<>(), "");
     }
 
-    public PermissionHandler(String name, int priority, boolean isEnabled, List<PermissionEntry> entries, String defaultPermission) {
-        super(name, priority, isEnabled);
+    public PermissionHandler(HandlerData data, List<PermissionEntry> entries, String defaultPermission) {
+        super(data);
         this.entries = entries;
         this.defaultPermission = defaultPermission;
         this.permCache = new CacheMap<>((k, m) -> {
@@ -366,13 +368,13 @@ public class PermissionHandler extends HandlerBase {
 
         if (parse.current.type == AdvCmdParser.CurrentElement.ElementType.ARGUMENT) {
             if (parse.current.index == 0) {
-                return ImmutableList.of("entries", "default").stream()
+                return Stream.of("entries", "default")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             } else if (isIn(ENTRIES_ALIASES, parse.args[0]) || isIn(FLAGS_ALIASES, parse.args[0])) {
                 if (parse.current.index == 1) {
-                    return ImmutableList.of("add", "set", "remove", "move").stream()
+                    return Stream.of("add", "set", "remove", "move")
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
@@ -484,7 +486,7 @@ public class PermissionHandler extends HandlerBase {
     public Text details(CommandSource source, String arguments) {
         Text.Builder builder = Text.builder();
 
-        Text prefix = Text.of("foxguard.handler.", TextColors.GOLD, this.name);
+        Text prefix = Text.of("foxguard.handler.", TextColors.GOLD, this.name.toLowerCase());
         Text postfix = Text.of(".",
                 TextColors.AQUA, "<",
                 TextColors.GREEN, "allow",
@@ -495,7 +497,7 @@ public class PermissionHandler extends HandlerBase {
                 TextColors.AQUA, ">");
         builder.append(Text.of(
                 TextActions.showText(Text.of("Click to add a permission entry")),
-                TextActions.suggestCommand("/foxguard md h " + this.name + " entries add "),
+                TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " entries add "),
                 TextColors.GREEN, "Entries:"
         ));
         int index = 0;
@@ -514,7 +516,7 @@ public class PermissionHandler extends HandlerBase {
             }
             entryBuilder.append(postfix)
                     .onHover(TextActions.showText(Text.of("Click to change this entry")))
-                    .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + "entries set " + (index++) + " "));
+                    .onClick(TextActions.suggestCommand("/foxguard md h " + this.getFullName() + "entries set " + (index++) + " "));
             builder.append(Text.NEW_LINE).append(entryBuilder.build());
         }
         Text.Builder entryBuilder = Text.builder();
@@ -529,7 +531,7 @@ public class PermissionHandler extends HandlerBase {
         }
         entryBuilder.append(postfix)
                 .onHover(TextActions.showText(Text.of("Click to change this entry")))
-                .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " default "));
+                .onClick(TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " default "));
         builder.append(Text.NEW_LINE).append(entryBuilder.build());
 
         return builder.build();
@@ -557,6 +559,12 @@ public class PermissionHandler extends HandlerBase {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void setName(String name) {
+        super.setName(name);
+        this.permCache.clear();
     }
 
     public boolean addFlagEntry(PermissionEntry entry) {
@@ -658,7 +666,7 @@ public class PermissionHandler extends HandlerBase {
     }
 
     private String expandPermission(String perm) {
-        if (perm.isEmpty() || perm.startsWith(".")) perm = "foxguard.handler." + this.name + perm;
+        if (perm.isEmpty() || perm.startsWith(".")) perm = "foxguard.handler." + this.name.toLowerCase() + perm;
         return perm;
     }
 
@@ -667,12 +675,12 @@ public class PermissionHandler extends HandlerBase {
         public static final String[] ALIASES = {"perm", "perms", "permission", "permissions"};
 
         @Override
-        public IHandler create(String name, int priority, String arguments, CommandSource source) throws CommandException {
-            return new PermissionHandler(name, priority, true);
+        public IHandler create(String name, String arguments, CommandSource source) throws CommandException {
+            return new PermissionHandler(new HandlerData().setName(name));
         }
 
         @Override
-        public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
+        public IHandler create(Path directory, HandlerData data) {
             Path permissionsFile = directory.resolve("permissions.cfg");
             ConfigurationLoader<CommentedConfigurationNode> loader =
                     HoconConfigurationLoader.builder().setPath(permissionsFile).build();
@@ -688,7 +696,7 @@ public class PermissionHandler extends HandlerBase {
                     .map(PermissionEntry::deserialize)
                     .collect(Collectors.toList());
             String defaultPermission = root.getNode("default").getString("");
-            return new PermissionHandler(name, priority, isEnabled, entries, defaultPermission);
+            return new PermissionHandler(data, entries, defaultPermission);
         }
 
         @Override

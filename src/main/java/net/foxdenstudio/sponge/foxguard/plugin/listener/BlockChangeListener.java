@@ -28,9 +28,13 @@ package net.foxdenstudio.sponge.foxguard.plugin.listener;
 import com.flowpowered.math.vector.Vector3i;
 import net.foxdenstudio.sponge.foxcore.plugin.command.CommandDebug;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
+import net.foxdenstudio.sponge.foxguard.plugin.util.DebugManager;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.block.BlockSnapshot;
@@ -67,6 +71,9 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
                     || tr.getOriginal().getState().getType().equals(BlockTypes.GRASS)
                     && tr.getFinal().getState().getType().equals(BlockTypes.DIRT)) return;
         }
+
+        DebugManager.INSTANCE.printEvent(event);
+
         //DebugHelper.printBlockEvent(event);
         /*FlagOld typeFlag;
         if (event instanceof ChangeBlockEvent.Modify) typeFlag = FlagOld.BLOCK_MODIFY;
@@ -89,8 +96,8 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
 
             FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                     .filter(region -> region.contains(pos, world))
-                    .forEach(region -> region.getHandlers().stream()
-                            .filter(IFGObject::isEnabled)
+                    .forEach(region -> region.getLinks().stream()
+                            .filter(IGuardObject::isEnabled)
                             .forEach(handlerSet::add));
         } else {
             FGManager.getInstance().getRegionsAtMultiLocI(
@@ -99,11 +106,12 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
                             .filter(Optional::isPresent)
                             .map(Optional::get)
                             .collect(Collectors.toList())
-            ).forEach(region -> region.getHandlers().stream()
-                    .filter(IFGObject::isEnabled)
+            ).forEach(region -> region.getLinks().stream()
+                    .filter(IGuardObject::isEnabled)
                     .forEach(handlerSet::add));
         }
-        if(handlerSet.size() == 0) return;
+        if(handlerSet.isEmpty()) return;
+
 
         User user;
         if (event.getCause().containsType(Player.class)) {
@@ -113,6 +121,8 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
         } else {
             user = null;
         }
+
+
 
         boolean[] flags = BASE_FLAG_SET.clone();
 
@@ -125,19 +135,24 @@ public class BlockChangeListener implements EventListener<ChangeBlockEvent> {
 
         FlagSet flagSet = new FlagSet(flags);
 
-        List<IHandler> handlerList = new ArrayList<>(handlerSet);
-        Collections.sort(handlerList);
-        int currPriority = handlerList.get(0).getPriority();
+
         Tristate flagState = UNDEFINED;
+        List<IHandler> handlerList = new ArrayList<>(handlerSet);
+        handlerList.sort(IHandler.PRIORITY);
+        int currPriority = handlerList.get(0).getPriority();
         for (IHandler handler : handlerList) {
             if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                 break;
             }
-            //flagState = flagState.and(handler.handle(user, typeFlag, Optional.of(event)).getState());
-            flagState = flagState.and(handler.handle(user, flagSet, ExtraContext.of(event)).getState());
+            EventResult result = handler.handle(user, flagSet, ExtraContext.of(event));
+            if (result != null) {
+                flagState = flagState.and(result.getState());
+            } else {
+                FoxGuardMain.instance().getLogger().error("Handler \"" + handler.getName() + "\" of type \"" + handler.getUniqueTypeString() + "\" returned null!");
+            }
             currPriority = handler.getPriority();
         }
-//        if(flagState == UNDEFINED) flagState = TRUE;
+
 
         if (flagState == FALSE) {
             if (user instanceof Player) {

@@ -26,6 +26,11 @@
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
 import com.google.common.collect.ImmutableList;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.SerializedName;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 import net.foxdenstudio.sponge.foxcore.common.util.CacheMap;
 import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
@@ -33,22 +38,24 @@ import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.ProcessResult;
 import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
-import net.foxdenstudio.sponge.foxguard.plugin.FGStorageManager;
+import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.Flag;
-import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagRegistry;
+import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.Operation;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.util.TristateEntry;
 import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
 import net.foxdenstudio.sponge.foxguard.plugin.object.factory.IHandlerFactory;
+import net.foxdenstudio.sponge.foxguard.plugin.storage.FGSLegacyLoader;
+import net.foxdenstudio.sponge.foxguard.plugin.storage.FGStorageManagerNew;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
 import org.mapdb.DB;
-import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
+import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandSource;
@@ -65,11 +72,14 @@ import org.spongepowered.api.world.World;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
+import static org.spongepowered.api.util.Tristate.UNDEFINED;
 
 public class GroupHandler extends HandlerBase {
 
@@ -98,20 +108,20 @@ public class GroupHandler extends HandlerBase {
     private final Map<FlagSet, Tristate> defaultPermCache;
     private final Map<Set<Group>, Map<FlagSet, Tristate>> groupSetPermCache;
 
-    public GroupHandler(String name, int priority) {
-        this(name, true, priority,
+    public GroupHandler(HandlerData data) {
+        this(data,
                 new ArrayList<>(),
                 new HashMap<>(),
                 new Group("default", "", TextColors.RED, "Default"),
                 new ArrayList<>());
     }
 
-    public GroupHandler(String name, boolean isEnabled, int priority,
+    public GroupHandler(HandlerData data,
                         List<Group> groups,
                         Map<Group, List<TristateEntry>> groupPermissions,
                         Group defaultGroup,
                         List<TristateEntry> defaultPermissions) {
-        super(name, priority, isEnabled);
+        super(data);
         this.groups = groups;
         this.defaultGroup = defaultGroup;
 
@@ -121,10 +131,11 @@ public class GroupHandler extends HandlerBase {
         this.groupPermCache = new CacheMap<>((k1, m1) -> {
             if (k1 instanceof Group) {
                 List<TristateEntry> entries = GroupHandler.this.groupPermissions.get(k1);
+
                 Map<FlagSet, Tristate> map = new CacheMap<>((k2, m2) -> {
                     if (k2 instanceof FlagSet) {
                         FlagSet flags = (FlagSet) k2;
-                        Tristate state = null;
+                        Tristate state = UNDEFINED;
                         for (TristateEntry entry : entries) {
                             if (flags.toFlagSet().containsAll(entry.set)) {
                                 state = entry.tristate;
@@ -142,7 +153,7 @@ public class GroupHandler extends HandlerBase {
         this.defaultPermCache = new CacheMap<>((k, m) -> {
             if (k instanceof FlagSet) {
                 FlagSet flags = (FlagSet) k;
-                Tristate state = Tristate.UNDEFINED;
+                Tristate state = UNDEFINED;
                 for (TristateEntry entry : GroupHandler.this.defaultPermissions) {
                     if (flags.toFlagSet().containsAll(entry.set)) {
                         state = entry.tristate;
@@ -160,7 +171,7 @@ public class GroupHandler extends HandlerBase {
                 }
                 Set<Group> set = (Set<Group>) k1;
                 List<Group> list = new ArrayList<>(set);
-                Collections.sort(list, (g1, g2) -> this.groups.indexOf(g1) - this.groups.indexOf(g2));
+                list.sort(Comparator.comparingInt(this.groups::indexOf));
                 Map<FlagSet, Tristate> map = new CacheMap<>((k2, m2) -> {
                     if (k2 instanceof FlagSet) {
                         Tristate state = null;
@@ -178,6 +189,12 @@ public class GroupHandler extends HandlerBase {
                 return map;
             } else return null;
         });
+    }
+
+    public static boolean isNameValid(String name) {
+        return !name.matches("^.*[ :\\.=;\"\'\\\\/\\{\\}\\(\\)\\[\\]<>#@\\|\\?\\*].*$") &&
+                !name.equalsIgnoreCase("default") &&
+                !isIn(FGStorageManagerNew.FS_ILLEGAL_NAMES, name);
     }
 
     public ProcessResult modify(CommandSource source, String arguments) throws CommandException {
@@ -432,7 +449,8 @@ public class GroupHandler extends HandlerBase {
                     if (parse.args.length < 4)
                         return ProcessResult.of(false, Text.of("Must specify flags or an index to remove!"));
                     List<TristateEntry> permissions = getGroupPermissions(group);
-                    if(permissions.isEmpty()) return ProcessResult.of(false, "There are no entries to remove in this group!");
+                    if (permissions.isEmpty())
+                        return ProcessResult.of(false, "There are no entries to remove in this group!");
                     try {
                         int index = Integer.parseInt(parse.args[3]);
                         if (index < 0) index = 0;
@@ -466,7 +484,8 @@ public class GroupHandler extends HandlerBase {
                     if (parse.args.length < 4)
                         return ProcessResult.of(false, Text.of("Must specify an index or flags and then a tristate value!"));
                     List<TristateEntry> permissions = getGroupPermissions(group);
-                    if(permissions.isEmpty()) return ProcessResult.of(false, "There are no entries to set in this group!");
+                    if (permissions.isEmpty())
+                        return ProcessResult.of(false, "There are no entries to set in this group!");
                     try {
                         int index = Integer.parseInt(parse.args[3]);
                         if (index < 0) index = 0;
@@ -560,7 +579,8 @@ public class GroupHandler extends HandlerBase {
                     List<TristateEntry> permissions = getGroupPermissions(group);
                     if (parse.args.length < 4)
                         return ProcessResult.of(false, Text.of("Must specify flags or an index to move!"));
-                    if(permissions.isEmpty()) return ProcessResult.of(false, "There are no entries to move in this group!");
+                    if (permissions.isEmpty())
+                        return ProcessResult.of(false, "There are no entries to move in this group!");
                     try {
                         int from = Integer.parseInt(parse.args[3]);
                         if (from < 0) from = 0;
@@ -631,13 +651,13 @@ public class GroupHandler extends HandlerBase {
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0) {
-                return ImmutableList.of("groups", "flags").stream()
+                return Stream.of("groups", "flags")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             } else if (parse.current.index == 1) {
                 if (isIn(GROUPS_ALIASES, parse.args[0])) {
-                    return ImmutableList.of("add", "remove", "modify", "rename", "move").stream()
+                    return Stream.of("add", "remove", "modify", "rename", "move")
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
@@ -684,7 +704,7 @@ public class GroupHandler extends HandlerBase {
                         }
                     }
                 } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
-                    return ImmutableList.of("add", "remove", "set", "move").stream()
+                    return Stream.of("add", "remove", "set", "move")
                             .filter(new StartsWithPredicate(parse.current.token))
                             .map(args -> parse.current.prefix + args)
                             .collect(GuavaCollectors.toImmutableList());
@@ -707,7 +727,7 @@ public class GroupHandler extends HandlerBase {
                     switch (parse.args[2].toLowerCase()) {
                         case "add": {
                             if (parse.current.token.startsWith("=")) {
-                                return ImmutableList.of("=allow", "=deny", "=pass").stream()
+                                return Stream.of("=allow", "=deny", "=pass")
                                         .filter(new StartsWithPredicate(parse.current.token))
                                         .map(args -> parse.current.prefix + args)
                                         .collect(GuavaCollectors.toImmutableList());
@@ -724,7 +744,7 @@ public class GroupHandler extends HandlerBase {
                         case "set": {
                             if (parse.current.index == 3) {
                                 if (parse.current.token.startsWith("=")) {
-                                    return ImmutableList.of("=allow", "=deny", "=pass", "=clear").stream()
+                                    return Stream.of("=allow", "=deny", "=pass", "=clear")
                                             .filter(new StartsWithPredicate(parse.current.token))
                                             .map(args -> parse.current.prefix + args)
                                             .collect(GuavaCollectors.toImmutableList());
@@ -737,14 +757,14 @@ public class GroupHandler extends HandlerBase {
                                 }
                             } else if (parse.current.index == 4) try {
                                 Integer.parseInt(parse.args[3]);
-                                return ImmutableList.of("allow", "deny", "pass", "clear").stream()
+                                return Stream.of("allow", "deny", "pass", "clear")
                                         .filter(new StartsWithPredicate(parse.current.token))
                                         .map(args -> parse.current.prefix + args)
                                         .collect(GuavaCollectors.toImmutableList());
                             } catch (NumberFormatException ignored) {
                             }
                             if (parse.current.token.startsWith("=")) {
-                                return ImmutableList.of("=allow", "=deny", "=pass", "=clear").stream()
+                                return Stream.of("=allow", "=deny", "=pass", "=clear")
                                         .filter(new StartsWithPredicate(parse.current.token))
                                         .map(args -> parse.current.prefix + args)
                                         .collect(GuavaCollectors.toImmutableList());
@@ -773,12 +793,12 @@ public class GroupHandler extends HandlerBase {
             }
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY)) {
             if (isIn(GROUPS_ALIASES, parse.args[0])) {
-                return ImmutableList.of("index", "color", "displayname", "permission").stream()
+                return Stream.of("index", "color", "displayname", "permission")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
             } else if (isIn(FLAGS_ALIASES, parse.args[0])) {
-                return ImmutableList.of("index").stream()
+                return Stream.of("index")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
@@ -833,12 +853,12 @@ public class GroupHandler extends HandlerBase {
     public Text details(CommandSource source, String arguments) {
         Text.Builder builder = Text.builder();
         builder.append(Text.of(TextColors.GOLD,
-                TextActions.suggestCommand("/foxguard md h " + this.getName() + " group add "),
+                TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " group add "),
                 TextActions.showText(Text.of("Click to add a group")),
                 "----- Group Permission Strings -----\n"));
         for (Group group : groups) {
             builder.append(Text.of(group.color,
-                    TextActions.suggestCommand("/foxguard md h " + this.getName() + " group modify " + group.name + " "),
+                    TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " group modify " + group.name + " "),
                     TextActions.showText(Text.of("Click to modify \"", group.color, group.displayName, TextColors.RESET, "\"" + (group.name.equals(group.displayName) ? "" : " (" + group.name + ")"))),
                     group.displayName,
                     TextColors.RESET, ": "));
@@ -849,17 +869,17 @@ public class GroupHandler extends HandlerBase {
                 permBuilder.append(Text.of("foxguard.handler.", TextColors.YELLOW, this.name.toLowerCase(), TextColors.RESET, ".", group.color, group.name));
             }
             permBuilder.onHover(TextActions.showText(Text.of("Click to modify the permissions string for \"", group.color, group.displayName, TextColors.RESET, "\"" + (group.name.equals(group.displayName) ? "" : " (" + group.name + ")"))));
-            permBuilder.onClick(TextActions.suggestCommand("/foxguard md h " + this.getName() + " group modify " + group.name + " --p:"));
+            permBuilder.onClick(TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " group modify " + group.name + " --p:"));
             builder.append(permBuilder.build());
             builder.append(Text.NEW_LINE);
         }
         builder.append(Text.of(TextColors.GOLD,
-                TextActions.suggestCommand("/foxguard md h " + this.getName() + " groups add "),
+                TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " groups add "),
                 TextActions.showText(Text.of("Click to add a group")),
                 "----- Group Flags -----\n"));
         for (Group group : groups) {
             builder.append(Text.of(group.color,
-                    TextActions.suggestCommand("/foxguard md h " + this.name + " flags " + group.name + " add "),
+                    TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " flags " + group.name + " add "),
                     TextActions.showText(Text.of("Click to add a flag entry")),
                     group.displayName + ":\n"));
             int index = 0;
@@ -870,12 +890,12 @@ public class GroupHandler extends HandlerBase {
                 entryBuilder.append(Text.of("  " + index + ": " + stringBuilder.toString(), TextColors.AQUA, ": "))
                         .append(FGUtil.readableTristateText(entry.tristate))
                         .onHover(TextActions.showText(Text.of("Click to change this flag entry")))
-                        .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " flags " + group.name + " set " + (index++) + " "));
+                        .onClick(TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " flags " + group.name + " set " + (index++) + " "));
                 builder.append(entryBuilder.build()).append(Text.NEW_LINE);
             }
         }
         builder.append(Text.of(this.defaultGroup.color,
-                TextActions.suggestCommand("/foxguard md h " + this.name + " flags default add "),
+                TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " flags default add "),
                 TextActions.showText(Text.of("Click to add a flag entry")),
                 this.defaultGroup.displayName + ":"));
         int index = 0;
@@ -886,7 +906,7 @@ public class GroupHandler extends HandlerBase {
             entryBuilder.append(Text.of("  " + index + ": " + stringBuilder.toString(), TextColors.AQUA, ": "))
                     .append(FGUtil.readableTristateText(entry.tristate))
                     .onHover(TextActions.showText(Text.of("Click to change this flag entry")))
-                    .onClick(TextActions.suggestCommand("/foxguard md h " + this.name + " flags default set " + (index++) + " "));
+                    .onClick(TextActions.suggestCommand("/foxguard md h " + this.getFullName() + " flags default set " + (index++) + " "));
             builder.append(Text.NEW_LINE).append(entryBuilder.build());
         }
         return builder.build();
@@ -899,12 +919,14 @@ public class GroupHandler extends HandlerBase {
 
     @Override
     public void save(Path directory) {
-        try (DB flagMapDB = DBMaker.fileDB(directory.resolve("groups.foxdb").normalize().toString()).make()) {
+        FGStorageManagerNew storageManager = FGStorageManagerNew.getInstance();
+        Logger logger = FoxGuardMain.instance().getLogger();
+        /*try (DB flagMapDB = FGStorageManagerOld.openFoxDB(directory.resolve("groups.foxdb"))) {
             List<String> groupNames = flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen();
             groupNames.clear();
             groupNames.addAll(this.groups.stream().map(group -> group.name).collect(Collectors.toList()));
         }
-        try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.foxdb").normalize().toString()).make()) {
+        try (DB flagMapDB = FGStorageManagerOld.openFoxDB(directory.resolve("flags.foxdb"))) {
             for (Group group : this.groups) {
                 List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
                 stringEntries.clear();
@@ -913,27 +935,44 @@ public class GroupHandler extends HandlerBase {
             List<String> stringEntries = flagMapDB.indexTreeList("default", Serializer.STRING).createOrOpen();
             stringEntries.clear();
             stringEntries.addAll(this.defaultPermissions.stream().map(TristateEntry::serialize).collect(Collectors.toList()));
+        }*/
+
+        Path dataFile = directory.resolve("data.foxcf");
+        GsonBuilder gsonBuilder = FGStorageManagerNew.getInstance().getGsonBuilder();
+        gsonBuilder.registerTypeAdapter(TristateEntry.class, TristateEntry.ADAPTER);
+        Gson gson = gsonBuilder.create();
+
+        GsonData data = new GsonData();
+        data.groups = new HashMap<>();
+        for (Map.Entry<Group, List<TristateEntry>> entry : this.groupPermissions.entrySet()) {
+            data.groups.put(entry.getKey().name, entry.getValue());
         }
-        {
-            Path groupsFile = directory.resolve("groups.cfg");
-            ConfigurationLoader<CommentedConfigurationNode> loader =
-                    HoconConfigurationLoader.builder().setPath(groupsFile).build();
-            CommentedConfigurationNode root = FCPUtil.getHOCONConfiguration(groupsFile, loader);
-            CommentedConfigurationNode defaultNode = root.getNode("default");
-            defaultNode.getNode("displayname").setValue(this.defaultGroup.displayName);
-            defaultNode.getNode("color").setValue(this.defaultGroup.color.getName());
-            CommentedConfigurationNode groupsNode = root.getNode("groups");
-            for (Group group : this.groups) {
-                CommentedConfigurationNode groupNode = groupsNode.getNode(group.name);
-                groupNode.getNode("displayname").setValue(group.displayName);
-                groupNode.getNode("color").setValue(group.color.getName());
-                groupNode.getNode("permission").setValue(group.permission);
-            }
-            try {
-                loader.save(root);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        data.defaultGroup = this.defaultPermissions;
+
+        try (JsonWriter jsonWriter = storageManager.getJsonWriter(Files.newBufferedWriter(dataFile, FGStorageManagerNew.CHARSET))) {
+            gson.toJson(data, GsonData.class, jsonWriter);
+        } catch (IOException e) {
+            logger.error("Failed to open data file for writing: " + data, e);
+        }
+
+        Path groupsFile = directory.resolve("groups.cfg");
+        ConfigurationLoader<CommentedConfigurationNode> loader =
+                HoconConfigurationLoader.builder().setPath(groupsFile).build();
+        CommentedConfigurationNode root = FCPUtil.getHOCONConfiguration(groupsFile, loader);
+        CommentedConfigurationNode defaultNode = root.getNode("default");
+        defaultNode.getNode("displayname").setValue(this.defaultGroup.displayName);
+        defaultNode.getNode("color").setValue(this.defaultGroup.color.getName());
+        CommentedConfigurationNode groupsNode = root.getNode("groups");
+        for (Group group : this.groups) {
+            CommentedConfigurationNode groupNode = groupsNode.getNode(group.name);
+            groupNode.getNode("displayname").setValue(group.displayName);
+            groupNode.getNode("color").setValue(group.color.getName());
+            groupNode.getNode("permission").setValue(group.permission);
+        }
+        try {
+            loader.save(root);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -1165,13 +1204,10 @@ public class GroupHandler extends HandlerBase {
         }
     }
 
-    public static boolean isNameValid(String name) {
-        if (name.matches("^.*[ :\\.=;\"\'\\\\/\\{\\}\\(\\)\\[\\]<>#@\\|\\?\\*].*$")) return false;
-        if (name.equalsIgnoreCase("default")) return false;
-        for (String s : FGStorageManager.FS_ILLEGAL_NAMES) {
-            if (name.equalsIgnoreCase(s)) return false;
-        }
-        return true;
+    private static class GsonData {
+        Map<String, List<TristateEntry>> groups;
+        @SerializedName("default")
+        List<TristateEntry> defaultGroup;
     }
 
     public static class Group {
@@ -1227,9 +1263,9 @@ public class GroupHandler extends HandlerBase {
         private static final String[] ALIASES = {"group", "permgroup"};
 
         @Override
-        public IHandler create(String name, int priority, String arguments, CommandSource source) throws CommandException {
+        public IHandler create(String name, String arguments, CommandSource source) throws CommandException {
             AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).parse();
-            GroupHandler handler = new GroupHandler(name, priority);
+            GroupHandler handler = new GroupHandler(new HandlerData().setName(name));
             if (parse.args.length < 1 || !parse.args[0].equalsIgnoreCase("bare")) {
                 Group members = handler.createGroup("members").get();
                 members.displayName = "Members";
@@ -1238,13 +1274,43 @@ public class GroupHandler extends HandlerBase {
             return handler;
         }
 
+        @SuppressWarnings("Duplicates")
         @Override
-        public IHandler create(Path directory, String name, int priority, boolean isEnabled) {
-            List<String> groupNames = new ArrayList<>();
-            try (DB flagMapDB = DBMaker.fileDB(directory.resolve("groups.foxdb").normalize().toString()).make()) {
-                groupNames.addAll(flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen());
+        public IHandler create(Path directory, HandlerData data) {
+            Logger logger = FoxGuardMain.instance().getLogger();
+            FGStorageManagerNew storageManagerNew = FGStorageManagerNew.getInstance();
+
+            GsonBuilder gsonBuilder = storageManagerNew.getGsonBuilder();
+            gsonBuilder.registerTypeAdapter(TristateEntry.class, TristateEntry.ADAPTER);
+            Gson gson = gsonBuilder.create();
+
+            GsonData gsonData = null;
+            Path gsonDataFile = directory.resolve("data.foxcf");
+            if (Files.exists(gsonDataFile) && !Files.isDirectory(gsonDataFile)) {
+                try (JsonReader jsonReader = new JsonReader(Files.newBufferedReader(gsonDataFile))) {
+                    gsonData = gson.fromJson(jsonReader, GsonData.class);
+                    if (gsonData == null) gsonData = new GsonData();
+                    if (gsonData.groups == null) gsonData.groups = new HashMap<>();
+                    if (gsonData.defaultGroup == null) gsonData.defaultGroup = new ArrayList<>();
+                } catch (IOException e) {
+                    logger.error("Failed to open data file for reading: " + data, e);
+                }
             }
+
+            List<String> groupNames = new ArrayList<>();
+            if (gsonData != null) {
+                groupNames.addAll(gsonData.groups.keySet());
+            } else {
+                // Legacy Code
+                Path dbFile = directory.resolve("groups.foxdb");
+                if (Files.exists(dbFile) && !Files.isDirectory(dbFile))
+                    try (DB flagMapDB = FGSLegacyLoader.openFoxDB(directory.resolve("groups.foxdb"))) {
+                        groupNames.addAll(flagMapDB.indexTreeList("names", Serializer.STRING).createOrOpen());
+                    }
+            }
+
             List<Group> groups = new ArrayList<>();
+
             Path groupsFile = directory.resolve("groups.cfg");
             ConfigurationLoader<CommentedConfigurationNode> loader =
                     HoconConfigurationLoader.builder().setPath(groupsFile).build();
@@ -1263,18 +1329,32 @@ public class GroupHandler extends HandlerBase {
 
             Map<Group, List<TristateEntry>> groupPermissions = new HashMap<>();
             List<TristateEntry> defaultPermissions;
-            try (DB flagMapDB = DBMaker.fileDB(directory.resolve("flags.foxdb").normalize().toString()).make()) {
+
+            if (gsonData != null) {
                 for (Group group : groups) {
-                    List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
-                    groupPermissions.put(group, stringEntries.stream()
-                            .map(TristateEntry::deserialize)
-                            .collect(Collectors.toList()));
+                    groupPermissions.put(group, gsonData.groups.get(group.name));
                 }
-                List<String> stringEntries = flagMapDB.indexTreeList("default", Serializer.STRING).createOrOpen();
-                defaultPermissions = stringEntries.stream().map(TristateEntry::deserialize).collect(Collectors.toList());
+                defaultPermissions = gsonData.defaultGroup;
+            } else {
+                // Legacy Code
+                Path dbFile = directory.resolve("flags.foxdb");
+                if (Files.exists(dbFile) && !Files.isDirectory(dbFile)) {
+                    try (DB flagMapDB = FGSLegacyLoader.openFoxDB(dbFile)) {
+                        for (Group group : groups) {
+                            List<String> stringEntries = flagMapDB.indexTreeList(group.name, Serializer.STRING).createOrOpen();
+                            groupPermissions.put(group, stringEntries.stream()
+                                    .map(TristateEntry::deserialize)
+                                    .collect(Collectors.toList()));
+                        }
+                        List<String> stringEntries = flagMapDB.indexTreeList("default", Serializer.STRING).createOrOpen();
+                        defaultPermissions = stringEntries.stream().map(TristateEntry::deserialize).collect(Collectors.toList());
+                    }
+                } else {
+                    defaultPermissions = new ArrayList<>();
+                }
             }
 
-            return new GroupHandler(name, isEnabled, priority,
+            return new GroupHandler(data,
                     groups,
                     groupPermissions,
                     new Group("default", "", defaultColor, defaultDisplayName),
@@ -1305,7 +1385,7 @@ public class GroupHandler extends HandlerBase {
                     .parse();
             if (parse.current.type == AdvCmdParser.CurrentElement.ElementType.ARGUMENT &&
                     parse.current.index == 0) {
-                return ImmutableList.of("bare").stream()
+                return Stream.of("bare")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());

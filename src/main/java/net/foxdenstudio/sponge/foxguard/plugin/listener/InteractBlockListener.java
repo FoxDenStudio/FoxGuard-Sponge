@@ -30,7 +30,8 @@ import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.FoxGuardMain;
 import net.foxdenstudio.sponge.foxguard.plugin.flag.FlagSet;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.object.IFGObject;
+import net.foxdenstudio.sponge.foxguard.plugin.listener.util.EventResult;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.ExtraContext;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockTypes;
@@ -68,8 +69,8 @@ public class InteractBlockListener implements EventListener<InteractBlockEvent> 
         Set<IHandler> handlerSet = new HashSet<>();
         FGManager.getInstance().getRegionsInChunkAtPos(world, pos).stream()
                 .filter(region -> region.contains(pos, world))
-                .forEach(region -> region.getHandlers().stream()
-                        .filter(IFGObject::isEnabled)
+                .forEach(region -> region.getLinks().stream()
+                        .filter(IGuardObject::isEnabled)
                         .forEach(handlerSet::add));
 
         if (handlerSet.isEmpty()) {
@@ -100,18 +101,23 @@ public class InteractBlockListener implements EventListener<InteractBlockEvent> 
         FlagSet flagSet = new FlagSet(flags);
 
         List<IHandler> handlerList = new ArrayList<>(handlerSet);
-        Collections.sort(handlerList);
+        handlerList.sort(IHandler.PRIORITY);
+
         int currPriority = handlerList.get(0).getPriority();
         Tristate flagState = UNDEFINED;
         for (IHandler handler : handlerList) {
             if (handler.getPriority() < currPriority && flagState != UNDEFINED) {
                 break;
             }
-            //flagState = flagState.and(handler.handle(user, typeFlag, Optional.of(event)).getState());
-            flagState = flagState.and(handler.handle(user, flagSet, ExtraContext.of(event)).getState());
+
+            EventResult result = handler.handle(user, flagSet, ExtraContext.of(event));
+            if (result != null) {
+                flagState = flagState.and(result.getState());
+            } else {
+                FoxGuardMain.instance().getLogger().error("Handler \"" + handler.getName() + "\" of type \"" + handler.getUniqueTypeString() + "\" returned null!");
+            }
             currPriority = handler.getPriority();
         }
-//        if (flagState == UNDEFINED) flagState = TRUE;
         if (flagState == FALSE) {
             if (user instanceof Player)
                 ((Player) user).sendMessage(ChatTypes.ACTION_BAR, Text.of("You don't have permission!"));

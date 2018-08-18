@@ -81,7 +81,7 @@ public class CommandUnlink extends FCCommandBase {
             FGUtil.getSelectedRegions(source).forEach(
                     region -> {
                         List<IHandler> handlers = new ArrayList<>();
-                        region.getHandlers().stream()
+                        region.getLinks().stream()
                                 .filter(handler -> !(handler instanceof GlobalHandler))
                                 .forEach(handlers::add);
                         handlers.forEach(handler -> count[0] += FGManager.getInstance().unlink(region, handler) ? 1 : 0);
@@ -98,7 +98,7 @@ public class CommandUnlink extends FCCommandBase {
             FGManager.getInstance().getAllRegions().forEach(
                     region -> {
                         List<IHandler> handlers = new ArrayList<>();
-                        region.getHandlers().stream()
+                        region.getLinks().stream()
                                 .filter(handler -> !(handler instanceof GlobalHandler))
                                 .forEach(handlers::add);
                         handlers.stream().forEach(handler -> count[0] += FGManager.getInstance().unlink(region, handler) ? 1 : 0);

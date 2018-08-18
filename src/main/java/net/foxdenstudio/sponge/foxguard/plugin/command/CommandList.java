@@ -30,12 +30,11 @@ import net.foxdenstudio.sponge.foxcore.common.util.FCCUtil;
 import net.foxdenstudio.sponge.foxcore.plugin.command.FCCommandBase;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.AdvCmdParser;
 import net.foxdenstudio.sponge.foxcore.plugin.command.util.FlagMapper;
-import net.foxdenstudio.sponge.foxcore.plugin.util.Aliases;
 import net.foxdenstudio.sponge.foxcore.plugin.util.FCPUtil;
 import net.foxdenstudio.sponge.foxguard.plugin.FGManager;
 import net.foxdenstudio.sponge.foxguard.plugin.controller.IController;
 import net.foxdenstudio.sponge.foxguard.plugin.handler.IHandler;
-import net.foxdenstudio.sponge.foxguard.plugin.region.IRegion;
+import net.foxdenstudio.sponge.foxguard.plugin.object.IGuardObject;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
@@ -46,14 +45,17 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.text.format.TextStyles;
 import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.StartsWithPredicate;
+import org.spongepowered.api.world.Locatable;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static net.foxdenstudio.sponge.foxcore.plugin.util.Aliases.*;
 
@@ -77,6 +79,191 @@ public class CommandList extends FCCommandBase {
         return true;
     };
 
+    @SuppressWarnings("Duplicates")
+    @Override
+    public CommandResult process(CommandSource source, String arguments) throws CommandException {
+        if (!testPermission(source)) {
+            source.sendMessage(Text.of(TextColors.RED, "You don't have permission to use this command!"));
+            return CommandResult.empty();
+        }
+        AdvCmdParser.ParseResult parse = AdvCmdParser.builder().arguments(arguments).flagMapper(MAPPER).parse();
+
+        if (parse.args.length == 0) {
+            source.sendMessage(Text.builder()
+                    .append(Text.of(TextColors.GREEN, "Usage: "))
+                    .append(getUsage(source))
+                    .build());
+            return CommandResult.empty();
+        } else {
+            List<IGuardObject> objects = new ArrayList<>();
+            FGCat cat = FGCat.from(parse.args[0]);
+            if (cat == null) throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);
+
+            String title = "Objects";
+            boolean hasControllers = false;
+            boolean dispWorld = false;
+
+            switch (cat) {
+                case REGION: {
+                    if (parse.flags.containsKey("world")) {
+                        World world;
+                        String worldName = parse.flags.get("world");
+                        if (!worldName.isEmpty()) {
+                            Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
+                            if (optWorld.isPresent()) {
+                                world = optWorld.get();
+                            } else {
+                                throw new CommandException(Text.of("No world exists with name \"" + worldName + "\"!"));
+                            }
+                        } else if (source instanceof Locatable) {
+                            world = ((Locatable) source).getWorld();
+                        } else {
+                            throw new CommandException(Text.of("Must specify world name for flag!"));
+                        }
+                        objects.addAll(FGManager.getInstance().getWorldRegions(world));
+                        title = "Regions in World: " + world.getName();
+                        if (parse.flags.containsKey("super")) {
+                            objects.addAll(FGManager.getInstance().getRegions());
+                            title = "All " + title;
+                        }
+                    } else {
+                        if (parse.flags.containsKey("super")) {
+                            objects.addAll(FGManager.getInstance().getRegions());
+                            title = "Super Regions";
+                        } else {
+                            objects.addAll(FGManager.getInstance().getAllRegions());
+                            title = "All Regions";
+                        }
+                        dispWorld = true;
+                    }
+                }
+                break;
+                case HANDLER: {
+                    boolean controllers = parse.flags.containsKey("all");
+                    Collection<IHandler> handlers = FGManager.getInstance().getHandlers(controllers);
+                    objects.addAll(handlers);
+                    title = "Handlers";
+                    if (controllers) {
+                        title += " and Controllers";
+                        for (IHandler handler : handlers) {
+                            if (handler instanceof IController) {
+                                hasControllers = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                break;
+                case CONTROLLER: {
+                    objects.addAll(FGManager.getInstance().getControllers());
+                    title = "Controllers";
+                    hasControllers = true;
+                }
+                break;
+            }
+
+            if (parse.flags.containsKey("query")) {
+                String query = parse.flags.get("query");
+                if (query.startsWith("/")) {
+                    if (source.hasPermission("foxcore.danger.regex")) {
+                        FCCUtil.FCPattern pattern = FCCUtil.parseUserRegex(query);
+                        objects = objects.stream()
+                                .filter(region -> pattern.matches(region.getName()))
+                                .collect(Collectors.toList());
+                    } else {
+                        throw new CommandException(Text.of("You don't have permission to use regular expressions!"));
+                    }
+                } else {
+                    objects = objects.stream()
+                            .filter(region -> region.getName().toLowerCase().contains(query.toLowerCase()))
+                            .collect(Collectors.toList());
+                }
+            }
+
+            int page, number;
+            if (parse.flags.containsKey("page")) {
+                try {
+                    page = Integer.parseInt(parse.flags.get("page"));
+                } catch (NumberFormatException ignored) {
+                    page = 1;
+                }
+            } else page = 1;
+            if (parse.flags.containsKey("number")) {
+                try {
+                    number = Integer.parseInt(parse.flags.get("number"));
+                } catch (NumberFormatException ignored) {
+                    if (source instanceof Player) number = 18;
+                    else number = Integer.MAX_VALUE;
+                }
+            } else {
+                if (source instanceof Player) number = 18;
+                else number = Integer.MAX_VALUE;
+            }
+            if (number < 1) number = 1;
+            int maxPage = (Math.max(objects.size() - 1, 0) / number) + 1;
+            if (page < 1) page = 1;
+            else if (page > maxPage) page = maxPage;
+            int skip = (page - 1) * number;
+
+
+            Text.Builder builder = Text.builder()
+                    .append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"))
+                    .append(Text.of(TextColors.GREEN, "------- " + title + " -------\n"));
+
+            objects.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
+            Iterator<IGuardObject> objectIterator = objects.iterator();
+            for (int i = 0; i < skip; i++) {
+                objectIterator.next();
+            }
+            int count = 0;
+            if(!objectIterator.hasNext()){
+                builder.append(Text.of(TextColors.GRAY, TextStyles.ITALIC, "No objects found"));
+            }
+            while (objectIterator.hasNext() && count < number) {
+                IGuardObject object = objectIterator.next();
+                String fullName = object.getFullName();
+                if (source instanceof Player) {
+                    FGUtil.genStatePrefix(builder, object, source, hasControllers);
+                }
+                builder.append(Text.of(FGUtil.getColorForObject(object),
+                        TextActions.runCommand("/foxguard det " + cat.sName + " " + FGUtil.genWorldFlag(object) + fullName),
+                        TextActions.showText(Text.of("View details")),
+                        FGUtil.getObjectDisplayName(object, dispWorld, null, source)));
+                count++;
+                if (objectIterator.hasNext() && count < number) builder.append(Text.NEW_LINE);
+            }
+            if (maxPage > 1)
+                builder.append(Text.NEW_LINE).append(FCPUtil.pageFooter(page, maxPage, "/foxguard ls " + arguments, null));
+            source.sendMessage(builder.build());
+
+            return CommandResult.empty();
+        }
+    }
+
+    private enum FGCat {
+        REGION(REGIONS_ALIASES, "r"),
+        HANDLER(HANDLERS_ALIASES, "h"),
+        CONTROLLER(CONTROLLERS_ALIASES, HANDLER.sName);
+
+        public final String[] catAliases;
+        public final String lName = name().toLowerCase();
+        public final String uName = FCCUtil.toCapitalCase(name());
+        public final String sName;
+
+        FGCat(String[] catAliases, String sName) {
+            this.catAliases = catAliases;
+            this.sName = sName;
+        }
+
+        public static FGCat from(String category) {
+            for (FGCat cat : values()) {
+                if (isIn(cat.catAliases, category)) return cat;
+            }
+            return null;
+        }
+    }
+
+    /*@SuppressWarnings("Duplicates")
     @Override
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         if (!testPermission(source)) {
@@ -98,15 +285,15 @@ public class CommandList extends FCCommandBase {
             if (!worldName.isEmpty()) {
                 Optional<World> optWorld = Sponge.getGame().getServer().getWorld(worldName);
                 if (optWorld.isPresent()) {
-                    FGManager.getInstance().getWorldRegions(optWorld.get()).forEach(regionList::add);
+                    regionList.addAll(FGManager.getInstance().getWorldRegions(optWorld.get()));
                     if (parse.flags.containsKey("super"))
-                        FGManager.getInstance().getRegions().forEach(regionList::add);
+                        regionList.addAll(FGManager.getInstance().getRegions());
                     allFlag = false;
                 }
             }
             if (allFlag) {
-                if (parse.flags.containsKey("super")) FGManager.getInstance().getRegions().forEach(regionList::add);
-                else FGManager.getInstance().getAllRegions().forEach(regionList::add);
+                if (parse.flags.containsKey("super")) regionList.addAll(FGManager.getInstance().getRegions());
+                else regionList.addAll(FGManager.getInstance().getAllRegions());
             }
             if (parse.flags.containsKey("query")) {
                 String query = parse.flags.get("query");
@@ -150,7 +337,7 @@ public class CommandList extends FCCommandBase {
             Text.Builder builder = Text.builder()
                     .append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"))
                     .append(Text.of(TextColors.GREEN, "------- Regions" + (allFlag ? "" : (" for World: \"" + worldName + "\"")) + " -------\n"));
-            Collections.sort(regionList, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
+            regionList.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
             Iterator<IRegion> regionIterator = regionList.iterator();
             for (int i = 0; i < skip; i++) {
                 regionIterator.next();
@@ -158,6 +345,7 @@ public class CommandList extends FCCommandBase {
             int count = 0;
             while (regionIterator.hasNext() && count < number) {
                 IRegion region = regionIterator.next();
+                String fullName = region.getOwner().toString() + ":" + region.getName();
                 if (source instanceof Player) {
                     List<IRegion> selectedRegions = FGUtil.getSelectedRegions(source);
                     if (selectedRegions.contains(region)) {
@@ -165,14 +353,14 @@ public class CommandList extends FCCommandBase {
                         builder.append(Text.of(TextColors.RED,
                                 TextActions.runCommand("/foxguard s r remove " +
                                         FGUtil.genWorldFlag(region) +
-                                        region.getName()),
+                                        FGUtil.getFullName(region)),
                                 TextActions.showText(Text.of("Remove from state buffer")),
                                 "[-]"));
                     } else {
                         builder.append(Text.of(TextColors.GREEN,
                                 TextActions.runCommand("/foxguard s r add " +
                                         FGUtil.genWorldFlag(region) +
-                                        region.getName()),
+                                        FGUtil.getFullName(region)),
                                 TextActions.showText(Text.of("Add to state buffer")),
                                 "[+]"));
                         builder.append(Text.of(TextColors.GRAY, "[-]"));
@@ -180,20 +368,20 @@ public class CommandList extends FCCommandBase {
                     builder.append(Text.of(" "));
                 }
                 builder.append(Text.of(FGUtil.getColorForObject(region),
-                        TextActions.runCommand("/foxguard det r " + FGUtil.genWorldFlag(region) + region.getName()),
+                        TextActions.runCommand("/foxguard det r " + FGUtil.genWorldFlag(region) + fullName),
                         TextActions.showText(Text.of("View details")),
-                        FGUtil.getRegionName(region, allFlag)));
+                        FGUtil.getObjectDisplayName(region, allFlag, null, source)));
                 count++;
                 if (regionIterator.hasNext() && count < number) builder.append(Text.NEW_LINE);
             }
             if (maxPage > 1)
-                builder.append(Text.NEW_LINE).append(FCPUtil.pageFooter(page, maxPage, "/fg ls " + arguments, null));
+                builder.append(Text.NEW_LINE).append(FCPUtil.pageFooter(page, maxPage, "/foxguard ls " + arguments, null));
             source.sendMessage(builder.build());
 
             //----------------------------------------------------------------------------------------------------------
         } else if (isIn(Aliases.HANDLERS_ALIASES, parse.args[0])) {
             boolean controllers = parse.flags.containsKey("all");
-            List<IHandler> handlerList = FGManager.getInstance().getHandlers(controllers).stream().collect(Collectors.toList());
+            List<IHandler> handlerList = new ArrayList<>(FGManager.getInstance().getHandlers(controllers));
             if (parse.flags.containsKey("query")) {
                 String query = parse.flags.get("query");
                 if (query.startsWith("/")) {
@@ -236,7 +424,7 @@ public class CommandList extends FCCommandBase {
             Text.Builder builder = Text.builder()
                     .append(Text.of(TextColors.GOLD, "\n-----------------------------------------------------\n"))
                     .append(Text.of(TextColors.GREEN, "------- Handlers " + (controllers ? "and Controllers " : "") + "-------\n"));
-            Collections.sort(handlerList, (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
+            handlerList.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
             Iterator<IHandler> handlerIterator = handlerList.iterator();
             for (int i = 0; i < skip; i++) {
                 handlerIterator.next();
@@ -244,6 +432,7 @@ public class CommandList extends FCCommandBase {
             int count = 0;
             while (handlerIterator.hasNext() && count < number) {
                 IHandler handler = handlerIterator.next();
+                String fullName = handler.getOwner().toString() + ":" + handler.getName();
                 if (source instanceof Player) {
                     List<IHandler> selectedHandlers = FGUtil.getSelectedHandlers(source);
                     if (controllers) {
@@ -251,12 +440,12 @@ public class CommandList extends FCCommandBase {
                         if (selectedHandlers.contains(handler)) {
                             builder.append(Text.of(TextColors.GRAY, "[h+]"));
                             builder.append(Text.of(TextColors.RED,
-                                    TextActions.runCommand("/foxguard s h remove " + handler.getName()),
+                                    TextActions.runCommand("/foxguard s h remove " + FGUtil.getFullName(handler)),
                                     TextActions.showText(Text.of("Remove from handler state buffer")),
                                     "[h-]"));
                         } else {
                             builder.append(Text.of(TextColors.GREEN,
-                                    TextActions.runCommand("/foxguard s h add " + handler.getName()),
+                                    TextActions.runCommand("/foxguard s h add " + FGUtil.getFullName(handler)),
                                     TextActions.showText(Text.of("Add to handler state buffer")),
                                     "[h+]"));
                             builder.append(Text.of(TextColors.GRAY, "[h-]"));
@@ -266,12 +455,12 @@ public class CommandList extends FCCommandBase {
                             if (selectedControllers.contains(controller)) {
                                 builder.append(Text.of(TextColors.GRAY, "[c+]"));
                                 builder.append(Text.of(TextColors.RED,
-                                        TextActions.runCommand("/foxguard s c remove " + controller.getName()),
+                                        TextActions.runCommand("/foxguard s c remove " + FGUtil.getFullName(controller)),
                                         TextActions.showText(Text.of("Remove from controller state buffer")),
                                         "[c-]"));
                             } else {
                                 builder.append(Text.of(TextColors.GREEN,
-                                        TextActions.runCommand("/foxguard s c add " + controller.getName()),
+                                        TextActions.runCommand("/foxguard s c add " + FGUtil.getFullName(controller)),
                                         TextActions.showText(Text.of("Add to controller state buffer")),
                                         "[c+]"));
                                 builder.append(Text.of(TextColors.GRAY, "[c-]"));
@@ -283,12 +472,12 @@ public class CommandList extends FCCommandBase {
                         if (selectedHandlers.contains(handler)) {
                             builder.append(Text.of(TextColors.GRAY, "[+]"));
                             builder.append(Text.of(TextColors.RED,
-                                    TextActions.runCommand("/foxguard s h remove " + handler.getName()),
+                                    TextActions.runCommand("/foxguard s h remove " + FGUtil.getFullName(handler)),
                                     TextActions.showText(Text.of("Remove from state buffer")),
                                     "[-]"));
                         } else {
                             builder.append(Text.of(TextColors.GREEN,
-                                    TextActions.runCommand("/foxguard s h add " + handler.getName()),
+                                    TextActions.runCommand("/foxguard s h add " + FGUtil.getFullName(handler)),
                                     TextActions.showText(Text.of("Add to state buffer")),
                                     "[+]"));
                             builder.append(Text.of(TextColors.GRAY, "[-]"));
@@ -297,18 +486,18 @@ public class CommandList extends FCCommandBase {
                     builder.append(Text.of(" "));
                 }
                 builder.append(Text.of(FGUtil.getColorForObject(handler),
-                        TextActions.runCommand("/foxguard det h " + handler.getName()),
+                        TextActions.runCommand("/foxguard det h " + fullName),
                         TextActions.showText(Text.of("View details")),
                         handler.getShortTypeName() + " : " + handler.getName()));
                 if (handlerIterator.hasNext() && count < number) builder.append(Text.NEW_LINE);
             }
             if (maxPage > 1)
-                builder.append(Text.NEW_LINE).append(FCPUtil.pageFooter(page, maxPage, "/fg ls " + arguments, null));
+                builder.append(Text.NEW_LINE).append(FCPUtil.pageFooter(page, maxPage, "/foxguard ls " + arguments, null));
             source.sendMessage(builder.build());
 
             //----------------------------------------------------------------------------------------------------------
         } else if (isIn(Aliases.CONTROLLERS_ALIASES, parse.args[0])) {
-            List<IController> controllerList = FGManager.getInstance().getControllers().stream().collect(Collectors.toList());
+            List<IController> controllerList = new ArrayList<>(FGManager.getInstance().getControllers());
             if (parse.flags.containsKey("query")) {
                 String query = parse.flags.get("query");
                 if (query.startsWith("/")) {
@@ -364,12 +553,12 @@ public class CommandList extends FCCommandBase {
                     if (selectedHandlers.contains(controller)) {
                         builder.append(Text.of(TextColors.GRAY, "[h+]"));
                         builder.append(Text.of(TextColors.RED,
-                                TextActions.runCommand("/foxguard s h remove " + controller.getName()),
+                                TextActions.runCommand("/foxguard s h remove " + FGUtil.getFullName(controller)),
                                 TextActions.showText(Text.of("Remove from handler state buffer")),
                                 "[h-]"));
                     } else {
                         builder.append(Text.of(TextColors.GREEN,
-                                TextActions.runCommand("/foxguard s h add " + controller.getName()),
+                                TextActions.runCommand("/foxguard s h add " + FGUtil.getFullName(controller)),
                                 TextActions.showText(Text.of("Add to handler state buffer")),
                                 "[h+]"));
                         builder.append(Text.of(TextColors.GRAY, "[h-]"));
@@ -377,12 +566,12 @@ public class CommandList extends FCCommandBase {
                     if (selectedControllers.contains(controller)) {
                         builder.append(Text.of(TextColors.GRAY, "[c+]"));
                         builder.append(Text.of(TextColors.RED,
-                                TextActions.runCommand("/foxguard s c remove " + controller.getName()),
+                                TextActions.runCommand("/foxguard s c remove " + FGUtil.getFullName(controller)),
                                 TextActions.showText(Text.of("Remove from controller state buffer")),
                                 "[c-]"));
                     } else {
                         builder.append(Text.of(TextColors.GREEN,
-                                TextActions.runCommand("/foxguard s c add " + controller.getName()),
+                                TextActions.runCommand("/foxguard s c add " + FGUtil.getFullName(controller)),
                                 TextActions.showText(Text.of("Add to controller state buffer")),
                                 "[c+]"));
                         builder.append(Text.of(TextColors.GRAY, "[c-]"));
@@ -390,21 +579,21 @@ public class CommandList extends FCCommandBase {
                     builder.append(Text.of(" "));
                 }
                 builder.append(Text.of(FGUtil.getColorForObject(controller),
-                        TextActions.runCommand("/foxguard det h " + controller.getName()),
+                        TextActions.runCommand("/foxguard det h " + FGUtil.getFullName(controller)),
                         TextActions.showText(Text.of("View details")),
                         controller.getShortTypeName() + " : " + controller.getName()));
                 count++;
                 if (controllerIterator.hasNext() && count < number) builder.append(Text.NEW_LINE);
             }
             if (maxPage > 1)
-                builder.append(Text.NEW_LINE).append(FCPUtil.pageFooter(page, maxPage, "/fg ls " + arguments, null));
+                builder.append(Text.NEW_LINE).append(FCPUtil.pageFooter(page, maxPage, "/foxguard ls " + arguments, null));
 
             source.sendMessage(builder.build());
         } else {
             throw new ArgumentParseException(Text.of("Not a valid category!"), parse.args[0], 0);
         }
         return CommandResult.empty();
-    }
+    }*/
 
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
@@ -418,12 +607,12 @@ public class CommandList extends FCCommandBase {
                 .parse();
         if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.ARGUMENT)) {
             if (parse.current.index == 0)
-                return Arrays.asList("regions", "handlers", "controllers").stream()
+                return Stream.of("regions", "handlers", "controllers")
                         .filter(new StartsWithPredicate(parse.current.token))
                         .map(args -> parse.current.prefix + args)
                         .collect(GuavaCollectors.toImmutableList());
         } else if (parse.current.type.equals(AdvCmdParser.CurrentElement.ElementType.LONGFLAGKEY))
-            return ImmutableList.of("world").stream()
+            return Stream.of("world")
                     .filter(new StartsWithPredicate(parse.current.token))
                     .map(args -> parse.current.prefix + args)
                     .collect(GuavaCollectors.toImmutableList());

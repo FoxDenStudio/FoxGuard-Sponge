@@ -25,16 +25,16 @@
 
 package net.foxdenstudio.sponge.foxguard.plugin.handler;
 
-import net.foxdenstudio.sponge.foxguard.plugin.object.FGObjectBase;
+import net.foxdenstudio.sponge.foxguard.plugin.object.GuardObjectBase;
 import net.foxdenstudio.sponge.foxguard.plugin.util.FGUtil;
 
-public abstract class HandlerBase extends FGObjectBase implements IHandler {
+public abstract class HandlerBase extends GuardObjectBase implements IHandler {
 
     int priority;
 
-    public HandlerBase(String name, int priority, boolean isEnabled) {
-        super(name, isEnabled);
-        setPriority(priority);
+    public HandlerBase(HandlerData data) {
+        super(data);
+        setPriority(data.getPriority());
     }
 
     @Override
@@ -46,23 +46,18 @@ public abstract class HandlerBase extends FGObjectBase implements IHandler {
     public void setPriority(int priority) {
         if (priority < Integer.MIN_VALUE / 2 + 1) priority = Integer.MIN_VALUE / 2 + 1;
         else if (priority > Integer.MAX_VALUE / 2) priority = Integer.MAX_VALUE / 2;
-        this.priority = priority > Integer.MIN_VALUE ? priority : Integer.MIN_VALUE + 1;
-    }
-
-    @Override
-    public int compareTo(IHandler o) {
-        return o.getPriority() - this.priority;
+        this.priority = priority;
     }
 
     public void markDirty() {
-        FGUtil.markHandlerDirty(this);
+        FGUtil.markDirty(this);
     }
 
     @Override
     public String toString() {
         return this.getClass().getSimpleName() + "{" +
                 "name='" + name + '\'' +
-                ", isEnabled=" + isEnabled +
+                ", enabled=" + enabled +
                 ", priority=" + priority +
                 '}';
     }
