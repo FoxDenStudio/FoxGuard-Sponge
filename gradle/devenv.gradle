@@ -1,3 +1,0 @@
-gradle.ext.isDevEnv = false
-
-gradle.ext.foxCorePath = 'FoxCore-Sponge'

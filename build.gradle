@@ -1,5 +1,8 @@
 buildscript {
+    ext.kotlinVersion = '1.4.32'
     repositories {
+        jcenter()
+        mavenCentral()
         maven {
             name = 'gradle-plugins'
             url = 'https://plugins.gradle.org/m2'
@@ -8,22 +11,32 @@ buildscript {
             name = "forge"
             url = "http://files.minecraftforge.net/maven"
         }
-        maven {
-            name = "sponge"
-            url = "https://repo.spongepowered.org/maven"
-        }
+        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
     }
+
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
-        classpath 'org.spongepowered:spongegradle:0.8.2-SNAPSHOT'
-        classpath 'org.spongepowered:event-impl-gen:5.1.0-SNAPSHOT'
-        //classpath 'gradle.plugin.org.spongepowered:event-impl-gen:5.0.2'
-        //classpath 'gradle.plugin.org.spongepowered:event-impl-gen:5.1.0-SNAPSHOT'
-        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
+        classpath('net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT') {
+            // The gradle Kotlin plugin depends on Intellij's custom fork
+            // of GNU Trove, which it doesn't relocate.
+            // Therefore, we need to remove any other version of Trove
+            // from the classpath, to ensure that 'gnu.trove.*' always
+            // resolves to Intellij's version of Trove at runtime
+            // See https://youtrack.jetbrains.com/issue/IDEA-211616
+            exclude group: 'trove', module: 'trove'
+            exclude group: 'net.sf.trove4j', module: 'trove4j'
+        }
+        classpath 'gradle.plugin.org.spongepowered:spongegradle:0.8.1'
+        classpath 'org.spongepowered:event-impl-gen:5.4.0'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.3'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
     }
 }
 
+ext.fcc = project(':FoxCore-Common')
 ext.fcsp = project(':FoxCore-Sponge')
+ext.fgc = project(':FoxGuard-Common')
+
+apply from: fcc.file("gradle/config.gradle")
 apply from: fcsp.file("gradle/versions.gradle")
 
 apply plugin: 'org.spongepowered.plugin'
@@ -32,13 +45,14 @@ apply plugin: 'net.minecraftforge.gradle.forge'
 group 'net.foxdenstudio.sponge'
 version 'api7-SNAPSHOT'
 
-apply from: fcsp.file("gradle/fox.gradle")
-apply from: fcsp.file("gradle/publish.gradle")
-apply from: project.file("gradle/foxguard.gradle")
+apply from: fcc.file("gradle/fox.gradle")
+apply from: fcc.file("gradle/publish.gradle")
 apply from: fcsp.file("gradle/minecraft.gradle")
+apply from: project.file("gradle/foxguard.gradle")
 
 dependencies {
-    compile fcsp
-    compile "org.spongepowered:spongeapi:$spongeVersion"
+    implementation fcsp
+    implementation fgc
+    implementation "org.spongepowered:spongeapi:$spongeVersion"
     //testCompile group: 'junit', name: 'junit', version: '4.11'
 }

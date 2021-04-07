@@ -1,13 +1,16 @@
 buildscript {
     repositories {
-        jcenter()
+        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
         maven {
-            name 'Sponge maven repo'
-            url 'http://repo.spongepowered.org/maven'
+            name = 'gradle-plugins'
+            url = 'https://plugins.gradle.org/m2'
         }
+        jcenter()
     }
     dependencies {
         classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
+        classpath 'gradle.plugin.org.spongepowered:spongegradle:0.8.1'
+        classpath 'org.spongepowered:event-impl-gen:5.4.0'
     }
 }
 
